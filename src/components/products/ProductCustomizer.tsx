@@ -1,29 +1,30 @@
-"use client";
+'use client';
 
-import { useState, useMemo } from "react";
-import { useTranslations, useLocale } from "next-intl";
-import { useSearchParams } from "next/navigation";
-import { useRouter } from "@/i18n/routing";
-import { products } from "@/lib/data/catalog";
-import { useCart } from "@/components/cart/CartProvider";
-import { useUploadSession } from "@/hooks/useUploadSession";
-import { SecureUpload } from "@/components/upload/SecureUpload";
-import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
-import { formatPrice } from "@/lib/utils";
-import type { ProductType } from "@/lib/data/catalog";
-import { Shirt } from "lucide-react";
+import { useState, useMemo } from 'react';
+import Image from 'next/image';
+import { useTranslations, useLocale } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
+import { products } from '@/lib/data/catalog';
+import { useCart } from '@/components/cart/CartProvider';
+import { useUploadSession } from '@/hooks/useUploadSession';
+import { SecureUpload } from '@/components/upload/SecureUpload';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { formatPrice } from '@/lib/utils';
+import type { ProductType } from '@/lib/data/catalog';
+import { Shirt } from 'lucide-react';
 
 export function ProductCustomizer({ type }: { type: ProductType }) {
-  const t = useTranslations("products.customizer");
-  const tp = useTranslations("products.types");
+  const t = useTranslations('products.customizer');
+  const tp = useTranslations('products.types');
   const locale = useLocale();
   const searchParams = useSearchParams();
   const router = useRouter();
   const { addItem } = useCart();
   const { token } = useUploadSession();
 
-  const productId = searchParams.get("id");
+  const productId = searchParams.get('id');
   const product = useMemo(
     () =>
       products.find((p) => p.id === productId) ||
@@ -31,8 +32,8 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     [productId, type],
   );
 
-  const [color, setColor] = useState(product?.colors?.[0] || "#ffffff");
-  const [size, setSize] = useState(product?.sizes?.[0] || "M");
+  const [color, setColor] = useState(product?.colors?.[0] || '#ffffff');
+  const [size, setSize] = useState(product?.sizes?.[0] || 'M');
   const [quantity, setQuantity] = useState(1);
   const [uploadedFile, setUploadedFile] = useState<{
     fileId: string;
@@ -45,7 +46,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
 
   function handleAddToCart() {
     addItem({
-      type: "product",
+      type: 'product',
       name: `${tp(type)} (${size})`,
       price: product!.basePrice,
       quantity,
@@ -56,7 +57,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       },
       fileIds: uploadedFile ? [uploadedFile.fileId] : [],
     });
-    router.push("/cart");
+    router.push('/cart');
   }
 
   return (
@@ -70,6 +71,16 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
             <p className="rounded-lg bg-white/80 px-4 py-2 text-sm text-ink-700">
               ✓ {uploadedFile.name}
             </p>
+          ) : product.image ? (
+            <div className="relative h-64 w-64">
+              <Image
+                src={product.image}
+                alt={tp(type)}
+                fill
+                sizes="256px"
+                className="object-contain"
+              />
+            </div>
           ) : (
             <Shirt className="h-32 w-32 text-ink-400" />
           )}
@@ -87,7 +98,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         {product.colors && (
           <div>
             <label className="mb-2 block text-sm font-medium text-ink-700">
-              {t("selectColor")}
+              {t('selectColor')}
             </label>
             <div className="flex gap-2">
               {product.colors.map((c) => (
@@ -96,7 +107,9 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
                   type="button"
                   onClick={() => setColor(c)}
                   className={`h-10 w-10 rounded-full border-2 transition ${
-                    color === c ? "border-brand-600 ring-2 ring-brand-200" : "border-ink-200"
+                    color === c
+                      ? 'border-brand-600 ring-2 ring-brand-200'
+                      : 'border-ink-200'
                   }`}
                   style={{ backgroundColor: c }}
                   aria-label={c}
@@ -109,7 +122,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         {product.sizes && (
           <div>
             <label className="mb-2 block text-sm font-medium text-ink-700">
-              {t("selectSize")}
+              {t('selectSize')}
             </label>
             <div className="flex flex-wrap gap-2">
               {product.sizes.map((s) => (
@@ -119,8 +132,8 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
                   onClick={() => setSize(s)}
                   className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
                     size === s
-                      ? "bg-brand-600 text-white"
-                      : "bg-ink-100 text-ink-600 hover:bg-ink-200"
+                      ? 'bg-brand-600 text-white'
+                      : 'bg-ink-100 text-ink-600 hover:bg-ink-200'
                   }`}
                 >
                   {s}
@@ -132,7 +145,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
 
         <div>
           <label className="mb-2 block text-sm font-medium text-ink-700">
-            {t("quantity")}
+            {t('quantity')}
           </label>
           <input
             type="number"
@@ -145,7 +158,9 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         </div>
 
         <Card>
-          <h3 className="mb-3 font-semibold text-ink-900">{t("uploadDesign")}</h3>
+          <h3 className="mb-3 font-semibold text-ink-900">
+            {t('uploadDesign')}
+          </h3>
           <SecureUpload
             token={token}
             onUpload={(fileId, name) => setUploadedFile({ fileId, name })}
