@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 interface SecureUploadProps {
   token: string | null;
@@ -10,10 +10,10 @@ interface SecureUploadProps {
 }
 
 export function SecureUpload({ token, onUpload, disabled }: SecureUploadProps) {
-  const t = useTranslations("common");
+  const t = useTranslations('common');
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState<{
-    type: "error" | "success";
+    type: 'error' | 'success';
     text: string;
   } | null>(null);
 
@@ -26,34 +26,42 @@ export function SecureUpload({ token, onUpload, disabled }: SecureUploadProps) {
 
     try {
       const formData = new FormData();
-      formData.append("file", file);
-      formData.append("token", token);
+      formData.append('file', file);
+      formData.append('token', token);
 
-      const res = await fetch("/api/upload", {
-        method: "POST",
+      const res = await fetch('/api/upload', {
+        method: 'POST',
         body: formData,
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Upload failed");
+        if (res.status === 429) {
+          throw new Error('UPLOAD_LIMIT_REACHED');
+        }
+        throw new Error(data.error || 'Upload failed');
       }
 
       onUpload(data.fileId, data.originalName);
-      setMessage({ type: "success", text: t("uploadSuccess") });
-    } catch {
-      setMessage({ type: "error", text: t("uploadError") });
+      setMessage({ type: 'success', text: t('uploadSuccess') });
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : '';
+      const errorText =
+        errorMsg === 'UPLOAD_LIMIT_REACHED'
+          ? t('uploadLimit')
+          : t('uploadError');
+      setMessage({ type: 'error', text: errorText });
     } finally {
       setUploading(false);
-      e.target.value = "";
+      e.target.value = '';
     }
   }
 
   return (
     <div>
       <label
-        className={`inline-flex cursor-pointer items-center gap-2 rounded-lg border-2 border-dashed border-ink-300 px-4 py-3 text-sm text-ink-600 transition hover:border-brand-500 hover:text-brand-600 ${disabled || !token || uploading ? "pointer-events-none opacity-50" : ""}`}
+        className={`inline-flex cursor-pointer items-center gap-2 rounded-lg border-2 border-dashed border-ink-300 px-4 py-3 text-sm text-ink-600 transition hover:border-brand-500 hover:text-brand-600 ${disabled || !token || uploading ? 'pointer-events-none opacity-50' : ''}`}
       >
         <svg
           className="h-5 w-5"
@@ -68,7 +76,7 @@ export function SecureUpload({ token, onUpload, disabled }: SecureUploadProps) {
             d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
           />
         </svg>
-        {uploading ? t("loading") : "Choose file"}
+        {uploading ? t('loading') : 'Choose file'}
         <input
           type="file"
           className="hidden"
@@ -79,7 +87,7 @@ export function SecureUpload({ token, onUpload, disabled }: SecureUploadProps) {
       </label>
       {message && (
         <p
-          className={`mt-2 text-sm ${message.type === "error" ? "text-red-600" : "text-green-600"}`}
+          className={`mt-2 text-sm ${message.type === 'error' ? 'text-red-600' : 'text-green-600'}`}
         >
           {message.text}
         </p>

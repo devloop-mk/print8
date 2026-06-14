@@ -106,6 +106,7 @@
     "title": "Design studio",
     "subtitle": "Create your design — add text, images, and save it for ordering.",
     "addText": "Add text",
+    "editText": "Edit text",
     "addImage": "Add image",
     "textPlaceholder": "Enter text...",
     "fontSize": "Size",
@@ -139,12 +140,26 @@
       "gift-set": "Gift sets"
     },
     "customizer": {
+      "editText": "Edit text",
+      "addText": "Add text",
+      "editPhoto": "Edit photo",
+      "addPhoto": "Add photo",
       "title": "Customize product",
       "selectColor": "Select color",
       "selectSize": "Select size",
       "uploadDesign": "Upload design",
       "quantity": "Quantity",
-      "preview": "Preview"
+      "preview": "Preview",
+      "textColor": "Text color",
+      "textPosition": "Text position",
+      "textSize": "Text size",
+      "imageSize": "Image size",
+      "imagePosition": "Image position",
+      "removePhoto": "Remove photo",
+      "photoUploadInstructions": "First upload a photo to customize it.",
+      "previewNotAvailable": "Preview is not available for this file.",
+      "fileUploaded": "File uploaded successfully.",
+      "close": "Close"
     }
   },
   "about": {
@@ -169,7 +184,7 @@
     "address": "Address",
     "hours": "Working hours",
     "hoursValue": "Mon–Fri: 09:00–17:00, Sat: 09:00–13:00",
-    "addressValue": "Skopje, North Macedonia",
+    "addressValue": "Shtip, North Macedonia",
     "phoneValue": "+389 XX XXX XXX",
     "emailValue": "info@print8.mk",
     "formTitle": "Send a message",
@@ -252,7 +267,8 @@
     "loading": "Loading...",
     "error": "Something went wrong. Please try again.",
     "uploadError": "Upload failed. Check your file.",
-    "uploadSuccess": "File uploaded."
+    "uploadSuccess": "File uploaded.",
+    "uploadLimit": "Upload limit reached. Please try again later."
   },
   "footer": {
     "tagline": "Professional printing and personalized products.",

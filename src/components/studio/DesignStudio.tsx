@@ -10,13 +10,43 @@ import { SecureUpload } from '@/components/upload/SecureUpload';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 
-const presetSizes = [
-  { key: 'a4', label: 'A4 (21x29.7 cm)', widthCm: 21, heightCm: 29.7 },
-  { key: 'a5', label: 'A5 (14.8x21 cm)', widthCm: 14.8, heightCm: 21 },
-  { key: 'a6', label: 'A6 (10.5x14.8 cm)', widthCm: 10.5, heightCm: 14.8 },
-] as const;
+const categoryPresetSizes = {
+  'business-cards': [
+    {
+      key: 'card-small',
+      label: 'Standard card (9×5 cm)',
+      widthCm: 9,
+      heightCm: 5,
+    },
+    {
+      key: 'card-large',
+      label: 'Standard card (9×5.5 cm)',
+      widthCm: 9,
+      heightCm: 5.5,
+    },
+  ],
+  wedding: [
+    { key: 'a5', label: 'A5 (14.8x21 cm)', widthCm: 14.8, heightCm: 21 },
+    { key: 'a6', label: 'A6 (10.5x14.8 cm)', widthCm: 10.5, heightCm: 14.8 },
+  ],
+  birthday: [
+    { key: 'a5', label: 'A5 (14.8x21 cm)', widthCm: 14.8, heightCm: 21 },
+    { key: 'a6', label: 'A6 (10.5x14.8 cm)', widthCm: 10.5, heightCm: 14.8 },
+  ],
+  menus: [
+    { key: 'a4', label: 'A4 (21x29.7 cm)', widthCm: 21, heightCm: 29.7 },
+    { key: 'a3', label: 'A3 (29.7x42 cm)', widthCm: 29.7, heightCm: 42 },
+  ],
+  general: [
+    { key: 'a4', label: 'A4 (21x29.7 cm)', widthCm: 21, heightCm: 29.7 },
+    { key: 'a5', label: 'A5 (14.8x21 cm)', widthCm: 14.8, heightCm: 21 },
+    { key: 'a6', label: 'A6 (10.5x14.8 cm)', widthCm: 10.5, heightCm: 14.8 },
+  ],
+} as const;
 
-type SizeKey = (typeof presetSizes)[number]['key'] | 'custom';
+type SizeKey = string | 'custom';
+
+type DesignCategory = keyof typeof categoryPresetSizes;
 
 const pxPerCm = 14;
 
@@ -38,11 +68,35 @@ export function DesignStudio() {
   const [uploadedFiles, setUploadedFiles] = useState<
     { fileId: string; name: string }[]
   >([]);
-  const [selectedSize, setSelectedSize] = useState<SizeKey>('a4');
-  const [customWidth, setCustomWidth] = useState(21);
-  const [customHeight, setCustomHeight] = useState(29.7);
+  const categories = Object.keys(categoryPresetSizes) as DesignCategory[];
+  const [selectedCategory, setSelectedCategory] =
+    useState<DesignCategory>('general');
+  const categorySizes = categoryPresetSizes[selectedCategory];
+  const [selectedSize, setSelectedSize] = useState<SizeKey>(
+    categorySizes[0].key,
+  );
+  const [customWidth, setCustomWidth] = useState<number>(
+    categorySizes[0].widthCm,
+  );
+  const [customHeight, setCustomHeight] = useState<number>(
+    categorySizes[0].heightCm,
+  );
 
   const templateId = searchParams.get('template');
+
+  useEffect(() => {
+    setSelectedSize(categorySizes[0].key);
+    setCustomWidth(categorySizes[0].widthCm);
+    setCustomHeight(categorySizes[0].heightCm);
+  }, [selectedCategory]);
+
+  const categorySizeLimits =
+    selectedCategory === 'business-cards'
+      ? { widthMin: 8, widthMax: 10, heightMin: 4, heightMax: 6 }
+      : { widthMin: 10, widthMax: 50, heightMin: 10, heightMax: 50 };
+
+  const clamp = (value: number, min: number, max: number) =>
+    Math.min(Math.max(value, min), max);
 
   const activeSize =
     selectedSize === 'custom'
@@ -52,8 +106,8 @@ export function DesignStudio() {
           widthCm: customWidth,
           heightCm: customHeight,
         }
-      : (presetSizes.find((size) => size.key === selectedSize) ??
-        presetSizes[0]);
+      : (categorySizes.find((size) => size.key === selectedSize) ??
+        categorySizes[0]);
 
   const canvasWidth = Math.max(240, Math.round(activeSize.widthCm * pxPerCm));
   const canvasHeight = Math.max(160, Math.round(activeSize.heightCm * pxPerCm));
@@ -239,25 +293,45 @@ export function DesignStudio() {
         <Card>
           <h3 className="mb-4 font-semibold text-ink-900">{t('sizeLabel')}</h3>
           <label className="mb-2 block text-sm font-medium text-ink-700">
-            {t('presetSize')}
+            {t('productType')}
           </label>
-          <div className="mb-4 grid gap-2 sm:grid-cols-2">
-            {presetSizes.map((size) => (
+          <div className="mb-4 flex flex-wrap gap-2">
+            {categories.map((category) => (
               <button
-                key={size.key}
+                key={category}
                 type="button"
-                onClick={() => {
-                  setSelectedSize(size.key);
-                  setCustomWidth(size.widthCm);
-                  setCustomHeight(size.heightCm);
-                }}
+                onClick={() => setSelectedCategory(category)}
                 className={`rounded-lg border px-3 py-2 text-sm transition ${
-                  selectedSize === size.key
+                  selectedCategory === category
                     ? 'border-brand-600 bg-brand-50 text-brand-700'
                     : 'border-ink-300 bg-white text-ink-700 hover:border-ink-400'
                 }`}
               >
-                {size.label}
+                {t(`designs.categories.${category}`) || category}
+              </button>
+            ))}
+          </div>
+
+          <label className="mb-2 block text-sm font-medium text-ink-700">
+            {t('presetSize')}
+          </label>
+          <div className="mb-4 grid gap-2 sm:grid-cols-2">
+            {categorySizes.map((sizeOption) => (
+              <button
+                key={sizeOption.key}
+                type="button"
+                onClick={() => {
+                  setSelectedSize(sizeOption.key);
+                  setCustomWidth(sizeOption.widthCm);
+                  setCustomHeight(sizeOption.heightCm);
+                }}
+                className={`rounded-lg border px-3 py-2 text-sm transition ${
+                  selectedSize === sizeOption.key
+                    ? 'border-brand-600 bg-brand-50 text-brand-700'
+                    : 'border-ink-300 bg-white text-ink-700 hover:border-ink-400'
+                }`}
+              >
+                {sizeOption.label}
               </button>
             ))}
             <button
@@ -282,10 +356,19 @@ export function DesignStudio() {
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
-                    min={1}
+                    min={categorySizeLimits.widthMin}
+                    max={categorySizeLimits.widthMax}
                     step={0.1}
                     value={customWidth}
-                    onChange={(e) => setCustomWidth(Number(e.target.value))}
+                    onChange={(e) =>
+                      setCustomWidth(
+                        clamp(
+                          Number(e.target.value),
+                          categorySizeLimits.widthMin,
+                          categorySizeLimits.widthMax,
+                        ),
+                      )
+                    }
                     className="w-full rounded-lg border border-ink-300 px-3 py-2 text-sm"
                   />
                   <span className="text-sm text-ink-500">{t('cm')}</span>
@@ -298,10 +381,19 @@ export function DesignStudio() {
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
-                    min={1}
+                    min={categorySizeLimits.heightMin}
+                    max={categorySizeLimits.heightMax}
                     step={0.1}
                     value={customHeight}
-                    onChange={(e) => setCustomHeight(Number(e.target.value))}
+                    onChange={(e) =>
+                      setCustomHeight(
+                        clamp(
+                          Number(e.target.value),
+                          categorySizeLimits.heightMin,
+                          categorySizeLimits.heightMax,
+                        ),
+                      )
+                    }
                     className="w-full rounded-lg border border-ink-300 px-3 py-2 text-sm"
                   />
                   <span className="text-sm text-ink-500">{t('cm')}</span>
@@ -342,7 +434,11 @@ export function DesignStudio() {
               />
             </div>
           </div>
-          <Button size="sm" onClick={addTextToCanvas} className="w-full">
+          <Button
+            size="sm"
+            onClick={addTextToCanvas}
+            className="w-full"
+          >
             {t('addText')}
           </Button>
         </Card>
@@ -350,7 +446,10 @@ export function DesignStudio() {
         <Card>
           <h3 className="mb-4 font-semibold text-ink-900">{t('addImage')}</h3>
           <p className="mb-3 text-xs text-ink-500">{t('uploadHint')}</p>
-          <SecureUpload token={token} onUpload={handleFileUpload} />
+          <SecureUpload
+            token={token}
+            onUpload={handleFileUpload}
+          />
           {uploadedFiles.length > 0 && (
             <ul className="mt-3 space-y-1 text-xs text-ink-600">
               {uploadedFiles.map((f) => (
@@ -362,10 +461,16 @@ export function DesignStudio() {
 
         <div className="flex flex-col gap-2">
           <Button onClick={saveDesign}>{t('saveDesign')}</Button>
-          <Button variant="secondary" onClick={addToCart}>
+          <Button
+            variant="secondary"
+            onClick={addToCart}
+          >
             {t('addToCart')}
           </Button>
-          <Button variant="outline" onClick={clearCanvas}>
+          <Button
+            variant="outline"
+            onClick={clearCanvas}
+          >
             {t('clear')}
           </Button>
           {saved && (

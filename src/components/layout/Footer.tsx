@@ -1,9 +1,9 @@
-import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/routing";
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/routing';
 
 export function Footer() {
-  const t = useTranslations("footer");
-  const nav = useTranslations("nav");
+  const t = useTranslations('footer');
+  const nav = useTranslations('nav');
 
   return (
     <footer className="border-t border-ink-200 bg-ink-900 text-ink-300">
@@ -15,47 +15,59 @@ export function Footer() {
             </div>
             <span className="text-lg font-bold text-white">Print 8</span>
           </div>
-          <p className="text-sm">{t("tagline")}</p>
+          <p className="text-sm">{t('tagline')}</p>
         </div>
 
         <div>
-          <h3 className="mb-4 font-semibold text-white">{t("quickLinks")}</h3>
+          <h3 className="mb-4 font-semibold text-white">{t('quickLinks')}</h3>
           <ul className="space-y-2 text-sm">
             <li>
-              <Link href="/services" className="hover:text-white">
-                {nav("services")}
+              <Link
+                href="/services"
+                className="hover:text-white"
+              >
+                {nav('services')}
               </Link>
             </li>
             <li>
-              <Link href="/designs" className="hover:text-white">
-                {nav("designs")}
+              <Link
+                href="/designs"
+                className="hover:text-white"
+              >
+                {nav('designs')}
               </Link>
             </li>
             <li>
-              <Link href="/products" className="hover:text-white">
-                {nav("products")}
+              <Link
+                href="/products"
+                className="hover:text-white"
+              >
+                {nav('products')}
               </Link>
             </li>
             <li>
-              <Link href="/faq" className="hover:text-white">
-                {nav("faq")}
+              <Link
+                href="/faq"
+                className="hover:text-white"
+              >
+                {nav('faq')}
               </Link>
             </li>
           </ul>
         </div>
 
         <div>
-          <h3 className="mb-4 font-semibold text-white">{t("contact")}</h3>
+          <h3 className="mb-4 font-semibold text-white">{t('contact')}</h3>
           <ul className="space-y-2 text-sm">
             <li>info@print8.mk</li>
             <li>+389 XX XXX XXX</li>
-            <li>Skopje, North Macedonia</li>
+            <li>Shtip, North Macedonia</li>
           </ul>
         </div>
       </div>
 
       <div className="border-t border-ink-800 py-4 text-center text-sm">
-        © {new Date().getFullYear()} Print 8. {t("rights")}
+        © {new Date().getFullYear()} Print 8. {t('rights')}
       </div>
     </footer>
   );
