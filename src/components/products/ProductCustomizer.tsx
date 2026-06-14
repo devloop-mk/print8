@@ -58,7 +58,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   const customTextRef = useRef<HTMLDivElement | null>(null);
   const textCustomizerRef = useRef<HTMLDivElement | null>(null);
   const photoCustomizerRef = useRef<HTMLDivElement | null>(null);
-    const previewContainerRef = useRef<HTMLDivElement | null>(null);
+  const previewContainerRef = useRef<HTMLDivElement | null>(null);
   const [uploadedFile, setUploadedFile] = useState<{
     fileId: string;
     name: string;
@@ -93,7 +93,6 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     }
   }
 
-
   async function handleAddToCart() {
     const preview = await generatePreviewImage();
     addItem({
@@ -124,7 +123,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     <div className="grid gap-8 lg:grid-cols-2">
       <Card className="flex aspect-square items-center justify-center">
         <div
-                    ref={previewContainerRef}
+          ref={previewContainerRef}
           className="relative flex h-80 w-80 items-center justify-center rounded-2xl shadow-inner transition-colors"
           style={{ backgroundColor: product.colorsImages ? undefined : color }}
         >
