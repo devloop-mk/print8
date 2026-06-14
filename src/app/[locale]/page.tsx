@@ -124,33 +124,6 @@ export default async function HomePage({
         </div>
       </section>
 
-      <section className="bg-ink-50 py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="mb-10 text-2xl font-bold text-ink-900">
-            {t('whyUs')}
-          </h2>
-          <div className="grid gap-8 md:grid-cols-3">
-            <Card>
-              <Sparkles className="mb-4 h-8 w-8 text-brand-600" />
-              <h3 className="font-semibold text-ink-900">{t('whyQuality')}</h3>
-              <p className="mt-2 text-sm text-ink-500">{t('whyQualityDesc')}</p>
-            </Card>
-            <Card>
-              <Palette className="mb-4 h-8 w-8 text-brand-600" />
-              <h3 className="font-semibold text-ink-900">{t('whyCustom')}</h3>
-              <p className="mt-2 text-sm text-ink-500">{t('whyCustomDesc')}</p>
-            </Card>
-            <Card>
-              <Truck className="mb-4 h-8 w-8 text-brand-600" />
-              <h3 className="font-semibold text-ink-900">{t('whyDelivery')}</h3>
-              <p className="mt-2 text-sm text-ink-500">
-                {t('whyDeliveryDesc')}
-              </p>
-            </Card>
-          </div>
-        </div>
-      </section>
-
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="mb-10 flex items-end justify-between">
           <h2 className="text-2xl font-bold text-ink-900">
@@ -170,8 +143,20 @@ export default async function HomePage({
               href={`/designs/create?template=${design.id}`}
             >
               <Card className="overflow-hidden p-0">
-                <div className="aspect-[4/3] bg-gradient-to-br from-ink-100 to-ink-200 flex items-center justify-center">
-                  <Palette className="h-12 w-12 text-ink-400" />
+                <div className="relative aspect-[4/3] bg-gradient-to-br from-ink-100 to-ink-200 flex items-center justify-center">
+                  {design.image ? (
+                    <div className="relative h-full w-full">
+                      <Image
+                        src={design.image}
+                        alt={td(`categories.${design.category}`) || design.id}
+                        fill
+                        sizes="320px"
+                        className="object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <Palette className="h-12 w-12 text-ink-400" />
+                  )}
                 </div>
                 <div className="p-4">
                   <p className="text-sm font-medium text-ink-900">
@@ -228,6 +213,33 @@ export default async function HomePage({
                 </Card>
               </Link>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-ink-50 py-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <h2 className="mb-10 text-2xl font-bold text-ink-900">
+            {t('whyUs')}
+          </h2>
+          <div className="grid gap-8 md:grid-cols-3">
+            <Card>
+              <Sparkles className="mb-4 h-8 w-8 text-brand-600" />
+              <h3 className="font-semibold text-ink-900">{t('whyQuality')}</h3>
+              <p className="mt-2 text-sm text-ink-500">{t('whyQualityDesc')}</p>
+            </Card>
+            <Card>
+              <Palette className="mb-4 h-8 w-8 text-brand-600" />
+              <h3 className="font-semibold text-ink-900">{t('whyCustom')}</h3>
+              <p className="mt-2 text-sm text-ink-500">{t('whyCustomDesc')}</p>
+            </Card>
+            <Card>
+              <Truck className="mb-4 h-8 w-8 text-brand-600" />
+              <h3 className="font-semibold text-ink-900">{t('whyDelivery')}</h3>
+              <p className="mt-2 text-sm text-ink-500">
+                {t('whyDeliveryDesc')}
+              </p>
+            </Card>
           </div>
         </div>
       </section>

@@ -1,20 +1,21 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/routing";
-import { designTemplates, designCategories } from "@/lib/data/catalog";
-import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { Palette } from "lucide-react";
-import type { DesignCategory } from "@/lib/data/catalog";
+import { useState } from 'react';
+import Image from 'next/image';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/routing';
+import { designTemplates, designCategories } from '@/lib/data/catalog';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Palette } from 'lucide-react';
+import type { DesignCategory } from '@/lib/data/catalog';
 
 export function DesignsGallery() {
-  const t = useTranslations("designs");
-  const [category, setCategory] = useState<DesignCategory | "all">("all");
+  const t = useTranslations('designs');
+  const [category, setCategory] = useState<DesignCategory | 'all'>('all');
 
   const filtered =
-    category === "all"
+    category === 'all'
       ? designTemplates
       : designTemplates.filter((d) => d.category === category);
 
@@ -23,14 +24,14 @@ export function DesignsGallery() {
       <div className="mb-8 flex flex-wrap gap-2">
         <button
           type="button"
-          onClick={() => setCategory("all")}
+          onClick={() => setCategory('all')}
           className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
-            category === "all"
-              ? "bg-brand-600 text-white"
-              : "bg-ink-100 text-ink-600 hover:bg-ink-200"
+            category === 'all'
+              ? 'bg-brand-600 text-white'
+              : 'bg-ink-100 text-ink-600 hover:bg-ink-200'
           }`}
         >
-          {t("allCategories")}
+          {t('allCategories')}
         </button>
         {designCategories.map((cat) => (
           <button
@@ -39,8 +40,8 @@ export function DesignsGallery() {
             onClick={() => setCategory(cat)}
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
               category === cat
-                ? "bg-brand-600 text-white"
-                : "bg-ink-100 text-ink-600 hover:bg-ink-200"
+                ? 'bg-brand-600 text-white'
+                : 'bg-ink-100 text-ink-600 hover:bg-ink-200'
             }`}
           >
             {t(`categories.${cat}`)}
@@ -50,9 +51,24 @@ export function DesignsGallery() {
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((design) => (
-          <Card key={design.id} className="overflow-hidden p-0">
-            <div className="flex aspect-[4/3] items-center justify-center bg-gradient-to-br from-ink-100 to-ink-200">
-              <Palette className="h-16 w-16 text-ink-400" />
+          <Card
+            key={design.id}
+            className="overflow-hidden p-0"
+          >
+            <div className="relative aspect-[4/3] items-center justify-center bg-gradient-to-br from-ink-100 to-ink-200 flex">
+              {design.image ? (
+                <div className="relative h-full w-full">
+                  <Image
+                    src={design.image}
+                    alt={t(`categories.${design.category}`) || design.id}
+                    fill
+                    sizes="320px"
+                    className="object-cover"
+                  />
+                </div>
+              ) : (
+                <Palette className="h-16 w-16 text-ink-400" />
+              )}
             </div>
             <div className="p-4">
               <p className="font-medium text-ink-900">
@@ -69,8 +85,11 @@ export function DesignsGallery() {
                 ))}
               </div>
               <Link href={`/designs/create?template=${design.id}`}>
-                <Button size="sm" className="mt-4 w-full">
-                  {t("useTemplate")}
+                <Button
+                  size="sm"
+                  className="mt-4 w-full"
+                >
+                  {t('useTemplate')}
                 </Button>
               </Link>
             </div>

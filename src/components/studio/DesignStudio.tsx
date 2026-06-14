@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { designTemplates } from '@/lib/data/catalog';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from '@/i18n/routing';
 import { useCart } from '@/components/cart/CartProvider';
@@ -52,6 +53,7 @@ const pxPerCm = 14;
 
 export function DesignStudio() {
   const t = useTranslations('studio');
+  const td = useTranslations('designs');
   const searchParams = useSearchParams();
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -119,7 +121,7 @@ export function DesignStudio() {
   const initCanvas = useCallback(async () => {
     if (!canvasRef.current || fabricRef.current) return;
 
-    const { Canvas, IText } = await import('fabric');
+    const { Canvas, IText, FabricImage } = await import('fabric');
 
     const canvas = new Canvas(canvasRef.current, {
       width: canvasWidth,
@@ -128,13 +130,25 @@ export function DesignStudio() {
     });
 
     if (templateId) {
-      const placeholder = new IText(`Template: ${templateId}`, {
-        left: 50,
-        top: 50,
-        fontSize: 24,
-        fill: '#64748b',
-      });
-      canvas.add(placeholder);
+      try {
+        const template = designTemplates.find((d) => d.id === templateId);
+        if (template?.image) {
+          const img = await FabricImage.fromURL(template.image);
+          // scale to fit canvas while keeping margins
+          img.scaleToWidth(
+            Math.min(canvasWidth - 40, img.width || canvasWidth),
+          );
+          img.set({
+            left: canvasWidth / 2,
+            top: canvasHeight / 2,
+            originX: 'center',
+            originY: 'center',
+          });
+          canvas.add(img);
+        }
+      } catch (err) {
+        // ignore template load errors
+      }
     }
 
     fabricRef.current = canvas;
@@ -307,7 +321,7 @@ export function DesignStudio() {
                     : 'border-ink-300 bg-white text-ink-700 hover:border-ink-400'
                 }`}
               >
-                {t(`designs.categories.${category}`) || category}
+                {td(`categories.${category}`) || category}
               </button>
             ))}
           </div>

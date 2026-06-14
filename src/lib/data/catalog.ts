@@ -57,7 +57,7 @@ export const designTemplates: DesignTemplate[] = [
   {
     id: 'bc-classic',
     category: 'business-cards',
-    image: '/designs/bc-classic.svg',
+    image: '/business-cards/business-card-2.jpg',
     tags: ['classic', 'elegant'],
   },
   {
