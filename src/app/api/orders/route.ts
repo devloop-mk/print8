@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
-import { nanoid } from "nanoid";
-import { db } from "@/lib/db";
-import { checkoutSchema } from "@/lib/validations/order";
-import { generateOrderNumber } from "@/lib/utils";
+import { NextRequest, NextResponse } from 'next/server';
+import { nanoid } from 'nanoid';
+import { db } from '@/lib/db';
+import { checkoutSchema } from '@/lib/validations/order';
+import { generateOrderNumber } from '@/lib/utils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid order data", details: parsed.error.flatten() },
+        { error: 'Invalid order data', details: parsed.error.flatten() },
         { status: 400 },
       );
     }
@@ -26,11 +26,11 @@ export async function POST(request: NextRequest) {
     const orderNumber = generateOrderNumber();
     const now = new Date().toISOString();
 
-    db.orders.insert({
+    await db.orders.insert({
       id: orderId,
       orderNumber,
-      status: "pending",
-      paymentMethod: "cod",
+      status: 'pending',
+      paymentMethod: 'cod',
       locale: data.locale,
       customerName: data.fullName,
       customerPhone: data.phone,
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ orderId, orderNumber });
   } catch {
     return NextResponse.json(
-      { error: "Failed to create order" },
+      { error: 'Failed to create order' },
       { status: 500 },
     );
   }

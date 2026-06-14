@@ -1,11 +1,8 @@
 import { nanoid } from 'nanoid';
-import { db } from '@/lib/db';
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
+import { db } from '../db';
+import { supabaseAdmin } from '@/lib/supabase/client';
 import sharp from 'sharp';
 
-export let UPLOAD_DIR = path.join(process.cwd(), 'uploads');
 export const MAX_FILE_SIZE = 10 * 1024 * 1024;
 export const MAX_UPLOADS_PER_SESSION = 10;
 export const ALLOWED_MIME_TYPES = [
@@ -16,24 +13,7 @@ export const ALLOWED_MIME_TYPES = [
 ];
 
 const SESSION_DURATION_MS = 24 * 60 * 60 * 1000;
-
-function ensureUploadDir() {
-  try {
-    if (!fs.existsSync(UPLOAD_DIR)) {
-      fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-    }
-  } catch (err) {
-    // fallback to OS temp directory when repository filesystem is read-only (e.g. Vercel)
-    const tmpDir = path.join(os.tmpdir(), 'print8-uploads');
-    try {
-      if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
-      UPLOAD_DIR = tmpDir;
-    } catch (e) {
-      // if even tmp dir fails, rethrow to let caller handle
-      throw e;
-    }
-  }
-}
+const STORAGE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET!;
 
 export async function createUploadSession(): Promise<{
   sessionId: string;
@@ -44,7 +24,7 @@ export async function createUploadSession(): Promise<{
   const now = new Date();
   const expiresAt = new Date(now.getTime() + SESSION_DURATION_MS);
 
-  db.uploadSessions.insert({
+  await db.uploadSessions.insert({
     id: sessionId,
     token,
     expiresAt: expiresAt.toISOString(),
@@ -80,28 +60,36 @@ export async function processUpload(
     throw new Error('File type not allowed');
   }
 
-  ensureUploadDir();
-
   const fileId = nanoid();
   const ext = file.type === 'application/pdf' ? '.pdf' : '.webp';
   const storedName = `${fileId}${ext}`;
-  const storedPath = path.join(UPLOAD_DIR, storedName);
 
-  const buffer = Buffer.from(await file.arrayBuffer());
+  const arrayBuffer = await file.arrayBuffer();
+  let buffer = Buffer.from(arrayBuffer) as unknown as Buffer;
 
   if (file.type.startsWith('image/')) {
-    await sharp(buffer)
+    buffer = (await sharp(buffer)
       .rotate()
       .resize(4096, 4096, { fit: 'inside', withoutEnlargement: true })
       .webp({ quality: 85 })
-      .toFile(storedPath);
-  } else {
-    fs.writeFileSync(storedPath, buffer);
+      .toBuffer()) as Buffer;
+  }
+
+  const { error: uploadError } = await supabaseAdmin.storage
+    .from(STORAGE_BUCKET)
+    .upload(storedName, buffer, {
+      contentType: file.type.startsWith('image/') ? 'image/webp' : file.type,
+      cacheControl: '3600',
+      upsert: false,
+    });
+
+  if (uploadError) {
+    throw new Error(uploadError.message);
   }
 
   const now = new Date().toISOString();
 
-  db.uploadedFiles.insert({
+  await db.uploadedFiles.insert({
     id: fileId,
     sessionId: session.id,
     originalName: file.name.slice(0, 255),
@@ -111,19 +99,11 @@ export async function processUpload(
     createdAt: now,
   });
 
-  db.uploadSessions.incrementUploadCount(session.id);
+  await db.uploadSessions.incrementUploadCount(session.id);
 
   return { fileId, originalName: file.name };
 }
 
 export async function getUploadedFile(fileId: string) {
   return db.uploadedFiles.findById(fileId);
-}
-
-export function getFilePath(storedName: string): string {
-  const resolved = path.resolve(UPLOAD_DIR, storedName);
-  if (!resolved.startsWith(path.resolve(UPLOAD_DIR))) {
-    throw new Error('Invalid file path');
-  }
-  return resolved;
 }

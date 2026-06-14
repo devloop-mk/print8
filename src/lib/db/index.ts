@@ -1,8 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import { supabaseAdmin } from '@/lib/supabase/client';
 import { nanoid } from 'nanoid';
-
-const DATA_DIR = path.join(process.cwd(), 'data');
 
 export type OrderStatus =
   | 'pending'
@@ -48,102 +45,121 @@ export interface UploadedFileRecord {
   createdAt: string;
 }
 
-interface Store {
-  orders: OrderRecord[];
-  uploadSessions: UploadSessionRecord[];
-  uploadedFiles: UploadedFileRecord[];
-}
-
-const STORE_PATH = path.join(DATA_DIR, 'store.json');
-
-// In-memory fallback when filesystem is read-only (serverless platforms)
-let memoryStore: Store | null = null;
-
-function ensureDataDir() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-}
-
-function readStore(): Store {
-  ensureDataDir();
-  try {
-    if (!fs.existsSync(STORE_PATH)) {
-      const empty: Store = {
-        orders: [],
-        uploadSessions: [],
-        uploadedFiles: [],
-      };
-      fs.writeFileSync(STORE_PATH, JSON.stringify(empty, null, 2));
-      return empty;
-    }
-    return JSON.parse(fs.readFileSync(STORE_PATH, 'utf-8')) as Store;
-  } catch (err) {
-    if (memoryStore) return memoryStore;
-    // initialize an in-memory store as a fallback
-    memoryStore = { orders: [], uploadSessions: [], uploadedFiles: [] };
-    return memoryStore;
-  }
-}
-
-function writeStore(store: Store) {
-  ensureDataDir();
-  try {
-    fs.writeFileSync(STORE_PATH, JSON.stringify(store, null, 2));
-  } catch (err) {
-    // fallback to in-memory store when filesystem is not writable
-    memoryStore = store;
-  }
-}
-
 export const db = {
   orders: {
-    insert(value: OrderRecord) {
-      const store = readStore();
-      store.orders.push(value);
-      writeStore(store);
+    async insert(value: OrderRecord) {
+      const { error } = await supabaseAdmin.from('orders').insert({
+        id: value.id,
+        order_number: value.orderNumber,
+        status: value.status,
+        payment_method: value.paymentMethod,
+        locale: value.locale,
+        customer_name: value.customerName,
+        customer_phone: value.customerPhone,
+        customer_email: value.customerEmail,
+        customer_city: value.customerCity,
+        customer_address: value.customerAddress,
+        notes: value.notes,
+        items: JSON.parse(value.itemsJson),
+        file_ids: value.fileIdsJson ? JSON.parse(value.fileIdsJson) : [],
+        total_amount: value.totalAmount,
+        created_at: value.createdAt,
+      });
+      if (error) throw new Error(error.message);
     },
-    findByOrderNumber(orderNumber: string) {
-      const store = readStore();
-      return store.orders.find((o) => o.orderNumber === orderNumber) ?? null;
-    },
-    list() {
-      return readStore().orders;
-    },
-  },
-  uploadSessions: {
-    insert(value: UploadSessionRecord) {
-      const store = readStore();
-      store.uploadSessions.push(value);
-      writeStore(store);
-    },
-    findByToken(token: string) {
-      const store = readStore();
-      const now = new Date().toISOString();
-      return (
-        store.uploadSessions.find(
-          (s) => s.token === token && s.expiresAt > now,
-        ) ?? null
-      );
-    },
-    incrementUploadCount(id: string) {
-      const store = readStore();
-      const session = store.uploadSessions.find((s) => s.id === id);
-      if (session) {
-        session.uploadCount += 1;
-        writeStore(store);
+
+    async findByOrderNumber(orderNumber: string) {
+      const { data, error } = await supabaseAdmin
+        .from('orders')
+        .select('*')
+        .eq('order_number', orderNumber)
+        .single();
+      if (error) {
+        if (error.code === 'PGRST116') return null;
+        throw new Error(error.message);
       }
+      return data as OrderRecord | null;
+    },
+
+    async list() {
+      const { data, error } = await supabaseAdmin
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw new Error(error.message);
+      return data as OrderRecord[];
     },
   },
-  uploadedFiles: {
-    insert(value: UploadedFileRecord) {
-      const store = readStore();
-      store.uploadedFiles.push(value);
-      writeStore(store);
+
+  uploadSessions: {
+    async insert(value: UploadSessionRecord) {
+      const { error } = await supabaseAdmin.from('upload_sessions').insert({
+        id: value.id,
+        token: value.token,
+        expires_at: value.expiresAt,
+        upload_count: value.uploadCount,
+        created_at: value.createdAt,
+      });
+      if (error) throw new Error(error.message);
     },
-    findById(id: string) {
-      const store = readStore();
-      return store.uploadedFiles.find((f) => f.id === id) ?? null;
+
+    async findByToken(token: string) {
+      const { data, error } = await supabaseAdmin
+        .from('upload_sessions')
+        .select('*')
+        .eq('token', token)
+        .single();
+      if (error) {
+        if (error.code === 'PGRST116') return null;
+        throw new Error(error.message);
+      }
+      if (!data) return null;
+      if (new Date(data.expires_at) <= new Date()) return null;
+      return data as UploadSessionRecord;
+    },
+
+    async incrementUploadCount(id: string) {
+      // read current count and update (not fully atomic but acceptable for most cases)
+      const { data, error: selErr } = await supabaseAdmin
+        .from('upload_sessions')
+        .select('upload_count')
+        .eq('id', id)
+        .single();
+      if (selErr) throw new Error(selErr.message);
+      const current = (data?.upload_count as number) || 0;
+      const { error } = await supabaseAdmin
+        .from('upload_sessions')
+        .update({ upload_count: current + 1 })
+        .eq('id', id);
+      if (error) throw new Error(error.message);
+    },
+  },
+
+  uploadedFiles: {
+    async insert(value: UploadedFileRecord) {
+      const { error } = await supabaseAdmin.from('uploaded_files').insert({
+        id: value.id,
+        session_id: value.sessionId,
+        original_name: value.originalName,
+        stored_name: value.storedName,
+        mime_type: value.mimeType,
+        size: value.size,
+        created_at: value.createdAt,
+      });
+      if (error) throw new Error(error.message);
+    },
+
+    async findById(id: string) {
+      const { data, error } = await supabaseAdmin
+        .from('uploaded_files')
+        .select('*')
+        .eq('id', id)
+        .single();
+      if (error) {
+        if (error.code === 'PGRST116') return null;
+        throw new Error(error.message);
+      }
+      return data as UploadedFileRecord | null;
     },
   },
 };
