@@ -1,23 +1,23 @@
-import fs from "fs";
-import path from "path";
-import { nanoid } from "nanoid";
+import fs from 'fs';
+import path from 'path';
+import { nanoid } from 'nanoid';
 
-const DATA_DIR = path.join(process.cwd(), "data");
+const DATA_DIR = path.join(process.cwd(), 'data');
 
 export type OrderStatus =
-  | "pending"
-  | "confirmed"
-  | "printing"
-  | "ready"
-  | "delivered"
-  | "cancelled";
+  | 'pending'
+  | 'confirmed'
+  | 'printing'
+  | 'ready'
+  | 'delivered'
+  | 'cancelled';
 
 export interface OrderRecord {
   id: string;
   orderNumber: string;
   status: OrderStatus;
-  paymentMethod: "cod";
-  locale: "mk" | "en";
+  paymentMethod: 'cod';
+  locale: 'mk' | 'en';
   customerName: string;
   customerPhone: string;
   customerEmail: string | null;
@@ -54,7 +54,10 @@ interface Store {
   uploadedFiles: UploadedFileRecord[];
 }
 
-const STORE_PATH = path.join(DATA_DIR, "store.json");
+const STORE_PATH = path.join(DATA_DIR, 'store.json');
+
+// In-memory fallback when filesystem is read-only (serverless platforms)
+let memoryStore: Store | null = null;
 
 function ensureDataDir() {
   if (!fs.existsSync(DATA_DIR)) {
@@ -64,17 +67,33 @@ function ensureDataDir() {
 
 function readStore(): Store {
   ensureDataDir();
-  if (!fs.existsSync(STORE_PATH)) {
-    const empty: Store = { orders: [], uploadSessions: [], uploadedFiles: [] };
-    fs.writeFileSync(STORE_PATH, JSON.stringify(empty, null, 2));
-    return empty;
+  try {
+    if (!fs.existsSync(STORE_PATH)) {
+      const empty: Store = {
+        orders: [],
+        uploadSessions: [],
+        uploadedFiles: [],
+      };
+      fs.writeFileSync(STORE_PATH, JSON.stringify(empty, null, 2));
+      return empty;
+    }
+    return JSON.parse(fs.readFileSync(STORE_PATH, 'utf-8')) as Store;
+  } catch (err) {
+    if (memoryStore) return memoryStore;
+    // initialize an in-memory store as a fallback
+    memoryStore = { orders: [], uploadSessions: [], uploadedFiles: [] };
+    return memoryStore;
   }
-  return JSON.parse(fs.readFileSync(STORE_PATH, "utf-8")) as Store;
 }
 
 function writeStore(store: Store) {
   ensureDataDir();
-  fs.writeFileSync(STORE_PATH, JSON.stringify(store, null, 2));
+  try {
+    fs.writeFileSync(STORE_PATH, JSON.stringify(store, null, 2));
+  } catch (err) {
+    // fallback to in-memory store when filesystem is not writable
+    memoryStore = store;
+  }
 }
 
 export const db = {

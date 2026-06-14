@@ -336,7 +336,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
               className="rounded-full border border-ink-200 bg-white px-3 py-1 text-sm text-ink-600 transition hover:bg-ink-50"
               aria-label={t('close')}
             >
-              ×
+              x
             </button>
           </div>
 
