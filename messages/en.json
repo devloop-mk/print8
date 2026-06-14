@@ -1,0 +1,256 @@
+{
+  "metadata": {
+    "title": "Print 8 — Professional Printing",
+    "description": "Print 8 offers business cards, menus, invitations, t-shirt printing, cups, bags, and personalized gift sets."
+  },
+  "nav": {
+    "home": "Home",
+    "services": "Services",
+    "designs": "Designs",
+    "products": "Products",
+    "about": "About",
+    "contact": "Contact",
+    "faq": "FAQ",
+    "order": "Order",
+    "cart": "Cart",
+    "studio": "Studio"
+  },
+  "home": {
+    "heroTitle": "Your print, our passion",
+    "heroSubtitle": "Print 8 — professional printing services, personalized designs, and custom products.",
+    "heroCta": "Browse services",
+    "heroSecondary": "Create a design",
+    "featuredServices": "Popular services",
+    "featuredDesigns": "Ready-made designs",
+    "featuredProducts": "Products",
+    "whyUs": "Why Print 8?",
+    "whyQuality": "High print quality",
+    "whyQualityDesc": "We use professional equipment and materials for lasting results.",
+    "whyCustom": "Personalization",
+    "whyCustomDesc": "From business cards to gift sets — every project is tailored to you.",
+    "whyDelivery": "Pay on delivery",
+    "whyDeliveryDesc": "Order online, pay when you receive your product.",
+    "viewAll": "View all"
+  },
+  "services": {
+    "title": "Our services",
+    "subtitle": "Complete printing solutions — from business cards to personalized gift sets.",
+    "startingFrom": "from",
+    "orderService": "Order service",
+    "items": {
+      "business-cards": {
+        "title": "Business cards",
+        "description": "Professional business cards with high print quality, various materials and finishes."
+      },
+      "restaurant-menus": {
+        "title": "Restaurant menus",
+        "description": "Elegant menus for restaurants, cafés, and hotels — laminated or plastified."
+      },
+      "laminating": {
+        "title": "Laminating",
+        "description": "Protection and enhancement of documents, posters, and menus with professional laminating."
+      },
+      "color-bw-printing": {
+        "title": "Color & B&W printing",
+        "description": "Documents, brochures, flyers, and posters — in color or black and white."
+      },
+      "plastification": {
+        "title": "Plastification",
+        "description": "Long-lasting protection of your materials with quality plastification."
+      },
+      "t-shirt-printing": {
+        "title": "T-shirt printing",
+        "description": "Custom t-shirt printing — perfect for events, promotions, and gifts."
+      },
+      "cup-printing": {
+        "title": "Cup printing",
+        "description": "Personalized cups and mugs — great for promo or gifts."
+      },
+      "bag-printing": {
+        "title": "Bag printing",
+        "description": "Branded bags for your business or event."
+      },
+      "bookbinding": {
+        "title": "Bookbinding",
+        "description": "Professional binding of documents, theses, catalogs, and books."
+      },
+      "wedding-invitations": {
+        "title": "Wedding invitations",
+        "description": "Elegant invitations for your special day — with personalized design."
+      },
+      "birthday-invitations": {
+        "title": "Birthday invitations",
+        "description": "Creative birthday invitations — for kids and adults."
+      },
+      "gift-sets": {
+        "title": "Personalized gift sets",
+        "description": "Complete gift sets with your brand or message."
+      }
+    }
+  },
+  "designs": {
+    "title": "Designs",
+    "subtitle": "Choose a ready-made template or create your own design in our studio.",
+    "createOwn": "Create your own design",
+    "useTemplate": "Use template",
+    "allCategories": "All categories",
+    "categories": {
+      "business-cards": "Business cards",
+      "wedding": "Wedding",
+      "birthday": "Birthday",
+      "menus": "Menus",
+      "general": "General"
+    }
+  },
+  "studio": {
+    "title": "Design studio",
+    "subtitle": "Create your design — add text, images, and save it for ordering.",
+    "addText": "Add text",
+    "addImage": "Add image",
+    "textPlaceholder": "Enter text...",
+    "fontSize": "Size",
+    "textColor": "Color",
+    "clear": "Clear",
+    "saveDesign": "Save design",
+    "addToCart": "Add to cart",
+    "uploadHint": "We accept JPG, PNG, and PDF (max 10MB)",
+    "saved": "Design saved!",
+    "productType": "Product type",
+    "selectTemplate": "Select template"
+  },
+  "products": {
+    "title": "Products",
+    "subtitle": "Browse ready-made products or customize t-shirts, cups, bags, and more.",
+    "customize": "Customize",
+    "orderAsIs": "Order as shown",
+    "startingFrom": "from",
+    "types": {
+      "t-shirt": "T-shirts",
+      "mug": "Mugs",
+      "cup": "Cups",
+      "bag": "Bags",
+      "gift-set": "Gift sets"
+    },
+    "customizer": {
+      "title": "Customize product",
+      "selectColor": "Select color",
+      "selectSize": "Select size",
+      "uploadDesign": "Upload design",
+      "quantity": "Quantity",
+      "preview": "Preview"
+    }
+  },
+  "about": {
+    "title": "About Print 8",
+    "subtitle": "Your trusted partner for professional printing.",
+    "story": "Print 8 is a company dedicated to high-quality printing and personalized products. With modern equipment and experience, we turn your ideas into reality — from simple business cards to complex gift sets.",
+    "mission": "Our mission",
+    "missionText": "To provide accessible, quality printing services with a focus on customer satisfaction and fast delivery.",
+    "values": "Our values",
+    "quality": "Quality",
+    "qualityDesc": "Every project gets our full attention.",
+    "speed": "Speed",
+    "speedDesc": "Efficient processing without compromising quality.",
+    "trust": "Trust",
+    "trustDesc": "Pay on delivery — no risk for you."
+  },
+  "contact": {
+    "title": "Contact",
+    "subtitle": "Get in touch — we'll respond as soon as possible.",
+    "phone": "Phone",
+    "email": "Email",
+    "address": "Address",
+    "hours": "Working hours",
+    "hoursValue": "Mon–Fri: 09:00–17:00, Sat: 09:00–13:00",
+    "addressValue": "Skopje, North Macedonia",
+    "phoneValue": "+389 XX XXX XXX",
+    "emailValue": "info@print8.mk",
+    "formTitle": "Send a message",
+    "name": "Full name",
+    "message": "Message",
+    "send": "Send",
+    "sent": "Message sent!"
+  },
+  "faq": {
+    "title": "Frequently asked questions",
+    "items": {
+      "payment": {
+        "q": "How does payment work?",
+        "a": "We work exclusively with payment on delivery. You order online and pay when you receive the product."
+      },
+      "formats": {
+        "q": "What file formats do you accept?",
+        "a": "We accept PDF, JPG, and PNG. For best results, use at least 300 DPI."
+      },
+      "delivery": {
+        "q": "How long does delivery take?",
+        "a": "Standard delivery is 3–5 business days. For urgent orders, contact us."
+      },
+      "custom": {
+        "q": "Can I create my own design?",
+        "a": "Yes! Use our design studio or upload your file when ordering."
+      },
+      "minimum": {
+        "q": "Is there a minimum quantity?",
+        "a": "It depends on the service. Business cards minimum is 100 pieces, t-shirts — 1 piece."
+      }
+    }
+  },
+  "cart": {
+    "title": "Cart",
+    "empty": "Your cart is empty.",
+    "continueShopping": "Continue shopping",
+    "quantity": "Qty",
+    "remove": "Remove",
+    "subtotal": "Subtotal",
+    "total": "Total",
+    "checkout": "Checkout",
+    "itemTypes": {
+      "service": "Service",
+      "design": "Design",
+      "product": "Product"
+    }
+  },
+  "checkout": {
+    "title": "Checkout",
+    "subtitle": "Fill in your details. Payment is made on delivery.",
+    "customerInfo": "Delivery details",
+    "fullName": "Full name",
+    "phone": "Phone",
+    "email": "Email (optional)",
+    "city": "City",
+    "address": "Address",
+    "notes": "Notes",
+    "notesPlaceholder": "Additional delivery or print instructions...",
+    "paymentMethod": "Payment method",
+    "cod": "Payment on delivery",
+    "codDesc": "Pay for your products when they arrive.",
+    "uploadFiles": "Upload files",
+    "uploadHint": "Upload your designs (JPG, PNG, PDF — max 10MB)",
+    "placeOrder": "Place order",
+    "processing": "Processing...",
+    "required": "Required field",
+    "invalidPhone": "Enter a valid phone number"
+  },
+  "orderSuccess": {
+    "title": "Order received!",
+    "subtitle": "Thank you. We'll contact you soon to confirm.",
+    "orderNumber": "Order number",
+    "backHome": "Back to home"
+  },
+  "common": {
+    "learnMore": "Learn more",
+    "from": "from",
+    "mkd": "MKD",
+    "loading": "Loading...",
+    "error": "Something went wrong. Please try again.",
+    "uploadError": "Upload failed. Check your file.",
+    "uploadSuccess": "File uploaded."
+  },
+  "footer": {
+    "tagline": "Professional printing and personalized products.",
+    "quickLinks": "Quick links",
+    "contact": "Contact",
+    "rights": "All rights reserved."
+  }
+}
