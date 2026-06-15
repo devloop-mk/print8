@@ -9,7 +9,7 @@ import { Footer } from "@/components/layout/Footer";
 import { CartProvider } from "@/components/cart/CartProvider";
 import { SiteAnalytics } from "@/components/analytics/SiteAnalytics";
 import { NavigationProgress } from "@/components/navigation/NavigationProgress";
-import { buildPageMetadata, defaultOgImageUrl } from "@/lib/seo/metadata";
+import { buildPageMetadata, buildOgImageUrl } from "@/lib/seo/metadata";
 import "@/app/globals.css";
 
 const inter = Inter({
@@ -33,7 +33,13 @@ export async function generateMetadata({
     locale: locale as Locale,
     title: t("title"),
     description: t("description"),
-    image: defaultOgImageUrl(locale as Locale),
+    image: buildOgImageUrl({
+      locale: locale as Locale,
+      title: t("ogImageTitle"),
+      description: t("ogImageDescription"),
+      subtitle: t("ogImageSubtitle"),
+      badge: t("ogImageBadge"),
+    }),
   });
 }
 

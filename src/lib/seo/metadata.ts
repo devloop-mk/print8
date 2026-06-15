@@ -36,7 +36,16 @@ export function buildOgImageUrl(params: {
 }
 
 export function defaultOgImageUrl(locale: Locale) {
-  return absoluteUrl(`/${locale}/opengraph-image`);
+  return buildOgImageUrl({
+    locale,
+    title: 'Print 8',
+    description:
+      locale === 'mk'
+        ? 'Визит карти, покани, маици, чашки и персонализирани производи.'
+        : 'Business cards, invitations, apparel, mugs and personalized products.',
+    badge: locale === 'mk' ? 'Печатница' : 'Print shop',
+    subtitle: locale === 'mk' ? 'Професионално печатење' : 'Professional printing',
+  });
 }
 
 export function buildPageMetadata({

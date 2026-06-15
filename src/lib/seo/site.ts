@@ -3,8 +3,16 @@ import type { Locale } from '@/i18n/routing';
 const DEFAULT_SITE_URL = 'https://print8.mk';
 
 export function getSiteUrl() {
-  const url = process.env.NEXT_PUBLIC_SITE_URL?.trim() || DEFAULT_SITE_URL;
-  return url.replace(/\/$/, '');
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (explicit) {
+    return explicit.replace(/\/$/, '');
+  }
+
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL.replace(/\/$/, '')}`;
+  }
+
+  return DEFAULT_SITE_URL;
 }
 
 export function absoluteUrl(path: string) {
