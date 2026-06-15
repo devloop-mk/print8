@@ -1,21 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import { products, productTypes } from '@/lib/data/catalog';
 import { formatPrice } from '@/lib/utils';
 import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Shirt } from 'lucide-react';
-import { useCart } from '@/components/cart/CartProvider';
-import type { ProductType, Product } from '@/lib/data/catalog';
+import { ProductImageCarousel } from '@/components/products/ProductImageCarousel';
 
 export function ProductsCatalog() {
   const t = useTranslations('products');
+  const tp = useTranslations('products.types');
   const locale = useLocale();
-  const [typeFilter, setTypeFilter] = useState<ProductType | 'all'>('all');
+  const [typeFilter, setTypeFilter] = useState<(typeof productTypes)[number] | 'all'>('all');
+  const [previewColors, setPreviewColors] = useState<Record<string, string>>({});
 
   const filtered =
     typeFilter === 'all'
@@ -53,75 +51,73 @@ export function ProductsCatalog() {
       </div>
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {filtered.map((product) => (
-          <Card
-            key={product.id}
-            className="overflow-hidden p-0"
-          >
-            <div className="relative flex aspect-square items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100">
-              {product.image ? (
-                <Image
-                  src={product.image}
-                  alt={t(`types.${product.type}`)}
-                  fill
-                  sizes="256px"
-                  className="object-contain"
-                />
-              ) : (
-                <Shirt className="h-20 w-20 text-brand-300" />
-              )}
-            </div>
-            <div className="p-4">
-              <p className="font-medium text-ink-900">
-                {t(`types.${product.type}`)}
-              </p>
-              <p className="mt-1 text-sm text-brand-600">
-                {t('startingFrom')} {formatPrice(product.basePrice, locale)}
-              </p>
-              <div className="mt-4 flex gap-2">
-                <Link
-                  href={`/products/${product.id}`}
-                  className="flex-1"
-                >
-                  <Button
-                    size="sm"
-                    className="w-full"
-                  >
-                    {t('viewProduct')}
-                  </Button>
-                </Link>
-                <ProductQuickOrder product={product} />
-              </div>
-            </div>
-          </Card>
-        ))}
+        {filtered.map((product) => {
+          const defaultColor = product.colors?.[0] ?? '#ffffff';
+          const cardColor = previewColors[product.id] ?? defaultColor;
+
+          return (
+            <Link
+              key={product.id}
+              href={`/products/${product.id}`}
+              className="group block transition hover:-translate-y-0.5"
+            >
+              <Card className="overflow-hidden p-0 transition group-hover:shadow-md">
+                <div className="p-4 pb-0">
+                  <ProductImageCarousel
+                    product={product}
+                    color={cardColor}
+                    typeLabel={tp(product.type)}
+                    stopLinkNavigation
+                  />
+                </div>
+                <div className="p-4">
+                  <p className="font-medium text-ink-900 group-hover:text-brand-700">
+                    {t(`types.${product.type}`)}
+                  </p>
+                  <p className="mt-1 text-sm text-brand-600">
+                    {t('startingFrom')} {formatPrice(product.basePrice, locale)}
+                  </p>
+                  {product.colors && product.colors.length > 0 && (
+                    <div
+                      className="mt-3 flex flex-wrap gap-1.5"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                      onKeyDown={(e) => e.stopPropagation()}
+                    >
+                      {product.colors.map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setPreviewColors((prev) => ({
+                              ...prev,
+                              [product.id]: c,
+                            }));
+                          }}
+                          className={`h-5 w-5 rounded-full border-2 transition ${
+                            cardColor === c
+                              ? 'border-brand-600 ring-2 ring-brand-200'
+                              : 'border-ink-200 hover:border-ink-300'
+                          }`}
+                          style={{ backgroundColor: c }}
+                          aria-label={c}
+                        />
+                      ))}
+                    </div>
+                  )}
+                  <p className="mt-3 text-sm font-medium text-brand-600">
+                    {t('viewProduct')} →
+                  </p>
+                </div>
+              </Card>
+            </Link>
+          );
+        })}
       </div>
     </>
-  );
-}
-
-function ProductQuickOrder({ product }: { product: Product }) {
-  const t = useTranslations('products');
-  const { addItem } = useCart();
-  const tp = useTranslations('products.types');
-
-  function handleOrder() {
-    addItem({
-      type: 'product',
-      name: tp(product.type),
-      price: product.basePrice,
-      quantity: 1,
-      metadata: { productId: product.id },
-    });
-  }
-
-  return (
-    <Button
-      size="sm"
-      variant="outline"
-      onClick={handleOrder}
-    >
-      {t('orderAsIs')}
-    </Button>
   );
 }

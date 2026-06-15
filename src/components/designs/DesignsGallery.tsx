@@ -6,7 +6,6 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import { designTemplates, designCategories } from '@/lib/data/catalog';
 import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
 import { Palette } from 'lucide-react';
 import type { DesignCategory } from '@/lib/data/catalog';
 
@@ -21,9 +20,15 @@ export function DesignsGallery() {
 
   return (
     <>
-      <div className="mb-8 flex flex-wrap gap-2">
+      <div
+        className="mb-8 flex flex-wrap gap-2"
+        role="tablist"
+        aria-label={t('allCategories')}
+      >
         <button
           type="button"
+          role="tab"
+          aria-selected={category === 'all'}
           onClick={() => setCategory('all')}
           className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
             category === 'all'
@@ -37,6 +42,8 @@ export function DesignsGallery() {
           <button
             key={cat}
             type="button"
+            role="tab"
+            aria-selected={category === cat}
             onClick={() => setCategory(cat)}
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
               category === cat
@@ -51,49 +58,40 @@ export function DesignsGallery() {
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((design) => (
-          <Card
+          <Link
             key={design.id}
-            className="overflow-hidden p-0"
+            href={`/designs/${design.id}`}
+            className="group block"
           >
-            <div className="relative aspect-[4/3] items-center justify-center bg-gradient-to-br from-ink-100 to-ink-200 flex">
-              {design.image ? (
-                <div className="relative h-full w-full">
-                  <Image
-                    src={design.image}
-                    alt={t(`categories.${design.category}`) || design.id}
-                    fill
-                    sizes="320px"
-                    className="object-cover"
-                  />
-                </div>
-              ) : (
-                <Palette className="h-16 w-16 text-ink-400" />
-              )}
-            </div>
-            <div className="p-4">
-              <p className="font-medium text-ink-900">
-                {t(`categories.${design.category}`)}
-              </p>
-              <div className="mt-2 flex flex-wrap gap-1">
-                {design.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded bg-ink-100 px-2 py-0.5 text-xs text-ink-600"
-                  >
-                    {tag}
-                  </span>
-                ))}
+            <Card className="overflow-hidden p-0 transition group-hover:shadow-md">
+              <div className="relative flex aspect-[4/3] items-center justify-center bg-gradient-to-br from-ink-50 to-ink-100">
+                {design.image ? (
+                  <div className="relative h-full w-full">
+                    <Image
+                      src={design.image}
+                      alt={t(`templates.${design.id}`)}
+                      fill
+                      sizes="320px"
+                      className="object-contain p-4 transition group-hover:scale-[1.02]"
+                    />
+                  </div>
+                ) : (
+                  <Palette className="h-16 w-16 text-ink-400" aria-hidden="true" />
+                )}
               </div>
-              <Link href={`/designs/create?template=${design.id}`}>
-                <Button
-                  size="sm"
-                  className="mt-4 w-full"
-                >
-                  {t('useTemplate')}
-                </Button>
-              </Link>
-            </div>
-          </Card>
+              <div className="p-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-brand-600">
+                  {t(`categories.${design.category}`)}
+                </p>
+                <p className="mt-1 font-medium text-ink-900 group-hover:text-brand-700">
+                  {t(`templates.${design.id}`)}
+                </p>
+                <p className="mt-3 text-sm font-medium text-brand-600">
+                  {t('orderWithInfo')} →
+                </p>
+              </div>
+            </Card>
+          </Link>
         ))}
       </div>
     </>

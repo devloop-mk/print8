@@ -15,7 +15,7 @@ export function CheckoutForm() {
   const locale = useLocale();
   const router = useRouter();
   const { items, total, clearCart } = useCart();
-  const { token } = useUploadSession();
+  const { token, loading: uploadLoading, error: uploadSessionError, refreshSession } = useUploadSession();
 
   const [form, setForm] = useState({
     fullName: "",
@@ -155,6 +155,9 @@ export function CheckoutForm() {
           <p className="mb-4 text-sm text-ink-500">{t("uploadHint")}</p>
           <SecureUpload
             token={token}
+            loading={uploadLoading}
+            sessionError={uploadSessionError}
+            onRefreshSession={refreshSession}
             onUpload={(fileId) =>
               setFileIds((prev) => [...prev, fileId])
             }

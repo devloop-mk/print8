@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid';
 import { db } from '../db';
-import { supabaseAdmin } from '@/lib/supabase/client';
+import { getSupabaseAdmin, formatSupabaseError } from '@/lib/supabase/client';
 import sharp from 'sharp';
 
 export const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -12,8 +12,32 @@ export const ALLOWED_MIME_TYPES = [
   'application/pdf',
 ];
 
+function resolveMimeType(file: File): string {
+  if (file.type && ALLOWED_MIME_TYPES.includes(file.type)) {
+    return file.type;
+  }
+
+  const ext = file.name.split('.').pop()?.toLowerCase();
+  const byExt: Record<string, string> = {
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    png: 'image/png',
+    webp: 'image/webp',
+    pdf: 'application/pdf',
+  };
+
+  return byExt[ext ?? ''] ?? file.type;
+}
+
 const SESSION_DURATION_MS = 24 * 60 * 60 * 1000;
-const STORAGE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET!;
+
+function getStorageBucket() {
+  const bucket = process.env.SUPABASE_STORAGE_BUCKET;
+  if (!bucket) {
+    throw new Error('Storage is not configured (SUPABASE_STORAGE_BUCKET)');
+  }
+  return bucket;
+}
 
 export async function createUploadSession(): Promise<{
   sessionId: string;
@@ -30,6 +54,8 @@ export async function createUploadSession(): Promise<{
     expiresAt: expiresAt.toISOString(),
     uploadCount: 0,
     createdAt: now.toISOString(),
+  }).catch((err) => {
+    throw new Error(formatSupabaseError(err));
   });
 
   return { sessionId, token };
@@ -56,18 +82,19 @@ export async function processUpload(
     throw new Error('File too large');
   }
 
-  if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+  const mimeType = resolveMimeType(file);
+  if (!ALLOWED_MIME_TYPES.includes(mimeType)) {
     throw new Error('File type not allowed');
   }
 
   const fileId = nanoid();
-  const ext = file.type === 'application/pdf' ? '.pdf' : '.webp';
+  const ext = mimeType === 'application/pdf' ? '.pdf' : '.webp';
   const storedName = `${fileId}${ext}`;
 
   const arrayBuffer = await file.arrayBuffer();
   let buffer = Buffer.from(arrayBuffer) as unknown as Buffer;
 
-  if (file.type.startsWith('image/')) {
+  if (mimeType.startsWith('image/')) {
     buffer = (await sharp(buffer)
       .rotate()
       .resize(4096, 4096, { fit: 'inside', withoutEnlargement: true })
@@ -75,10 +102,10 @@ export async function processUpload(
       .toBuffer()) as Buffer;
   }
 
-  const { error: uploadError } = await supabaseAdmin.storage
-    .from(STORAGE_BUCKET)
+  const { error: uploadError } = await getSupabaseAdmin().storage
+    .from(getStorageBucket())
     .upload(storedName, buffer, {
-      contentType: file.type.startsWith('image/') ? 'image/webp' : file.type,
+      contentType: mimeType.startsWith('image/') ? 'image/webp' : mimeType,
       cacheControl: '3600',
       upsert: false,
     });
@@ -94,9 +121,11 @@ export async function processUpload(
     sessionId: session.id,
     originalName: file.name.slice(0, 255),
     storedName,
-    mimeType: file.type.startsWith('image/') ? 'image/webp' : file.type,
-    size: file.size,
+    mimeType: mimeType.startsWith('image/') ? 'image/webp' : mimeType,
+    size: Math.max(0, Math.round(Number(file.size))),
     createdAt: now,
+  }).catch((err) => {
+    throw new Error(formatSupabaseError(err));
   });
 
   await db.uploadSessions.incrementUploadCount(session.id);

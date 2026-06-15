@@ -1,4 +1,4 @@
-import { supabaseAdmin } from '@/lib/supabase/client';
+import { getSupabaseAdmin } from '@/lib/supabase/client';
 import { nanoid } from 'nanoid';
 
 export type OrderStatus =
@@ -45,10 +45,46 @@ export interface UploadedFileRecord {
   createdAt: string;
 }
 
+function mapUploadSession(row: {
+  id: string;
+  token: string;
+  expires_at: string;
+  upload_count: number;
+  created_at: string;
+}): UploadSessionRecord {
+  return {
+    id: row.id,
+    token: row.token,
+    expiresAt: row.expires_at,
+    uploadCount: row.upload_count ?? 0,
+    createdAt: row.created_at,
+  };
+}
+
+function mapUploadedFile(row: {
+  id: string;
+  session_id: string;
+  original_name: string;
+  stored_name: string;
+  mime_type: string;
+  size: number;
+  created_at: string;
+}): UploadedFileRecord {
+  return {
+    id: row.id,
+    sessionId: row.session_id,
+    originalName: row.original_name,
+    storedName: row.stored_name,
+    mimeType: row.mime_type,
+    size: row.size,
+    createdAt: row.created_at,
+  };
+}
+
 export const db = {
   orders: {
     async insert(value: OrderRecord) {
-      const { error } = await supabaseAdmin.from('orders').insert({
+      const { error } = await getSupabaseAdmin().from('orders').insert({
         id: value.id,
         order_number: value.orderNumber,
         status: value.status,
@@ -69,7 +105,7 @@ export const db = {
     },
 
     async findByOrderNumber(orderNumber: string) {
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await getSupabaseAdmin()
         .from('orders')
         .select('*')
         .eq('order_number', orderNumber)
@@ -82,7 +118,7 @@ export const db = {
     },
 
     async list() {
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await getSupabaseAdmin()
         .from('orders')
         .select('*')
         .order('created_at', { ascending: false });
@@ -93,7 +129,7 @@ export const db = {
 
   uploadSessions: {
     async insert(value: UploadSessionRecord) {
-      const { error } = await supabaseAdmin.from('upload_sessions').insert({
+      const { error } = await getSupabaseAdmin().from('upload_sessions').insert({
         id: value.id,
         token: value.token,
         expires_at: value.expiresAt,
@@ -104,7 +140,7 @@ export const db = {
     },
 
     async findByToken(token: string) {
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await getSupabaseAdmin()
         .from('upload_sessions')
         .select('*')
         .eq('token', token)
@@ -115,19 +151,19 @@ export const db = {
       }
       if (!data) return null;
       if (new Date(data.expires_at) <= new Date()) return null;
-      return data as UploadSessionRecord;
+      return mapUploadSession(data);
     },
 
     async incrementUploadCount(id: string) {
       // read current count and update (not fully atomic but acceptable for most cases)
-      const { data, error: selErr } = await supabaseAdmin
+      const { data, error: selErr } = await getSupabaseAdmin()
         .from('upload_sessions')
         .select('upload_count')
         .eq('id', id)
         .single();
       if (selErr) throw new Error(selErr.message);
       const current = (data?.upload_count as number) || 0;
-      const { error } = await supabaseAdmin
+      const { error } = await getSupabaseAdmin()
         .from('upload_sessions')
         .update({ upload_count: current + 1 })
         .eq('id', id);
@@ -137,7 +173,7 @@ export const db = {
 
   uploadedFiles: {
     async insert(value: UploadedFileRecord) {
-      const { error } = await supabaseAdmin.from('uploaded_files').insert({
+      const { error } = await getSupabaseAdmin().from('uploaded_files').insert({
         id: value.id,
         session_id: value.sessionId,
         original_name: value.originalName,
@@ -150,7 +186,7 @@ export const db = {
     },
 
     async findById(id: string) {
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await getSupabaseAdmin()
         .from('uploaded_files')
         .select('*')
         .eq('id', id)
@@ -159,7 +195,8 @@ export const db = {
         if (error.code === 'PGRST116') return null;
         throw new Error(error.message);
       }
-      return data as UploadedFileRecord | null;
+      if (!data) return null;
+      return mapUploadedFile(data);
     },
   },
 };

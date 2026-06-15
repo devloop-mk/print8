@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createUploadSession } from "@/lib/upload";
 
 export async function POST() {
   try {
     const session = await createUploadSession();
     return NextResponse.json({ token: session.token });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to create upload session" },
-      { status: 500 },
-    );
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Failed to create upload session";
+    console.error("[upload/session]", message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 

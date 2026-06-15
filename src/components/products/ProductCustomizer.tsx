@@ -8,7 +8,7 @@ import {
   useState,
   type RefObject,
 } from 'react';
-import Image from 'next/image';
+import { flushSync } from 'react-dom';
 import html2canvas from 'html2canvas';
 import { useTranslations, useLocale } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
@@ -29,6 +29,19 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { formatPrice } from '@/lib/utils';
 import {
+  formatProductCartName,
+  restoreSideDesignFromMetadata,
+} from '@/lib/cart/product-cart';
+import { PRODUCT_MOCKUP_INNER_CLASS } from '@/components/products/ProductMockupFrame';
+import {
+  createDefaultSideDesign,
+  sideDesignFromImageTemplate,
+  sideDesignFromRestored,
+  sideDesignFromTextTemplate,
+  type SideDesign,
+  type UploadedFile,
+} from '@/lib/products/design-state';
+import {
   Shirt,
   Type,
   ImageIcon,
@@ -40,42 +53,7 @@ import {
   ArrowDown,
 } from 'lucide-react';
 
-interface UploadedFile {
-  fileId: string;
-  name: string;
-  previewUrl?: string;
-  isImage?: boolean;
-}
-
-interface SideDesign {
-  customText: string;
-  customTextColor: string;
-  customTextSize: number;
-  customTextPosition: { x: number; y: number };
-  uploadedFile: UploadedFile | null;
-  uploadedImageScale: number;
-  uploadedImagePosition: { x: number; y: number };
-  templateImage: string | null;
-  templateScale: number;
-  templatePosition: { x: number; y: number };
-}
-
 type EditorPanel = 'text' | 'photo' | null;
-
-function createDefaultSideDesign(): SideDesign {
-  return {
-    customText: '',
-    customTextColor: '#000000',
-    customTextSize: 18,
-    customTextPosition: { x: 50, y: 30 },
-    uploadedFile: null,
-    uploadedImageScale: 60,
-    uploadedImagePosition: { x: 50, y: 45 },
-    templateImage: null,
-    templateScale: 45,
-    templatePosition: { x: 50, y: 40 },
-  };
-}
 
 function isImageFile(fileName: string) {
   return /\.(jpe?g|png|webp|gif|avif|svg)$/i.test(fileName);
@@ -85,163 +63,175 @@ function useDraggablePosition(
   position: { x: number; y: number },
   onChange: (pos: { x: number; y: number }) => void,
 ) {
-  const dragPointerId = useRef<number | null>(null);
   const elementRef = useRef<HTMLDivElement | null>(null);
-  const [dragStart, setDragStart] = useState<{
-    startX: number;
-    startY: number;
-  } | null>(null);
+  const positionRef = useRef(position);
+  const dragStartRef = useRef<{ x: number; y: number } | null>(null);
+  const draggingRef = useRef(false);
+
+  positionRef.current = position;
+
+  const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    draggingRef.current = true;
+    dragStartRef.current = { x: event.clientX, y: event.clientY };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!draggingRef.current || !dragStartRef.current) return;
+    event.preventDefault();
+    const deltaX = event.clientX - dragStartRef.current.x;
+    const deltaY = event.clientY - dragStartRef.current.y;
+    dragStartRef.current = { x: event.clientX, y: event.clientY };
+
+    const parent = elementRef.current?.parentElement;
+    if (!parent) return;
+    const parentRect = parent.getBoundingClientRect();
+    const currentX = (positionRef.current.x / 100) * parentRect.width;
+    const currentY = (positionRef.current.y / 100) * parentRect.height;
+    const nextX = Math.min(Math.max(currentX + deltaX, 0), parentRect.width);
+    const nextY = Math.min(Math.max(currentY + deltaY, 0), parentRect.height);
+    onChange({
+      x: (nextX / parentRect.width) * 100,
+      y: (nextY / parentRect.height) * 100,
+    });
+  };
+
+  const endDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (draggingRef.current) {
+      draggingRef.current = false;
+      dragStartRef.current = null;
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+    }
+  };
 
   return {
     ref: elementRef,
-    onPointerDown: (event: React.PointerEvent<HTMLDivElement>) => {
-      dragPointerId.current = event.pointerId;
-      event.currentTarget.setPointerCapture(event.pointerId);
-      setDragStart({ startX: event.clientX, startY: event.clientY });
-    },
-    onPointerMove: (event: React.PointerEvent<HTMLDivElement>) => {
-      if (!dragStart || dragPointerId.current !== event.pointerId) return;
-      const deltaX = event.clientX - dragStart.startX;
-      const deltaY = event.clientY - dragStart.startY;
-      const parent = elementRef.current?.parentElement;
-      if (!parent) return;
-      const parentRect = parent.getBoundingClientRect();
-      const currentX = (position.x / 100) * parentRect.width;
-      const currentY = (position.y / 100) * parentRect.height;
-      const nextX = Math.min(Math.max(currentX + deltaX, 0), parentRect.width);
-      const nextY = Math.min(Math.max(currentY + deltaY, 0), parentRect.height);
-      onChange({
-        x: (nextX / parentRect.width) * 100,
-        y: (nextY / parentRect.height) * 100,
-      });
-      setDragStart({ startX: event.clientX, startY: event.clientY });
-    },
-    onPointerUp: (event: React.PointerEvent<HTMLDivElement>) => {
-      if (dragPointerId.current === event.pointerId) {
-        event.currentTarget.releasePointerCapture(event.pointerId);
-        dragPointerId.current = null;
-        setDragStart(null);
-      }
-    },
-    onPointerCancel: (event: React.PointerEvent<HTMLDivElement>) => {
-      if (dragPointerId.current === event.pointerId) {
-        event.currentTarget.releasePointerCapture(event.pointerId);
-        dragPointerId.current = null;
-        setDragStart(null);
-      }
-    },
+    onPointerDown,
+    onPointerMove,
+    onPointerUp: endDrag,
+    onPointerCancel: endDrag,
   };
 }
 
-function ProductPreview({
-  mockupImage,
-  sideDesign,
-  showPrintArea,
-  containerRef,
-  interactive,
-  typeLabel,
+function useScaleResize(
+  scale: number,
+  onScaleChange: (scale: number) => void,
+  min = 15,
+  max = 120,
+) {
+  const draggingRef = useRef(false);
+  const startRef = useRef({ pointerX: 0, pointerY: 0, scale: 0 });
+
+  const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    draggingRef.current = true;
+    startRef.current = {
+      pointerX: event.clientX,
+      pointerY: event.clientY,
+      scale,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!draggingRef.current) return;
+    event.preventDefault();
+    const delta =
+      event.clientX - startRef.current.pointerX +
+      (event.clientY - startRef.current.pointerY);
+    const next = Math.min(
+      max,
+      Math.max(min, Math.round(startRef.current.scale + delta * 0.15)),
+    );
+    onScaleChange(next);
+  };
+
+  const endDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (draggingRef.current) {
+      draggingRef.current = false;
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+    }
+  };
+
+  return {
+    onPointerDown,
+    onPointerMove,
+    onPointerUp: endDrag,
+    onPointerCancel: endDrag,
+  };
+}
+
+function ResizableImageOverlay({
+  src,
+  alt,
+  scale,
+  position,
+  onScaleChange,
+  onPositionChange,
+  hideControls,
 }: {
-  mockupImage: string;
-  sideDesign: SideDesign;
-  showPrintArea?: boolean;
-  containerRef?: RefObject<HTMLDivElement | null>;
-  interactive?: boolean;
-  typeLabel: string;
+  src: string;
+  alt: string;
+  scale: number;
+  position: { x: number; y: number };
+  onScaleChange: (scale: number) => void;
+  onPositionChange: (pos: { x: number; y: number }) => void;
+  hideControls?: boolean;
 }) {
-  const textDrag = useDraggablePosition(
-    sideDesign.customTextPosition,
-    () => {},
-  );
-  const imageDrag = useDraggablePosition(
-    sideDesign.uploadedImagePosition,
-    () => {},
-  );
+  const drag = useDraggablePosition(position, onPositionChange);
+  const resize = useScaleResize(scale, onScaleChange);
 
   return (
     <div
-      ref={containerRef}
-      className="relative flex aspect-square w-full max-w-sm items-center justify-center rounded-2xl bg-gradient-to-br from-ink-50 to-ink-100 shadow-inner"
+      ref={drag.ref}
+      className="absolute cursor-grab active:cursor-grabbing"
+      style={{
+        left: `${position.x}%`,
+        top: `${position.y}%`,
+        width: `${scale}%`,
+        transform: 'translate(-50%, -50%)',
+        touchAction: 'none',
+      }}
+      onPointerDown={drag.onPointerDown}
+      onPointerMove={drag.onPointerMove}
+      onPointerUp={drag.onPointerUp}
+      onPointerCancel={drag.onPointerCancel}
     >
-      <div className="relative h-[85%] w-[85%]">
-        {mockupImage ? (
-          <Image
-            src={mockupImage}
-            alt={typeLabel}
-            fill
-            sizes="(max-width: 768px) 100vw, 400px"
-            className="object-contain"
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt={alt}
+        draggable={false}
+        crossOrigin="anonymous"
+        className="pointer-events-none block w-full rounded-lg object-contain shadow-sm"
+      />
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label="Resize"
+        className={`absolute -bottom-2 -right-2 flex h-6 w-6 cursor-se-resize items-center justify-center rounded-full border-2 border-white bg-brand-600 shadow-md ${hideControls ? 'hidden' : ''}`}
+        style={{ touchAction: 'none' }}
+        onPointerDown={resize.onPointerDown}
+        onPointerMove={resize.onPointerMove}
+        onPointerUp={resize.onPointerUp}
+        onPointerCancel={resize.onPointerCancel}
+      >
+        <svg viewBox="0 0 10 10" className="h-3 w-3 text-white" aria-hidden>
+          <path
+            d="M9 1v8H1"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
           />
-        ) : (
-          <div className="flex h-full items-center justify-center">
-            <Shirt className="h-24 w-24 text-ink-300" />
-          </div>
-        )}
-
-        {showPrintArea && (
-          <div className="pointer-events-none absolute inset-[12%] rounded-xl border-2 border-dashed border-brand-300/50" />
-        )}
-
-        {sideDesign.templateImage && (
-          <div
-            className="pointer-events-none absolute"
-            style={{
-              left: `${sideDesign.templatePosition.x}%`,
-              top: `${sideDesign.templatePosition.y}%`,
-              width: `${sideDesign.templateScale}%`,
-              transform: 'translate(-50%, -50%)',
-            }}
-          >
-            <img
-              src={sideDesign.templateImage}
-              alt=""
-              className="block w-full object-contain"
-            />
-          </div>
-        )}
-
-        {sideDesign.uploadedFile?.isImage && sideDesign.uploadedFile.previewUrl && (
-          <div
-            ref={interactive ? imageDrag.ref : undefined}
-            className={`absolute ${interactive ? 'cursor-move touch-none' : 'pointer-events-none'}`}
-            style={{
-              left: `${sideDesign.uploadedImagePosition.x}%`,
-              top: `${sideDesign.uploadedImagePosition.y}%`,
-              width: `${sideDesign.uploadedImageScale}%`,
-              transform: 'translate(-50%, -50%)',
-            }}
-            onPointerDown={interactive ? imageDrag.onPointerDown : undefined}
-            onPointerMove={interactive ? imageDrag.onPointerMove : undefined}
-            onPointerUp={interactive ? imageDrag.onPointerUp : undefined}
-            onPointerCancel={interactive ? imageDrag.onPointerCancel : undefined}
-          >
-            <img
-              src={sideDesign.uploadedFile.previewUrl}
-              alt={sideDesign.uploadedFile.name}
-              className="block w-full rounded-lg object-contain shadow-sm"
-            />
-          </div>
-        )}
-
-        {sideDesign.customText && (
-          <div
-            ref={interactive ? textDrag.ref : undefined}
-            style={{
-              color: sideDesign.customTextColor,
-              left: `${sideDesign.customTextPosition.x}%`,
-              top: `${sideDesign.customTextPosition.y}%`,
-              transform: 'translate(-50%, -50%)',
-              fontSize: `${sideDesign.customTextSize}px`,
-              textShadow: '0 1px 4px rgba(0,0,0,0.25)',
-            }}
-            className={`absolute max-w-[80%] select-none text-center font-semibold leading-tight ${interactive ? 'cursor-move touch-none' : 'pointer-events-none'}`}
-            onPointerDown={interactive ? textDrag.onPointerDown : undefined}
-            onPointerMove={interactive ? textDrag.onPointerMove : undefined}
-            onPointerUp={interactive ? textDrag.onPointerUp : undefined}
-            onPointerCancel={interactive ? textDrag.onPointerCancel : undefined}
-          >
-            {sideDesign.customText}
-          </div>
-        )}
+        </svg>
       </div>
     </div>
   );
@@ -253,11 +243,12 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   const locale = useLocale();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { addItem } = useCart();
-  const { token } = useUploadSession();
+  const { addItem, updateItem, items: cartItems } = useCart();
+  const { token, loading: uploadLoading, error: uploadError, refreshSession } = useUploadSession();
 
   const productId = searchParams.get('id');
   const designId = searchParams.get('design');
+  const editCartItemId = searchParams.get('edit');
 
   const product = useMemo(
     () =>
@@ -273,7 +264,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   const hasTwoSides = product ? productSupportsSides(product) : false;
 
   const [color, setColor] = useState(product?.colors?.[0] || '#ffffff');
-  const [size, setSize] = useState(product?.sizes?.[0] || 'M');
+  const [size, setSize] = useState(product?.sizes?.[0] ?? '');
   const [quantity, setQuantity] = useState(1);
   const [activeSide, setActiveSide] = useState<ProductSide>('front');
   const [sideDesigns, setSideDesigns] = useState<
@@ -285,8 +276,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   const [activePanel, setActivePanel] = useState<EditorPanel>(null);
 
   const previewRef = useRef<HTMLDivElement | null>(null);
-  const frontCaptureRef = useRef<HTMLDivElement | null>(null);
-  const backCaptureRef = useRef<HTMLDivElement | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
 
   const currentDesign = sideDesigns[activeSide];
 
@@ -301,21 +291,55 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   );
 
   useEffect(() => {
-    if (!designId) return;
+    if (!designId || editCartItemId) return;
     const template = getProductDesignTemplate(designId);
     if (!template) return;
 
-    setSideDesigns((prev) => ({
-      ...prev,
-      [template.defaultSide]: {
-        ...prev[template.defaultSide],
-        templateImage: template.image,
-        templateScale: template.scale ?? 45,
-        templatePosition: template.position ?? { x: 50, y: 40 },
-      },
-    }));
-    setActiveSide(template.defaultSide);
-  }, [designId]);
+    const side = template.defaultSide;
+    const textDesign = sideDesignFromTextTemplate(template);
+    const imageDesign = sideDesignFromImageTemplate(template);
+
+    if (textDesign) {
+      setSideDesigns((prev) => ({
+        ...prev,
+        [side]: textDesign,
+      }));
+    } else if (imageDesign) {
+      setSideDesigns((prev) => ({
+        ...prev,
+        [side]: imageDesign,
+      }));
+    }
+
+    setActiveSide(side);
+  }, [designId, editCartItemId]);
+
+  useEffect(() => {
+    if (!editCartItemId || !product) return;
+    const cartItem = cartItems.find((i) => i.id === editCartItemId);
+    if (!cartItem?.metadata) return;
+
+    const meta = cartItem.metadata;
+    if (typeof meta.color === 'string') setColor(meta.color);
+    if (typeof meta.size === 'string') setSize(meta.size);
+    if (typeof cartItem.quantity === 'number') setQuantity(cartItem.quantity);
+
+    const restored: Record<ProductSide, SideDesign> = {
+      front: createDefaultSideDesign(),
+      back: createDefaultSideDesign(),
+    };
+
+    for (const side of sides) {
+      const data = restoreSideDesignFromMetadata(meta, side);
+      if (!data) continue;
+      restored[side] = sideDesignFromRestored(data);
+    }
+
+    setSideDesigns(restored);
+    if (typeof meta.activeSide === 'string' && (meta.activeSide === 'front' || meta.activeSide === 'back')) {
+      setActiveSide(meta.activeSide);
+    }
+  }, [editCartItemId, product, cartItems, sides]);
 
   const mockupImage = product
     ? getProductMockup(product, color, activeSide)
@@ -326,10 +350,15 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   ): Promise<string | undefined> {
     if (!ref.current) return undefined;
     try {
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      });
       const canvas = await html2canvas(ref.current, {
-        backgroundColor: null,
-        scale: window.devicePixelRatio || 1,
+        backgroundColor: '#f4f4f5',
+        scale: 2,
         useCORS: true,
+        allowTaint: true,
+        logging: false,
       });
       return canvas.toDataURL('image/png');
     } catch {
@@ -337,20 +366,53 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     }
   }
 
+  async function captureAllSidePreviews(): Promise<{
+    front?: string;
+    back?: string;
+  }> {
+    const results: { front?: string; back?: string } = {};
+    const originalSide = activeSide;
+
+    for (const side of sides) {
+      flushSync(() => setActiveSide(side));
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      });
+      const captured = await capturePreview(previewRef);
+      if (captured) results[side] = captured;
+    }
+
+    flushSync(() => setActiveSide(originalSide));
+    return results;
+  }
+
   async function handleAddToCart() {
-    const frontPreview = hasTwoSides
-      ? await capturePreview(frontCaptureRef)
-      : await capturePreview(previewRef);
-    const backPreview = hasTwoSides
-      ? await capturePreview(backCaptureRef)
-      : undefined;
+    flushSync(() => setIsCapturing(true));
+
+    let frontPreview: string | undefined;
+    let backPreview: string | undefined;
+
+    try {
+      if (hasTwoSides) {
+        const captured = await captureAllSidePreviews();
+        frontPreview = captured.front;
+        backPreview = captured.back;
+      } else {
+        frontPreview = await capturePreview(previewRef);
+      }
+    } finally {
+      flushSync(() => setIsCapturing(false));
+    }
 
     const metadata: Record<string, string | number | boolean> = {
       productId: product?.id ?? '',
       color,
-      size,
+      isCustomized: true,
       activeSide,
     };
+    if (product?.sizes?.length && size) {
+      metadata.size = size;
+    }
 
     for (const side of sides) {
       const d = sideDesigns[side];
@@ -360,31 +422,54 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       metadata[`${prefix}CustomTextSize`] = d.customTextSize;
       metadata[`${prefix}CustomTextPositionX`] = d.customTextPosition.x;
       metadata[`${prefix}CustomTextPositionY`] = d.customTextPosition.y;
+      metadata[`${prefix}CustomTextFontWeight`] = d.customTextFontWeight;
+      metadata[`${prefix}CustomTextLetterSpacing`] = d.customTextLetterSpacing;
+      metadata[`${prefix}CustomTextLineHeight`] = d.customTextLineHeight;
+      metadata[`${prefix}CustomTextShadow`] = d.customTextShadow;
+      metadata[`${prefix}IsTextTemplate`] = d.isTextTemplate;
       metadata[`${prefix}UploadedImageScale`] = d.uploadedImageScale;
       metadata[`${prefix}UploadedImagePositionX`] = d.uploadedImagePosition.x;
       metadata[`${prefix}UploadedImagePositionY`] = d.uploadedImagePosition.y;
-      metadata[`${prefix}TemplateScale`] = d.templateScale;
-      metadata[`${prefix}TemplatePositionX`] = d.templatePosition.x;
-      metadata[`${prefix}TemplatePositionY`] = d.templatePosition.y;
-      if (d.templateImage) metadata[`${prefix}TemplateImage`] = d.templateImage;
+      if (d.premadeDesignImage) {
+        metadata[`${prefix}PremadeDesignImage`] = d.premadeDesignImage;
+      }
+      if (d.premadeDesignId) {
+        metadata[`${prefix}PremadeDesignId`] = d.premadeDesignId;
+      }
+      if (d.uploadedFile?.fileId) {
+        metadata[`${prefix}UploadedFileId`] = d.uploadedFile.fileId;
+      }
+      if (d.uploadedFile?.previewUrl) {
+        metadata[`${prefix}UploadedPreviewUrl`] = d.uploadedFile.previewUrl;
+      }
     }
 
-    if (designId) metadata.designTemplateId = designId;
+    if (designId) {
+      metadata.designTemplateId = designId;
+      const template = getProductDesignTemplate(designId);
+      if (template) metadata.designKind = template.kind;
+    }
 
     const fileIds = sides
       .map((s) => sideDesigns[s].uploadedFile?.fileId)
       .filter((id): id is string => Boolean(id));
 
-    addItem({
-      type: 'product',
-      name: `${tp(type)} (${size})`,
+    const cartPayload = {
+      type: 'product' as const,
+      name: formatProductCartName(tp(type), size, product),
       price: product?.basePrice ?? 0,
       quantity,
       designPreview: frontPreview,
       backDesignPreview: backPreview,
       metadata,
       fileIds,
-    });
+    };
+
+    if (editCartItemId) {
+      updateItem(editCartItemId, cartPayload);
+    } else {
+      addItem(cartPayload);
+    }
     router.push('/cart');
   }
 
@@ -398,8 +483,6 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       updateCurrentSide({ customTextPosition: positions[preset] });
     } else if (activePanel === 'photo') {
       updateCurrentSide({ uploadedImagePosition: positions[preset] });
-    } else if (currentDesign.templateImage) {
-      updateCurrentSide({ templatePosition: positions[preset] });
     }
   }
 
@@ -409,8 +492,11 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
 
   const sideHasContent = (side: ProductSide) => {
     const d = sideDesigns[side];
-    return Boolean(d.customText || d.uploadedFile || d.templateImage);
+    return Boolean(d.customText || d.uploadedFile || d.premadeDesignImage);
   };
+
+  const hasPremadeImage = Boolean(currentDesign.premadeDesignImage);
+  const hasTextTemplate = Boolean(currentDesign.isTextTemplate);
 
   return (
     <div className="pb-28 lg:pb-0">
@@ -453,37 +539,30 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
               sideDesign={currentDesign}
               typeLabel={tp(type)}
               containerRef={previewRef}
+              isCapturing={isCapturing}
+              photoGuideLabel={t('photoGuide')}
               onTextPositionChange={(pos) =>
                 updateCurrentSide({ customTextPosition: pos })
+              }
+              onTextSizeChange={(size) =>
+                updateCurrentSide({ customTextSize: size })
               }
               onImagePositionChange={(pos) =>
                 updateCurrentSide({ uploadedImagePosition: pos })
               }
-              onTemplatePositionChange={(pos) =>
-                updateCurrentSide({ templatePosition: pos })
+              onImageScaleChange={(scale) =>
+                updateCurrentSide({ uploadedImageScale: scale })
               }
             />
           </Card>
 
-          <p className="text-center text-xs text-ink-500">{t('dragHint')}</p>
-
-          {/* Hidden capture targets for both sides */}
-          {hasTwoSides && (
-            <div className="pointer-events-none fixed -left-[9999px] top-0 opacity-0">
-              {sides.map((side) => (
-                <div
-                  key={side}
-                  ref={side === 'front' ? frontCaptureRef : backCaptureRef}
-                >
-                  <ProductPreview
-                    mockupImage={getProductMockup(product, color, side)}
-                    sideDesign={sideDesigns[side]}
-                    typeLabel={tp(type)}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
+          <p className="text-center text-xs text-ink-500">
+            {hasTextTemplate
+              ? t('textTemplateHint')
+              : hasPremadeImage
+                ? t('premadeDesignHint')
+                : t('resizeHint')}
+          </p>
         </div>
 
         {/* Controls column — desktop */}
@@ -503,7 +582,11 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
             updateCurrentSide={updateCurrentSide}
             setPositionPreset={setPositionPreset}
             token={token}
+            uploadLoading={uploadLoading}
+            uploadError={uploadError}
+            refreshSession={refreshSession}
             onAddToCart={handleAddToCart}
+            isCapturing={isCapturing}
             locale={locale}
           />
         </div>
@@ -558,8 +641,13 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
             <ImageIcon className="h-5 w-5" />
             {t('photo')}
           </button>
-          <Button size="sm" onClick={handleAddToCart} className="shrink-0">
-            {t('addToCart')}
+          <Button
+            size="sm"
+            onClick={handleAddToCart}
+            className="shrink-0"
+            disabled={isCapturing}
+          >
+            {isCapturing ? t('capturing') : t('addToCart')}
           </Button>
         </div>
       </div>
@@ -592,6 +680,9 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
               updateCurrentSide={updateCurrentSide}
               setPositionPreset={setPositionPreset}
               token={token}
+              uploadLoading={uploadLoading}
+              uploadError={uploadError}
+              refreshSession={refreshSession}
             />
           </div>
         </div>
@@ -613,49 +704,114 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   );
 }
 
+function ResizableTextOverlay({
+  text,
+  color,
+  size,
+  position,
+  fontWeight,
+  letterSpacing,
+  lineHeight,
+  textShadow,
+  onSizeChange,
+  onPositionChange,
+  hideControls,
+}: {
+  text: string;
+  color: string;
+  size: number;
+  position: { x: number; y: number };
+  fontWeight: number;
+  letterSpacing: string;
+  lineHeight: number;
+  textShadow: string;
+  onSizeChange: (size: number) => void;
+  onPositionChange: (pos: { x: number; y: number }) => void;
+  hideControls?: boolean;
+}) {
+  const drag = useDraggablePosition(position, onPositionChange);
+  const resize = useScaleResize(size, onSizeChange, 12, 72);
+
+  return (
+    <div
+      ref={drag.ref}
+      className="absolute cursor-grab select-none text-center font-bold leading-tight active:cursor-grabbing"
+      style={{
+        color,
+        left: `${position.x}%`,
+        top: `${position.y}%`,
+        transform: 'translate(-50%, -50%)',
+        fontSize: `${size}px`,
+        fontWeight,
+        letterSpacing,
+        lineHeight,
+        textShadow,
+        touchAction: 'none',
+        maxWidth: '78%',
+        whiteSpace: 'pre-line',
+      }}
+      onPointerDown={drag.onPointerDown}
+      onPointerMove={drag.onPointerMove}
+      onPointerUp={drag.onPointerUp}
+      onPointerCancel={drag.onPointerCancel}
+    >
+      {text}
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label="Resize text"
+        className={`absolute -bottom-3 -right-3 flex h-5 w-5 cursor-se-resize items-center justify-center rounded-full border-2 border-white bg-brand-600 shadow-md ${hideControls ? 'hidden' : ''}`}
+        style={{ touchAction: 'none' }}
+        onPointerDown={resize.onPointerDown}
+        onPointerMove={resize.onPointerMove}
+        onPointerUp={resize.onPointerUp}
+        onPointerCancel={resize.onPointerCancel}
+      />
+    </div>
+  );
+}
+
 function InteractivePreview({
   mockupImage,
   sideDesign,
   typeLabel,
   containerRef,
+  isCapturing,
+  photoGuideLabel,
   onTextPositionChange,
+  onTextSizeChange,
   onImagePositionChange,
-  onTemplatePositionChange,
+  onImageScaleChange,
 }: {
   mockupImage: string;
   sideDesign: SideDesign;
   typeLabel: string;
   containerRef: RefObject<HTMLDivElement | null>;
+  isCapturing?: boolean;
+  photoGuideLabel: string;
   onTextPositionChange: (pos: { x: number; y: number }) => void;
+  onTextSizeChange: (size: number) => void;
   onImagePositionChange: (pos: { x: number; y: number }) => void;
-  onTemplatePositionChange: (pos: { x: number; y: number }) => void;
+  onImageScaleChange: (scale: number) => void;
 }) {
-  const textDrag = useDraggablePosition(
-    sideDesign.customTextPosition,
-    onTextPositionChange,
-  );
-  const imageDrag = useDraggablePosition(
-    sideDesign.uploadedImagePosition,
-    onImagePositionChange,
-  );
-  const templateDrag = useDraggablePosition(
-    sideDesign.templatePosition,
-    onTemplatePositionChange,
-  );
+  const baseImage = sideDesign.premadeDesignImage ?? mockupImage;
+  const isPremade = Boolean(sideDesign.premadeDesignImage);
 
   return (
     <div
       ref={containerRef}
-      className="relative flex aspect-square w-full max-w-sm items-center justify-center rounded-2xl bg-gradient-to-br from-ink-50 to-ink-100 shadow-inner"
+      className={`relative flex aspect-square w-full max-w-sm items-center justify-center rounded-2xl bg-gradient-to-br from-ink-50 to-ink-100 shadow-inner ${isCapturing ? 'opacity-90' : ''}`}
+      style={{ touchAction: 'none' }}
     >
-      <div className="relative h-[85%] w-[85%]">
-        {mockupImage ? (
-          <Image
-            src={mockupImage}
+      <div className={PRODUCT_MOCKUP_INNER_CLASS}>
+        {baseImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={baseImage}
             alt={typeLabel}
-            fill
-            sizes="(max-width: 768px) 100vw, 400px"
-            className="object-contain"
+            draggable={false}
+            crossOrigin="anonymous"
+            className="pointer-events-none h-full w-full object-contain"
           />
         ) : (
           <div className="flex h-full items-center justify-center">
@@ -663,75 +819,57 @@ function InteractivePreview({
           </div>
         )}
 
-        <div className="pointer-events-none absolute inset-[12%] rounded-xl border-2 border-dashed border-brand-300/40" />
-
-        {sideDesign.templateImage && (
-          <div
-            ref={templateDrag.ref}
-            className="absolute cursor-move touch-none"
-            style={{
-              left: `${sideDesign.templatePosition.x}%`,
-              top: `${sideDesign.templatePosition.y}%`,
-              width: `${sideDesign.templateScale}%`,
-              transform: 'translate(-50%, -50%)',
-            }}
-            onPointerDown={templateDrag.onPointerDown}
-            onPointerMove={templateDrag.onPointerMove}
-            onPointerUp={templateDrag.onPointerUp}
-            onPointerCancel={templateDrag.onPointerCancel}
-          >
-            <img
-              src={sideDesign.templateImage}
-              alt=""
-              className="block w-full object-contain"
-            />
-          </div>
+        {!isPremade && (
+          <div className="pointer-events-none absolute inset-[12%] rounded-xl border-2 border-dashed border-brand-300/40" />
         )}
 
         {sideDesign.uploadedFile?.isImage &&
           sideDesign.uploadedFile.previewUrl && (
+            <ResizableImageOverlay
+              src={sideDesign.uploadedFile.previewUrl}
+              alt={sideDesign.uploadedFile.name}
+              scale={sideDesign.uploadedImageScale}
+              position={sideDesign.uploadedImagePosition}
+              onScaleChange={onImageScaleChange}
+              onPositionChange={onImagePositionChange}
+              hideControls={isCapturing}
+            />
+          )}
+
+        {sideDesign.customText && (
+          <ResizableTextOverlay
+            text={sideDesign.customText}
+            color={sideDesign.customTextColor}
+            size={sideDesign.customTextSize}
+            position={sideDesign.customTextPosition}
+            fontWeight={sideDesign.customTextFontWeight}
+            letterSpacing={sideDesign.customTextLetterSpacing}
+            lineHeight={sideDesign.customTextLineHeight}
+            textShadow={sideDesign.customTextShadow}
+            onSizeChange={onTextSizeChange}
+            onPositionChange={onTextPositionChange}
+            hideControls={isCapturing}
+          />
+        )}
+
+        {sideDesign.showPhotoGuide &&
+          !sideDesign.uploadedFile?.previewUrl &&
+          !isCapturing && (
             <div
-              ref={imageDrag.ref}
-              className="absolute cursor-move touch-none"
+              className="pointer-events-none absolute flex items-center justify-center rounded-full border-2 border-dashed border-brand-400/70 bg-brand-50/40"
               style={{
                 left: `${sideDesign.uploadedImagePosition.x}%`,
                 top: `${sideDesign.uploadedImagePosition.y}%`,
                 width: `${sideDesign.uploadedImageScale}%`,
+                aspectRatio: '1',
                 transform: 'translate(-50%, -50%)',
               }}
-              onPointerDown={imageDrag.onPointerDown}
-              onPointerMove={imageDrag.onPointerMove}
-              onPointerUp={imageDrag.onPointerUp}
-              onPointerCancel={imageDrag.onPointerCancel}
             >
-              <img
-                src={sideDesign.uploadedFile.previewUrl}
-                alt={sideDesign.uploadedFile.name}
-                className="block w-full rounded-lg object-contain shadow-sm"
-              />
+              <span className="px-2 text-center text-[10px] font-medium leading-tight text-brand-700/80">
+                {photoGuideLabel}
+              </span>
             </div>
           )}
-
-        {sideDesign.customText && (
-          <div
-            ref={textDrag.ref}
-            style={{
-              color: sideDesign.customTextColor,
-              left: `${sideDesign.customTextPosition.x}%`,
-              top: `${sideDesign.customTextPosition.y}%`,
-              transform: 'translate(-50%, -50%)',
-              fontSize: `${sideDesign.customTextSize}px`,
-              textShadow: '0 1px 4px rgba(0,0,0,0.25)',
-            }}
-            className="absolute max-w-[80%] cursor-move touch-none select-none text-center font-semibold leading-tight"
-            onPointerDown={textDrag.onPointerDown}
-            onPointerMove={textDrag.onPointerMove}
-            onPointerUp={textDrag.onPointerUp}
-            onPointerCancel={textDrag.onPointerCancel}
-          >
-            {sideDesign.customText}
-          </div>
-        )}
       </div>
     </div>
   );
@@ -813,12 +951,18 @@ function EditorPanelContent({
   updateCurrentSide,
   setPositionPreset,
   token,
+  uploadLoading,
+  uploadError,
+  refreshSession,
 }: {
   panel: EditorPanel;
   currentDesign: SideDesign;
   updateCurrentSide: (u: Partial<SideDesign>) => void;
   setPositionPreset: (p: 'center' | 'top' | 'bottom') => void;
   token: string | null;
+  uploadLoading: boolean;
+  uploadError: string | null;
+  refreshSession: () => Promise<string | null>;
 }) {
   const t = useTranslations('products.customizer');
 
@@ -871,7 +1015,7 @@ function EditorPanelContent({
               <StepperInput
                 value={currentDesign.uploadedImageScale}
                 onChange={(v) => updateCurrentSide({ uploadedImageScale: v })}
-                min={20}
+                min={15}
                 max={120}
                 step={5}
               />
@@ -892,6 +1036,9 @@ function EditorPanelContent({
             </p>
             <SecureUpload
               token={token}
+              loading={uploadLoading}
+              sessionError={uploadError}
+              onRefreshSession={refreshSession}
               onUpload={(fileId, name) => {
                 updateCurrentSide({
                   uploadedFile: {
@@ -902,6 +1049,7 @@ function EditorPanelContent({
                       ? `/api/files/${fileId}`
                       : undefined,
                   },
+                  showPhotoGuide: false,
                 });
               }}
             />
@@ -1010,7 +1158,11 @@ function ProductControls({
   updateCurrentSide,
   setPositionPreset,
   token,
+  uploadLoading,
+  uploadError,
+  refreshSession,
   onAddToCart,
+  isCapturing,
   locale,
 }: {
   product: (typeof products)[number];
@@ -1027,7 +1179,11 @@ function ProductControls({
   updateCurrentSide: (u: Partial<SideDesign>) => void;
   setPositionPreset: (p: 'center' | 'top' | 'bottom') => void;
   token: string | null;
+  uploadLoading: boolean;
+  uploadError: string | null;
+  refreshSession: () => Promise<string | null>;
   onAddToCart: () => void;
+  isCapturing: boolean;
   locale: string;
 }) {
   const t = useTranslations('products.customizer');
@@ -1041,6 +1197,18 @@ function ProductControls({
           {formatPrice(product.basePrice, locale)}
         </p>
       </div>
+
+      {currentDesign.premadeDesignImage && (
+        <p className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-800">
+          {t('premadeDesignHint')}
+        </p>
+      )}
+
+      {currentDesign.isTextTemplate && (
+        <p className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-800">
+          {t('textTemplateHint')}
+        </p>
+      )}
 
       <div className="flex gap-2">
         <Button
@@ -1073,25 +1241,10 @@ function ProductControls({
             updateCurrentSide={updateCurrentSide}
             setPositionPreset={setPositionPreset}
             token={token}
+            uploadLoading={uploadLoading}
+            uploadError={uploadError}
+            refreshSession={refreshSession}
           />
-        </Card>
-      )}
-
-      {currentDesign.templateImage && !activePanel && (
-        <Card>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-ink-600">{t('designSize')}</span>
-            <StepperInput
-              value={currentDesign.templateScale}
-              onChange={(v) => updateCurrentSide({ templateScale: v })}
-              min={20}
-              max={100}
-              step={5}
-            />
-          </div>
-          <div className="mt-3">
-            <PositionPresets onPreset={setPositionPreset} />
-          </div>
         </Card>
       )}
 
@@ -1105,9 +1258,15 @@ function ProductControls({
         setQuantity={setQuantity}
       />
 
-      <Button size="lg" onClick={onAddToCart} className="w-full">
-        {t('addToCart')} —{' '}
-        {formatPrice(product.basePrice * quantity, locale)}
+      <Button
+        size="lg"
+        onClick={onAddToCart}
+        className="w-full"
+        disabled={isCapturing}
+      >
+        {isCapturing
+          ? t('capturing')
+          : `${t('addToCart')} — ${formatPrice(product.basePrice * quantity, locale)}`}
       </Button>
     </>
   );

@@ -1,22 +1,27 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import Image from 'next/image';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import {
   products,
+  getProductDesignTemplatesByCategory,
   getProductMockup,
-  getProductDesignTemplates,
+  isImageDesignTemplate,
+  isTextDesignTemplate,
   type Product,
   type ProductDesignTemplate,
 } from '@/lib/data/catalog';
 import { formatPrice } from '@/lib/utils';
+import { formatProductCartName } from '@/lib/cart/product-cart';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { useCart } from '@/components/cart/CartProvider';
 import { useRouter } from '@/i18n/routing';
-import { Shirt, ArrowLeft, Palette, Sparkles } from 'lucide-react';
+import { ProductImageCarousel } from '@/components/products/ProductImageCarousel';
+import { DesignTemplatePreview } from '@/components/products/DesignTemplatePreview';
+import Image from 'next/image';
+import { ArrowLeft, Palette, Sparkles, Type } from 'lucide-react';
 
 export function ProductDetail({ productId }: { productId: string }) {
   const t = useTranslations('products');
@@ -30,16 +35,27 @@ export function ProductDetail({ productId }: { productId: string }) {
   );
 
   const [color, setColor] = useState(product?.colors?.[0] || '#ffffff');
-  const designs = useMemo(
-    () => (product ? getProductDesignTemplates(product) : []),
+  const [size, setSize] = useState(product?.sizes?.[0] ?? '');
+
+  const imageDesigns = useMemo(
+    () =>
+      product
+        ? getProductDesignTemplatesByCategory(product, 'image-designs')
+        : [],
+    [product],
+  );
+
+  const textDesigns = useMemo(
+    () =>
+      product
+        ? getProductDesignTemplatesByCategory(product, 'text-designs')
+        : [],
     [product],
   );
 
   if (!product) {
     return <p>{td('notFound')}</p>;
   }
-
-  const mockupImage = getProductMockup(product, color, 'front');
 
   return (
     <div className="space-y-10">
@@ -56,22 +72,11 @@ export function ProductDetail({ productId }: { productId: string }) {
           <p className="mb-4 text-sm font-medium text-ink-500">
             {td('blankProduct')}
           </p>
-          <div className="relative flex aspect-square w-full max-w-sm items-center justify-center rounded-2xl bg-gradient-to-br from-ink-50 to-ink-100 shadow-inner">
-            {mockupImage ? (
-              <div className="relative h-4/5 w-4/5">
-                <Image
-                  src={mockupImage}
-                  alt={tp(product.type)}
-                  fill
-                  sizes="(max-width: 768px) 100vw, 400px"
-                  className="object-contain"
-                  priority
-                />
-              </div>
-            ) : (
-              <Shirt className="h-32 w-32 text-ink-300" />
-            )}
-          </div>
+          <ProductImageCarousel
+            product={product}
+            color={color}
+            typeLabel={tp(product.type)}
+          />
 
           {product.colors && (
             <div className="mt-6 w-full max-w-sm">
@@ -92,6 +97,30 @@ export function ProductDetail({ productId }: { productId: string }) {
                     style={{ backgroundColor: c }}
                     aria-label={c}
                   />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {product.sizes && (
+            <div className="mt-4 w-full max-w-sm">
+              <label className="mb-2 block text-center text-sm font-medium text-ink-700">
+                {t('customizer.selectSize')}
+              </label>
+              <div className="flex flex-wrap justify-center gap-2">
+                {product.sizes.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setSize(s)}
+                    className={`min-h-10 min-w-10 rounded-lg px-3 py-1.5 text-sm font-medium ${
+                      size === s
+                        ? 'bg-brand-600 text-white'
+                        : 'bg-ink-100 text-ink-600'
+                    }`}
+                  >
+                    {s}
+                  </button>
                 ))}
               </div>
             </div>
@@ -119,89 +148,130 @@ export function ProductDetail({ productId }: { productId: string }) {
                 {td('customizeYourOwn')}
               </Button>
             </Link>
-            <ProductQuickOrderLink product={product} color={color} />
+            <ProductQuickOrderLink product={product} color={color} size={size} />
           </div>
         </div>
       </div>
 
-      {designs.length > 0 && (
-        <section>
-          <div className="mb-6 flex items-center gap-3">
-            <Sparkles className="h-6 w-6 text-brand-600" />
-            <div>
-              <h2 className="text-2xl font-bold text-ink-900">
-                {td('premadeDesigns')}
-              </h2>
-              <p className="text-ink-500">{td('premadeDesignsHint')}</p>
-            </div>
-          </div>
+      {textDesigns.length > 0 && (
+        <DesignSection
+          icon={<Type className="h-6 w-6 text-brand-600" />}
+          title={td('textDesigns')}
+          hint={td('textDesignsHint')}
+          product={product}
+          color={color}
+          designs={textDesigns}
+        />
+      )}
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {designs.map((design) => (
-              <Card
-                key={design.id}
-                className="overflow-hidden p-0"
-              >
-                <div className="relative flex aspect-square items-center justify-center bg-gradient-to-br from-brand-50 to-brand-100 p-6">
-                  <div className="relative h-full w-full">
-                    <Image
-                      src={getProductMockup(product, color, design.defaultSide)}
-                      alt=""
-                      fill
-                      sizes="200px"
-                      className="object-contain opacity-90"
-                    />
-                    <div
-                      className="pointer-events-none absolute"
-                      style={{
-                        left: `${design.position?.x ?? 50}%`,
-                        top: `${design.position?.y ?? 40}%`,
-                        width: `${design.scale ?? 45}%`,
-                        transform: 'translate(-50%, -50%)',
-                      }}
-                    >
-                      <img
-                        src={design.image}
-                        alt=""
-                        className="w-full object-contain"
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-3 p-4">
-                  <p className="font-medium text-ink-900">
-                    {t(`designs.${design.nameKey}`)}
-                  </p>
-                  <div className="flex flex-col gap-2">
-                    <Link
-                      href={`/products/customize/${product.type}?id=${product.id}&design=${design.id}`}
-                    >
-                      <Button size="sm" className="w-full">
-                        {td('customizeDesign')}
-                      </Button>
-                    </Link>
-                    <OrderWithDesignButton
-                      product={product}
-                      design={design}
-                      color={color}
-                    />
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </section>
+      {imageDesigns.length > 0 && (
+        <DesignSection
+          icon={<Sparkles className="h-6 w-6 text-brand-600" />}
+          title={td('imageDesigns')}
+          hint={td('imageDesignsHint')}
+          product={product}
+          color={color}
+          designs={imageDesigns}
+        />
       )}
     </div>
+  );
+}
+
+function DesignSection({
+  icon,
+  title,
+  hint,
+  product,
+  color,
+  designs,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  hint: string;
+  product: Product;
+  color: string;
+  designs: ProductDesignTemplate[];
+}) {
+  const t = useTranslations('products');
+  const td = useTranslations('products.detail');
+  const tp = useTranslations('products.types');
+
+  return (
+    <section>
+      <div className="mb-6 flex items-center gap-3">
+        {icon}
+        <div>
+          <h2 className="text-2xl font-bold text-ink-900">{title}</h2>
+          <p className="text-ink-500">{hint}</p>
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {designs.map((design) => (
+          <Card key={design.id} className="overflow-hidden p-0">
+            {isTextDesignTemplate(design) ? (
+              <DesignTemplatePreview
+                product={product}
+                color={color}
+                design={design}
+                typeLabel={tp(product.type)}
+              />
+            ) : isImageDesignTemplate(design) ? (
+              <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-brand-50 to-brand-100">
+                <Image
+                  src={design.image!}
+                  alt={t(`designs.${design.nameKey}`)}
+                  fill
+                  sizes="(max-width: 768px) 50vw, 300px"
+                  className="object-contain p-4"
+                />
+              </div>
+            ) : null}
+
+            <div className="space-y-3 p-4">
+              <p className="font-medium text-ink-900">
+                {t(`designs.${design.nameKey}`)}
+              </p>
+              {isTextDesignTemplate(design) && design.textStyle && (
+                <p className="text-sm text-ink-500 line-clamp-2 whitespace-pre-line">
+                  {design.textStyle.text}
+                </p>
+              )}
+              <div className="flex flex-col gap-2">
+                <Link
+                  href={`/products/customize/${product.type}?id=${product.id}&design=${design.id}`}
+                >
+                  <Button size="sm" className="w-full">
+                    {isTextDesignTemplate(design)
+                      ? td('customizeWithPhoto')
+                      : td('customizeDesign')}
+                  </Button>
+                </Link>
+                {isImageDesignTemplate(design) && (
+                  <OrderWithDesignButton
+                    product={product}
+                    design={design}
+                    color={color}
+                  />
+                )}
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </section>
   );
 }
 
 function ProductQuickOrderLink({
   product,
   color,
+  size,
 }: {
   product: Product;
   color: string;
+  size: string;
 }) {
   const t = useTranslations('products');
   const tp = useTranslations('products.types');
@@ -209,12 +279,21 @@ function ProductQuickOrderLink({
   const router = useRouter();
 
   function handleOrder() {
+    const metadata: Record<string, string | number | boolean> = {
+      productId: product.id,
+      color,
+    };
+    if (product.sizes?.length && size) {
+      metadata.size = size;
+    }
+
     addItem({
       type: 'product',
-      name: tp(product.type),
+      name: formatProductCartName(tp(product.type), size, product),
       price: product.basePrice,
       quantity: 1,
-      metadata: { productId: product.id, color },
+      designPreview: getProductMockup(product, color, 'front'),
+      metadata,
     });
     router.push('/cart');
   }
@@ -247,17 +326,21 @@ function OrderWithDesignButton({
   const router = useRouter();
 
   function handleOrder() {
+    const metadata: Record<string, string | number | boolean> = {
+      productId: product.id,
+      color,
+      designTemplateId: design.id,
+      designSide: design.defaultSide,
+      designKind: design.kind,
+    };
+
     addItem({
       type: 'product',
       name: `${tp(product.type)} — ${t(`designs.${design.nameKey}`)}`,
       price: product.basePrice,
       quantity: 1,
-      metadata: {
-        productId: product.id,
-        color,
-        designTemplateId: design.id,
-        designSide: design.defaultSide,
-      },
+      designPreview: design.image ?? getProductMockup(product, color, design.defaultSide),
+      metadata,
     });
     router.push('/cart');
   }

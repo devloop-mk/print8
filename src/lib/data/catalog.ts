@@ -94,10 +94,7 @@ export interface ProductSideImages {
   back: string;
 }
 
-export type ProductColorImages = Record<
-  string,
-  string | ProductSideImages
->;
+export type ProductColorImages = Record<string, string | ProductSideImages>;
 
 export interface Product {
   id: string;
@@ -111,63 +108,177 @@ export interface Product {
   sides?: ProductSide[];
 }
 
+export type ProductDesignKind = 'image' | 'text';
+export type ProductDesignCategory = 'image-designs' | 'text-designs';
+
+export interface ProductDesignTextStyle {
+  text: string;
+  textColor: string;
+  textSize: number;
+  textPosition: { x: number; y: number };
+  fontWeight?: 600 | 700 | 800;
+  letterSpacing?: string;
+  lineHeight?: number;
+  textShadow?: string;
+  /** Default slot for uploaded family/personal photo */
+  photoPosition?: { x: number; y: number };
+  photoScale?: number;
+}
+
 export interface ProductDesignTemplate {
   id: string;
+  kind: ProductDesignKind;
+  category: ProductDesignCategory;
   productTypes: ProductType[];
+  productIds?: string[];
   nameKey: string;
-  image: string;
   defaultSide: ProductSide;
-  scale?: number;
-  position?: { x: number; y: number };
+  /** Full product JPEG — used for `image` kind thumbnails & customizer base */
+  image?: string;
+  /** Styled Macedonian text layout — used for `text` kind */
+  textStyle?: ProductDesignTextStyle;
 }
 
 export const productDesignTemplates: ProductDesignTemplate[] = [
   {
-    id: 'tee-smile',
+    id: 'tee-design-1',
+    kind: 'image',
+    category: 'image-designs',
     productTypes: ['t-shirt'],
-    nameKey: 'smile',
-    image: '/product-designs/smile.svg',
+    nameKey: 'design1',
+    image: '/product-designs/tee-design-1.jpg',
     defaultSide: 'front',
-    scale: 45,
-    position: { x: 50, y: 38 },
   },
   {
-    id: 'tee-heart',
+    id: 'tee-design-2',
+    kind: 'image',
+    category: 'image-designs',
     productTypes: ['t-shirt'],
-    nameKey: 'heart',
-    image: '/product-designs/heart.svg',
+    nameKey: 'design2',
+    image: '/product-designs/tee-design-2.jpg',
     defaultSide: 'front',
-    scale: 40,
-    position: { x: 50, y: 38 },
   },
   {
-    id: 'tee-mountain',
+    id: 'tee-design-3',
+    kind: 'image',
+    category: 'image-designs',
     productTypes: ['t-shirt'],
-    nameKey: 'mountain',
-    image: '/product-designs/mountain.svg',
+    nameKey: 'design3',
+    image: '/product-designs/tee-design-3.jpg',
     defaultSide: 'front',
-    scale: 55,
-    position: { x: 50, y: 40 },
   },
   {
-    id: 'tee-back-logo',
+    id: 'tee-back-design-1',
+    kind: 'image',
+    category: 'image-designs',
     productTypes: ['t-shirt'],
-    nameKey: 'backLogo',
-    image: '/product-designs/back-logo.svg',
+    nameKey: 'backDesign1',
+    image: '/product-designs/tee-back-design-1.jpg',
     defaultSide: 'back',
-    scale: 35,
-    position: { x: 50, y: 35 },
   },
   {
-    id: 'mug-floral',
-    productTypes: ['mug'],
-    nameKey: 'floral',
-    image: '/product-designs/floral.svg',
+    id: 'tee-text-family',
+    kind: 'text',
+    category: 'text-designs',
+    productTypes: ['t-shirt'],
+    nameKey: 'loveFamily',
     defaultSide: 'front',
-    scale: 50,
-    position: { x: 50, y: 45 },
+    textStyle: {
+      text: 'Го сакам\nмоето семејство',
+      textColor: '#1e3a5f',
+      textSize: 17,
+      textPosition: { x: 50, y: 33 },
+      fontWeight: 800,
+      letterSpacing: '0.03em',
+      lineHeight: 1.15,
+      photoPosition: { x: 50, y: 47 },
+      photoScale: 38,
+    },
+  },
+  {
+    id: 'tee-text-mother',
+    kind: 'text',
+    category: 'text-designs',
+    productTypes: ['t-shirt'],
+    nameKey: 'bestMother',
+    defaultSide: 'front',
+    textStyle: {
+      text: 'Најдобрата\nмајка',
+      textColor: '#9d174d',
+      textSize: 20,
+      textPosition: { x: 50, y: 34 },
+      fontWeight: 800,
+      letterSpacing: '0.02em',
+      lineHeight: 1.1,
+      photoPosition: { x: 50, y: 49 },
+      photoScale: 36,
+    },
+  },
+  {
+    id: 'tee-text-father',
+    kind: 'text',
+    category: 'text-designs',
+    productTypes: ['t-shirt'],
+    nameKey: 'bestFather',
+    defaultSide: 'front',
+    textStyle: {
+      text: 'Најдобриот\nтатко',
+      textColor: '#1e40af',
+      textSize: 20,
+      textPosition: { x: 50, y: 34 },
+      fontWeight: 800,
+      letterSpacing: '0.02em',
+      lineHeight: 1.1,
+      photoPosition: { x: 50, y: 49 },
+      photoScale: 36,
+    },
+  },
+  {
+    id: 'tee-text-macedonia',
+    kind: 'text',
+    category: 'text-designs',
+    productTypes: ['t-shirt'],
+    nameKey: 'loveMacedonia',
+    defaultSide: 'front',
+    textStyle: {
+      text: 'Ја сакам\nМакедонија',
+      textColor: '#fc0000',
+      textSize: 19,
+      textPosition: { x: 50, y: 34 },
+      fontWeight: 800,
+      letterSpacing: '0.05em',
+      lineHeight: 1.12,
+      photoPosition: { x: 50, y: 50 },
+      photoScale: 34,
+    },
+  },
+  {
+    id: 'mug-design-1',
+    kind: 'image',
+    category: 'image-designs',
+    productTypes: ['mug'],
+    nameKey: 'mugDesign1',
+    image: '/product-designs/mug-design-1.jpg',
+    defaultSide: 'front',
   },
 ];
+
+export function getProductDesignTemplatesByCategory(
+  product: Product,
+  category: ProductDesignCategory,
+) {
+  return getProductDesignTemplates(product).filter(
+    (d) => d.category === category,
+  );
+}
+
+export function isImageDesignTemplate(d: ProductDesignTemplate) {
+  return d.kind === 'image' && Boolean(d.image);
+}
+
+export function isTextDesignTemplate(d: ProductDesignTemplate) {
+  return d.kind === 'text' && Boolean(d.textStyle);
+}
 
 export function productSupportsSides(product: Product): boolean {
   return (product.sides?.length ?? 0) > 1;
@@ -196,13 +307,19 @@ export function getProductMockup(
 }
 
 export function getProductDesignTemplates(product: Product) {
-  return productDesignTemplates.filter((d) =>
-    d.productTypes.includes(product.type),
+  return productDesignTemplates.filter(
+    (d) =>
+      d.productTypes.includes(product.type) &&
+      (!d.productIds || d.productIds.includes(product.id)),
   );
 }
 
 export function getProductDesignTemplate(id: string) {
   return productDesignTemplates.find((d) => d.id === id);
+}
+
+export function getDesignTemplate(id: string) {
+  return designTemplates.find((d) => d.id === id);
 }
 
 export const products: Product[] = [

@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUploadedFile } from '@/lib/upload';
-import { supabaseAdmin } from '@/lib/supabase/client';
+import { getSupabaseAdmin } from '@/lib/supabase/client';
 
-const STORAGE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET!;
+function getStorageBucket() {
+  const bucket = process.env.SUPABASE_STORAGE_BUCKET;
+  if (!bucket) {
+    throw new Error('Storage is not configured');
+  }
+  return bucket;
+}
 
 export async function GET(
   _request: NextRequest,
@@ -15,8 +21,8 @@ export async function GET(
       return NextResponse.json({ error: 'File not found' }, { status: 404 });
     }
 
-    const { data, error } = await supabaseAdmin.storage
-      .from(STORAGE_BUCKET)
+    const { data, error } = await getSupabaseAdmin().storage
+      .from(getStorageBucket())
       .download(file.storedName);
 
     if (error || !data) {

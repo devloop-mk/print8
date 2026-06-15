@@ -5,11 +5,21 @@ import { useTranslations } from 'next-intl';
 
 interface SecureUploadProps {
   token: string | null;
+  loading?: boolean;
+  sessionError?: string | null;
+  onRefreshSession?: () => Promise<string | null>;
   onUpload: (fileId: string, originalName: string) => void;
   disabled?: boolean;
 }
 
-export function SecureUpload({ token, onUpload, disabled }: SecureUploadProps) {
+export function SecureUpload({
+  token,
+  loading = false,
+  sessionError = null,
+  onRefreshSession,
+  onUpload,
+  disabled,
+}: SecureUploadProps) {
   const t = useTranslations('common');
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState<{
@@ -17,40 +27,62 @@ export function SecureUpload({ token, onUpload, disabled }: SecureUploadProps) {
     text: string;
   } | null>(null);
 
+  const isDisabled = disabled || loading || uploading;
+  const canUpload = Boolean(token) && !isDisabled;
+
+  async function uploadWithToken(uploadToken: string, file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('token', uploadToken);
+
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      if (res.status === 429) {
+        throw new Error('UPLOAD_LIMIT_REACHED');
+      }
+      if (
+        data.error?.includes('Invalid or expired upload session') &&
+        onRefreshSession
+      ) {
+        const newToken = await onRefreshSession();
+        if (newToken) {
+          return uploadWithToken(newToken, file);
+        }
+      }
+      throw new Error(data.error || 'Upload failed');
+    }
+
+    return data as { fileId: string; originalName: string };
+  }
+
   async function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (!file || !token) return;
+    if (!file) return;
+
+    if (!token) {
+      setMessage({ type: 'error', text: t('uploadSessionError') });
+      return;
+    }
 
     setUploading(true);
     setMessage(null);
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('token', token);
-
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        if (res.status === 429) {
-          throw new Error('UPLOAD_LIMIT_REACHED');
-        }
-        throw new Error(data.error || 'Upload failed');
-      }
-
-      onUpload(data.fileId, data.originalName);
+      const result = await uploadWithToken(token, file);
+      onUpload(result.fileId, result.originalName);
       setMessage({ type: 'success', text: t('uploadSuccess') });
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : '';
       const errorText =
         errorMsg === 'UPLOAD_LIMIT_REACHED'
           ? t('uploadLimit')
-          : t('uploadError');
+          : errorMsg || t('uploadError');
       setMessage({ type: 'error', text: errorText });
     } finally {
       setUploading(false);
@@ -60,8 +92,28 @@ export function SecureUpload({ token, onUpload, disabled }: SecureUploadProps) {
 
   return (
     <div>
+      {loading && (
+        <p className="mb-2 text-sm text-ink-500">{t('uploadPreparing')}</p>
+      )}
+
+      {!loading && sessionError && (
+        <div className="mb-3 space-y-2">
+          <p className="text-sm text-red-600">{sessionError}</p>
+          <p className="text-xs text-ink-500">{t('uploadSessionHint')}</p>
+          {onRefreshSession && (
+            <button
+              type="button"
+              onClick={() => void onRefreshSession()}
+              className="text-sm font-medium text-brand-600 hover:text-brand-700"
+            >
+              {t('uploadRetry')}
+            </button>
+          )}
+        </div>
+      )}
+
       <label
-        className={`inline-flex cursor-pointer items-center gap-2 rounded-lg border-2 border-dashed border-ink-300 px-4 py-3 text-sm text-ink-600 transition hover:border-brand-500 hover:text-brand-600 ${disabled || !token || uploading ? 'pointer-events-none opacity-50' : ''}`}
+        className={`inline-flex cursor-pointer items-center gap-2 rounded-lg border-2 border-dashed border-ink-300 px-4 py-3 text-sm text-ink-600 transition hover:border-brand-500 hover:text-brand-600 ${!canUpload ? 'pointer-events-none opacity-50' : ''}`}
       >
         <svg
           className="h-5 w-5"
@@ -76,15 +128,16 @@ export function SecureUpload({ token, onUpload, disabled }: SecureUploadProps) {
             d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
           />
         </svg>
-        {uploading ? t('loading') : 'Choose file'}
+        {uploading ? t('loading') : t('chooseFile')}
         <input
           type="file"
           className="hidden"
           accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
           onChange={handleChange}
-          disabled={disabled || !token || uploading}
+          disabled={!canUpload}
         />
       </label>
+
       {message && (
         <p
           className={`mt-2 text-sm ${message.type === 'error' ? 'text-red-600' : 'text-green-600'}`}

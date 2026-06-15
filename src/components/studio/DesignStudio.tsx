@@ -60,7 +60,7 @@ export function DesignStudio() {
   const fabricRef = useRef<unknown>(null);
   const prevCanvasSizeRef = useRef({ width: 0, height: 0 });
   const { addItem } = useCart();
-  const { token } = useUploadSession();
+  const { token, loading: uploadLoading, error: uploadSessionError, refreshSession } = useUploadSession();
 
   const [text, setText] = useState('');
   const [fontSize, setFontSize] = useState(32);
@@ -462,6 +462,9 @@ export function DesignStudio() {
           <p className="mb-3 text-xs text-ink-500">{t('uploadHint')}</p>
           <SecureUpload
             token={token}
+            loading={uploadLoading}
+            sessionError={uploadSessionError}
+            onRefreshSession={refreshSession}
             onUpload={handleFileUpload}
           />
           {uploadedFiles.length > 0 && (

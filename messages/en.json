@@ -16,10 +16,11 @@
     "studio": "Studio"
   },
   "home": {
-    "heroTitle": "Your print, our passion",
-    "heroSubtitle": "Print 8 — professional printing services, personalized designs, and custom products.",
+    "heroBadge": "Print 8 · Professional printing",
+    "heroTitle": "Professional printing for your business and events",
+    "heroSubtitle": "Business cards, invitations, menus, and custom products — prepared and printed with care. Choose a ready-made design, enter your details, and order online. Pay on delivery.",
     "heroCta": "Browse services",
-    "heroSecondary": "Create a design",
+    "heroSecondary": "Ready-made designs",
     "featuredServices": "Popular services",
     "featuredDesigns": "Ready-made designs",
     "featuredProducts": "Products",
@@ -90,9 +91,10 @@
   },
   "designs": {
     "title": "Designs",
-    "subtitle": "Choose a ready-made template or create your own design in our studio.",
-    "createOwn": "Create your own design",
-    "useTemplate": "Use template",
+    "subtitle": "Pick a ready-made design and fill in your details — we handle the rest. No design skills needed.",
+    "createOwn": "Advanced: design studio",
+    "orderWithInfo": "Order with your info",
+    "useTemplate": "Order this design",
     "allCategories": "All categories",
     "categories": {
       "business-cards": "Business cards",
@@ -100,6 +102,61 @@
       "birthday": "Birthday",
       "menus": "Menus",
       "general": "General"
+    },
+    "templates": {
+      "bc-modern": "Modern business card",
+      "bc-classic": "Classic business card",
+      "wedding-floral": "Floral wedding invitation",
+      "wedding-minimal": "Minimal wedding invitation",
+      "birthday-fun": "Fun birthday invitation",
+      "menu-elegant": "Elegant restaurant menu"
+    },
+    "order": {
+      "backToDesigns": "Back to designs",
+      "pageSubtitle": "Enter your information below. We will apply it to this design and prepare your order.",
+      "formTitle": "Your information",
+      "formSubtitle": "Fill in the fields you need on your design. Only required fields are marked.",
+      "previewNote": "Preview of the selected design. Your details will be placed by our team.",
+      "startingFrom": "From",
+      "quantity": "Quantity",
+      "requiredNote": "Fields marked with * are required.",
+      "required": "This field is required",
+      "invalidEmail": "Enter a valid email address",
+      "invalidPhone": "Enter a valid phone number",
+      "addToCart": "Add to cart",
+      "studioTitle": "Prefer to design it yourself?",
+      "studioHint": "Open the full design studio to add text, images, and fine-tune the layout.",
+      "openStudio": "Open design studio",
+      "fields": {
+        "fullName": "Full name",
+        "companyName": "Company name",
+        "jobTitle": "Job title / position",
+        "phone": "Phone",
+        "email": "Email",
+        "website": "Website",
+        "address": "Address",
+        "coupleNames": "Couple names",
+        "eventDate": "Event date",
+        "venue": "Venue / location",
+        "celebrantName": "Birthday person",
+        "restaurantName": "Restaurant name",
+        "additionalInfo": "Additional information"
+      },
+      "placeholders": {
+        "fullName": "e.g. Ana Petrova",
+        "companyName": "e.g. Print 8 DOO",
+        "jobTitle": "e.g. Marketing manager",
+        "phone": "e.g. 070 123 456",
+        "email": "e.g. name@company.com",
+        "website": "e.g. www.example.com",
+        "address": "Street, city",
+        "coupleNames": "e.g. Ana & Marko",
+        "eventDate": "",
+        "venue": "e.g. Hotel Continental",
+        "celebrantName": "e.g. Stefan",
+        "restaurantName": "e.g. Restaurant Skopje",
+        "additionalInfo": "Special requests, message text, etc."
+      }
     }
   },
   "studio": {
@@ -134,11 +191,15 @@
     "orderAsIs": "Order as shown",
     "startingFrom": "from",
     "designs": {
-      "smile": "Smiley face",
-      "heart": "Heart",
-      "mountain": "Mountain landscape",
-      "backLogo": "Back logo",
-      "floral": "Floral pattern"
+      "design1": "Design 1",
+      "design2": "Design 2",
+      "design3": "Design 3",
+      "backDesign1": "Back design 1",
+      "mugDesign1": "Mug design 1",
+      "loveFamily": "I love my family",
+      "bestMother": "Best mother",
+      "bestFather": "Best father",
+      "loveMacedonia": "I love Macedonia"
     },
     "detail": {
       "notFound": "Product not found",
@@ -148,7 +209,12 @@
       "customizeYourOwn": "Create your own design",
       "premadeDesigns": "Ready-made designs",
       "premadeDesignsHint": "Pick a design and order it as-is, or customize it further.",
+      "imageDesigns": "Photo designs",
+      "imageDesignsHint": "Full designs on the product — add text or a photo on top.",
+      "textDesigns": "Text designs",
+      "textDesignsHint": "Macedonian phrases with a spot for your photo — edit the text and upload a picture.",
       "customizeDesign": "Customize this design",
+      "customizeWithPhoto": "Add your photo",
       "orderWithDesign": "Order with this design"
     },
     "types": {
@@ -189,7 +255,12 @@
       "positionTop": "Top",
       "positionCenter": "Center",
       "positionBottom": "Bottom",
-      "designSize": "Design size"
+      "designSize": "Image size",
+      "capturing": "Saving preview...",
+      "premadeDesignHint": "Add text or a photo on top of this design",
+      "textTemplateHint": "Edit the text and upload a photo of your loved one",
+      "photoGuide": "Add photo here",
+      "resizeHint": "Drag to move, use corner handles to resize"
     }
   },
   "about": {
@@ -257,6 +328,11 @@
     "subtotal": "Subtotal",
     "total": "Total",
     "checkout": "Checkout",
+    "zoomPreview": "View design preview",
+    "color": "Color",
+    "size": "Size",
+    "changeSize": "Change size",
+    "editDesign": "Edit design",
     "itemTypes": {
       "service": "Service",
       "design": "Design",
@@ -298,7 +374,12 @@
     "error": "Something went wrong. Please try again.",
     "uploadError": "Upload failed. Check your file.",
     "uploadSuccess": "File uploaded.",
-    "uploadLimit": "Upload limit reached. Please try again later."
+    "uploadLimit": "Upload limit reached. Please try again later.",
+    "uploadPreparing": "Preparing upload...",
+    "uploadSessionError": "Upload is unavailable. Check your connection or try again.",
+    "uploadSessionHint": "Check .env.local Supabase settings and run supabase/schema.sql if tables are missing.",
+    "uploadRetry": "Retry",
+    "chooseFile": "Choose file"
   },
   "footer": {
     "tagline": "Professional printing and personalized products.",

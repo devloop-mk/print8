@@ -1,10 +1,10 @@
-import { defineRouting } from "next-intl/routing";
-import { createNavigation } from "next-intl/navigation";
+import { defineRouting } from 'next-intl/routing';
+import { createNavigation } from 'next-intl/navigation';
 
 export const routing = defineRouting({
-  locales: ["mk", "en"],
-  defaultLocale: "mk",
-  localePrefix: "always",
+  locales: ['mk', 'en'],
+  defaultLocale: 'mk',
+  localePrefix: 'always',
 });
 
 export type Locale = (typeof routing.locales)[number];
