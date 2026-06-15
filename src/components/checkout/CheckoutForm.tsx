@@ -41,6 +41,9 @@ export function CheckoutForm() {
       newErrors.phone = t("invalidPhone");
     if (!form.city.trim()) newErrors.city = t("required");
     if (!form.address.trim()) newErrors.address = t("required");
+    if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      newErrors.email = t("invalidEmail");
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }
@@ -57,13 +60,14 @@ export function CheckoutForm() {
         body: JSON.stringify({
           ...form,
           locale,
-          items: items.map(({ type, name, price, quantity, metadata, designPreview, fileIds: itemFileIds }) => ({
+          items: items.map(({ type, name, price, quantity, metadata, designPreview, backDesignPreview, fileIds: itemFileIds }) => ({
             type,
             name,
             price,
             quantity,
             metadata,
             designPreview,
+            backDesignPreview,
             fileIds: itemFileIds,
           })),
           fileIds,
@@ -117,7 +121,10 @@ export function CheckoutForm() {
               value={form.email}
               onChange={(v) => updateField("email", v)}
               type="email"
+              error={errors.email}
+              required
               className="sm:col-span-2"
+              hint={t("emailHint")}
             />
             <Field
               label={t("city")}
@@ -220,6 +227,7 @@ function Field({
   required,
   type = "text",
   className = "",
+  hint,
 }: {
   label: string;
   value: string;
@@ -228,6 +236,7 @@ function Field({
   required?: boolean;
   type?: string;
   className?: string;
+  hint?: string;
 }) {
   return (
     <div className={className}>
@@ -244,6 +253,9 @@ function Field({
           error ? "border-red-400" : "border-ink-300"
         }`}
       />
+      {hint && !error && (
+        <p className="mt-1 text-xs text-ink-500">{hint}</p>
+      )}
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
   );

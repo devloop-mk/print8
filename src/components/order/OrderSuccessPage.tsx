@@ -18,6 +18,7 @@ function OrderSuccessContent() {
       <CheckCircle className="mx-auto h-16 w-16 text-green-500" />
       <h1 className="mt-6 text-2xl font-bold text-ink-900">{t("title")}</h1>
       <p className="mt-2 text-ink-500">{t("subtitle")}</p>
+      <p className="mt-3 text-sm text-ink-600">{t("confirmationEmail")}</p>
       {orderNumber && (
         <p className="mt-4 text-lg">
           <span className="text-ink-500">{t("orderNumber")}: </span>

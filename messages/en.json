@@ -22,8 +22,19 @@
     "heroCta": "Browse services",
     "heroSecondary": "Ready-made designs",
     "featuredServices": "Popular services",
-    "featuredDesigns": "Ready-made designs",
+    "featuredServicesDesc": "Professional printing for everyday business needs — cards, documents, menus, and more.",
+    "featuredDesigns": "Personalized designs",
+    "featuredDesignsDesc": "Customize text and colors online, then order exactly what you see. Filter by category and explore our templates.",
+    "designFilterLabel": "Filter personalized designs",
+    "seeAllDesigns": "See all",
+    "noDesignsInCategory": "No personalized templates in this category yet.",
+    "contactCtaBadge": "We're here to help",
+    "contactCtaTitle": "Questions about your order?",
+    "contactCtaDesc": "Reach out for help with designs, file formats, delivery, or a custom quote. We usually reply within one business day.",
+    "contactCtaButton": "Contact us",
+    "contactCtaFaq": "View FAQ",
     "featuredProducts": "Products",
+    "featuredProductsDesc": "T-shirts, mugs, bags, and more — customize with your design or order as shown.",
     "whyUs": "Why Print 8?",
     "whyQuality": "High print quality",
     "whyQualityDesc": "We use professional equipment and materials for lasting results.",
@@ -38,64 +49,91 @@
     "subtitle": "Complete printing solutions — from business cards to personalized gift sets.",
     "startingFrom": "from",
     "orderService": "Order service",
+    "seeOptions": "See options",
+    "backToServices": "Back to services",
+    "designsSection": "Ready-made designs",
+    "designsSectionDesc": "Choose a template and send us your details — we prepare the design for you.",
+    "productsSection": "Products to customize",
+    "productsSectionDesc": "Pick a product and add your design, or order as shown.",
+    "orderHint": "You can also place a general order for this service. Upload your files at checkout if needed.",
     "items": {
       "business-cards": {
         "title": "Business cards",
-        "description": "Professional business cards with high print quality, various materials and finishes."
+        "description": "Professional business cards with high print quality, various materials and finishes.",
+        "detail": "Choose a ready-made business card design and send us your contact details. We prepare the layout and print for you."
       },
       "restaurant-menus": {
         "title": "Restaurant menus",
-        "description": "Elegant menus for restaurants, cafés, and hotels — laminated or plastified."
+        "description": "Elegant menus for restaurants, cafés, and hotels — laminated or plastified.",
+        "detail": "Browse menu templates and share your restaurant details. We format and print your menus."
       },
       "laminating": {
         "title": "Laminating",
-        "description": "Protection and enhancement of documents, posters, and menus with professional laminating."
+        "description": "Protection and enhancement of documents, posters, and menus with professional laminating.",
+        "detail": "Bring or upload your documents for professional laminating. No design setup needed."
       },
       "color-bw-printing": {
         "title": "Color & B&W printing",
-        "description": "Documents, brochures, flyers, and posters — in color or black and white."
+        "description": "Documents, brochures, flyers, and posters — in color or black and white.",
+        "detail": "Standard printing service for documents and marketing materials. Upload files at checkout."
       },
       "plastification": {
         "title": "Plastification",
-        "description": "Long-lasting protection of your materials with quality plastification."
+        "description": "Long-lasting protection of your materials with quality plastification.",
+        "detail": "Protect menus, posters, and documents with durable plastification."
       },
       "t-shirt-printing": {
         "title": "T-shirt printing",
-        "description": "Custom t-shirt printing — perfect for events, promotions, and gifts."
+        "description": "Custom t-shirt printing — perfect for events, promotions, and gifts.",
+        "detail": "Choose a t-shirt, customize with your design, or use one of our pre-made layouts."
       },
       "cup-printing": {
         "title": "Cup printing",
-        "description": "Personalized cups and mugs — great for promo or gifts."
+        "description": "Personalized cups and mugs — great for promo or gifts.",
+        "detail": "Select a mug or cup and personalize it with your logo or message."
       },
       "bag-printing": {
         "title": "Bag printing",
-        "description": "Branded bags for your business or event."
+        "description": "Branded bags for your business or event.",
+        "detail": "Pick a bag style and add your branding through our product customizer."
       },
       "bookbinding": {
         "title": "Bookbinding",
-        "description": "Professional binding of documents, theses, catalogs, and books."
+        "description": "Professional binding of documents, theses, catalogs, and books.",
+        "detail": "Professional binding for theses, catalogs, and documents. Order directly — no design step."
       },
       "wedding-invitations": {
         "title": "Wedding invitations",
-        "description": "Elegant invitations for your special day — with personalized design."
+        "description": "Elegant invitations for your special day — with personalized design.",
+        "detail": "Select a wedding invitation template and provide your event details."
       },
       "birthday-invitations": {
         "title": "Birthday invitations",
-        "description": "Creative birthday invitations — for kids and adults."
+        "description": "Creative birthday invitations — for kids and adults.",
+        "detail": "Choose a birthday design and send us the party details to personalize."
       },
       "gift-sets": {
         "title": "Personalized gift sets",
-        "description": "Complete gift sets with your brand or message."
+        "description": "Complete gift sets with your brand or message.",
+        "detail": "Browse gift set products and customize them for your occasion."
       }
     }
   },
   "designs": {
     "title": "Designs",
-    "subtitle": "Pick a ready-made design and fill in your details — we handle the rest. No design skills needed.",
+    "subtitle": "Choose a ready-made design and send your details, or personalize a template online with live preview.",
     "createOwn": "Advanced: design studio",
     "orderWithInfo": "Order with your info",
+    "customizeOnline": "Customize online",
     "useTemplate": "Order this design",
     "allCategories": "All categories",
+    "fixedSectionTitle": "Ready-made designs",
+    "fixedSectionDesc": "Fixed layouts — enter your details and we prepare the final design for printing.",
+    "customizableSectionTitle": "Customizable templates",
+    "customizableSectionDesc": "Edit text and colors on the preview, then order exactly what you see.",
+    "fixedBadge": "Ready-made",
+    "customizableBadge": "Customizable",
+    "menuGalleryNote": "The listed price covers front and back cover customization only. Menu interior pages, food photos, and other extras are not included — our team will contact you after ordering to arrange those separately.",
     "categories": {
       "business-cards": "Business cards",
       "wedding": "Wedding",
@@ -106,14 +144,90 @@
     "templates": {
       "bc-modern": "Modern business card",
       "bc-classic": "Classic business card",
+      "bc-editable-minimal": "Minimal business card",
+      "bc-editable-classic": "Classic editable card",
+      "bc-executive": "Executive business card",
       "wedding-floral": "Floral wedding invitation",
       "wedding-minimal": "Minimal wedding invitation",
       "birthday-fun": "Fun birthday invitation",
-      "menu-elegant": "Elegant restaurant menu"
+      "birthday-modern": "Modern birthday invitation",
+      "menu-elegant": "Elegant restaurant menu",
+      "menu-modern": "Modern restaurant menu"
+    },
+    "customize": {
+      "backToDesigns": "Back to designs",
+      "badge": "Customizable template",
+      "pageSubtitle": "Use the step-by-step editor to personalize front and back, then order exactly what you see.",
+      "editorNav": "Design editor steps",
+      "livePreview": "Live preview",
+      "frontSide": "Front",
+      "backSide": "Back",
+      "prevStep": "Previous",
+      "nextStep": "Next",
+      "formTitle": "Personalize your design",
+      "formSubtitle": "Change text and colors to match your event or brand.",
+      "previewNote": "Live preview — your order includes front and back as shown.",
+      "colorTheme": "Colors",
+      "accentColor": "Accent",
+      "backgroundColor": "Background",
+      "textColor": "Text",
+      "secondaryColor": "Secondary",
+      "capturing": "Saving preview...",
+      "menuInsideTitle": "What this price includes",
+      "menuInsideNote": "The price shown is for the front and back cover only. It does not include the interior menu pages, food photos, extra sections, or other add-ons. After you place your order, our team will contact you to collect your dishes, prices, and any photos, then prepare a quote for the inside pages.",
+      "menuPriceNote": "Price is for front & back cover only — not interior pages, photos, or extras.",
+      "steps": {
+        "front": {
+          "title": "Front side",
+          "hint": "Main details",
+          "desc": "These fields appear on the front of your design."
+        },
+        "back": {
+          "title": "Back side",
+          "hint": "Extra details",
+          "desc": "Contact info, RSVP, or additional text for the back."
+        },
+        "colors": {
+          "title": "Colors",
+          "hint": "Theme & style",
+          "desc": "Pick a preset or fine-tune each color. Both sides update instantly."
+        },
+        "review": {
+          "title": "Review & order",
+          "hint": "Check & add to cart",
+          "desc": "Review both sides, set quantity, and add to your cart."
+        }
+      },
+      "presets": {
+        "ocean": "Ocean",
+        "forest": "Forest",
+        "slate": "Slate",
+        "gold": "Gold",
+        "wine": "Wine",
+        "navy": "Navy",
+        "party": "Party",
+        "candy": "Candy",
+        "blush": "Blush",
+        "sage": "Sage",
+        "ivory": "Ivory",
+        "mono": "Mono",
+        "rose": "Rose",
+        "midnight": "Midnight",
+        "platinum": "Platinum",
+        "emerald": "Emerald",
+        "brass": "Brass",
+        "charcoal": "Charcoal",
+        "olive": "Olive",
+        "citrus": "Citrus",
+        "noir": "Noir",
+        "cream": "Cream",
+        "steel": "Steel"
+      }
     },
     "order": {
       "backToDesigns": "Back to designs",
       "pageSubtitle": "Enter your information below. We will apply it to this design and prepare your order.",
+      "fixedBadge": "Ready-made design — layout is fixed; only your details change.",
       "formTitle": "Your information",
       "formSubtitle": "Fill in the fields you need on your design. Only required fields are marked.",
       "previewNote": "Preview of the selected design. Your details will be placed by our team.",
@@ -140,7 +254,9 @@
         "venue": "Venue / location",
         "celebrantName": "Birthday person",
         "restaurantName": "Restaurant name",
-        "additionalInfo": "Additional information"
+        "additionalInfo": "Additional information",
+        "frontHeadline": "Front headline / tagline",
+        "backHeadline": "Back headline / label"
       },
       "placeholders": {
         "fullName": "e.g. Ana Petrova",
@@ -155,7 +271,9 @@
         "venue": "e.g. Hotel Continental",
         "celebrantName": "e.g. Stefan",
         "restaurantName": "e.g. Restaurant Skopje",
-        "additionalInfo": "Special requests, message text, etc."
+        "additionalInfo": "Special requests, message text, etc.",
+        "frontHeadline": "e.g. You're invited!",
+        "backHeadline": "e.g. RSVP or Contact"
       }
     }
   },
@@ -181,7 +299,13 @@
     "uploadHint": "We accept JPG, PNG, and PDF (max 10MB)",
     "saved": "Design saved!",
     "productType": "Product type",
-    "selectTemplate": "Select template"
+    "selectTemplate": "Select template",
+    "tabCreate": "Create",
+    "tabSaved": "Saved designs",
+    "savedDesignDefaultName": "Design {number}",
+    "continueEditing": "Continue editing",
+    "deleteDesign": "Delete",
+    "savedDesignsHint": "Your saved designs are stored on this device. Continue editing or add one to your cart."
   },
   "products": {
     "title": "Products",
@@ -345,7 +469,9 @@
     "customerInfo": "Delivery details",
     "fullName": "Full name",
     "phone": "Phone",
-    "email": "Email (optional)",
+    "email": "Email",
+    "emailHint": "We'll send your order confirmation and design preview to this address.",
+    "invalidEmail": "Enter a valid email address",
     "city": "City",
     "address": "Address",
     "notes": "Notes",
@@ -363,6 +489,7 @@
   "orderSuccess": {
     "title": "Order received!",
     "subtitle": "Thank you. We'll contact you soon to confirm.",
+    "confirmationEmail": "A confirmation email with your design preview has been sent to your inbox.",
     "orderNumber": "Order number",
     "backHome": "Back to home"
   },

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <defs>
+    <linearGradient id="bar" x1="0" x2="1">
+      <stop offset="0" stop-color="#c9a227"/>
+      <stop offset="1" stop-color="#94a3b8"/>
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="#0f172a"/>
+  <rect x="0" y="0" width="800" height="8" fill="url(#bar)"/>
+  <rect x="40" y="80" width="48" height="48" rx="4" fill="#c9a227" opacity="0.15"/>
+  <rect x="64" y="104" width="56" height="56" rx="6" fill="#c9a227" opacity="0.22"/>
+  <text x="120" y="150" fill="#c9a227" font-family="Inter, Arial, sans-serif" font-size="12" letter-spacing="4">PRINT 8</text>
+  <text x="120" y="210" fill="#f8fafc" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="700">Ana Petrova</text>
+  <text x="120" y="248" fill="#94a3b8" font-family="Inter, Arial, sans-serif" font-size="16">Marketing Manager</text>
+  <line x1="120" y1="280" x2="260" y2="280" stroke="#c9a227" stroke-width="2" opacity="0.7"/>
+</svg>

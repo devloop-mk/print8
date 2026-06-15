@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <rect width="100%" height="100%" fill="#f8fafc"/>
+  <rect x="80" y="100" width="640" height="250" rx="12" fill="#ffffff" stroke="#e2e8f0"/>
+  <rect x="80" y="100" width="72" height="250" rx="12" fill="#2563eb"/>
+  <text x="200" y="190" fill="#0f172a" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700">Ana Petrova</text>
+  <text x="200" y="225" fill="#2563eb" font-family="Inter, Arial, sans-serif" font-size="16">Marketing Manager</text>
+  <text x="200" y="255" fill="#64748b" font-family="Inter, Arial, sans-serif" font-size="14">Print 8</text>
+</svg>

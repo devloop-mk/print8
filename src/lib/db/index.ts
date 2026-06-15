@@ -40,6 +40,8 @@ export interface UploadedFileRecord {
   sessionId: string;
   originalName: string;
   storedName: string;
+  /** Full-quality original in storage (images only) */
+  originalStoredName: string | null;
   mimeType: string;
   size: number;
   createdAt: string;
@@ -66,6 +68,7 @@ function mapUploadedFile(row: {
   session_id: string;
   original_name: string;
   stored_name: string;
+  original_stored_name?: string | null;
   mime_type: string;
   size: number;
   created_at: string;
@@ -75,6 +78,7 @@ function mapUploadedFile(row: {
     sessionId: row.session_id,
     originalName: row.original_name,
     storedName: row.stored_name,
+    originalStoredName: row.original_stored_name ?? null,
     mimeType: row.mime_type,
     size: row.size,
     createdAt: row.created_at,
@@ -178,6 +182,7 @@ export const db = {
         session_id: value.sessionId,
         original_name: value.originalName,
         stored_name: value.storedName,
+        original_stored_name: value.originalStoredName,
         mime_type: value.mimeType,
         size: value.size,
         created_at: value.createdAt,

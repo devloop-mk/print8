@@ -29,6 +29,14 @@ function resolveMimeType(file: File): string {
   return byExt[ext ?? ''] ?? file.type;
 }
 
+function extensionForMime(mimeType: string) {
+  if (mimeType === 'image/jpeg') return '.jpg';
+  if (mimeType === 'image/png') return '.png';
+  if (mimeType === 'image/webp') return '.webp';
+  if (mimeType === 'application/pdf') return '.pdf';
+  return '';
+}
+
 const SESSION_DURATION_MS = 24 * 60 * 60 * 1000;
 
 function getStorageBucket() {
@@ -88,30 +96,58 @@ export async function processUpload(
   }
 
   const fileId = nanoid();
-  const ext = mimeType === 'application/pdf' ? '.pdf' : '.webp';
-  const storedName = `${fileId}${ext}`;
-
   const arrayBuffer = await file.arrayBuffer();
-  let buffer = Buffer.from(arrayBuffer) as unknown as Buffer;
+  const sourceBuffer = Buffer.from(arrayBuffer) as unknown as Buffer;
+
+  let storedName: string;
+  let originalStoredName: string | null = null;
+  let storedMimeType = mimeType;
 
   if (mimeType.startsWith('image/')) {
-    buffer = (await sharp(buffer)
+    const ext = extensionForMime(mimeType);
+    originalStoredName = `${fileId}-original${ext}`;
+    storedName = `${fileId}.webp`;
+    storedMimeType = 'image/webp';
+
+    const { error: originalError } = await getSupabaseAdmin().storage
+      .from(getStorageBucket())
+      .upload(originalStoredName, sourceBuffer, {
+        contentType: mimeType,
+        cacheControl: '3600',
+        upsert: false,
+      });
+    if (originalError) {
+      throw new Error(originalError.message);
+    }
+
+    const previewBuffer = (await sharp(sourceBuffer)
       .rotate()
       .resize(4096, 4096, { fit: 'inside', withoutEnlargement: true })
       .webp({ quality: 85 })
       .toBuffer()) as Buffer;
-  }
 
-  const { error: uploadError } = await getSupabaseAdmin().storage
-    .from(getStorageBucket())
-    .upload(storedName, buffer, {
-      contentType: mimeType.startsWith('image/') ? 'image/webp' : mimeType,
-      cacheControl: '3600',
-      upsert: false,
-    });
-
-  if (uploadError) {
-    throw new Error(uploadError.message);
+    const { error: previewError } = await getSupabaseAdmin().storage
+      .from(getStorageBucket())
+      .upload(storedName, previewBuffer, {
+        contentType: 'image/webp',
+        cacheControl: '3600',
+        upsert: false,
+      });
+    if (previewError) {
+      throw new Error(previewError.message);
+    }
+  } else {
+    storedName = `${fileId}.pdf`;
+    const { error: uploadError } = await getSupabaseAdmin().storage
+      .from(getStorageBucket())
+      .upload(storedName, sourceBuffer, {
+        contentType: mimeType,
+        cacheControl: '3600',
+        upsert: false,
+      });
+    if (uploadError) {
+      throw new Error(uploadError.message);
+    }
   }
 
   const now = new Date().toISOString();
@@ -121,7 +157,8 @@ export async function processUpload(
     sessionId: session.id,
     originalName: file.name.slice(0, 255),
     storedName,
-    mimeType: mimeType.startsWith('image/') ? 'image/webp' : mimeType,
+    originalStoredName,
+    mimeType: storedMimeType,
     size: Math.max(0, Math.round(Number(file.size))),
     createdAt: now,
   }).catch((err) => {

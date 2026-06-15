@@ -7,9 +7,12 @@ import { useSearchParams } from 'next/navigation';
 import { useRouter } from '@/i18n/routing';
 import { useCart } from '@/components/cart/CartProvider';
 import { useUploadSession } from '@/hooks/useUploadSession';
+import { useSavedDesigns } from '@/hooks/useSavedDesigns';
 import { SecureUpload } from '@/components/upload/SecureUpload';
+import { SavedDesignsPanel } from '@/components/studio/SavedDesignsPanel';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import type { SavedDesign, SavedDesignCategory } from '@/lib/designs/saved-designs';
 
 const categoryPresetSizes = {
   'business-cards': [
@@ -59,8 +62,14 @@ export function DesignStudio() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricRef = useRef<unknown>(null);
   const prevCanvasSizeRef = useRef({ width: 0, height: 0 });
+  const suppressCategoryResetRef = useRef(false);
   const { addItem } = useCart();
   const { token, loading: uploadLoading, error: uploadSessionError, refreshSession } = useUploadSession();
+  const { designs: savedDesigns, saveDesign: persistDesign, deleteDesign } = useSavedDesigns();
+
+  const [activeTab, setActiveTab] = useState<'create' | 'saved'>('create');
+  const [activeDraftId, setActiveDraftId] = useState<string | null>(null);
+  const [pendingDraft, setPendingDraft] = useState<SavedDesign | null>(null);
 
   const [text, setText] = useState('');
   const [fontSize, setFontSize] = useState(32);
@@ -72,7 +81,7 @@ export function DesignStudio() {
   >([]);
   const categories = Object.keys(categoryPresetSizes) as DesignCategory[];
   const [selectedCategory, setSelectedCategory] =
-    useState<DesignCategory>('general');
+    useState<SavedDesignCategory>('general');
   const categorySizes = categoryPresetSizes[selectedCategory];
   const [selectedSize, setSelectedSize] = useState<SizeKey>(
     categorySizes[0].key,
@@ -87,6 +96,11 @@ export function DesignStudio() {
   const templateId = searchParams.get('template');
 
   useEffect(() => {
+    if (suppressCategoryResetRef.current) {
+      suppressCategoryResetRef.current = false;
+      return;
+    }
+
     setSelectedSize(categorySizes[0].key);
     setCustomWidth(categorySizes[0].widthCm);
     setCustomHeight(categorySizes[0].heightCm);
@@ -202,6 +216,33 @@ export function DesignStudio() {
     prevCanvasSizeRef.current = { width: canvasWidth, height: canvasHeight };
   }, [canvasWidth, canvasHeight]);
 
+  useEffect(() => {
+    if (!pendingDraft || !fabricRef.current) return;
+
+    let cancelled = false;
+    const canvas = fabricRef.current as InstanceType<
+      Awaited<typeof import('fabric')>['Canvas']
+    >;
+
+    canvas.clear();
+    canvas.backgroundColor = '#ffffff';
+
+    void canvas.loadFromJSON(pendingDraft.canvasJson).then(() => {
+      if (cancelled) return;
+
+      canvas.backgroundColor = '#ffffff';
+      canvas.renderAll();
+      prevCanvasSizeRef.current = { width: canvasWidth, height: canvasHeight };
+      setPreviewDataUrl(pendingDraft.previewDataUrl);
+      setSaved(true);
+      setPendingDraft(null);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pendingDraft, canvasWidth, canvasHeight]);
+
   async function addTextToCanvas() {
     if (!text.trim() || !fabricRef.current) return;
     const { IText } = await import('fabric');
@@ -238,14 +279,101 @@ export function DesignStudio() {
     addImageToCanvas(`/api/files/${fileId}`);
   }
 
+  function buildSizeLabel(
+    sizeKey: SizeKey,
+    widthCm: number,
+    heightCm: number,
+    presetLabel?: string,
+  ) {
+    return sizeKey === 'custom'
+      ? `${widthCm.toFixed(1)}×${heightCm.toFixed(1)} ${t('cm')}`
+      : (presetLabel ?? `${widthCm}×${heightCm} ${t('cm')}`);
+  }
+
   function saveDesign() {
     if (!fabricRef.current) return;
     const canvas = fabricRef.current as InstanceType<
       Awaited<typeof import('fabric')>['Canvas']
     >;
-    const dataUrl = canvas.toDataURL({ format: 'png', multiplier: 1 });
-    setPreviewDataUrl(dataUrl);
+    const preview = canvas.toDataURL({ format: 'jpeg', quality: 0.82, multiplier: 0.5 });
+    const canvasJson = canvas.toJSON() as Record<string, unknown>;
+    const now = new Date().toISOString();
+    const existingDraft = activeDraftId
+      ? savedDesigns.find((design) => design.id === activeDraftId)
+      : undefined;
+    const draftId = activeDraftId ?? crypto.randomUUID();
+    const draftName =
+      existingDraft?.name ??
+      t('savedDesignDefaultName', { number: savedDesigns.length + 1 });
+
+    const savedEntry: SavedDesign = {
+      id: draftId,
+      name: draftName,
+      createdAt: existingDraft?.createdAt ?? now,
+      updatedAt: now,
+      previewDataUrl: preview,
+      canvasJson,
+      selectedCategory,
+      selectedSize,
+      customWidth,
+      customHeight,
+      templateId,
+      uploadedFiles,
+    };
+
+    persistDesign(savedEntry);
+    setActiveDraftId(draftId);
+    setPreviewDataUrl(preview);
     setSaved(true);
+  }
+
+  function loadDraft(design: SavedDesign) {
+    suppressCategoryResetRef.current = true;
+    setSelectedCategory(design.selectedCategory);
+    setSelectedSize(design.selectedSize);
+    setCustomWidth(design.customWidth);
+    setCustomHeight(design.customHeight);
+    setUploadedFiles(design.uploadedFiles);
+    setActiveDraftId(design.id);
+    setActiveTab('create');
+    setPendingDraft(design);
+  }
+
+  function addSavedDesignToCart(design: SavedDesign) {
+    const categorySizesForDraft = categoryPresetSizes[design.selectedCategory];
+    const preset = categorySizesForDraft.find((size) => size.key === design.selectedSize);
+    const widthCm =
+      design.selectedSize === 'custom'
+        ? design.customWidth
+        : (preset?.widthCm ?? design.customWidth);
+    const heightCm =
+      design.selectedSize === 'custom'
+        ? design.customHeight
+        : (preset?.heightCm ?? design.customHeight);
+    const label = buildSizeLabel(
+      design.selectedSize,
+      widthCm,
+      heightCm,
+      preset?.label,
+    );
+
+    addItem({
+      type: 'design',
+      name: design.templateId
+        ? `Design (${design.templateId}) ${label}`
+        : `Custom design ${label}`,
+      price: 500,
+      quantity: 1,
+      designPreview: design.previewDataUrl,
+      fileIds: design.uploadedFiles.map((file) => file.fileId),
+      metadata: {
+        templateId: design.templateId || 'custom',
+        selectedSize: design.selectedSize,
+        widthCm,
+        heightCm,
+      },
+    });
+    router.push('/cart');
   }
 
   function addToCart() {
@@ -287,9 +415,69 @@ export function DesignStudio() {
     canvas.renderAll();
     setSaved(false);
     setPreviewDataUrl(null);
+    setActiveDraftId(null);
+    setPendingDraft(null);
+    setUploadedFiles([]);
+  }
+
+  function handleDeleteDesign(id: string) {
+    deleteDesign(id);
+    if (activeDraftId === id) {
+      void clearCanvas();
+    }
+    if (savedDesigns.length <= 1) {
+      setActiveTab('create');
+    }
   }
 
   return (
+    <div className="space-y-6">
+      <div
+        className="flex flex-wrap gap-2"
+        role="tablist"
+        aria-label={t('title')}
+      >
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'create'}
+          onClick={() => setActiveTab('create')}
+          className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+            activeTab === 'create'
+              ? 'bg-brand-600 text-white'
+              : 'bg-ink-100 text-ink-600 hover:bg-ink-200'
+          }`}
+        >
+          {t('tabCreate')}
+        </button>
+        {savedDesigns.length > 0 && (
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'saved'}
+            onClick={() => setActiveTab('saved')}
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+              activeTab === 'saved'
+                ? 'bg-brand-600 text-white'
+                : 'bg-ink-100 text-ink-600 hover:bg-ink-200'
+            }`}
+          >
+            {t('tabSaved')} ({savedDesigns.length})
+          </button>
+        )}
+      </div>
+
+      {activeTab === 'saved' ? (
+        <div className="space-y-4">
+          <p className="text-sm text-ink-500">{t('savedDesignsHint')}</p>
+          <SavedDesignsPanel
+            designs={savedDesigns}
+            onContinue={loadDraft}
+            onAddToCart={addSavedDesignToCart}
+            onDelete={handleDeleteDesign}
+          />
+        </div>
+      ) : (
     <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
       <Card className="overflow-hidden p-4">
         <div className="flex justify-center overflow-auto rounded-lg border border-ink-200 bg-ink-50 p-4">
@@ -495,6 +683,8 @@ export function DesignStudio() {
           )}
         </div>
       </div>
+    </div>
+      )}
     </div>
   );
 }

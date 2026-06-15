@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/routing";
+import { Suspense } from "react";
 import { DesignsGallery } from "@/components/designs/DesignsGallery";
 import { Button } from "@/components/ui/Button";
 
@@ -19,7 +20,9 @@ export default async function DesignsPage() {
           </Button>
         </Link>
       </div>
-      <DesignsGallery />
+      <Suspense fallback={null}>
+        <DesignsGallery />
+      </Suspense>
     </div>
   );
 }

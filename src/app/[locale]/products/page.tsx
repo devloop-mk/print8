@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { Suspense } from "react";
 import { ProductsCatalog } from "@/components/products/ProductsCatalog";
 
 export default async function ProductsPage() {
@@ -10,7 +11,9 @@ export default async function ProductsPage() {
         <h1 className="text-3xl font-bold text-ink-900">{t("title")}</h1>
         <p className="mt-2 text-lg text-ink-500">{t("subtitle")}</p>
       </div>
-      <ProductsCatalog />
+      <Suspense fallback={null}>
+        <ProductsCatalog />
+      </Suspense>
     </div>
   );
 }

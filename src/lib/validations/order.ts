@@ -14,7 +14,7 @@ export const orderItemSchema = z.object({
 export const checkoutSchema = z.object({
   fullName: z.string().min(2).max(100),
   phone: z.string().min(8).max(20),
-  email: z.string().email().optional().or(z.literal("")),
+  email: z.string().email(),
   city: z.string().min(2).max(100),
   address: z.string().min(5).max(300),
   notes: z.string().max(1000).optional(),

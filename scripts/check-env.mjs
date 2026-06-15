@@ -4,6 +4,9 @@ const keys = [
   'NEXT_PUBLIC_SUPABASE_ANON_KEY',
   'SUPABASE_SERVICE_ROLE_KEY',
   'SUPABASE_STORAGE_BUCKET',
+  'RESEND_API_KEY',
+  'EMAIL_FROM',
+  'ORDER_NOTIFICATION_EMAIL',
 ];
 
 const lines = fs.readFileSync('.env.local', 'utf8').split(/\r?\n/);

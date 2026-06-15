@@ -21,6 +21,7 @@ create table if not exists public.uploaded_files (
   session_id text not null references public.upload_sessions (id) on delete cascade,
   original_name text not null,
   stored_name text not null,
+  original_stored_name text,
   mime_type text not null,
   size bigint not null,
   created_at timestamptz not null default now()

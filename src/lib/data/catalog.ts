@@ -12,25 +12,99 @@ export type ServiceId =
   | 'birthday-invitations'
   | 'gift-sets';
 
+export type ServiceCustomization = 'none' | 'designs' | 'products';
+
 export interface Service {
   id: ServiceId;
   icon: string;
   startingPrice: number;
+  /** Whether the service has design/product options on its detail page */
+  customization: ServiceCustomization;
+  designCategory?: DesignCategory;
+  productTypes?: ProductType[];
 }
 
 export const services: Service[] = [
-  { id: 'business-cards', icon: 'CreditCard', startingPrice: 500 },
-  { id: 'restaurant-menus', icon: 'BookOpen', startingPrice: 800 },
-  { id: 'laminating', icon: 'Layers', startingPrice: 50 },
-  { id: 'color-bw-printing', icon: 'Printer', startingPrice: 10 },
-  { id: 'plastification', icon: 'Shield', startingPrice: 100 },
-  { id: 't-shirt-printing', icon: 'Shirt', startingPrice: 600 },
-  { id: 'cup-printing', icon: 'Coffee', startingPrice: 250 },
-  { id: 'bag-printing', icon: 'ShoppingBag', startingPrice: 300 },
-  { id: 'bookbinding', icon: 'BookMarked', startingPrice: 400 },
-  { id: 'wedding-invitations', icon: 'Heart', startingPrice: 1500 },
-  { id: 'birthday-invitations', icon: 'PartyPopper', startingPrice: 800 },
-  { id: 'gift-sets', icon: 'Gift', startingPrice: 1200 },
+  {
+    id: 'business-cards',
+    icon: 'CreditCard',
+    startingPrice: 500,
+    customization: 'designs',
+    designCategory: 'business-cards',
+  },
+  {
+    id: 'restaurant-menus',
+    icon: 'BookOpen',
+    startingPrice: 800,
+    customization: 'designs',
+    designCategory: 'menus',
+  },
+  {
+    id: 'laminating',
+    icon: 'Layers',
+    startingPrice: 50,
+    customization: 'none',
+  },
+  {
+    id: 'color-bw-printing',
+    icon: 'Printer',
+    startingPrice: 10,
+    customization: 'none',
+  },
+  {
+    id: 'plastification',
+    icon: 'Shield',
+    startingPrice: 100,
+    customization: 'none',
+  },
+  {
+    id: 't-shirt-printing',
+    icon: 'Shirt',
+    startingPrice: 600,
+    customization: 'products',
+    productTypes: ['t-shirt'],
+  },
+  {
+    id: 'cup-printing',
+    icon: 'Coffee',
+    startingPrice: 250,
+    customization: 'products',
+    productTypes: ['mug', 'cup'],
+  },
+  {
+    id: 'bag-printing',
+    icon: 'ShoppingBag',
+    startingPrice: 300,
+    customization: 'products',
+    productTypes: ['bag'],
+  },
+  {
+    id: 'bookbinding',
+    icon: 'BookMarked',
+    startingPrice: 400,
+    customization: 'none',
+  },
+  {
+    id: 'wedding-invitations',
+    icon: 'Heart',
+    startingPrice: 1500,
+    customization: 'designs',
+    designCategory: 'wedding',
+  },
+  {
+    id: 'birthday-invitations',
+    icon: 'PartyPopper',
+    startingPrice: 800,
+    customization: 'designs',
+    designCategory: 'birthday',
+  },
+  {
+    id: 'gift-sets',
+    icon: 'Gift',
+    startingPrice: 1200,
+    customization: 'products',
+    productTypes: ['gift-set'],
+  },
 ];
 
 export type DesignCategory =
@@ -40,11 +114,15 @@ export type DesignCategory =
   | 'menus'
   | 'general';
 
+export type DesignTemplateKind = 'fixed' | 'customizable';
+
 export interface DesignTemplate {
   id: string;
   category: DesignCategory;
   image: string;
   tags: string[];
+  kind: DesignTemplateKind;
+  layoutId?: string;
 }
 
 export const designTemplates: DesignTemplate[] = [
@@ -53,36 +131,86 @@ export const designTemplates: DesignTemplate[] = [
     category: 'business-cards',
     image: '/business-cards/business-card-1.jpg',
     tags: ['modern', 'minimal'],
+    kind: 'fixed',
   },
   {
     id: 'bc-classic',
     category: 'business-cards',
     image: '/business-cards/business-card-2.jpg',
     tags: ['classic', 'elegant'],
+    kind: 'fixed',
+  },
+  {
+    id: 'bc-editable-minimal',
+    category: 'business-cards',
+    image: '/designs/bc-editable-minimal.svg',
+    tags: ['modern', 'editable'],
+    kind: 'customizable',
+    layoutId: 'bc-minimal',
+  },
+  {
+    id: 'bc-editable-classic',
+    category: 'business-cards',
+    image: '/designs/bc-editable-classic.svg',
+    tags: ['classic', 'editable'],
+    kind: 'customizable',
+    layoutId: 'bc-classic',
+  },
+  {
+    id: 'bc-executive',
+    category: 'business-cards',
+    image: '/designs/bc-executive.svg',
+    tags: ['professional', 'premium'],
+    kind: 'customizable',
+    layoutId: 'bc-executive',
   },
   {
     id: 'wedding-floral',
     category: 'wedding',
     image: '/designs/wedding-floral.svg',
     tags: ['floral', 'romantic'],
+    kind: 'customizable',
+    layoutId: 'wedding-floral',
   },
   {
     id: 'wedding-minimal',
     category: 'wedding',
     image: '/designs/wedding-minimal.svg',
     tags: ['minimal', 'modern'],
+    kind: 'customizable',
+    layoutId: 'wedding-minimal',
   },
   {
     id: 'birthday-fun',
     category: 'birthday',
     image: '/designs/birthday-fun.svg',
     tags: ['colorful', 'kids'],
+    kind: 'customizable',
+    layoutId: 'birthday-fun',
+  },
+  {
+    id: 'birthday-modern',
+    category: 'birthday',
+    image: '/designs/birthday-modern.svg',
+    tags: ['modern', 'elegant'],
+    kind: 'customizable',
+    layoutId: 'birthday-modern',
   },
   {
     id: 'menu-elegant',
     category: 'menus',
     image: '/designs/menu-elegant.svg',
     tags: ['restaurant', 'elegant'],
+    kind: 'customizable',
+    layoutId: 'menu-elegant',
+  },
+  {
+    id: 'menu-modern',
+    category: 'menus',
+    image: '/designs/menu-modern.svg',
+    tags: ['restaurant', 'modern'],
+    kind: 'customizable',
+    layoutId: 'menu-modern',
   },
 ];
 
@@ -320,6 +448,36 @@ export function getProductDesignTemplate(id: string) {
 
 export function getDesignTemplate(id: string) {
   return designTemplates.find((d) => d.id === id);
+}
+
+export function getDesignHref(design: DesignTemplate) {
+  return design.kind === 'customizable'
+    ? `/designs/${design.id}/customize`
+    : `/designs/${design.id}`;
+}
+
+export function isCustomizableDesign(template: DesignTemplate) {
+  return template.kind === 'customizable' && Boolean(template.layoutId);
+}
+
+export function getService(id: string) {
+  return services.find((s) => s.id === id);
+}
+
+export function serviceHasDetailOptions(service: Service) {
+  return service.customization !== 'none';
+}
+
+export function getDesignsForService(service: Service) {
+  if (service.customization !== 'designs' || !service.designCategory) return [];
+  return designTemplates.filter((d) => d.category === service.designCategory);
+}
+
+export function getProductsForService(service: Service) {
+  if (service.customization !== 'products' || !service.productTypes?.length) {
+    return [];
+  }
+  return products.filter((p) => service.productTypes!.includes(p.type));
 }
 
 export const products: Product[] = [

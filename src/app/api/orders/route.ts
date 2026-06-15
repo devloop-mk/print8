@@ -3,6 +3,7 @@ import { nanoid } from 'nanoid';
 import { db } from '@/lib/db';
 import { checkoutSchema } from '@/lib/validations/order';
 import { generateOrderNumber } from '@/lib/utils';
+import { sendOrderEmails } from '@/lib/email/order-emails';
 
 export async function POST(request: NextRequest) {
   try {
@@ -43,6 +44,12 @@ export async function POST(request: NextRequest) {
       totalAmount,
       createdAt: now,
     });
+
+    try {
+      await sendOrderEmails(orderNumber, data, totalAmount);
+    } catch (emailError) {
+      console.error('[orders] email delivery failed:', emailError);
+    }
 
     return NextResponse.json({ orderId, orderNumber });
   } catch {

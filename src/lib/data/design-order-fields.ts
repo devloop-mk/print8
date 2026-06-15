@@ -13,7 +13,9 @@ export type DesignOrderFieldId =
   | "venue"
   | "celebrantName"
   | "restaurantName"
-  | "additionalInfo";
+  | "additionalInfo"
+  | "frontHeadline"
+  | "backHeadline";
 
 export const categoryOrderFields: Record<
   DesignCategory,
