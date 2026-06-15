@@ -81,12 +81,16 @@ export default async function HomePage({
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 sm:gap-4">
           {featuredServices.map((service) => (
-            <ServiceCard key={service.id} service={service} variant="home" />
+            <ServiceCard
+              key={service.id}
+              service={service}
+              variant="home"
+            />
           ))}
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+      <section className="mx-auto max-w-7xl px-4 pt-6 pb-16 sm:px-6 lg:px-8">
         <div className="mb-10 max-w-2xl">
           <h2 className="text-2xl font-bold text-ink-900">
             {t('featuredDesigns')}

@@ -56,6 +56,11 @@
     "productsSection": "Products to customize",
     "productsSectionDesc": "Pick a product and add your design, or order as shown.",
     "orderHint": "You can also place a general order for this service. Upload your files at checkout if needed.",
+    "ctaTitle": "Keep exploring",
+    "ctaDesc": "Browse products, pick a ready-made design, or build something from scratch in our design studio.",
+    "ctaProducts": "Browse products",
+    "ctaDesigns": "Browse designs",
+    "ctaStudio": "Make your own design",
     "items": {
       "business-cards": {
         "title": "Business cards",

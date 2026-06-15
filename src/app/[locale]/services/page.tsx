@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { services } from "@/lib/data/catalog";
 import { ServiceCard } from "@/components/services/ServiceCard";
+import { ServicesExploreCta } from "@/components/services/ServicesExploreCta";
 
 export default async function ServicesPage({
   params,
@@ -22,6 +23,8 @@ export default async function ServicesPage({
           <ServiceCard key={service.id} service={service} variant="list" />
         ))}
       </div>
+
+      <ServicesExploreCta />
     </div>
   );
 }
