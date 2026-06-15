@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { nanoid } from 'nanoid';
+import { VISITOR_COOKIE_NAME, VISITOR_TTL_SECONDS } from '@/lib/analytics/constants';
 import { db } from '@/lib/db';
-
-export const VISITOR_COOKIE_NAME = 'print8_vid';
-const VISITOR_TTL_SECONDS = 365 * 24 * 60 * 60;
 
 const BLOCKED_PREFIXES = ['/admin', '/api', '/_next'];
 
