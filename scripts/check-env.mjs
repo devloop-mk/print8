@@ -7,6 +7,9 @@ const keys = [
   'RESEND_API_KEY',
   'EMAIL_FROM',
   'ORDER_NOTIFICATION_EMAIL',
+  'ADMIN_USERNAME',
+  'ADMIN_PASSWORD',
+  'ADMIN_SESSION_SECRET',
 ];
 
 const lines = fs.readFileSync('.env.local', 'utf8').split(/\r?\n/);

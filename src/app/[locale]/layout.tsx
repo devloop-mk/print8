@@ -6,6 +6,7 @@ import { routing } from "@/i18n/routing";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { CartProvider } from "@/components/cart/CartProvider";
+import { SiteAnalytics } from "@/components/analytics/SiteAnalytics";
 import "@/app/globals.css";
 
 const inter = Inter({
@@ -40,6 +41,7 @@ export default async function LocaleLayout({
       >
         <NextIntlClientProvider messages={messages}>
           <CartProvider>
+            <SiteAnalytics />
             <Header />
             <main className="min-h-[calc(100vh-8rem)]">{children}</main>
             <Footer />

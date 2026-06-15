@@ -47,6 +47,15 @@ export interface UploadedFileRecord {
   createdAt: string;
 }
 
+export interface PageViewRecord {
+  id: string;
+  path: string;
+  locale: string | null;
+  visitorId: string;
+  referrer: string | null;
+  createdAt: string;
+}
+
 function mapUploadSession(row: {
   id: string;
   token: string;
@@ -81,6 +90,44 @@ function mapUploadedFile(row: {
     originalStoredName: row.original_stored_name ?? null,
     mimeType: row.mime_type,
     size: row.size,
+    createdAt: row.created_at,
+  };
+}
+
+type OrderRow = {
+  id: string;
+  order_number: string;
+  status: OrderStatus;
+  payment_method: 'cod';
+  locale: 'mk' | 'en';
+  customer_name: string;
+  customer_phone: string;
+  customer_email: string | null;
+  customer_city: string;
+  customer_address: string;
+  notes: string | null;
+  items: unknown;
+  file_ids: unknown;
+  total_amount: number;
+  created_at: string;
+};
+
+function mapOrderRow(row: OrderRow): OrderRecord {
+  return {
+    id: row.id,
+    orderNumber: row.order_number,
+    status: row.status,
+    paymentMethod: row.payment_method,
+    locale: row.locale,
+    customerName: row.customer_name,
+    customerPhone: row.customer_phone,
+    customerEmail: row.customer_email,
+    customerCity: row.customer_city,
+    customerAddress: row.customer_address,
+    notes: row.notes,
+    itemsJson: JSON.stringify(row.items ?? []),
+    fileIdsJson: row.file_ids ? JSON.stringify(row.file_ids) : null,
+    totalAmount: Number(row.total_amount),
     createdAt: row.created_at,
   };
 }
@@ -127,16 +174,81 @@ export const db = {
         if (error.code === 'PGRST116') return null;
         throw new Error(error.message);
       }
-      return data as OrderRecord | null;
+      return data ? mapOrderRow(data as OrderRow) : null;
     },
 
-    async list() {
+    async findById(id: string) {
       const { data, error } = await getSupabaseAdmin()
         .from('orders')
         .select('*')
-        .order('created_at', { ascending: false });
+        .eq('id', id)
+        .single();
+      if (error) {
+        if (error.code === 'PGRST116') return null;
+        throw new Error(error.message);
+      }
+      return data ? mapOrderRow(data as OrderRow) : null;
+    },
+
+    async updateStatus(id: string, status: OrderStatus) {
+      const { data, error } = await getSupabaseAdmin()
+        .from('orders')
+        .update({ status })
+        .eq('id', id)
+        .select('*')
+        .single();
       if (error) throw new Error(error.message);
-      return data as OrderRecord[];
+      return mapOrderRow(data as OrderRow);
+    },
+
+    async list(options?: {
+      status?: OrderStatus | 'all';
+      sort?: 'newest' | 'oldest' | 'amount_high' | 'amount_low';
+      search?: string;
+      limit?: number;
+    }) {
+      let query = getSupabaseAdmin().from('orders').select('*');
+
+      if (options?.status && options.status !== 'all') {
+        query = query.eq('status', options.status);
+      }
+
+      const sort = options?.sort ?? 'newest';
+      if (sort === 'oldest') {
+        query = query.order('created_at', { ascending: true });
+      } else if (sort === 'amount_high') {
+        query = query.order('total_amount', { ascending: false });
+      } else if (sort === 'amount_low') {
+        query = query.order('total_amount', { ascending: true });
+      } else {
+        query = query.order('created_at', { ascending: false });
+      }
+
+      if (options?.limit) {
+        query = query.limit(options.limit);
+      }
+
+      const { data, error } = await query;
+      if (error) throw new Error(error.message);
+
+      let rows = (data as OrderRow[]).map(mapOrderRow);
+      const search = options?.search?.trim().toLowerCase();
+      if (search) {
+        rows = rows.filter((row) => {
+          const haystack = [
+            row.orderNumber,
+            row.customerName,
+            row.customerPhone,
+            row.customerEmail ?? '',
+            row.customerCity,
+          ]
+            .join(' ')
+            .toLowerCase();
+          return haystack.includes(search);
+        });
+      }
+
+      return rows;
     },
   },
 
@@ -228,6 +340,36 @@ export const db = {
       }
       if (!data) return null;
       return mapUploadedFile(data);
+    },
+  },
+
+  pageViews: {
+    async insert(value: PageViewRecord) {
+      const { error } = await getSupabaseAdmin().from('page_views').insert({
+        id: value.id,
+        path: value.path,
+        locale: value.locale,
+        visitor_id: value.visitorId,
+        referrer: value.referrer,
+        created_at: value.createdAt,
+      });
+      if (error) throw new Error(error.message);
+    },
+
+    async listSince(since: string) {
+      const { data, error } = await getSupabaseAdmin()
+        .from('page_views')
+        .select('path, locale, visitor_id, created_at')
+        .gte('created_at', since)
+        .order('created_at', { ascending: false });
+      if (error) throw new Error(error.message);
+
+      return (data ?? []).map((row) => ({
+        path: row.path as string,
+        locale: (row.locale as string | null) ?? null,
+        visitorId: row.visitor_id as string,
+        createdAt: row.created_at as string,
+      }));
     },
   },
 };
