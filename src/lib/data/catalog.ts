@@ -87,6 +87,17 @@ export const designTemplates: DesignTemplate[] = [
 ];
 
 export type ProductType = 't-shirt' | 'mug' | 'cup' | 'bag' | 'gift-set';
+export type ProductSide = 'front' | 'back';
+
+export interface ProductSideImages {
+  front: string;
+  back: string;
+}
+
+export type ProductColorImages = Record<
+  string,
+  string | ProductSideImages
+>;
 
 export interface Product {
   id: string;
@@ -94,8 +105,104 @@ export interface Product {
   image: string;
   basePrice: number;
   colors?: string[];
-  colorsImages?: Record<string, string>;
+  colorsImages?: ProductColorImages;
   sizes?: string[];
+  /** Products that support separate front/back customization */
+  sides?: ProductSide[];
+}
+
+export interface ProductDesignTemplate {
+  id: string;
+  productTypes: ProductType[];
+  nameKey: string;
+  image: string;
+  defaultSide: ProductSide;
+  scale?: number;
+  position?: { x: number; y: number };
+}
+
+export const productDesignTemplates: ProductDesignTemplate[] = [
+  {
+    id: 'tee-smile',
+    productTypes: ['t-shirt'],
+    nameKey: 'smile',
+    image: '/product-designs/smile.svg',
+    defaultSide: 'front',
+    scale: 45,
+    position: { x: 50, y: 38 },
+  },
+  {
+    id: 'tee-heart',
+    productTypes: ['t-shirt'],
+    nameKey: 'heart',
+    image: '/product-designs/heart.svg',
+    defaultSide: 'front',
+    scale: 40,
+    position: { x: 50, y: 38 },
+  },
+  {
+    id: 'tee-mountain',
+    productTypes: ['t-shirt'],
+    nameKey: 'mountain',
+    image: '/product-designs/mountain.svg',
+    defaultSide: 'front',
+    scale: 55,
+    position: { x: 50, y: 40 },
+  },
+  {
+    id: 'tee-back-logo',
+    productTypes: ['t-shirt'],
+    nameKey: 'backLogo',
+    image: '/product-designs/back-logo.svg',
+    defaultSide: 'back',
+    scale: 35,
+    position: { x: 50, y: 35 },
+  },
+  {
+    id: 'mug-floral',
+    productTypes: ['mug'],
+    nameKey: 'floral',
+    image: '/product-designs/floral.svg',
+    defaultSide: 'front',
+    scale: 50,
+    position: { x: 50, y: 45 },
+  },
+];
+
+export function productSupportsSides(product: Product): boolean {
+  return (product.sides?.length ?? 0) > 1;
+}
+
+export function getProductSides(product: Product): ProductSide[] {
+  if (product.sides?.length) return product.sides;
+  if (product.type === 't-shirt' || product.type === 'bag') {
+    return ['front', 'back'];
+  }
+  return ['front'];
+}
+
+export function getProductMockup(
+  product: Product,
+  color: string,
+  side: ProductSide,
+): string {
+  const entry = product.colorsImages?.[color];
+  if (!entry) return product.image;
+  if (typeof entry === 'string') {
+    if (side === 'front') return entry;
+    return entry.replace(/(\.[a-z]+)$/i, '-back$1');
+  }
+  return side === 'front' ? entry.front : entry.back || entry.front;
+}
+
+export function getProductDesignTemplates(product: Product) {
+  return productDesignTemplates.filter((d) =>
+    d.productTypes.includes(product.type),
+  );
+}
+
+export function getProductDesignTemplate(id: string) {
+  return productDesignTemplates.find((d) => d.id === id);
 }
 
 export const products: Product[] = [
@@ -104,14 +211,27 @@ export const products: Product[] = [
     type: 't-shirt',
     image: '/t-shirts/tshirt-white.png',
     colorsImages: {
-      '#ffffff': '/t-shirts/tshirt-white.png',
-      '#000000': '/t-shirts/tshirt-black.png',
-      '#1e40af': '/t-shirts/tshirt-blue.png',
-      '#dc2626': '/t-shirts/tshirt-red.png',
+      '#ffffff': {
+        front: '/t-shirts/tshirt-white.png',
+        back: '/t-shirts/tshirt-white-back.png',
+      },
+      '#000000': {
+        front: '/t-shirts/tshirt-black.png',
+        back: '/t-shirts/tshirt-black-back.png',
+      },
+      '#1e40af': {
+        front: '/t-shirts/tshirt-blue.png',
+        back: '/t-shirts/tshirt-blue-back.png',
+      },
+      '#dc2626': {
+        front: '/t-shirts/tshirt-red.png',
+        back: '/t-shirts/tshirt-red-back.png',
+      },
     },
     basePrice: 600,
     colors: ['#ffffff', '#000000', '#1e40af', '#dc2626'],
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    sides: ['front', 'back'],
   },
   {
     id: 'mug-classic',
@@ -130,13 +250,14 @@ export const products: Product[] = [
     type: 'bag',
     image: '/bags/bag-beige.png',
     colorsImages: {
-      '#D8C3A5': '/bags/bag-beige.png',
+      '#D8C3A5': {
+        front: '/bags/bag-beige.png',
+        back: '/bags/bag-beige-back.png',
+      },
     },
     basePrice: 300,
-    colors: [
-      '#D8C3A5',
-      //  '#1c1917', '#166534'
-    ],
+    colors: ['#D8C3A5'],
+    sides: ['front', 'back'],
   },
   // {
   //   id: 'cup-paper',

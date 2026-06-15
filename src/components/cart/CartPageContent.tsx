@@ -29,12 +29,23 @@ export function CartPageContent() {
       <div className="space-y-4">
         {items.map((item) => (
           <Card key={item.id} className="flex gap-4">
-            {item.designPreview && (
-              <img
-                src={item.designPreview}
-                alt=""
-                className="h-20 w-20 rounded-lg border border-ink-200 object-cover"
-              />
+            {(item.designPreview || item.backDesignPreview) && (
+              <div className="flex shrink-0 gap-1">
+                {item.designPreview && (
+                  <img
+                    src={item.designPreview}
+                    alt=""
+                    className="h-20 w-20 rounded-lg border border-ink-200 object-cover"
+                  />
+                )}
+                {item.backDesignPreview && (
+                  <img
+                    src={item.backDesignPreview}
+                    alt=""
+                    className="h-20 w-20 rounded-lg border border-ink-200 object-cover"
+                  />
+                )}
+              </div>
             )}
             <div className="flex flex-1 flex-col">
               <div className="flex items-start justify-between">

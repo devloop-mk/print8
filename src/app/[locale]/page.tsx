@@ -186,7 +186,7 @@ export default async function HomePage({
             {featuredProducts.map((product) => (
               <Link
                 key={product.id}
-                href={`/products/customize/${product.type}?id=${product.id}`}
+                href={`/products/${product.id}`}
               >
                 <Card className="overflow-hidden p-0">
                   <div className="relative aspect-square bg-gradient-to-br from-brand-50 to-brand-100 flex items-center justify-center">

@@ -7,6 +7,7 @@ export const orderItemSchema = z.object({
   quantity: z.number().int().positive(),
   metadata: z.record(z.union([z.string(), z.number(), z.boolean()])).optional(),
   designPreview: z.string().optional(),
+  backDesignPreview: z.string().optional(),
   fileIds: z.array(z.string()).optional(),
 });
 

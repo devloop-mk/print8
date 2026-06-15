@@ -80,14 +80,14 @@ export function ProductsCatalog() {
               </p>
               <div className="mt-4 flex gap-2">
                 <Link
-                  href={`/products/customize/${product.type}?id=${product.id}`}
+                  href={`/products/${product.id}`}
                   className="flex-1"
                 >
                   <Button
                     size="sm"
                     className="w-full"
                   >
-                    {t('customize')}
+                    {t('viewProduct')}
                   </Button>
                 </Link>
                 <ProductQuickOrder product={product} />

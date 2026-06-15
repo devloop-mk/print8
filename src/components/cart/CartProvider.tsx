@@ -19,6 +19,7 @@ export interface CartItem {
   quantity: number;
   metadata?: Record<string, string | number | boolean>;
   designPreview?: string;
+  backDesignPreview?: string;
   fileIds?: string[];
 }
 

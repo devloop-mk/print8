@@ -130,8 +130,27 @@
     "title": "Products",
     "subtitle": "Browse ready-made products or customize t-shirts, cups, bags, and more.",
     "customize": "Customize",
+    "viewProduct": "View product",
     "orderAsIs": "Order as shown",
     "startingFrom": "from",
+    "designs": {
+      "smile": "Smiley face",
+      "heart": "Heart",
+      "mountain": "Mountain landscape",
+      "backLogo": "Back logo",
+      "floral": "Floral pattern"
+    },
+    "detail": {
+      "notFound": "Product not found",
+      "backToProducts": "Back to products",
+      "blankProduct": "Plain product — no design",
+      "description": "Choose a ready-made design, order the plain product, or create your own custom design on front and back.",
+      "customizeYourOwn": "Create your own design",
+      "premadeDesigns": "Ready-made designs",
+      "premadeDesignsHint": "Pick a design and order it as-is, or customize it further.",
+      "customizeDesign": "Customize this design",
+      "orderWithDesign": "Order with this design"
+    },
     "types": {
       "t-shirt": "T-shirts",
       "mug": "Mugs",
@@ -156,10 +175,21 @@
       "imageSize": "Image size",
       "imagePosition": "Image position",
       "removePhoto": "Remove photo",
-      "photoUploadInstructions": "First upload a photo to customize it.",
+      "photoUploadInstructions": "Upload a photo, then drag it on the preview to position it.",
       "previewNotAvailable": "Preview is not available for this file.",
       "fileUploaded": "File uploaded successfully.",
-      "close": "Close"
+      "close": "Close",
+      "front": "Front",
+      "back": "Back",
+      "text": "Text",
+      "photo": "Photo",
+      "addToCart": "Add to cart",
+      "backToProduct": "Back to product",
+      "dragHint": "Drag text and images directly on the preview to position them",
+      "positionTop": "Top",
+      "positionCenter": "Center",
+      "positionBottom": "Bottom",
+      "designSize": "Design size"
     }
   },
   "about": {
