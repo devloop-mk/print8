@@ -1,7 +1,20 @@
 import { getTranslations } from "next-intl/server";
+import type { Metadata } from "next";
 import { Card } from "@/components/ui/Card";
+import { buildSectionMetadata } from "@/lib/seo/page-metadata";
+import type { Locale } from "@/i18n/routing";
 
 const faqKeys = ["payment", "formats", "delivery", "custom", "minimum"] as const;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const tm = await getTranslations({ locale, namespace: "metadata" });
+  return buildSectionMetadata(locale as Locale, "/faq", "faq", tm("badges.faq"));
+}
 
 export default async function FaqPage() {
   const t = await getTranslations("faq");

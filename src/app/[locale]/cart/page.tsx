@@ -1,5 +1,17 @@
 import { getTranslations } from "next-intl/server";
+import type { Metadata } from "next";
 import { CartPageContent } from "@/components/cart/CartPageContent";
+import { buildNoIndexMetadata } from "@/lib/seo/page-metadata";
+import type { Locale } from "@/i18n/routing";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return buildNoIndexMetadata(locale as Locale, "/cart", "cart");
+}
 
 export default async function CartPage() {
   const t = await getTranslations("cart");

@@ -1,12 +1,26 @@
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
+import type { Metadata } from 'next';
 import { Link, redirect } from '@/i18n/routing';
 import {
   getDesignTemplate,
   isCustomizableDesign,
 } from '@/lib/data/catalog';
 import { DesignOrderForm } from '@/components/designs/DesignOrderForm';
+import { buildDesignMetadata } from '@/lib/seo/page-metadata';
+import type { Locale } from '@/i18n/routing';
 import { ArrowLeft } from 'lucide-react';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string; id: string }>;
+}): Promise<Metadata> {
+  const { locale, id } = await params;
+  const metadata = await buildDesignMetadata(locale as Locale, id);
+  if (!metadata) notFound();
+  return metadata;
+}
 
 export default async function DesignOrderPage({
   params,

@@ -209,6 +209,7 @@ export function CheckoutForm() {
             type="submit"
             size="lg"
             className="mt-6 w-full"
+            loading={processing}
             disabled={processing}
           >
             {processing ? t("processing") : t("placeOrder")}

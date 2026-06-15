@@ -13,9 +13,9 @@ export function MetricCard({
   className?: string;
 }) {
   return (
-    <Card className={cn('p-5', className)}>
-      <p className="text-sm text-ink-500">{label}</p>
-      <p className="mt-1 text-2xl font-semibold text-ink-900">{value}</p>
+    <Card className={cn('p-4 sm:p-5', className)}>
+      <p className="text-xs sm:text-sm text-ink-500 leading-snug">{label}</p>
+      <p className="mt-1 text-xl sm:text-2xl font-semibold text-ink-900">{value}</p>
       {hint ? <p className="mt-1 text-xs text-ink-400">{hint}</p> : null}
     </Card>
   );

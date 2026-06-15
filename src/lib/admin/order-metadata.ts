@@ -14,25 +14,28 @@ const ADVANCED_KEY_PATTERNS = [
 ];
 
 const KEY_LABELS: Record<string, string> = {
-  designTemplateId: 'Template ID',
-  designKind: 'Design type',
-  productId: 'Product ID',
-  serviceId: 'Service ID',
-  orderType: 'Order type',
-  layoutId: 'Layout',
-  accentColor: 'Accent color',
-  backgroundColor: 'Background color',
-  textColor: 'Text color',
-  secondaryColor: 'Secondary color',
-  isCustomized: 'Customized',
-  frontCustomText: 'Front text',
-  backCustomText: 'Back text',
-  frontCustomTextColor: 'Front text color',
-  backCustomTextColor: 'Back text color',
-  frontCustomTextSize: 'Front text size',
-  backCustomTextSize: 'Back text size',
-  frontPremadeDesignId: 'Front design',
-  backPremadeDesignId: 'Back design',
+  designTemplateId: 'Шаблон',
+  designKind: 'Тип на дизајн',
+  productId: 'Производ',
+  serviceId: 'Услуга',
+  orderType: 'Тип нарачка',
+  layoutId: 'Распоред',
+  accentColor: 'Акцент боја',
+  backgroundColor: 'Позадина',
+  textColor: 'Боја на текст',
+  secondaryColor: 'Секундарна боја',
+  isCustomized: 'Прилагодено',
+  frontCustomText: 'Преден текст',
+  backCustomText: 'Заден текст',
+  frontCustomTextColor: 'Боја на преден текст',
+  backCustomTextColor: 'Боја на заден текст',
+  frontCustomTextSize: 'Големина на преден текст',
+  backCustomTextSize: 'Големина на заден текст',
+  frontPremadeDesignId: 'Преден дизајн',
+  backPremadeDesignId: 'Заден дизајн',
+  category: 'Категорија',
+  size: 'Големина',
+  color: 'Боја',
 };
 
 function formatMetadataKey(key: string) {
@@ -48,7 +51,7 @@ function formatMetadataKey(key: string) {
 }
 
 function formatMetadataValue(value: string | number | boolean) {
-  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+  if (typeof value === 'boolean') return value ? 'Да' : 'Не';
   const text = String(value);
   if (text.length > 120) return `${text.slice(0, 117)}…`;
   return text;
@@ -76,8 +79,8 @@ export function splitOrderMetadata(metadata: Record<string, string | number | bo
     }
   }
 
-  essential.sort((a, b) => a.label.localeCompare(b.label));
-  advanced.sort((a, b) => a.label.localeCompare(b.label));
+  essential.sort((a, b) => a.label.localeCompare(b.label, 'mk'));
+  advanced.sort((a, b) => a.label.localeCompare(b.label, 'mk'));
 
   return { essential, advanced };
 }

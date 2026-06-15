@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { Spinner } from '@/components/ui/Spinner';
+import { LoadingIndicator } from '@/components/ui/LoadingIndicator';
 
 interface SecureUploadProps {
   token: string | null;
@@ -92,9 +94,11 @@ export function SecureUpload({
 
   return (
     <div>
-      {loading && (
-        <p className="mb-2 text-sm text-ink-500">{t('uploadPreparing')}</p>
-      )}
+      {loading ? (
+        <div className="mb-3">
+          <LoadingIndicator label={t('uploadPreparing')} size="sm" />
+        </div>
+      ) : null}
 
       {!loading && sessionError && (
         <div className="mb-3 space-y-2">
@@ -115,19 +119,23 @@ export function SecureUpload({
       <label
         className={`inline-flex cursor-pointer items-center gap-2 rounded-lg border-2 border-dashed border-ink-300 px-4 py-3 text-sm text-ink-600 transition hover:border-brand-500 hover:text-brand-600 ${!canUpload ? 'pointer-events-none opacity-50' : ''}`}
       >
-        <svg
-          className="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-          />
-        </svg>
+        {uploading ? (
+          <Spinner size="sm" />
+        ) : (
+          <svg
+            className="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+            />
+          </svg>
+        )}
         {uploading ? t('loading') : t('chooseFile')}
         <input
           type="file"

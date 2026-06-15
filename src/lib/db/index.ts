@@ -356,6 +356,21 @@ export const db = {
       if (error) throw new Error(error.message);
     },
 
+    async hasRecentView(visitorId: string, path: string, withinSeconds: number) {
+      const since = new Date(Date.now() - withinSeconds * 1000).toISOString();
+      const { data, error } = await getSupabaseAdmin()
+        .from('page_views')
+        .select('id')
+        .eq('visitor_id', visitorId)
+        .eq('path', path)
+        .gte('created_at', since)
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw new Error(error.message);
+      return Boolean(data);
+    },
+
     async listSince(since: string) {
       const { data, error } = await getSupabaseAdmin()
         .from('page_views')

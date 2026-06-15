@@ -530,7 +530,7 @@ export function CustomizableDesignForm({
                   <ChevronRight className="h-4 w-4" aria-hidden="true" />
                 </Button>
               ) : (
-                <Button type="button" onClick={handleSubmit} disabled={capturing} size="lg">
+                <Button type="button" onClick={handleSubmit} loading={capturing} disabled={capturing} size="lg">
                   {capturing ? t('capturing') : to('addToCart')}
                 </Button>
               )}

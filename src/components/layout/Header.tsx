@@ -1,15 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/routing";
 import { useCart } from "@/components/cart/CartProvider";
 import { cn } from "@/lib/utils";
+import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import {
   Menu,
   X,
   ShoppingCart,
-  Globe,
 } from "lucide-react";
 
 const navItems = [
@@ -24,12 +24,9 @@ const navItems = [
 
 export function Header() {
   const t = useTranslations("nav");
-  const locale = useLocale();
   const pathname = usePathname();
   const { itemCount } = useCart();
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  const otherLocale = locale === "mk" ? "en" : "mk";
 
   return (
     <header className="sticky top-0 z-50 border-b border-ink-200 bg-white/95 backdrop-blur">
@@ -61,14 +58,7 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Link
-            href={pathname}
-            locale={otherLocale}
-            className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-ink-600 transition hover:bg-ink-50"
-          >
-            <Globe className="h-4 w-4" />
-            {otherLocale.toUpperCase()}
-          </Link>
+          <LanguageSwitcher />
 
           <Link
             href="/cart"

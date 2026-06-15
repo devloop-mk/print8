@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { OrderStatus } from '@/lib/db';
 import { ORDER_STATUS_LABELS } from '@/lib/admin/orders';
+import { adminStrings } from '@/lib/admin/strings';
 import { Button } from '@/components/ui/Button';
 
 const STATUS_FLOW: OrderStatus[] = [
@@ -27,6 +28,7 @@ export function OrderStatusUpdater({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const t = adminStrings.orderDetail;
 
   async function handleUpdate() {
     if (status === currentStatus) return;
@@ -45,14 +47,14 @@ export function OrderStatusUpdater({
       const data = (await response.json()) as { error?: string };
 
       if (!response.ok) {
-        setError(data.error ?? 'Failed to update status.');
+        setError(data.error ?? t.statusFailed);
         return;
       }
 
-      setSuccess('Status updated.');
+      setSuccess(t.statusUpdated);
       router.refresh();
     } catch {
-      setError('Unable to update status.');
+      setError(t.statusError);
     } finally {
       setSaving(false);
     }
@@ -61,13 +63,13 @@ export function OrderStatusUpdater({
   return (
     <div className="space-y-3">
       <label htmlFor="order-status" className="block text-sm font-medium text-ink-700">
-        Order status
+        {t.statusTitle}
       </label>
       <select
         id="order-status"
         value={status}
         onChange={(event) => setStatus(event.target.value as OrderStatus)}
-        className="w-full rounded-lg border border-ink-300 px-3 py-2 text-sm outline-none ring-brand-500 focus:ring-2"
+        className="w-full rounded-lg border border-ink-300 px-3 py-2.5 text-sm outline-none ring-brand-500 focus:ring-2"
       >
         {STATUS_FLOW.map((value) => (
           <option key={value} value={value}>
@@ -76,23 +78,26 @@ export function OrderStatusUpdater({
         ))}
       </select>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
         <Button
           type="button"
           size="sm"
+          className="w-full sm:w-auto"
           onClick={handleUpdate}
+          loading={saving}
           disabled={saving || status === currentStatus}
         >
-          {saving ? 'Saving…' : 'Save status'}
+          {saving ? t.saving : t.saveStatus}
         </Button>
         {status !== 'delivered' ? (
           <Button
             type="button"
             size="sm"
             variant="outline"
+            className="w-full sm:w-auto"
             onClick={() => setStatus('delivered')}
           >
-            Mark delivered
+            {t.markDelivered}
           </Button>
         ) : null}
         {status !== 'cancelled' ? (
@@ -100,9 +105,10 @@ export function OrderStatusUpdater({
             type="button"
             size="sm"
             variant="outline"
+            className="w-full sm:w-auto"
             onClick={() => setStatus('cancelled')}
           >
-            Cancel order
+            {t.cancelOrder}
           </Button>
         ) : null}
       </div>

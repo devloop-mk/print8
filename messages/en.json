@@ -1,7 +1,23 @@
 {
   "metadata": {
     "title": "Print 8 — Professional Printing",
-    "description": "Print 8 offers business cards, menus, invitations, t-shirt printing, cups, bags, and personalized gift sets."
+    "description": "Print 8 offers business cards, menus, invitations, t-shirt printing, cups, bags, and personalized gift sets.",
+    "ogImageTitle": "Print 8",
+    "ogImageSubtitle": "Professional printing",
+    "ogImageDescription": "Business cards, invitations, apparel, mugs and personalized products.",
+    "ogImageBadge": "Print shop",
+    "badges": {
+      "product": "Product",
+      "design": "Design",
+      "customize": "Customize",
+      "services": "Services",
+      "designs": "Designs",
+      "products": "Products",
+      "about": "About us",
+      "contact": "Contact",
+      "faq": "FAQ",
+      "studio": "Studio"
+    }
   },
   "nav": {
     "home": "Home",
@@ -13,7 +29,12 @@
     "faq": "FAQ",
     "order": "Order",
     "cart": "Cart",
-    "studio": "Studio"
+    "studio": "Studio",
+    "language": "Language",
+    "languages": {
+      "mk": "Macedonian",
+      "en": "English"
+    }
   },
   "home": {
     "heroBadge": "Print 8 · Professional printing",
@@ -343,8 +364,9 @@
       "notFound": "Product not found",
       "backToProducts": "Back to products",
       "blankProduct": "Plain product — no design",
-      "description": "Choose a ready-made design, order the plain product, or create your own custom design on front and back.",
-      "customizeYourOwn": "Create your own design",
+      "description": "Create your own design on front and back, or choose from our ready-made layouts below.",
+      "customizeYourOwn": "Create your design",
+      "choosePremadeDesigns": "Choose from pre-made designs",
       "premadeDesigns": "Ready-made designs",
       "premadeDesignsHint": "Pick a design and order it as-is, or customize it further.",
       "imageDesigns": "Photo designs",
@@ -434,6 +456,7 @@
   },
   "faq": {
     "title": "Frequently asked questions",
+    "subtitle": "Answers to common questions about orders, payment, and delivery.",
     "items": {
       "payment": {
         "q": "How does payment work?",

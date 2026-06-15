@@ -160,12 +160,12 @@ export async function getAdminMetrics(): Promise<AdminMetrics> {
 }
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
-  pending: 'Pending',
-  confirmed: 'Confirmed',
-  printing: 'Printing',
-  ready: 'Ready',
-  delivered: 'Delivered',
-  cancelled: 'Cancelled',
+  pending: 'На чекање',
+  confirmed: 'Потврдена',
+  printing: 'Печати се',
+  ready: 'Подготвена',
+  delivered: 'Испорачана',
+  cancelled: 'Откажана',
 };
 
 export const ORDER_STATUS_STYLES: Record<OrderStatus, string> = {

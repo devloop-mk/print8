@@ -12,7 +12,7 @@ export default function AdminRootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="mk">
       <body className={`${inter.variable} min-h-screen bg-ink-50 font-sans antialiased`}>
         {children}
       </body>

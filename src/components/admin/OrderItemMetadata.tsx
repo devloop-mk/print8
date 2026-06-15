@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { splitOrderMetadata } from '@/lib/admin/order-metadata';
+import { adminStrings } from '@/lib/admin/strings';
 import { cn } from '@/lib/utils';
 
 function MetadataList({
@@ -11,7 +12,7 @@ function MetadataList({
   entries: Array<{ key: string; label: string; value: string }>;
 }) {
   return (
-    <dl className="grid gap-2 text-sm sm:grid-cols-2">
+    <dl className="grid gap-2 text-sm">
       {entries.map((entry) => (
         <div key={entry.key}>
           <dt className="text-ink-500">{entry.label}</dt>
@@ -41,11 +42,11 @@ export function OrderItemMetadata({
           <button
             type="button"
             onClick={() => setShowAdvanced((open) => !open)}
-            className="flex w-full items-center justify-between px-3 py-2 text-left text-sm font-medium text-ink-700"
+            className="flex w-full items-center justify-between px-3 py-2.5 text-left text-sm font-medium text-ink-700"
           >
-            Advanced information
+            {adminStrings.orderDetail.advancedInfo}
             <ChevronDown
-              className={cn('h-4 w-4 transition', showAdvanced && 'rotate-180')}
+              className={cn('h-4 w-4 shrink-0 transition', showAdvanced && 'rotate-180')}
             />
           </button>
           {showAdvanced ? (

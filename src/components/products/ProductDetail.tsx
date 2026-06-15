@@ -13,7 +13,6 @@ import {
   type ProductDesignTemplate,
 } from '@/lib/data/catalog';
 import { formatPrice } from '@/lib/utils';
-import { formatProductCartName } from '@/lib/cart/product-cart';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { useCart } from '@/components/cart/CartProvider';
@@ -21,7 +20,14 @@ import { useRouter } from '@/i18n/routing';
 import { ProductImageCarousel } from '@/components/products/ProductImageCarousel';
 import { DesignTemplatePreview } from '@/components/products/DesignTemplatePreview';
 import Image from 'next/image';
-import { ArrowLeft, Palette, Sparkles, Type } from 'lucide-react';
+import { ArrowLeft, Palette, Sparkles, Type, LayoutGrid } from 'lucide-react';
+
+function scrollToPremadeDesigns() {
+  document.getElementById('premade-designs')?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'start',
+  });
+}
 
 export function ProductDetail({ productId }: { productId: string }) {
   const t = useTranslations('products');
@@ -52,6 +58,8 @@ export function ProductDetail({ productId }: { productId: string }) {
         : [],
     [product],
   );
+
+  const hasPremadeDesigns = textDesigns.length > 0 || imageDesigns.length > 0;
 
   if (!product) {
     return <p>{td('notFound')}</p>;
@@ -148,32 +156,51 @@ export function ProductDetail({ productId }: { productId: string }) {
                 {td('customizeYourOwn')}
               </Button>
             </Link>
-            <ProductQuickOrderLink product={product} color={color} size={size} />
+            {hasPremadeDesigns ? (
+              <Button
+                size="lg"
+                variant="outline"
+                className="w-full flex-1 gap-2"
+                onClick={scrollToPremadeDesigns}
+              >
+                <LayoutGrid className="h-5 w-5" />
+                {td('choosePremadeDesigns')}
+              </Button>
+            ) : null}
           </div>
         </div>
       </div>
 
-      {textDesigns.length > 0 && (
-        <DesignSection
-          icon={<Type className="h-6 w-6 text-brand-600" />}
-          title={td('textDesigns')}
-          hint={td('textDesignsHint')}
-          product={product}
-          color={color}
-          designs={textDesigns}
-        />
-      )}
+      {hasPremadeDesigns ? (
+        <div id="premade-designs" className="scroll-mt-24 space-y-10">
+          <div>
+            <h2 className="text-2xl font-bold text-ink-900">{td('premadeDesigns')}</h2>
+            <p className="mt-1 text-ink-500">{td('premadeDesignsHint')}</p>
+          </div>
 
-      {imageDesigns.length > 0 && (
-        <DesignSection
-          icon={<Sparkles className="h-6 w-6 text-brand-600" />}
-          title={td('imageDesigns')}
-          hint={td('imageDesignsHint')}
-          product={product}
-          color={color}
-          designs={imageDesigns}
-        />
-      )}
+          {textDesigns.length > 0 && (
+            <DesignSection
+              icon={<Type className="h-6 w-6 text-brand-600" />}
+              title={td('textDesigns')}
+              hint={td('textDesignsHint')}
+              product={product}
+              color={color}
+              designs={textDesigns}
+            />
+          )}
+
+          {imageDesigns.length > 0 && (
+            <DesignSection
+              icon={<Sparkles className="h-6 w-6 text-brand-600" />}
+              title={td('imageDesigns')}
+              hint={td('imageDesignsHint')}
+              product={product}
+              color={color}
+              designs={imageDesigns}
+            />
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -261,52 +288,6 @@ function DesignSection({
         ))}
       </div>
     </section>
-  );
-}
-
-function ProductQuickOrderLink({
-  product,
-  color,
-  size,
-}: {
-  product: Product;
-  color: string;
-  size: string;
-}) {
-  const t = useTranslations('products');
-  const tp = useTranslations('products.types');
-  const { addItem } = useCart();
-  const router = useRouter();
-
-  function handleOrder() {
-    const metadata: Record<string, string | number | boolean> = {
-      productId: product.id,
-      color,
-    };
-    if (product.sizes?.length && size) {
-      metadata.size = size;
-    }
-
-    addItem({
-      type: 'product',
-      name: formatProductCartName(tp(product.type), size, product),
-      price: product.basePrice,
-      quantity: 1,
-      designPreview: getProductMockup(product, color, 'front'),
-      metadata,
-    });
-    router.push('/cart');
-  }
-
-  return (
-    <Button
-      size="lg"
-      variant="outline"
-      className="w-full flex-1"
-      onClick={handleOrder}
-    >
-      {t('orderAsIs')}
-    </Button>
   );
 }
 

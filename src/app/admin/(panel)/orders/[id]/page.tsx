@@ -8,15 +8,9 @@ import {
   collectOrderFileIds,
   getAdminOrder,
 } from '@/lib/admin/orders';
+import { adminStrings, formatAdminDate } from '@/lib/admin/strings';
 import { db } from '@/lib/db';
 import { formatPrice } from '@/lib/utils';
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat('en-GB', {
-    dateStyle: 'full',
-    timeStyle: 'short',
-  }).format(new Date(value));
-}
 
 export default async function AdminOrderDetailPage({
   params,
@@ -27,6 +21,7 @@ export default async function AdminOrderDetailPage({
   const order = await getAdminOrder(id);
   if (!order) notFound();
 
+  const t = adminStrings.orderDetail;
   const allFileIds = collectOrderFileIds(order);
   const files = await Promise.all(
     allFileIds.map(async (fileId) => {
@@ -36,37 +31,43 @@ export default async function AdminOrderDetailPage({
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <Link href="/admin/orders" className="text-sm text-brand-700 hover:underline">
-            ← Back to orders
+            {t.back}
           </Link>
-          <h1 className="mt-2 text-2xl font-semibold text-ink-900">{order.orderNumber}</h1>
-          <p className="text-sm text-ink-500">Placed {formatDate(order.createdAt)}</p>
+          <h1 className="mt-2 break-all text-xl font-semibold text-ink-900 sm:text-2xl">
+            {order.orderNumber}
+          </h1>
+          <p className="text-sm text-ink-500">
+            {t.placed} {formatAdminDate(order.createdAt, 'long')}
+          </p>
         </div>
         <OrderStatusBadge status={order.status} />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
-          <Card>
-            <h2 className="text-sm font-semibold text-ink-900">Order items</h2>
+      <div className="grid gap-4 lg:grid-cols-3 lg:gap-6">
+        <div className="space-y-4 lg:col-span-2 lg:space-y-6">
+          <Card className="p-4 sm:p-6">
+            <h2 className="text-sm font-semibold text-ink-900">{t.items}</h2>
             <div className="mt-4 space-y-4">
               {order.items.map((item, index) => (
                 <div
                   key={`${item.name}-${index}`}
-                  className="rounded-lg border border-ink-100 p-4"
+                  className="rounded-lg border border-ink-100 p-3 sm:p-4"
                 >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+                    <div className="min-w-0">
                       <p className="font-medium text-ink-900">{item.name}</p>
-                      <p className="text-sm capitalize text-ink-500">{item.type}</p>
+                      <p className="text-sm text-ink-500">
+                        {adminStrings.itemType[item.type]}
+                      </p>
                       <p className="mt-1 text-sm text-ink-600">
                         {item.quantity} × {formatPrice(item.price, order.locale)}
                       </p>
                     </div>
-                    <p className="font-semibold text-ink-900">
+                    <p className="shrink-0 font-semibold text-ink-900">
                       {formatPrice(item.price * item.quantity, order.locale)}
                     </p>
                   </div>
@@ -76,26 +77,26 @@ export default async function AdminOrderDetailPage({
                   ) : null}
 
                   {(item.designPreview || item.backDesignPreview) ? (
-                    <div className="mt-4 flex flex-wrap gap-3">
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
                       {item.designPreview ? (
                         <div>
-                          <p className="mb-1 text-xs text-ink-500">Front preview</p>
+                          <p className="mb-1 text-xs text-ink-500">{t.frontPreview}</p>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={item.designPreview}
-                            alt="Front design preview"
-                            className="max-h-48 rounded border border-ink-200 bg-white"
+                            alt={t.frontPreview}
+                            className="w-full max-h-48 rounded border border-ink-200 bg-white object-contain"
                           />
                         </div>
                       ) : null}
                       {item.backDesignPreview ? (
                         <div>
-                          <p className="mb-1 text-xs text-ink-500">Back preview</p>
+                          <p className="mb-1 text-xs text-ink-500">{t.backPreview}</p>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={item.backDesignPreview}
-                            alt="Back design preview"
-                            className="max-h-48 rounded border border-ink-200 bg-white"
+                            alt={t.backPreview}
+                            className="w-full max-h-48 rounded border border-ink-200 bg-white object-contain"
                           />
                         </div>
                       ) : null}
@@ -106,7 +107,7 @@ export default async function AdminOrderDetailPage({
             </div>
 
             <div className="mt-4 flex justify-between border-t border-ink-100 pt-4 text-sm">
-              <span className="font-medium text-ink-700">Total</span>
+              <span className="font-medium text-ink-700">{t.total}</span>
               <span className="text-lg font-semibold text-ink-900">
                 {formatPrice(order.totalAmount, order.locale)}
               </span>
@@ -114,13 +115,13 @@ export default async function AdminOrderDetailPage({
           </Card>
 
           {files.filter(Boolean).length > 0 ? (
-            <Card>
-              <h2 className="text-sm font-semibold text-ink-900">Uploaded files</h2>
+            <Card className="p-4 sm:p-6">
+              <h2 className="text-sm font-semibold text-ink-900">{t.uploadedFiles}</h2>
               <ul className="mt-3 space-y-2">
                 {files
                   .filter((file): file is NonNullable<typeof file> => Boolean(file))
                   .map((file) => (
-                    <li key={file.fileId}>
+                    <li key={file.fileId} className="break-all">
                       <a
                         href={`/api/files/${file.fileId}`}
                         target="_blank"
@@ -137,42 +138,50 @@ export default async function AdminOrderDetailPage({
           ) : null}
         </div>
 
-        <div className="space-y-6">
-          <Card>
-            <h2 className="text-sm font-semibold text-ink-900">Customer</h2>
-            <dl className="mt-3 space-y-2 text-sm">
+        <div className="space-y-4 lg:space-y-6">
+          <Card className="p-4 sm:p-6">
+            <h2 className="text-sm font-semibold text-ink-900">{t.customer}</h2>
+            <dl className="mt-3 space-y-3 text-sm">
               <div>
-                <dt className="text-ink-500">Name</dt>
+                <dt className="text-ink-500">{t.name}</dt>
                 <dd className="font-medium text-ink-900">{order.customerName}</dd>
               </div>
               <div>
-                <dt className="text-ink-500">Phone</dt>
-                <dd className="font-medium text-ink-900">{order.customerPhone}</dd>
+                <dt className="text-ink-500">{t.phone}</dt>
+                <dd className="font-medium text-ink-900">
+                  <a href={`tel:${order.customerPhone}`} className="hover:underline">
+                    {order.customerPhone}
+                  </a>
+                </dd>
               </div>
               {order.customerEmail ? (
                 <div>
-                  <dt className="text-ink-500">Email</dt>
-                  <dd className="font-medium text-ink-900">{order.customerEmail}</dd>
+                  <dt className="text-ink-500">{t.email}</dt>
+                  <dd className="break-all font-medium text-ink-900">
+                    <a href={`mailto:${order.customerEmail}`} className="hover:underline">
+                      {order.customerEmail}
+                    </a>
+                  </dd>
                 </div>
               ) : null}
               <div>
-                <dt className="text-ink-500">City</dt>
+                <dt className="text-ink-500">{t.city}</dt>
                 <dd className="font-medium text-ink-900">{order.customerCity}</dd>
               </div>
               <div>
-                <dt className="text-ink-500">Address</dt>
+                <dt className="text-ink-500">{t.address}</dt>
                 <dd className="font-medium text-ink-900">{order.customerAddress}</dd>
               </div>
               {order.notes ? (
                 <div>
-                  <dt className="text-ink-500">Notes</dt>
+                  <dt className="text-ink-500">{t.notes}</dt>
                   <dd className="font-medium text-ink-900">{order.notes}</dd>
                 </div>
               ) : null}
             </dl>
           </Card>
 
-          <Card>
+          <Card className="p-4 sm:p-6">
             <OrderStatusUpdater
               key={`${order.id}-${order.status}`}
               orderId={order.id}
@@ -180,15 +189,15 @@ export default async function AdminOrderDetailPage({
             />
           </Card>
 
-          <Card>
-            <h2 className="text-sm font-semibold text-ink-900">Details</h2>
+          <Card className="p-4 sm:p-6">
+            <h2 className="text-sm font-semibold text-ink-900">{t.details}</h2>
             <dl className="mt-3 space-y-2 text-sm">
-              <div className="flex justify-between">
-                <dt className="text-ink-500">Payment</dt>
+              <div className="flex justify-between gap-4">
+                <dt className="text-ink-500">{t.payment}</dt>
                 <dd className="font-medium uppercase text-ink-900">{order.paymentMethod}</dd>
               </div>
-              <div className="flex justify-between">
-                <dt className="text-ink-500">Locale</dt>
+              <div className="flex justify-between gap-4">
+                <dt className="text-ink-500">{t.locale}</dt>
                 <dd className="font-medium uppercase text-ink-900">{order.locale}</dd>
               </div>
             </dl>

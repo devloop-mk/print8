@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { nanoid } from 'nanoid';
-import { VISITOR_COOKIE_NAME, VISITOR_TTL_SECONDS } from '@/lib/analytics/constants';
+import {
+  PAGE_VIEW_DEDUP_SECONDS,
+  VISITOR_COOKIE_NAME,
+  VISITOR_TTL_SECONDS,
+} from '@/lib/analytics/constants';
 import { db } from '@/lib/db';
 
 const BLOCKED_PREFIXES = ['/admin', '/api', '/_next'];
@@ -30,6 +34,27 @@ export async function POST(request: NextRequest) {
       body.locale === 'mk' || body.locale === 'en' ? body.locale : null;
     const existingVisitorId = getVisitorId(request);
     const visitorId = existingVisitorId ?? nanoid();
+
+    const isDuplicate = await db.pageViews.hasRecentView(
+      visitorId,
+      path,
+      PAGE_VIEW_DEDUP_SECONDS,
+    );
+
+    if (isDuplicate) {
+      const response = NextResponse.json({ ok: true, deduped: true });
+      if (!existingVisitorId) {
+        response.cookies.set(VISITOR_COOKIE_NAME, visitorId, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: VISITOR_TTL_SECONDS,
+        });
+      }
+      return response;
+    }
+
     const referrer = request.headers.get('referer');
 
     await db.pageViews.insert({
