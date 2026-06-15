@@ -18,7 +18,7 @@ export default async function HomePage({
   await params;
   const t = await getTranslations('home');
 
-  const featuredServices = services.slice(0, 6);
+  const featuredServices = services.slice(0, 4);
   const personalizedDesigns = designTemplates.filter(
     (design) => design.kind === 'customizable',
   );
@@ -64,8 +64,8 @@ export default async function HomePage({
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-2xl">
             <h2 className="text-2xl font-bold text-ink-900">
               {t('featuredServices')}
@@ -79,7 +79,7 @@ export default async function HomePage({
             {t('viewAll')} →
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 sm:gap-4">
           {featuredServices.map((service) => (
             <ServiceCard key={service.id} service={service} variant="home" />
           ))}

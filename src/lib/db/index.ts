@@ -85,6 +85,15 @@ function mapUploadedFile(row: {
   };
 }
 
+function isMissingOriginalStoredNameColumn(message: string) {
+  const lower = message.toLowerCase();
+  return (
+    lower.includes('original_stored_name') ||
+    lower.includes("column 'original_stored_name'") ||
+    lower.includes('schema cache')
+  );
+}
+
 export const db = {
   orders: {
     async insert(value: OrderRecord) {
@@ -177,17 +186,34 @@ export const db = {
 
   uploadedFiles: {
     async insert(value: UploadedFileRecord) {
-      const { error } = await getSupabaseAdmin().from('uploaded_files').insert({
+      const baseRow = {
         id: value.id,
         session_id: value.sessionId,
         original_name: value.originalName,
         stored_name: value.storedName,
-        original_stored_name: value.originalStoredName,
         mime_type: value.mimeType,
         size: value.size,
         created_at: value.createdAt,
-      });
-      if (error) throw new Error(error.message);
+      };
+
+      const { error: fullError } = await getSupabaseAdmin()
+        .from('uploaded_files')
+        .insert({
+          ...baseRow,
+          original_stored_name: value.originalStoredName,
+        });
+
+      if (!fullError) return;
+
+      if (isMissingOriginalStoredNameColumn(fullError.message)) {
+        const { error: fallbackError } = await getSupabaseAdmin()
+          .from('uploaded_files')
+          .insert(baseRow);
+        if (!fallbackError) return;
+        throw new Error(fallbackError.message);
+      }
+
+      throw new Error(fullError.message);
     },
 
     async findById(id: string) {

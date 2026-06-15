@@ -52,7 +52,22 @@ type SizeKey = string | 'custom';
 
 type DesignCategory = keyof typeof categoryPresetSizes;
 
+type ShapeKind = 'circle' | 'rectangle' | 'triangle';
+
+type FabricCanvas = InstanceType<Awaited<typeof import('fabric')>['Canvas']>;
+
 const pxPerCm = 14;
+
+const SHAPE_TYPES = new Set(['circle', 'rect', 'triangle']);
+
+function applyPrimaryColorToShapes(canvas: FabricCanvas, color: string) {
+  canvas.getObjects().forEach((object) => {
+    if (SHAPE_TYPES.has(object.type ?? '')) {
+      object.set('fill', color);
+    }
+  });
+  canvas.renderAll();
+}
 
 export function DesignStudio() {
   const t = useTranslations('studio');
@@ -60,9 +75,14 @@ export function DesignStudio() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasPanelRef = useRef<HTMLDivElement>(null);
   const fabricRef = useRef<unknown>(null);
   const prevCanvasSizeRef = useRef({ width: 0, height: 0 });
+  const canvasWidthRef = useRef(0);
+  const canvasHeightRef = useRef(0);
+  const backgroundColorRef = useRef('#ffffff');
   const suppressCategoryResetRef = useRef(false);
+  const noticeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { addItem } = useCart();
   const { token, loading: uploadLoading, error: uploadSessionError, refreshSession } = useUploadSession();
   const { designs: savedDesigns, saveDesign: persistDesign, deleteDesign } = useSavedDesigns();
@@ -74,6 +94,12 @@ export function DesignStudio() {
   const [text, setText] = useState('');
   const [fontSize, setFontSize] = useState(32);
   const [textColor, setTextColor] = useState('#000000');
+  const [primaryColor, setPrimaryColor] = useState('#2563eb');
+  const prevPrimaryColorRef = useRef('#2563eb');
+  const [backgroundColor, setBackgroundColor] = useState('#ffffff');
+  const [studioNotice, setStudioNotice] = useState<string | null>(null);
+  const [canvasMountKey, setCanvasMountKey] = useState(0);
+  const [canvasReady, setCanvasReady] = useState(false);
   const [saved, setSaved] = useState(false);
   const [previewDataUrl, setPreviewDataUrl] = useState<string | null>(null);
   const [uploadedFiles, setUploadedFiles] = useState<
@@ -127,72 +153,132 @@ export function DesignStudio() {
 
   const canvasWidth = Math.max(240, Math.round(activeSize.widthCm * pxPerCm));
   const canvasHeight = Math.max(160, Math.round(activeSize.heightCm * pxPerCm));
+  canvasWidthRef.current = canvasWidth;
+  canvasHeightRef.current = canvasHeight;
+  backgroundColorRef.current = backgroundColor;
   const sizeLabel =
     selectedSize === 'custom'
       ? `${activeSize.widthCm.toFixed(1)}×${activeSize.heightCm.toFixed(1)} ${t('cm')}`
       : activeSize.label;
 
-  const initCanvas = useCallback(async () => {
-    if (!canvasRef.current || fabricRef.current) return;
+  const getCanvas = useCallback(
+    () => fabricRef.current as FabricCanvas | null,
+    [],
+  );
 
-    const { Canvas, IText, FabricImage } = await import('fabric');
+  const applyCanvasBackground = useCallback(
+    (color: string) => {
+      const canvas = getCanvas();
+      if (!canvas) return;
+      canvas.backgroundColor = color;
+      canvas.renderAll();
+    },
+    [getCanvas],
+  );
 
-    const canvas = new Canvas(canvasRef.current, {
-      width: canvasWidth,
-      height: canvasHeight,
-      backgroundColor: '#ffffff',
+  const showStudioNotice = useCallback((message: string) => {
+    if (noticeTimeoutRef.current) {
+      clearTimeout(noticeTimeoutRef.current);
+    }
+    setStudioNotice(message);
+    noticeTimeoutRef.current = setTimeout(() => {
+      setStudioNotice(null);
+      noticeTimeoutRef.current = null;
+    }, 3200);
+  }, []);
+
+  const scrollToCanvas = useCallback(() => {
+    canvasPanelRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
     });
+  }, []);
 
-    if (templateId) {
-      try {
-        const template = designTemplates.find((d) => d.id === templateId);
-        if (template?.image) {
-          const img = await FabricImage.fromURL(template.image);
-          // scale to fit canvas while keeping margins
-          img.scaleToWidth(
-            Math.min(canvasWidth - 40, img.width || canvasWidth),
-          );
-          img.set({
-            left: canvasWidth / 2,
-            top: canvasHeight / 2,
-            originX: 'center',
-            originY: 'center',
-          });
-          canvas.add(img);
+  const disposeFabricCanvas = useCallback(() => {
+    if (
+      fabricRef.current &&
+      typeof (fabricRef.current as { dispose?: () => void }).dispose === 'function'
+    ) {
+      (fabricRef.current as { dispose: () => void }).dispose();
+    }
+    fabricRef.current = null;
+    setCanvasReady(false);
+  }, []);
+
+  useEffect(() => {
+    if (activeTab !== 'create') return;
+
+    let cancelled = false;
+
+    async function bootstrapCanvas() {
+      if (!canvasRef.current) return;
+
+      disposeFabricCanvas();
+
+      const { Canvas, FabricImage } = await import('fabric');
+      if (cancelled || !canvasRef.current) return;
+
+      const width = canvasWidthRef.current;
+      const height = canvasHeightRef.current;
+      const bg = backgroundColorRef.current;
+
+      const canvas = new Canvas(canvasRef.current, {
+        width,
+        height,
+        backgroundColor: bg,
+      });
+
+      if (templateId) {
+        try {
+          const template = designTemplates.find((d) => d.id === templateId);
+          if (template?.image) {
+            const img = await FabricImage.fromURL(template.image);
+            if (cancelled) return;
+            img.scaleToWidth(Math.min(width - 40, img.width || width));
+            img.set({
+              left: width / 2,
+              top: height / 2,
+              originX: 'center',
+              originY: 'center',
+            });
+            canvas.add(img);
+          }
+        } catch {
+          // ignore template load errors
         }
-      } catch (err) {
-        // ignore template load errors
       }
+
+      if (cancelled) {
+        canvas.dispose();
+        return;
+      }
+
+      fabricRef.current = canvas;
+      prevCanvasSizeRef.current = { width, height };
+      canvas.renderAll();
+      setCanvasReady(true);
     }
 
-    fabricRef.current = canvas;
-    prevCanvasSizeRef.current = { width: canvasWidth, height: canvasHeight };
-  }, [canvasWidth, canvasHeight, templateId]);
+    void bootstrapCanvas();
 
-  useEffect(() => {
-    initCanvas();
     return () => {
-      if (
-        fabricRef.current &&
-        typeof (fabricRef.current as { dispose?: () => void }).dispose ===
-          'function'
-      ) {
-        (fabricRef.current as { dispose: () => void }).dispose();
-        fabricRef.current = null;
-      }
+      cancelled = true;
+      disposeFabricCanvas();
+      setCanvasMountKey((key) => key + 1);
     };
-  }, [initCanvas]);
+  }, [activeTab, canvasMountKey, templateId, disposeFabricCanvas]);
 
   useEffect(() => {
-    if (!fabricRef.current) return;
+    if (!canvasReady || !fabricRef.current) return;
 
-    const canvas = fabricRef.current as InstanceType<
-      Awaited<typeof import('fabric')>['Canvas']
-    >;
-
+    const canvas = fabricRef.current as FabricCanvas;
     const prevSize = prevCanvasSizeRef.current;
 
-    if (prevSize.width && prevSize.height) {
+    if (
+      prevSize.width &&
+      prevSize.height &&
+      (prevSize.width !== canvasWidth || prevSize.height !== canvasHeight)
+    ) {
       const scaleX = canvasWidth / prevSize.width;
       const scaleY = canvasHeight / prevSize.height;
 
@@ -209,15 +295,29 @@ export function DesignStudio() {
 
     canvas.setWidth(canvasWidth);
     canvas.setHeight(canvasHeight);
-    canvas.backgroundColor = '#ffffff';
     canvas.calcOffset?.();
     canvas.renderAll();
 
     prevCanvasSizeRef.current = { width: canvasWidth, height: canvasHeight };
-  }, [canvasWidth, canvasHeight]);
+  }, [canvasWidth, canvasHeight, canvasReady]);
 
   useEffect(() => {
-    if (!pendingDraft || !fabricRef.current) return;
+    if (!canvasReady) return;
+    applyCanvasBackground(backgroundColor);
+  }, [backgroundColor, applyCanvasBackground, canvasReady]);
+
+  useEffect(() => {
+    if (!canvasReady) return;
+    if (prevPrimaryColorRef.current === primaryColor) return;
+    prevPrimaryColorRef.current = primaryColor;
+
+    const canvas = getCanvas();
+    if (!canvas) return;
+    applyPrimaryColorToShapes(canvas, primaryColor);
+  }, [primaryColor, getCanvas, canvasReady]);
+
+  useEffect(() => {
+    if (!pendingDraft || !canvasReady || !fabricRef.current) return;
 
     let cancelled = false;
     const canvas = fabricRef.current as InstanceType<
@@ -225,12 +325,17 @@ export function DesignStudio() {
     >;
 
     canvas.clear();
-    canvas.backgroundColor = '#ffffff';
+    canvas.backgroundColor = pendingDraft.backgroundColor ?? backgroundColor;
 
     void canvas.loadFromJSON(pendingDraft.canvasJson).then(() => {
       if (cancelled) return;
 
-      canvas.backgroundColor = '#ffffff';
+      const restoredBg =
+        (canvas.backgroundColor as string | undefined) ??
+        pendingDraft.backgroundColor ??
+        backgroundColor;
+      setBackgroundColor(restoredBg);
+      canvas.backgroundColor = restoredBg;
       canvas.renderAll();
       prevCanvasSizeRef.current = { width: canvasWidth, height: canvasHeight };
       setPreviewDataUrl(pendingDraft.previewDataUrl);
@@ -241,7 +346,41 @@ export function DesignStudio() {
     return () => {
       cancelled = true;
     };
-  }, [pendingDraft, canvasWidth, canvasHeight]);
+  }, [pendingDraft, canvasWidth, canvasHeight, canvasReady, backgroundColor]);
+
+  const shapeLabels: Record<ShapeKind, string> = {
+    circle: t('shapeCircle'),
+    rectangle: t('shapeRectangle'),
+    triangle: t('shapeTriangle'),
+  };
+
+  async function addShape(shape: ShapeKind) {
+    if (!fabricRef.current) return;
+    const { Circle, Rect, Triangle } = await import('fabric');
+    const canvas = getCanvas();
+    if (!canvas) return;
+
+    const common = {
+      left: canvasWidth / 2,
+      top: canvasHeight / 2,
+      fill: primaryColor,
+      originX: 'center' as const,
+      originY: 'center' as const,
+    };
+
+    const shapeObject =
+      shape === 'circle'
+        ? new Circle({ ...common, radius: 50 })
+        : shape === 'rectangle'
+          ? new Rect({ ...common, width: 120, height: 80 })
+          : new Triangle({ ...common, width: 110, height: 100 });
+
+    canvas.add(shapeObject);
+    canvas.setActiveObject(shapeObject);
+    canvas.renderAll();
+    showStudioNotice(t('shapeAdded', { shape: shapeLabels[shape] }));
+    scrollToCanvas();
+  }
 
   async function addTextToCanvas() {
     if (!text.trim() || !fabricRef.current) return;
@@ -319,6 +458,7 @@ export function DesignStudio() {
       customHeight,
       templateId,
       uploadedFiles,
+      backgroundColor,
     };
 
     persistDesign(savedEntry);
@@ -334,6 +474,7 @@ export function DesignStudio() {
     setCustomWidth(design.customWidth);
     setCustomHeight(design.customHeight);
     setUploadedFiles(design.uploadedFiles);
+    setBackgroundColor(design.backgroundColor ?? '#ffffff');
     setActiveDraftId(design.id);
     setActiveTab('create');
     setPendingDraft(design);
@@ -411,7 +552,7 @@ export function DesignStudio() {
       Awaited<typeof import('fabric')>['Canvas']
     >;
     canvas.clear();
-    canvas.backgroundColor = '#ffffff';
+    canvas.backgroundColor = backgroundColor;
     canvas.renderAll();
     setSaved(false);
     setPreviewDataUrl(null);
@@ -479,9 +620,18 @@ export function DesignStudio() {
         </div>
       ) : (
     <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
-      <Card className="overflow-hidden p-4">
+      <Card ref={canvasPanelRef} className="relative overflow-hidden p-4">
+        {studioNotice && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="absolute left-4 right-4 top-4 z-10 rounded-lg bg-brand-600 px-4 py-2.5 text-center text-sm font-medium text-white shadow-lg"
+          >
+            {studioNotice}
+          </div>
+        )}
         <div className="flex justify-center overflow-auto rounded-lg border border-ink-200 bg-ink-50 p-4">
-          <canvas ref={canvasRef} />
+          <canvas key={canvasMountKey} ref={canvasRef} />
         </div>
         <div className="mt-4 rounded-lg border border-ink-200 bg-white p-4 shadow-sm">
           <p className="text-sm text-ink-600">
@@ -603,6 +753,66 @@ export function DesignStudio() {
               </div>
             </div>
           )}
+        </Card>
+
+        <Card>
+          <h3 className="mb-4 font-semibold text-ink-900">{t('colors')}</h3>
+          <div className="mb-4 grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-ink-500">
+                {t('primaryColor')}
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  className="h-10 w-12 cursor-pointer rounded-lg border border-ink-300"
+                />
+                <input
+                  type="text"
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  className="min-w-0 flex-1 rounded-lg border border-ink-300 px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-ink-500">
+                {t('backgroundColor')}
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={backgroundColor}
+                  onChange={(e) => setBackgroundColor(e.target.value)}
+                  className="h-10 w-12 cursor-pointer rounded-lg border border-ink-300"
+                />
+                <input
+                  type="text"
+                  value={backgroundColor}
+                  onChange={(e) => setBackgroundColor(e.target.value)}
+                  className="min-w-0 flex-1 rounded-lg border border-ink-300 px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        <Card>
+          <h3 className="mb-4 font-semibold text-ink-900">{t('addShapes')}</h3>
+          <p className="mb-3 text-xs text-ink-500">{t('shapesHint')}</p>
+          <div className="grid grid-cols-3 gap-2">
+            <Button size="sm" variant="outline" onClick={() => addShape('circle')}>
+              {t('shapeCircle')}
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => addShape('rectangle')}>
+              {t('shapeRectangle')}
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => addShape('triangle')}>
+              {t('shapeTriangle')}
+            </Button>
+          </div>
         </Card>
 
         <Card>

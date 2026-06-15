@@ -18,6 +18,7 @@ export interface SavedDesign {
   customHeight: number;
   templateId: string | null;
   uploadedFiles: { fileId: string; name: string }[];
+  backgroundColor?: string;
 }
 
 const STORAGE_KEY = 'print8-saved-designs';
