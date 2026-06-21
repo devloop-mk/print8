@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { LOGO_MARK } from '@/lib/brand/logos';
 
 export type OgImageContent = {
   title: string;
@@ -7,6 +8,7 @@ export type OgImageContent = {
   badge?: string;
   locale: string;
   previewImageUrl?: string;
+  logoUrl?: string;
 };
 
 export function OgImageLayout({
@@ -16,8 +18,10 @@ export function OgImageLayout({
   badge,
   locale,
   previewImageUrl,
+  logoUrl,
 }: OgImageContent) {
   const isMk = locale === 'mk';
+  const markUrl = logoUrl ?? LOGO_MARK;
 
   return (
     <div
@@ -78,22 +82,17 @@ export function OgImageLayout({
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-          <div
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={markUrl}
+            alt=""
             style={{
               width: 72,
               height: 72,
-              borderRadius: 18,
-              background: '#2563eb',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 34,
-              fontWeight: 800,
-              boxShadow: '0 12px 30px rgba(0,0,0,0.25)',
+              objectFit: 'contain',
+              filter: 'brightness(0) invert(1)',
             }}
-          >
-            8
-          </div>
+          />
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <div style={{ fontSize: 40, fontWeight: 800, letterSpacing: -1 }}>Print 8</div>
             <div style={{ fontSize: 18, color: 'rgba(255,255,255,0.78)' }}>

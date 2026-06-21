@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 import { Card } from "@/components/ui/Card";
+import { PageIntro } from "@/components/brand/PageIntro";
 import { buildSectionMetadata } from "@/lib/seo/page-metadata";
 import type { Locale } from "@/i18n/routing";
 
@@ -21,9 +22,7 @@ export default async function FaqPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
-      <h1 className="mb-12 text-center text-3xl font-bold text-ink-900">
-        {t("title")}
-      </h1>
+      <PageIntro title={t("title")} centered className="mb-8" />
       <div className="space-y-4">
         {faqKeys.map((key) => (
           <Card key={key}>

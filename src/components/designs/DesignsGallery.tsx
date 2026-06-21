@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
@@ -12,6 +12,7 @@ import {
 import { parseDesignCategoryFilter } from '@/lib/data/service-routes';
 import { Card } from '@/components/ui/Card';
 import { DesignCardThumbnail } from '@/components/designs/DesignCardThumbnail';
+import { FilterChipBar } from '@/components/catalog/FilterChipBar';
 import type { DesignCategory, DesignTemplate } from '@/lib/data/catalog';
 
 function DesignCard({
@@ -26,21 +27,18 @@ function DesignCard({
   const t = useTranslations('designs');
 
   return (
-    <Link
-      href={getDesignHref(design)}
-      className="group block"
-    >
+    <Link href={getDesignHref(design)} className="group block">
       <Card className="overflow-hidden p-0 transition group-hover:shadow-md">
         <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-gradient-to-br from-ink-50 to-ink-100">
           <DesignCardThumbnail
             design={design}
             alt={t(`templates.${design.id}`)}
           />
-          {badgeLabel && (
+          {badgeLabel ? (
             <span className="absolute left-3 top-3 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-brand-700 shadow-sm">
               {badgeLabel}
             </span>
-          )}
+          ) : null}
         </div>
         <div className="p-4">
           <p className="text-xs font-medium uppercase tracking-wide text-brand-600">
@@ -69,6 +67,15 @@ export function DesignsGallery() {
     setCategory(parseDesignCategoryFilter(searchParams.get('category')));
   }, [searchParams]);
 
+  const filterOptions = useMemo(
+    () =>
+      designCategories.map((cat) => ({
+        value: cat,
+        label: t(`categories.${cat}`),
+      })),
+    [t],
+  );
+
   const filtered =
     category === 'all'
       ? designTemplates
@@ -81,41 +88,17 @@ export function DesignsGallery() {
 
   return (
     <>
-      <div
-        className="mb-8 flex flex-wrap gap-2"
-        role="tablist"
-        aria-label={t('allCategories')}
-      >
-        <button
-          type="button"
-          role="tab"
-          aria-selected={category === 'all'}
-          onClick={() => setCategory('all')}
-          className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
-            category === 'all'
-              ? 'bg-brand-600 text-white'
-              : 'bg-ink-100 text-ink-600 hover:bg-ink-200'
-          }`}
-        >
-          {t('allCategories')}
-        </button>
-        {designCategories.map((cat) => (
-          <button
-            key={cat}
-            type="button"
-            role="tab"
-            aria-selected={category === cat}
-            onClick={() => setCategory(cat)}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
-              category === cat
-                ? 'bg-brand-600 text-white'
-                : 'bg-ink-100 text-ink-600 hover:bg-ink-200'
-            }`}
-          >
-            {t(`categories.${cat}`)}
-          </button>
-        ))}
-      </div>
+      <FilterChipBar
+        ariaLabel={t('filterLabel')}
+        showFiltersLabel={t('showFilters')}
+        hideFiltersLabel={t('hideFilters')}
+        allOption={{ value: 'all', label: t('allCategories') }}
+        options={filterOptions}
+        value={category}
+        onChange={setCategory}
+        resultsCount={filtered.length}
+        resultsLabel={(count) => t('resultsCount', { count })}
+      />
 
       {fixedDesigns.length > 0 && (
         <section className="mb-12">

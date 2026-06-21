@@ -27,6 +27,7 @@ export async function GET(request: Request) {
 
   const previewImageUrl =
     imagePath && imagePath.startsWith('/') ? absoluteUrl(imagePath) : undefined;
+  const logoUrl = absoluteUrl('/logo/print%208%20number%20only.svg');
 
   return new ImageResponse(
     (
@@ -37,6 +38,7 @@ export async function GET(request: Request) {
         badge={badge || undefined}
         subtitle={subtitle || undefined}
         previewImageUrl={previewImageUrl}
+        logoUrl={logoUrl}
       />
     ),
     {

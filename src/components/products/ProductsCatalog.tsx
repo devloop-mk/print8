@@ -1,23 +1,37 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/routing';
 import { products, productTypes } from '@/lib/data/catalog';
 import { parseProductTypeFilter } from '@/lib/data/service-routes';
 import { ProductCardGrid } from '@/components/products/ProductCardGrid';
+import { FilterChipBar } from '@/components/catalog/FilterChipBar';
+import { ProductJourneyGuide } from '@/components/products/ProductJourneyGuide';
+import { Reveal } from '@/components/motion/Reveal';
+import type { ProductType } from '@/lib/data/catalog';
+
+type ProductFilter = ProductType | 'all';
 
 export function ProductsCatalog() {
   const t = useTranslations('products');
   const searchParams = useSearchParams();
-  const [typeFilter, setTypeFilter] = useState(() =>
+  const [typeFilter, setTypeFilter] = useState<ProductFilter>(() =>
     parseProductTypeFilter(searchParams.get('type')),
   );
 
   useEffect(() => {
     setTypeFilter(parseProductTypeFilter(searchParams.get('type')));
   }, [searchParams]);
+
+  const filterOptions = useMemo(
+    () =>
+      productTypes.map((type) => ({
+        value: type as ProductFilter,
+        label: t(`types.${type}`),
+      })),
+    [t],
+  );
 
   const filtered =
     typeFilter === 'all'
@@ -26,35 +40,27 @@ export function ProductsCatalog() {
 
   return (
     <>
-      <div className="mb-8 flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => setTypeFilter('all')}
-          className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
-            typeFilter === 'all'
-              ? 'bg-brand-600 text-white'
-              : 'bg-ink-100 text-ink-600 hover:bg-ink-200'
-          }`}
-        >
-          All
-        </button>
-        {productTypes.map((type) => (
-          <button
-            key={type}
-            type="button"
-            onClick={() => setTypeFilter(type)}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
-              typeFilter === type
-                ? 'bg-brand-600 text-white'
-                : 'bg-ink-100 text-ink-600 hover:bg-ink-200'
-            }`}
-          >
-            {t(`types.${type}`)}
-          </button>
-        ))}
-      </div>
+      <ProductJourneyGuide />
 
-      <ProductCardGrid items={filtered} />
+      <Reveal delay={80}>
+        <FilterChipBar
+        ariaLabel={t('filterLabel')}
+        showFiltersLabel={t('showFilters')}
+        hideFiltersLabel={t('hideFilters')}
+        allOption={{ value: 'all', label: t('allTypes') }}
+        options={filterOptions}
+        value={typeFilter}
+        onChange={setTypeFilter}
+        resultsCount={filtered.length}
+        resultsLabel={(count) => t('resultsCount', { count })}
+        />
+      </Reveal>
+
+      <Reveal delay={160}>
+        <div id="products-grid">
+          <ProductCardGrid items={filtered} />
+        </div>
+      </Reveal>
     </>
   );
 }

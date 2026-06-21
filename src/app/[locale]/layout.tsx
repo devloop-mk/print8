@@ -8,6 +8,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { CartProvider } from "@/components/cart/CartProvider";
 import { SiteAnalytics } from "@/components/analytics/SiteAnalytics";
+import { CookieConsent } from "@/components/legal/CookieConsent";
 import { NavigationProgress } from "@/components/navigation/NavigationProgress";
 import { buildPageMetadata, buildOgImageUrl } from "@/lib/seo/metadata";
 import "@/app/globals.css";
@@ -68,6 +69,7 @@ export default async function LocaleLayout({
           <CartProvider>
             <NavigationProgress />
             <SiteAnalytics />
+            <CookieConsent />
             <Header />
             <main className="min-h-[calc(100vh-8rem)]">{children}</main>
             <Footer />

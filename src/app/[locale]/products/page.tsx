@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { ProductsCatalog } from "@/components/products/ProductsCatalog";
 import { SectionLoading } from "@/components/ui/SectionLoading";
+import { PageIntro } from "@/components/brand/PageIntro";
 import { buildSectionMetadata } from "@/lib/seo/page-metadata";
 import type { Locale } from "@/i18n/routing";
 
@@ -21,10 +22,7 @@ export default async function ProductsPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-      <div className="mb-12">
-        <h1 className="text-3xl font-bold text-ink-900">{t("title")}</h1>
-        <p className="mt-2 text-lg text-ink-500">{t("subtitle")}</p>
-      </div>
+      <PageIntro title={t("title")} subtitle={t("subtitle")} />
       <Suspense fallback={<SectionLoading />}>
         <ProductsCatalog />
       </Suspense>

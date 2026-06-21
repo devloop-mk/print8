@@ -8,7 +8,17 @@ import { localeConfig } from '@/i18n/locale-config';
 import { LocaleFlag } from '@/components/ui/LocaleFlag';
 import { cn } from '@/lib/utils';
 
-export function LanguageSwitcher() {
+type LanguageSwitcherProps = {
+  variant?: 'dropdown' | 'list';
+  onLocaleChange?: () => void;
+  className?: string;
+};
+
+export function LanguageSwitcher({
+  variant = 'dropdown',
+  onLocaleChange,
+  className,
+}: LanguageSwitcherProps) {
   const t = useTranslations('nav');
   const locale = useLocale() as Locale;
   const pathname = usePathname();
@@ -18,7 +28,7 @@ export function LanguageSwitcher() {
   const current = localeConfig[locale];
 
   useEffect(() => {
-    if (!open) return;
+    if (variant !== 'dropdown' || !open) return;
 
     function handlePointerDown(event: MouseEvent) {
       if (!containerRef.current?.contains(event.target as Node)) {
@@ -36,10 +46,40 @@ export function LanguageSwitcher() {
       document.removeEventListener('mousedown', handlePointerDown);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [open]);
+  }, [open, variant]);
+
+  if (variant === 'list') {
+    return (
+      <ul className={cn('space-y-1', className)} aria-label={t('language')}>
+        {routing.locales.map((loc) => {
+          const selected = loc === locale;
+
+          return (
+            <li key={loc}>
+              <Link
+                href={pathname}
+                locale={loc}
+                onClick={onLocaleChange}
+                className={cn(
+                  'flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition',
+                  selected
+                    ? 'bg-brand-50 text-brand-700'
+                    : 'text-ink-700 hover:bg-ink-50',
+                )}
+              >
+                <LocaleFlag locale={loc} />
+                <span className="flex-1">{t(`languages.${loc}`)}</span>
+                {selected ? <Check className="h-4 w-4 shrink-0" aria-hidden /> : null}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    );
+  }
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className={cn('relative', className)}>
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
@@ -72,7 +112,10 @@ export function LanguageSwitcher() {
                 <Link
                   href={pathname}
                   locale={loc}
-                  onClick={() => setOpen(false)}
+                  onClick={() => {
+                    setOpen(false);
+                    onLocaleChange?.();
+                  }}
                   className={cn(
                     'flex items-center gap-2.5 px-3 py-2.5 text-sm transition hover:bg-ink-50',
                     selected && 'bg-brand-50 text-brand-700',

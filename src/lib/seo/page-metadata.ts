@@ -1,9 +1,14 @@
 import { getTranslations } from 'next-intl/server';
 import type { Locale } from '@/i18n/routing';
 import {
+  LEGAL_PAGE_PATHS,
+  type LegalPageKey,
+} from '@/lib/legal/pages';
+import {
   products,
   getDesignTemplate,
   type ProductType,
+  type ProductDesignCategory,
 } from '@/lib/data/catalog';
 import { buildOgImageUrl, buildPageMetadata } from '@/lib/seo/metadata';
 
@@ -29,6 +34,45 @@ export async function buildProductMetadata(locale: Locale, id: string) {
       locale,
       title: productName,
       description,
+      badge: tm('badges.product'),
+      image: product.image,
+    }),
+  });
+}
+
+export async function buildProductDesignsMetadata(
+  locale: Locale,
+  id: string,
+  category: ProductDesignCategory,
+) {
+  const product = products.find((item) => item.id === id);
+  if (!product) return null;
+
+  const t = await getTranslations({ locale, namespace: 'products' });
+  const tp = await getTranslations({ locale, namespace: 'products.types' });
+  const td = await getTranslations({ locale, namespace: 'products.detail' });
+  const tm = await getTranslations({ locale, namespace: 'metadata' });
+
+  const productName = tp(product.type);
+  const isPhoto = category === 'image-designs';
+  const sectionTitle = isPhoto ? td('imageDesigns') : td('textDesigns');
+  const description = isPhoto
+    ? td('imageDesignsPageHint')
+    : td('textDesignsPageHint');
+  const title = `${sectionTitle} — ${productName} | Print 8`;
+  const path = isPhoto
+    ? `/products/${id}/photo-designs`
+    : `/products/${id}/text-designs`;
+
+  return buildPageMetadata({
+    locale,
+    title,
+    description,
+    path,
+    image: buildOgImageUrl({
+      locale,
+      title: sectionTitle,
+      description: productName,
       badge: tm('badges.product'),
       image: product.image,
     }),
@@ -138,6 +182,27 @@ export async function buildProductCustomizeMetadata(
       description: tc('title'),
       badge: tm('badges.customize'),
       image: product?.image,
+    }),
+  });
+}
+
+export async function buildLegalMetadata(locale: Locale, documentKey: LegalPageKey) {
+  const t = await getTranslations({ locale, namespace: 'legal' });
+  const tm = await getTranslations({ locale, namespace: 'metadata' });
+  const path = LEGAL_PAGE_PATHS[documentKey];
+  const title = `${t(`${documentKey}.title`)} | Print 8`;
+  const description = t(`${documentKey}.metaDescription`);
+
+  return buildPageMetadata({
+    locale,
+    title,
+    description,
+    path,
+    image: buildOgImageUrl({
+      locale,
+      title: t(`${documentKey}.title`),
+      description,
+      badge: tm('badges.legal'),
     }),
   });
 }

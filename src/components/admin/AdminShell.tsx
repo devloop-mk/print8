@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { adminStrings } from '@/lib/admin/strings';
 import { cn } from '@/lib/utils';
+import { Logo } from '@/components/brand/Logo';
 import { NavigationProgress } from '@/components/navigation/NavigationProgress';
 
 const NAV_ITEMS = [
@@ -43,9 +44,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       <div className="mx-auto flex min-h-screen max-w-7xl">
         <aside className="hidden w-56 shrink-0 border-r border-ink-200 bg-white px-3 py-5 lg:block xl:w-64 xl:px-4 xl:py-6">
           <div className="mb-8 px-2">
-            <p className="text-xs font-semibold uppercase tracking-wider text-brand-600">
-              {adminStrings.brand}
-            </p>
+            <Logo className="mb-3 h-8" />
             <h1 className="text-lg font-semibold text-ink-900">{adminStrings.admin}</h1>
           </div>
 
@@ -97,10 +96,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-20 flex items-center justify-between border-b border-ink-200 bg-white/95 px-3 py-3 backdrop-blur md:px-6 lg:hidden">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-brand-600">
-                {adminStrings.brand}
-              </p>
+            <div className="flex items-center gap-3">
+              <Logo variant="mark" className="h-8 w-8" />
               <p className="text-sm font-medium text-ink-900">{adminStrings.admin}</p>
             </div>
             <button

@@ -1,0 +1,266 @@
+{
+  "nav": {
+    "privacy": "Privacy Policy",
+    "terms": "Terms & Conditions",
+    "cookies": "Cookie Policy",
+    "returns": "Returns & Complaints",
+    "legalNotice": "Legal Notice"
+  },
+  "shared": {
+    "disclaimer": "These documents are provided for transparency and customer information. They do not replace individual legal advice. If you operate Print 8 under a registered company, verify company registration numbers, tax IDs, and any sector-specific obligations with a qualified adviser in North Macedonia.",
+    "questions": "Questions about these policies?",
+    "contactLink": "Contact us"
+  },
+  "consent": {
+    "title": "We use cookies",
+    "description": "We use essential cookies for cart and order functionality, and optional analytics cookies to understand how the website is used. You can accept or reject analytics cookies.",
+    "learnMore": "Cookie Policy",
+    "privacyLink": "Privacy Policy",
+    "accept": "Accept analytics",
+    "reject": "Reject non-essential"
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "subtitle": "How Print 8 collects, uses, and protects your personal data.",
+    "lastUpdated": "Last updated: 15 June 2026",
+    "metaDescription": "Print 8 privacy policy — how we process personal data for orders, contact requests, and website use.",
+    "intro": "Print 8 (“we”, “us”) respects your privacy. This policy explains what personal data we collect when you use print8.mk, why we collect it, how long we keep it, and what rights you have under applicable data protection law, including the Law on Personal Data Protection of North Macedonia and the EU General Data Protection Regulation (GDPR) where it applies.",
+    "sections": [
+      {
+        "title": "1. Data controller",
+        "body": "The data controller responsible for your personal data is:\n\nPrint 8\nShtip, North Macedonia\nEmail: info@print8.mk\nPhone: +389 XX XXX XXX\n\nIf we appoint a data protection contact person, their details will be published on this page."
+      },
+      {
+        "title": "2. What data we collect",
+        "body": "Depending on how you use the website, we may process the following categories of personal data:",
+        "items": [
+          "Identity and contact data: name, phone number, email address, delivery city and address.",
+          "Order data: products or services ordered, quantities, prices, design choices, customization details, order notes, and uploaded files.",
+          "Technical data: browser type, pages visited, approximate usage patterns, referrer URL, and a pseudonymous visitor identifier stored in a cookie when analytics consent is given.",
+          "Communication data: messages you send through contact forms or email.",
+          "Payment-related data: we currently offer cash on delivery (COD); we do not store payment card details on this website."
+        ]
+      },
+      {
+        "title": "3. How we use your data",
+        "body": "We process personal data only where we have a lawful basis:",
+        "items": [
+          "To process and fulfil your order, prepare prints, arrange delivery, and contact you about your order (contract performance).",
+          "To respond to enquiries and provide customer support (legitimate interest / pre-contract steps).",
+          "To send order confirmations and service-related emails (contract performance).",
+          "To maintain website security, prevent abuse, and improve our services (legitimate interest).",
+          "To measure website traffic with analytics cookies, only if you consent (consent).",
+          "To comply with legal obligations such as accounting or tax record-keeping where applicable."
+        ]
+      },
+      {
+        "title": "4. Uploaded files and designs",
+        "body": "When you upload images, logos, or other files for printing, you are responsible for ensuring you have the right to use that content. Uploaded files are stored securely for production and order fulfilment. We do not use your private uploads for marketing without your permission. Files may be deleted after the order is completed and any legally required retention period has passed."
+      },
+      {
+        "title": "5. Cookies and similar technologies",
+        "body": "We use essential technologies to operate the website, including cart storage in your browser and secure upload sessions. Optional analytics uses a pseudonymous cookie (print8_vid) to count page views. Details are in our Cookie Policy. Non-essential analytics runs only after you accept cookies in the banner."
+      },
+      {
+        "title": "6. Who we share data with",
+        "body": "We may share personal data only when necessary:",
+        "items": [
+          "Hosting, database, email delivery, and file storage providers that help us operate the website and process orders.",
+          "Courier or delivery partners to deliver your order.",
+          "Professional advisers or authorities when required by law.",
+          "We do not sell your personal data to third parties."
+        ]
+      },
+      {
+        "title": "7. International transfers",
+        "body": "Some service providers may process data outside North Macedonia or the EEA. Where this occurs, we take appropriate safeguards consistent with applicable law, such as standard contractual clauses or providers certified under recognized frameworks."
+      },
+      {
+        "title": "8. Retention",
+        "body": "We keep personal data only as long as necessary for the purposes above. Order records are typically retained for the period required for accounting, tax, warranty, and dispute resolution purposes. Analytics data is kept in aggregated or pseudonymous form. You may request erasure where we have no overriding legal reason to retain data."
+      },
+      {
+        "title": "9. Your rights",
+        "body": "Subject to applicable law, you may have the right to access, rectify, erase, restrict, or object to certain processing, and to data portability where processing is based on consent or contract. You may withdraw consent for analytics cookies at any time by clearing site data or rejecting cookies on your next visit. You also have the right to lodge a complaint with the Personal Data Protection Agency of North Macedonia."
+      },
+      {
+        "title": "10. Children",
+        "body": "Our services are not directed at children under 16. We do not knowingly collect personal data from children. If you believe a child has provided us data, contact us and we will delete it."
+      },
+      {
+        "title": "11. Changes",
+        "body": "We may update this policy from time to time. The latest version will always be published on this page with an updated date."
+      }
+    ]
+  },
+  "terms": {
+    "title": "Terms & Conditions",
+    "subtitle": "Rules for using print8.mk and placing orders with Print 8.",
+    "lastUpdated": "Last updated: 15 June 2026",
+    "metaDescription": "Print 8 terms and conditions for online orders, customized products, and delivery.",
+    "intro": "By accessing print8.mk or placing an order, you agree to these Terms & Conditions. Please read them carefully before ordering. If you do not agree, do not use the website.",
+    "sections": [
+      {
+        "title": "1. About Print 8",
+        "body": "The website print8.mk is operated by Print 8, a printing and personalization business based in Shtip, North Macedonia. Contact: info@print8.mk."
+      },
+      {
+        "title": "2. Services",
+        "body": "We offer printing services, ready-made designs, and customizable products including apparel, mugs, bags, business cards, invitations, menus, and related items. Product images and previews are illustrative. Minor colour or material variation may occur due to screens, substrates, and production processes."
+      },
+      {
+        "title": "3. Orders and contract formation",
+        "body": "Browsing the website does not create a contract. An order is received when you submit the checkout form. We will contact you to confirm details, production feasibility, delivery timing, and final price where custom work or extras are involved. A binding contract is formed when we confirm acceptance of your order."
+      },
+      {
+        "title": "4. Prices and payment",
+        "body": "Prices shown on the website are in Macedonian denars unless stated otherwise and may change before checkout is completed. Unless stated on the product page, listed prices may exclude delivery. Payment is currently accepted by cash on delivery (COD) unless we agree otherwise in writing."
+      },
+      {
+        "title": "5. Custom content and your responsibility",
+        "body": "If you supply text, images, logos, or other materials, you confirm that you own them or have permission to use them and that they do not infringe third-party rights or violate law. You indemnify Print 8 against claims arising from content you provide. We may refuse or cancel orders that appear unlawful, offensive, or likely to infringe intellectual property."
+      },
+      {
+        "title": "6. Proofs and approval",
+        "body": "For customized or complex jobs we may provide a digital proof. Production may begin after your approval or after a reasonable period without objection. You are responsible for reviewing spelling, colours, placement, and quantities before approval."
+      },
+      {
+        "title": "7. Production and delivery",
+        "body": "Stated delivery times are estimates, not guarantees. Production time depends on order complexity, workload, and material availability. Risk passes to you upon delivery to the address provided or collection by you, unless mandatory consumer law provides otherwise."
+      },
+      {
+        "title": "8. Cancellations and changes",
+        "body": "You may request cancellation or changes before production starts. Once production has begun, cancellation may not be possible and costs already incurred may be charged. Contact us as soon as possible if you need to change an order."
+      },
+      {
+        "title": "9. Returns, defects, and complaints",
+        "body": "Please see our Returns & Complaints Policy. Custom-made and personalized items are generally non-returnable except where defective or not produced according to the confirmed order."
+      },
+      {
+        "title": "10. Limitation of liability",
+        "body": "To the fullest extent permitted by law, Print 8 is not liable for indirect or consequential loss, loss of profit, or loss of data. Our total liability for any order is limited to the amount paid for that order, except where liability cannot be limited under mandatory consumer protection law."
+      },
+      {
+        "title": "11. Intellectual property",
+        "body": "Website content, templates, branding, and software are owned by Print 8 or its licensors. You may not copy or reuse them without permission. Your uploaded content remains yours; you grant us a limited licence to use it solely to fulfil your order."
+      },
+      {
+        "title": "12. Website use",
+        "body": "You must not misuse the website, attempt unauthorized access, upload malware, scrape content excessively, or interfere with other users. We may suspend access for abuse or security reasons."
+      },
+      {
+        "title": "13. Governing law and disputes",
+        "body": "These terms are governed by the laws of North Macedonia. Courts in North Macedonia have jurisdiction unless mandatory consumer rules require otherwise. We encourage you to contact us first to resolve disputes amicably."
+      }
+    ]
+  },
+  "cookies": {
+    "title": "Cookie Policy",
+    "subtitle": "What cookies and similar technologies we use on print8.mk.",
+    "lastUpdated": "Last updated: 15 June 2026",
+    "metaDescription": "Print 8 cookie policy — essential and analytics cookies used on print8.mk.",
+    "intro": "This policy explains how Print 8 uses cookies and similar browser technologies. Essential technologies are required for the site to function. Analytics cookies are optional and used only with your consent.",
+    "sections": [
+      {
+        "title": "1. What are cookies?",
+        "body": "Cookies are small text files stored on your device. Similar technologies include local storage used by your browser. They help websites remember preferences, keep sessions secure, or understand usage."
+      },
+      {
+        "title": "2. Essential technologies",
+        "body": "These are necessary for core functionality and do not require consent under typical ePrivacy interpretations:",
+        "items": [
+          "Shopping cart contents stored in your browser so items remain while you browse.",
+          "Upload session token for securely attaching files to an order.",
+          "Admin session cookie for authorized staff access to the admin area (not set for regular customers).",
+          "Language preference as part of normal site navigation."
+        ]
+      },
+      {
+        "title": "3. Analytics cookies (optional)",
+        "body": "With your consent, we set a first-party cookie named print8_vid. It stores a pseudonymous random identifier so we can count page views without knowing your name. We also store the page path, locale, referrer, and timestamp in our database. You can reject analytics in the cookie banner."
+      },
+      {
+        "title": "4. How to manage cookies",
+        "body": "You can delete cookies in your browser settings, block all cookies, or reject analytics on first visit. Rejecting analytics does not affect ordering. If you clear cookies, you may see the consent banner again."
+      },
+      {
+        "title": "5. Third-party cookies",
+        "body": "We aim to minimize third-party tracking. If embedded content or service providers set their own cookies in the future, we will update this policy."
+      },
+      {
+        "title": "6. Contact",
+        "body": "Questions about cookies: info@print8.mk. For broader privacy questions, see our Privacy Policy."
+      }
+    ]
+  },
+  "returns": {
+    "title": "Returns & Complaints",
+    "subtitle": "Our policy for defective items, order issues, and complaints.",
+    "lastUpdated": "Last updated: 15 June 2026",
+    "metaDescription": "Print 8 returns, refunds, and complaints policy for printed and personalized products.",
+    "intro": "We want you to be satisfied with your order. Because many of our products are made to your specifications, standard return rules for off-the-shelf goods often do not apply. This policy explains what you can expect.",
+    "sections": [
+      {
+        "title": "1. Custom and personalized products",
+        "body": "Items produced to your design, text, photos, measurements, or specifications are generally not eligible for return or refund simply because you changed your mind, except where required by mandatory consumer law."
+      },
+      {
+        "title": "2. Defective or incorrect orders",
+        "body": "If an item is defective, damaged in production, or materially different from what was confirmed, contact us within 7 days of delivery with your order number and photos of the issue. We will review the case and, where appropriate, offer reprint, repair, partial refund, or replacement."
+      },
+      {
+        "title": "3. Colour and minor variations",
+        "body": "Slight differences between screen preview and printed output may occur due to monitors, inks, fabrics, and materials. These are not considered defects unless they fall outside reasonable production tolerance agreed with you."
+      },
+      {
+        "title": "4. Customer-supplied content errors",
+        "body": "We are not responsible for errors in text, images, or files you approved or submitted, including spelling mistakes, low-resolution images, or incorrect placement after proof approval."
+      },
+      {
+        "title": "5. How to complain",
+        "body": "Email info@print8.mk with your name, order number, phone number, description of the problem, and supporting photos. We aim to respond within 2 business days."
+      },
+      {
+        "title": "6. Refunds",
+        "body": "Approved refunds for COD orders are returned by bank transfer or another method we agree on. Refund timing depends on verification of the issue and any return of goods if requested."
+      },
+      {
+        "title": "7. Consumer rights",
+        "body": "Nothing in this policy limits rights you may have under mandatory consumer protection legislation in North Macedonia. If you are a consumer and believe your statutory rights apply, please contact us with details."
+      }
+    ]
+  },
+  "legal-notice": {
+    "title": "Legal Notice",
+    "subtitle": "Company identification and website operator information.",
+    "lastUpdated": "Last updated: 15 June 2026",
+    "metaDescription": "Print 8 legal notice and company identification for print8.mk.",
+    "intro": "This page provides legally required business identification information for users of print8.mk.",
+    "sections": [
+      {
+        "title": "1. Website operator",
+        "body": "Website: https://print8.mk\nOperator: Print 8\nAddress: Shtip, North Macedonia\nEmail: info@print8.mk\nPhone: +389 XX XXX XXX"
+      },
+      {
+        "title": "2. Company registration",
+        "body": "Legal form: [e.g. Print 8 DOOEL Shtip]\nCentral Registry (EMBS) number: [insert number]\nTax identification number (EDB): [insert number]\nRegistered activity: printing services, personalized products, and related commercial activities.\n\nPlease replace bracketed fields with your official registration details before going live."
+      },
+      {
+        "title": "3. Supervisory and professional information",
+        "body": "If your business is subject to sector licensing or trade registration beyond general company registration, add the competent authority and licence number here."
+      },
+      {
+        "title": "4. Online dispute resolution",
+        "body": "The European Commission provides an ODR platform for consumers in cross-border disputes: https://ec.europa.eu/consumers/odr. We are not obliged to participate in alternative dispute resolution bodies unless required by law, but we encourage customers to contact us directly first."
+      },
+      {
+        "title": "5. Liability for content",
+        "body": "We prepare website content with care but do not guarantee completeness or uninterrupted availability. We are responsible for our own content under applicable law. Linked external websites are the responsibility of their operators."
+      },
+      {
+        "title": "6. Copyright",
+        "body": "Content on print8.mk is protected by copyright. Reproduction or distribution without permission is prohibited except as allowed by law."
+      }
+    ]
+  }
+}

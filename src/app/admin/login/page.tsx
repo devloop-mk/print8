@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { Card } from '@/components/ui/Card';
 import { AdminLoginForm } from '@/components/admin/AdminLoginForm';
 import { AdminPageLoading } from '@/components/admin/AdminPageLoading';
+import { Logo } from '@/components/brand/Logo';
 import { isAdminAuthConfigured } from '@/lib/admin/auth';
 import { adminStrings } from '@/lib/admin/strings';
 
@@ -13,9 +14,7 @@ export default function AdminLoginPage() {
     <div className="flex min-h-screen items-center justify-center px-4 py-10 sm:py-12">
       <Card className="w-full max-w-md p-5 sm:p-6">
         <div className="mb-6">
-          <p className="text-xs font-semibold uppercase tracking-wider text-brand-600">
-            {adminStrings.brand}
-          </p>
+          <Logo className="mb-4 h-9" />
           <h1 className="text-2xl font-semibold text-ink-900">{t.title}</h1>
           <p className="mt-1 text-sm text-ink-500">{t.subtitle}</p>
         </div>

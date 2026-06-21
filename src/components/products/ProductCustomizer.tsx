@@ -51,6 +51,7 @@ import {
   AlignCenter,
   ArrowUp,
   ArrowDown,
+  X,
 } from 'lucide-react';
 
 type EditorPanel = 'text' | 'photo' | null;
@@ -168,6 +169,33 @@ function useScaleResize(
   };
 }
 
+function OverlayRemoveButton({
+  onRemove,
+  label,
+  hideControls,
+}: {
+  onRemove: () => void;
+  label: string;
+  hideControls?: boolean;
+}) {
+  if (hideControls) return null;
+
+  return (
+    <button
+      type="button"
+      onPointerDown={(event) => event.stopPropagation()}
+      onClick={(event) => {
+        event.stopPropagation();
+        onRemove();
+      }}
+      className="absolute -right-2 -top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-ink-900/90 text-white shadow-md transition hover:bg-ink-900"
+      aria-label={label}
+    >
+      <X className="h-3.5 w-3.5" />
+    </button>
+  );
+}
+
 function ResizableImageOverlay({
   src,
   alt,
@@ -175,6 +203,8 @@ function ResizableImageOverlay({
   position,
   onScaleChange,
   onPositionChange,
+  onRemove,
+  removeLabel,
   hideControls,
 }: {
   src: string;
@@ -183,6 +213,8 @@ function ResizableImageOverlay({
   position: { x: number; y: number };
   onScaleChange: (scale: number) => void;
   onPositionChange: (pos: { x: number; y: number }) => void;
+  onRemove?: () => void;
+  removeLabel?: string;
   hideControls?: boolean;
 }) {
   const drag = useDraggablePosition(position, onPositionChange);
@@ -204,6 +236,7 @@ function ResizableImageOverlay({
       onPointerUp={drag.onPointerUp}
       onPointerCancel={drag.onPointerCancel}
     >
+      <div className="relative">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
@@ -212,6 +245,13 @@ function ResizableImageOverlay({
         crossOrigin="anonymous"
         className="pointer-events-none block w-full rounded-lg object-contain shadow-sm"
       />
+      {onRemove && removeLabel ? (
+        <OverlayRemoveButton
+          onRemove={onRemove}
+          label={removeLabel}
+          hideControls={hideControls}
+        />
+      ) : null}
       <div
         role="button"
         tabIndex={0}
@@ -232,6 +272,7 @@ function ResizableImageOverlay({
             strokeLinecap="round"
           />
         </svg>
+      </div>
       </div>
     </div>
   );
@@ -553,6 +594,10 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
               onImageScaleChange={(scale) =>
                 updateCurrentSide({ uploadedImageScale: scale })
               }
+              onRemoveText={() => updateCurrentSide({ customText: '' })}
+              onRemoveImage={() => updateCurrentSide({ uploadedFile: null })}
+              removeTextLabel={t('removeText')}
+              removeImageLabel={t('removePhoto')}
             />
           </Card>
 
@@ -715,6 +760,8 @@ function ResizableTextOverlay({
   textShadow,
   onSizeChange,
   onPositionChange,
+  onRemove,
+  removeLabel,
   hideControls,
 }: {
   text: string;
@@ -727,6 +774,8 @@ function ResizableTextOverlay({
   textShadow: string;
   onSizeChange: (size: number) => void;
   onPositionChange: (pos: { x: number; y: number }) => void;
+  onRemove?: () => void;
+  removeLabel?: string;
   hideControls?: boolean;
 }) {
   const drag = useDraggablePosition(position, onPositionChange);
@@ -755,7 +804,15 @@ function ResizableTextOverlay({
       onPointerUp={drag.onPointerUp}
       onPointerCancel={drag.onPointerCancel}
     >
+      <span className="relative inline-block max-w-full">
       {text}
+      {onRemove && removeLabel ? (
+        <OverlayRemoveButton
+          onRemove={onRemove}
+          label={removeLabel}
+          hideControls={hideControls}
+        />
+      ) : null}
       <div
         role="button"
         tabIndex={0}
@@ -767,6 +824,7 @@ function ResizableTextOverlay({
         onPointerUp={resize.onPointerUp}
         onPointerCancel={resize.onPointerCancel}
       />
+      </span>
     </div>
   );
 }
@@ -782,6 +840,10 @@ function InteractivePreview({
   onTextSizeChange,
   onImagePositionChange,
   onImageScaleChange,
+  onRemoveText,
+  onRemoveImage,
+  removeTextLabel,
+  removeImageLabel,
 }: {
   mockupImage: string;
   sideDesign: SideDesign;
@@ -793,6 +855,10 @@ function InteractivePreview({
   onTextSizeChange: (size: number) => void;
   onImagePositionChange: (pos: { x: number; y: number }) => void;
   onImageScaleChange: (scale: number) => void;
+  onRemoveText?: () => void;
+  onRemoveImage?: () => void;
+  removeTextLabel?: string;
+  removeImageLabel?: string;
 }) {
   const baseImage = sideDesign.premadeDesignImage ?? mockupImage;
   const isPremade = Boolean(sideDesign.premadeDesignImage);
@@ -832,6 +898,8 @@ function InteractivePreview({
               position={sideDesign.uploadedImagePosition}
               onScaleChange={onImageScaleChange}
               onPositionChange={onImagePositionChange}
+              onRemove={onRemoveImage}
+              removeLabel={removeImageLabel}
               hideControls={isCapturing}
             />
           )}
@@ -848,6 +916,8 @@ function InteractivePreview({
             textShadow={sideDesign.customTextShadow}
             onSizeChange={onTextSizeChange}
             onPositionChange={onTextPositionChange}
+            onRemove={onRemoveText}
+            removeLabel={removeTextLabel}
             hideControls={isCapturing}
           />
         )}

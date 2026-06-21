@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { useRouter } from "@/i18n/routing";
+import { useRouter, Link } from "@/i18n/routing";
 import { useCart } from "@/components/cart/CartProvider";
 import { useUploadSession } from "@/hooks/useUploadSession";
 import { SecureUpload } from "@/components/upload/SecureUpload";
@@ -26,6 +26,7 @@ export function CheckoutForm() {
     notes: "",
   });
   const [fileIds, setFileIds] = useState<string[]>([]);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [processing, setProcessing] = useState(false);
 
@@ -43,6 +44,9 @@ export function CheckoutForm() {
     if (!form.address.trim()) newErrors.address = t("required");
     if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       newErrors.email = t("invalidEmail");
+    }
+    if (!termsAccepted) {
+      newErrors.terms = t("acceptTermsRequired");
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -205,6 +209,33 @@ export function CheckoutForm() {
               {formatPrice(total, locale)}
             </span>
           </div>
+
+          <label className="mt-4 flex items-start gap-3 text-sm text-ink-600">
+            <input
+              type="checkbox"
+              checked={termsAccepted}
+              onChange={(e) => {
+                setTermsAccepted(e.target.checked);
+                setErrors((prev) => ({ ...prev, terms: "" }));
+              }}
+              className="mt-1 h-4 w-4 rounded border-ink-300 text-brand-600 focus:ring-brand-500"
+            />
+            <span>
+              {t("acceptTermsBeforeTerms")}{" "}
+              <Link href="/terms" className="font-medium text-brand-600 hover:text-brand-700">
+                {t("termsLink")}
+              </Link>{" "}
+              {t("acceptTermsBeforePrivacy")}{" "}
+              <Link href="/privacy" className="font-medium text-brand-600 hover:text-brand-700">
+                {t("privacyLink")}
+              </Link>
+              .
+            </span>
+          </label>
+          {errors.terms ? (
+            <p className="mt-2 text-xs text-red-600">{errors.terms}</p>
+          ) : null}
+
           <Button
             type="submit"
             size="lg"
