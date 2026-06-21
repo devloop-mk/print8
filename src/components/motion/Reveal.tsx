@@ -17,13 +17,13 @@ export function Reveal({
   children,
   className,
   delay = 0,
-  y = 16,
-  duration = 500,
+  y = 24,
+  duration = 620,
 }: RevealProps) {
   const reducedMotion = useReducedMotion();
   const { ref, inView } = useInView<HTMLDivElement>({
-    rootMargin: '0px 0px 22% 0px',
-    threshold: 0.01,
+    rootMargin: '0px 0px 16% 0px',
+    threshold: 0.02,
     once: true,
   });
   const visible = reducedMotion || inView;

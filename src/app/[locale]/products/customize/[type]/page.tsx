@@ -32,8 +32,8 @@ export default async function CustomizeProductPage({
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-      <h1 className="mb-8 text-3xl font-bold text-ink-900">{t("title")}</h1>
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 md:py-10 xl:px-8 xl:py-12">
+      <h1 className="mb-6 text-2xl font-bold text-ink-900 md:mb-8 md:text-3xl">{t("title")}</h1>
       <Suspense fallback={<LocalePageLoading />}>
         <ProductCustomizer type={type as ProductType} />
       </Suspense>

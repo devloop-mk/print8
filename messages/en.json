@@ -543,6 +543,7 @@
       "cropApply": "Apply crop",
       "cropProcessing": "Processing crop…",
       "cropUploading": "Uploading photo…",
+      "cropPleaseWait": "Please wait — this may take a few seconds.",
       "cropPhoto": "Crop photo",
       "replacePhoto": "Replace photo",
       "previewNotAvailable": "Preview is not available for this file.",

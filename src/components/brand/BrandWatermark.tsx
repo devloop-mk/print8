@@ -43,7 +43,7 @@ export function BrandWatermark({
           sizeClasses[size],
           positionClasses[position],
           variant === 'on-dark'
-            ? 'opacity-[0.08] brightness-0 invert'
+            ? 'opacity-[0.12] brightness-0 invert'
             : 'opacity-[0.045]',
         )}
       />

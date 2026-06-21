@@ -8,12 +8,14 @@ type ParallaxFloatProps = {
   children: ReactNode;
   className?: string;
   strength?: number;
+  scaleStrength?: number;
 };
 
 export function ParallaxFloat({
   children,
   className,
-  strength = 0.12,
+  strength = 0.18,
+  scaleStrength = 0.00012,
 }: ParallaxFloatProps) {
   const reducedMotion = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
@@ -31,7 +33,8 @@ export function ParallaxFloat({
         const viewportCenter = window.innerHeight / 2;
         const elementCenter = rect.top + rect.height / 2;
         const offset = (elementCenter - viewportCenter) * strength;
-        ref.current.style.transform = `translate3d(0, ${offset}px, 0)`;
+        const scale = 1 + Math.abs(offset) * scaleStrength;
+        ref.current.style.transform = `translate3d(0, ${offset}px, 0) scale(${scale})`;
       });
     }
 
@@ -41,14 +44,10 @@ export function ParallaxFloat({
       cancelAnimationFrame(frame);
       window.removeEventListener('scroll', onScroll);
     };
-  }, [reducedMotion, strength]);
+  }, [reducedMotion, strength, scaleStrength]);
 
   return (
-    <div
-      ref={ref}
-      className={cn('will-change-transform', className)}
-      style={reducedMotion ? undefined : { transition: 'transform 0.1s linear' }}
-    >
+    <div ref={ref} className={cn('will-change-transform', className)}>
       {children}
     </div>
   );

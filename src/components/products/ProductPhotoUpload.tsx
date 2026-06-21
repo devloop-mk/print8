@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl';
 import { Crop, Upload } from 'lucide-react';
 import { ImageCropModal } from '@/components/products/ImageCropModal';
 import { Button } from '@/components/ui/Button';
-import { Spinner } from '@/components/ui/Spinner';
 import { LoadingIndicator } from '@/components/ui/LoadingIndicator';
 
 type ProductPhotoUploadProps = {
@@ -64,13 +63,12 @@ export function ProductPhotoUpload({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [cropSource, setCropSource] = useState<string | null>(null);
   const [pendingName, setPendingName] = useState('photo.jpg');
-  const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState<{
     type: 'error' | 'success';
     text: string;
   } | null>(null);
 
-  const isDisabled = uploadLoading || uploading || !token;
+  const isDisabled = uploadLoading || Boolean(cropSource) || !token;
 
   function openFilePicker() {
     if (!isDisabled) fileInputRef.current?.click();
@@ -102,10 +100,9 @@ export function ProductPhotoUpload({
     if (!token) {
       setMessage({ type: 'error', text: tc('uploadSessionError') });
       setCropSource(null);
-      return;
+      throw new Error('No upload session');
     }
 
-    setUploading(true);
     setMessage(null);
     try {
       const result = await uploadBlob(
@@ -123,8 +120,7 @@ export function ProductPhotoUpload({
       setCropSource(null);
     } catch {
       setMessage({ type: 'error', text: tc('uploadError') });
-    } finally {
-      setUploading(false);
+      throw new Error('Upload failed');
     }
   }
 
@@ -148,13 +144,6 @@ export function ProductPhotoUpload({
         </div>
       ) : null}
 
-      {uploading ? (
-        <div className="flex items-center gap-2 text-sm text-ink-600">
-          <Spinner size="sm" />
-          {tc('loading')}
-        </div>
-      ) : null}
-
       {!hasPhoto ? (
         <>
           <p className="text-sm text-ink-600">{t('photoUploadInstructions')}</p>
@@ -175,7 +164,7 @@ export function ProductPhotoUpload({
             variant="secondary"
             className="gap-2"
             onClick={openRecrop}
-            disabled={uploading || !previewUrl}
+            disabled={Boolean(cropSource) || !previewUrl}
           >
             <Crop className="h-4 w-4" />
             {t('cropPhoto')}
@@ -211,7 +200,7 @@ export function ProductPhotoUpload({
         <ImageCropModal
           imageSrc={cropSource}
           onCancel={() => setCropSource(null)}
-          onComplete={(blob) => void handleCropComplete(blob)}
+          onComplete={handleCropComplete}
         />
       ) : null}
     </div>

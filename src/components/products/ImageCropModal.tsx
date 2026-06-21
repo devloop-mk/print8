@@ -16,7 +16,7 @@ type ImageCropModalProps = {
   imageSrc: string;
   aspect?: number;
   onCancel: () => void;
-  onComplete: (blob: Blob) => void | Promise<void>;
+  onComplete: (blob: Blob) => Promise<void>;
 };
 
 export function ImageCropModal({
@@ -52,7 +52,9 @@ export function ImageCropModal({
     try {
       const blob = await cropImageToBlob(imageSrc, croppedAreaPixels);
       setSavingPhase('upload');
-      await Promise.resolve(onComplete(blob));
+      await onComplete(blob);
+    } catch {
+      // Upload failed — keep the modal open so the user can retry.
     } finally {
       setSaving(false);
       setSavingPhase('crop');
@@ -69,94 +71,95 @@ export function ImageCropModal({
         aria-label={t('cropTitle')}
       >
         {saving ? (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/85 backdrop-blur-sm">
+          <div className="flex min-h-[min(70vh,520px)] flex-col items-center justify-center px-6 py-16">
             <LoadingIndicator
               label={
                 savingPhase === 'upload' ? t('cropUploading') : t('cropProcessing')
               }
-              size="md"
+              size="lg"
             />
-          </div>
-        ) : null}
-
-        <div className="border-b border-ink-100 px-5 py-4">
-          <h3 className="text-lg font-semibold text-ink-900">{t('cropTitle')}</h3>
-          <p className="mt-1 text-sm text-ink-500">{t('cropSubtitle')}</p>
-        </div>
-
-        <div className="relative h-[min(55vh,420px)] w-full bg-ink-900">
-          <Cropper
-            key={aspect}
-            image={imageSrc}
-            crop={crop}
-            zoom={zoom}
-            aspect={aspect}
-            onCropChange={setCrop}
-            onZoomChange={setZoom}
-            onCropComplete={onCropComplete}
-            objectFit="contain"
-          />
-        </div>
-
-        <div className="space-y-3 border-t border-ink-100 px-5 py-4">
-          <div>
-            <p className="mb-2 text-sm font-medium text-ink-700">
-              {t('cropAspect')}
+            <p className="mt-4 max-w-xs text-center text-sm text-ink-500">
+              {t('cropPleaseWait')}
             </p>
-            <div className="flex flex-wrap gap-2">
-              {PRODUCT_PHOTO_CROP_ASPECT_OPTIONS.map((option) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  onClick={() => selectAspect(option.ratio)}
-                  disabled={saving}
-                  className={cn(
-                    'rounded-lg border px-3 py-1.5 text-sm font-medium transition disabled:opacity-50',
-                    aspect === option.ratio
-                      ? 'border-brand-600 bg-brand-50 text-brand-700'
-                      : 'border-ink-200 bg-white text-ink-600 hover:border-ink-300',
-                  )}
-                >
-                  {t(option.labelKey)}
-                </button>
-              ))}
+          </div>
+        ) : (
+          <>
+            <div className="border-b border-ink-100 px-5 py-4">
+              <h3 className="text-lg font-semibold text-ink-900">{t('cropTitle')}</h3>
+              <p className="mt-1 text-sm text-ink-500">{t('cropSubtitle')}</p>
             </div>
-          </div>
 
-          <label className="block text-sm font-medium text-ink-700">
-            {t('cropZoom')}
-          </label>
-          <input
-            type="range"
-            min={1}
-            max={3}
-            step={0.05}
-            value={zoom}
-            disabled={saving}
-            onChange={(e) => setZoom(Number(e.target.value))}
-            className="w-full accent-brand-600 disabled:opacity-50"
-          />
-          <div className="flex gap-2 pt-1">
-            <Button
-              type="button"
-              variant="outline"
-              className="flex-1"
-              onClick={onCancel}
-              disabled={saving}
-            >
-              {t('cropCancel')}
-            </Button>
-            <Button
-              type="button"
-              className="flex-1"
-              onClick={() => void handleApply()}
-              loading={saving}
-              disabled={saving || !croppedAreaPixels}
-            >
-              {t('cropApply')}
-            </Button>
-          </div>
-        </div>
+            <div className="relative h-[min(55vh,420px)] w-full bg-ink-900">
+              <Cropper
+                key={aspect}
+                image={imageSrc}
+                crop={crop}
+                zoom={zoom}
+                aspect={aspect}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={onCropComplete}
+                objectFit="contain"
+              />
+            </div>
+
+            <div className="space-y-3 border-t border-ink-100 px-5 py-4">
+              <div>
+                <p className="mb-2 text-sm font-medium text-ink-700">
+                  {t('cropAspect')}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {PRODUCT_PHOTO_CROP_ASPECT_OPTIONS.map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => selectAspect(option.ratio)}
+                      className={cn(
+                        'rounded-lg border px-3 py-1.5 text-sm font-medium transition',
+                        aspect === option.ratio
+                          ? 'border-brand-600 bg-brand-50 text-brand-700'
+                          : 'border-ink-200 bg-white text-ink-600 hover:border-ink-300',
+                      )}
+                    >
+                      {t(option.labelKey)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <label className="block text-sm font-medium text-ink-700">
+                {t('cropZoom')}
+              </label>
+              <input
+                type="range"
+                min={1}
+                max={3}
+                step={0.05}
+                value={zoom}
+                onChange={(e) => setZoom(Number(e.target.value))}
+                className="w-full accent-brand-600"
+              />
+              <div className="flex gap-2 pt-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={onCancel}
+                >
+                  {t('cropCancel')}
+                </Button>
+                <Button
+                  type="button"
+                  className="flex-1"
+                  onClick={() => void handleApply()}
+                  disabled={!croppedAreaPixels}
+                >
+                  {t('cropApply')}
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

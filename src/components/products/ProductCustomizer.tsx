@@ -555,7 +555,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   const hasTextTemplate = Boolean(currentDesign.isTextTemplate);
 
   return (
-    <div className="pb-28 lg:pb-0">
+    <div className="pb-28 md:pb-0">
       <Link
         href={`/products/${product.id}`}
         className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-ink-600 transition hover:text-brand-600"
@@ -564,8 +564,8 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         {t('backToProduct')}
       </Link>
 
-      <div className="grid gap-6 lg:grid-cols-2 lg:gap-8">
-        {/* Preview column — side gutters stay scrollable on mobile */}
+      <div className="grid gap-6 xl:grid-cols-2 xl:items-start xl:gap-8">
+        {/* Preview column */}
         <div className="space-y-4 touch-pan-y">
           {hasTwoSides && (
             <div className="flex rounded-xl bg-ink-100 p-1">
@@ -590,7 +590,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
           )}
 
           <Card className="flex items-center justify-center p-4 sm:p-6">
-            <div className="w-full max-w-[min(18rem,calc(100%-2.5rem))] touch-pan-y sm:max-w-sm">
+            <div className="mx-auto w-full max-w-[min(18rem,calc(100%-2.5rem))] touch-pan-y md:max-w-md lg:max-w-lg xl:max-w-sm">
               <InteractivePreview
                 mockupImage={mockupImage}
                 sideDesign={currentDesign}
@@ -629,8 +629,8 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
           </p>
         </div>
 
-        {/* Controls column — desktop */}
-        <div className="hidden space-y-5 lg:block">
+        {/* Controls — inline from tablet up; sidebar on wide desktop */}
+        <div className="hidden space-y-5 md:block xl:sticky xl:top-24 xl:self-start">
           <ProductControls
             product={product}
             type={type}
@@ -656,8 +656,8 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         </div>
       </div>
 
-      {/* Mobile bottom toolbar */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-ink-200 bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
+      {/* Phone bottom toolbar */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-ink-200 bg-white/95 px-4 py-3 backdrop-blur md:hidden">
         <div className="mx-auto flex max-w-lg items-center justify-between gap-2">
           {hasTwoSides && (
             <div className="flex rounded-lg bg-ink-100 p-0.5">
@@ -716,9 +716,9 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         </div>
       </div>
 
-      {/* Mobile editor sheet */}
+      {/* Phone editor sheet */}
       {activePanel && (
-        <div className="fixed inset-0 z-50 lg:hidden">
+        <div className="fixed inset-0 z-50 md:hidden">
           <button
             type="button"
             className="absolute inset-0 bg-ink-900/40"
@@ -752,8 +752,8 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         </div>
       )}
 
-      {/* Mobile product options (color, size, qty) */}
-      <div className="mt-6 space-y-5 lg:hidden">
+      {/* Phone-only options when compact controls are hidden */}
+      <div className="mt-6 space-y-5 md:hidden">
         <ProductOptions
           product={product}
           color={color}
@@ -1346,7 +1346,7 @@ function ProductControls({
         </p>
       )}
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Button
           variant={activePanel === 'text' ? 'primary' : 'secondary'}
           onClick={() =>
