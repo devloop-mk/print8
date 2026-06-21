@@ -68,19 +68,44 @@ function useDraggablePosition(
   const elementRef = useRef<HTMLDivElement | null>(null);
   const positionRef = useRef(position);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
+  const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
   const draggingRef = useRef(false);
+  const pendingRef = useRef(false);
 
   positionRef.current = position;
 
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    event.preventDefault();
     event.stopPropagation();
-    draggingRef.current = true;
+    pendingRef.current = true;
+    draggingRef.current = false;
+    pointerStartRef.current = { x: event.clientX, y: event.clientY };
     dragStartRef.current = { x: event.clientX, y: event.clientY };
-    event.currentTarget.setPointerCapture(event.pointerId);
   };
 
   const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!pendingRef.current && !draggingRef.current) return;
+
+    if (pendingRef.current && !draggingRef.current) {
+      const start = pointerStartRef.current;
+      if (!start) return;
+
+      const dx = event.clientX - start.x;
+      const dy = event.clientY - start.y;
+      if (Math.hypot(dx, dy) < 8) return;
+
+      if (Math.abs(dy) > Math.abs(dx) * 1.15) {
+        pendingRef.current = false;
+        dragStartRef.current = null;
+        pointerStartRef.current = null;
+        return;
+      }
+
+      draggingRef.current = true;
+      pendingRef.current = false;
+      event.currentTarget.setPointerCapture(event.pointerId);
+      event.preventDefault();
+    }
+
     if (!draggingRef.current || !dragStartRef.current) return;
     event.preventDefault();
     const deltaX = event.clientX - dragStartRef.current.x;
@@ -101,9 +126,11 @@ function useDraggablePosition(
   };
 
   const endDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    pendingRef.current = false;
     if (draggingRef.current) {
       draggingRef.current = false;
       dragStartRef.current = null;
+      pointerStartRef.current = null;
       if (event.currentTarget.hasPointerCapture(event.pointerId)) {
         event.currentTarget.releasePointerCapture(event.pointerId);
       }
@@ -174,10 +201,12 @@ function OverlayRemoveButton({
   onRemove,
   label,
   hideControls,
+  placement = 'image',
 }: {
   onRemove: () => void;
   label: string;
   hideControls?: boolean;
+  placement?: 'image' | 'text';
 }) {
   if (hideControls) return null;
 
@@ -189,7 +218,11 @@ function OverlayRemoveButton({
         event.stopPropagation();
         onRemove();
       }}
-      className="absolute -left-2 -top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-ink-900/90 text-white shadow-md transition hover:bg-ink-900"
+      className={
+        placement === 'text'
+          ? 'absolute -top-2 left-[calc(100%+0.375rem)] z-10 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-ink-900/90 text-white shadow-md transition hover:bg-ink-900'
+          : 'absolute -left-2 -top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-ink-900/90 text-white shadow-md transition hover:bg-ink-900'
+      }
       aria-label={label}
     >
       <X className="h-3.5 w-3.5" />
@@ -231,7 +264,7 @@ function ResizableImageOverlay({
   return (
     <div
       ref={drag.ref}
-      className="absolute cursor-grab active:cursor-grabbing"
+      className="absolute cursor-grab active:cursor-grabbing pointer-events-auto"
       style={{
         left: `${position.x}%`,
         top: `${position.y}%`,
@@ -558,8 +591,8 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       </Link>
 
       <div className="grid gap-6 lg:grid-cols-2 lg:gap-8">
-        {/* Preview column */}
-        <div className="space-y-4">
+        {/* Preview column — side gutters stay scrollable on mobile */}
+        <div className="space-y-4 touch-pan-y">
           {hasTwoSides && (
             <div className="flex rounded-xl bg-ink-100 p-1">
               {sides.map((side) => (
@@ -583,32 +616,34 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
           )}
 
           <Card className="flex items-center justify-center p-4 sm:p-6">
-            <InteractivePreview
-              mockupImage={mockupImage}
-              sideDesign={currentDesign}
-              typeLabel={tp(type)}
-              containerRef={previewRef}
-              isCapturing={isCapturing}
-              photoGuideLabel={t('photoGuide')}
-              onTextPositionChange={(pos) =>
-                updateCurrentSide({ customTextPosition: pos })
-              }
-              onTextSizeChange={(size) =>
-                updateCurrentSide({ customTextSize: size })
-              }
-              onImagePositionChange={(pos) =>
-                updateCurrentSide({ uploadedImagePosition: pos })
-              }
-              onImageScaleChange={(scale) =>
-                updateCurrentSide({
-                  uploadedImageScale: clampPhotoScale(scale),
-                })
-              }
-              onRemoveText={() => updateCurrentSide({ customText: '' })}
-              onRemoveImage={() => updateCurrentSide({ uploadedFile: null })}
-              removeTextLabel={t('removeText')}
-              removeImageLabel={t('removePhoto')}
-            />
+            <div className="w-full max-w-[min(18rem,calc(100%-2.5rem))] touch-pan-y sm:max-w-sm">
+              <InteractivePreview
+                mockupImage={mockupImage}
+                sideDesign={currentDesign}
+                typeLabel={tp(type)}
+                containerRef={previewRef}
+                isCapturing={isCapturing}
+                photoGuideLabel={t('photoGuide')}
+                onTextPositionChange={(pos) =>
+                  updateCurrentSide({ customTextPosition: pos })
+                }
+                onTextSizeChange={(size) =>
+                  updateCurrentSide({ customTextSize: size })
+                }
+                onImagePositionChange={(pos) =>
+                  updateCurrentSide({ uploadedImagePosition: pos })
+                }
+                onImageScaleChange={(scale) =>
+                  updateCurrentSide({
+                    uploadedImageScale: clampPhotoScale(scale),
+                  })
+                }
+                onRemoveText={() => updateCurrentSide({ customText: '' })}
+                onRemoveImage={() => updateCurrentSide({ uploadedFile: null })}
+                removeTextLabel={t('removeText')}
+                removeImageLabel={t('removePhoto')}
+              />
+            </div>
           </Card>
 
           <p className="text-center text-xs text-ink-500">
@@ -794,7 +829,7 @@ function ResizableTextOverlay({
   return (
     <div
       ref={drag.ref}
-      className="absolute cursor-grab select-none text-center font-bold leading-tight active:cursor-grabbing"
+      className="absolute cursor-grab select-none text-center font-bold leading-tight active:cursor-grabbing pointer-events-auto"
       style={{
         color,
         left: `${position.x}%`,
@@ -821,6 +856,7 @@ function ResizableTextOverlay({
           onRemove={onRemove}
           label={removeLabel}
           hideControls={hideControls}
+          placement="text"
         />
       ) : null}
       <div
@@ -876,10 +912,9 @@ function InteractivePreview({
   return (
     <div
       ref={containerRef}
-      className={`relative flex aspect-square w-full max-w-sm items-center justify-center rounded-2xl bg-gradient-to-br from-ink-50 to-ink-100 shadow-inner ${isCapturing ? 'opacity-90' : ''}`}
-      style={{ touchAction: 'none' }}
+      className={`relative flex aspect-square w-full items-center justify-center rounded-2xl bg-gradient-to-br from-ink-50 to-ink-100 shadow-inner touch-pan-y ${isCapturing ? 'opacity-90' : ''}`}
     >
-      <div className={PRODUCT_MOCKUP_INNER_CLASS}>
+      <div className={`${PRODUCT_MOCKUP_INNER_CLASS} pointer-events-none`}>
         {baseImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img

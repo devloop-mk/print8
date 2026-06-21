@@ -8,3 +8,10 @@ export const PRODUCT_PRINT_AREA_MAX_SCALE =
 export const PRODUCT_PHOTO_MIN_SCALE = 15;
 
 export const PRODUCT_PHOTO_CROP_ASPECT = 1;
+
+export const PRODUCT_PHOTO_CROP_ASPECT_OPTIONS = [
+  { id: 'square', ratio: 1, labelKey: 'cropAspectSquare' },
+  { id: 'portrait', ratio: 3 / 4, labelKey: 'cropAspectPortrait' },
+  { id: 'landscape', ratio: 4 / 3, labelKey: 'cropAspectLandscape' },
+  { id: 'wide', ratio: 16 / 9, labelKey: 'cropAspectWide' },
+] as const;

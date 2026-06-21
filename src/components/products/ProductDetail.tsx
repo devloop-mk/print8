@@ -15,7 +15,7 @@ import { ProductImageCarousel } from '@/components/products/ProductImageCarousel
 import { ProductPathChooser } from '@/components/products/ProductPathChooser';
 import { ProductDesignSection } from '@/components/products/ProductDesignSection';
 import { Reveal } from '@/components/motion/Reveal';
-import { ArrowLeft, Sparkles, Type } from 'lucide-react';
+import { ArrowLeft, Palette, Sparkles, Type } from 'lucide-react';
 
 export function ProductDetail({ productId }: { productId: string }) {
   const t = useTranslations('products');
@@ -59,7 +59,7 @@ export function ProductDetail({ productId }: { productId: string }) {
   const paths = getProductPaths(product.id, product.type);
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-10 pb-24 lg:pb-0">
       <Link
         href="/products"
         className="inline-flex items-center gap-2 text-sm font-medium text-ink-600 transition hover:text-brand-600"
@@ -216,6 +216,18 @@ export function ProductDetail({ productId }: { productId: string }) {
           )}
         </div>
       ) : null}
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-ink-200 bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
+        <div className="mx-auto max-w-lg">
+          <Link
+            href={paths.custom}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand-600 px-6 py-3 text-base font-medium text-white transition hover:bg-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+          >
+            <Palette className="h-5 w-5" aria-hidden />
+            {t('customize')}
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

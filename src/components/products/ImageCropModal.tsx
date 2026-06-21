@@ -5,7 +5,11 @@ import Cropper, { type Area } from 'react-easy-crop';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/Button';
 import { cropImageToBlob } from '@/lib/products/crop-image';
-import { PRODUCT_PHOTO_CROP_ASPECT } from '@/lib/products/customizer-constants';
+import {
+  PRODUCT_PHOTO_CROP_ASPECT,
+  PRODUCT_PHOTO_CROP_ASPECT_OPTIONS,
+} from '@/lib/products/customizer-constants';
+import { cn } from '@/lib/utils';
 
 type ImageCropModalProps = {
   imageSrc: string;
@@ -16,11 +20,12 @@ type ImageCropModalProps = {
 
 export function ImageCropModal({
   imageSrc,
-  aspect = PRODUCT_PHOTO_CROP_ASPECT,
+  aspect: initialAspect = PRODUCT_PHOTO_CROP_ASPECT,
   onCancel,
   onComplete,
 }: ImageCropModalProps) {
   const t = useTranslations('products.customizer');
+  const [aspect, setAspect] = useState(initialAspect);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
@@ -29,6 +34,13 @@ export function ImageCropModal({
   const onCropComplete = useCallback((_: Area, pixels: Area) => {
     setCroppedAreaPixels(pixels);
   }, []);
+
+  function selectAspect(ratio: number) {
+    setAspect(ratio);
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    setCroppedAreaPixels(null);
+  }
 
   async function handleApply() {
     if (!croppedAreaPixels) return;
@@ -56,6 +68,7 @@ export function ImageCropModal({
 
         <div className="relative h-[min(55vh,420px)] w-full bg-ink-900">
           <Cropper
+            key={aspect}
             image={imageSrc}
             crop={crop}
             zoom={zoom}
@@ -68,6 +81,29 @@ export function ImageCropModal({
         </div>
 
         <div className="space-y-3 border-t border-ink-100 px-5 py-4">
+          <div>
+            <p className="mb-2 text-sm font-medium text-ink-700">
+              {t('cropAspect')}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {PRODUCT_PHOTO_CROP_ASPECT_OPTIONS.map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => selectAspect(option.ratio)}
+                  className={cn(
+                    'rounded-lg border px-3 py-1.5 text-sm font-medium transition',
+                    aspect === option.ratio
+                      ? 'border-brand-600 bg-brand-50 text-brand-700'
+                      : 'border-ink-200 bg-white text-ink-600 hover:border-ink-300',
+                  )}
+                >
+                  {t(option.labelKey)}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <label className="block text-sm font-medium text-ink-700">
             {t('cropZoom')}
           </label>
