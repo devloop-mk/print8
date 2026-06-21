@@ -26,6 +26,7 @@ import { useCart } from '@/components/cart/CartProvider';
 import { useUploadSession } from '@/hooks/useUploadSession';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { LoadingIndicator } from '@/components/ui/LoadingIndicator';
 import { formatPrice } from '@/lib/utils';
 import {
   formatProductCartName,
@@ -68,44 +69,19 @@ function useDraggablePosition(
   const elementRef = useRef<HTMLDivElement | null>(null);
   const positionRef = useRef(position);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
-  const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
   const draggingRef = useRef(false);
-  const pendingRef = useRef(false);
 
   positionRef.current = position;
 
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    event.preventDefault();
     event.stopPropagation();
-    pendingRef.current = true;
-    draggingRef.current = false;
-    pointerStartRef.current = { x: event.clientX, y: event.clientY };
+    draggingRef.current = true;
     dragStartRef.current = { x: event.clientX, y: event.clientY };
+    event.currentTarget.setPointerCapture(event.pointerId);
   };
 
   const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (!pendingRef.current && !draggingRef.current) return;
-
-    if (pendingRef.current && !draggingRef.current) {
-      const start = pointerStartRef.current;
-      if (!start) return;
-
-      const dx = event.clientX - start.x;
-      const dy = event.clientY - start.y;
-      if (Math.hypot(dx, dy) < 8) return;
-
-      if (Math.abs(dy) > Math.abs(dx) * 1.15) {
-        pendingRef.current = false;
-        dragStartRef.current = null;
-        pointerStartRef.current = null;
-        return;
-      }
-
-      draggingRef.current = true;
-      pendingRef.current = false;
-      event.currentTarget.setPointerCapture(event.pointerId);
-      event.preventDefault();
-    }
-
     if (!draggingRef.current || !dragStartRef.current) return;
     event.preventDefault();
     const deltaX = event.clientX - dragStartRef.current.x;
@@ -126,11 +102,9 @@ function useDraggablePosition(
   };
 
   const endDrag = (event: React.PointerEvent<HTMLDivElement>) => {
-    pendingRef.current = false;
     if (draggingRef.current) {
       draggingRef.current = false;
       dragStartRef.current = null;
-      pointerStartRef.current = null;
       if (event.currentTarget.hasPointerCapture(event.pointerId)) {
         event.currentTarget.releasePointerCapture(event.pointerId);
       }
@@ -906,23 +880,49 @@ function InteractivePreview({
   removeTextLabel?: string;
   removeImageLabel?: string;
 }) {
+  const t = useTranslations('products.customizer');
   const baseImage = sideDesign.premadeDesignImage ?? mockupImage;
   const isPremade = Boolean(sideDesign.premadeDesignImage);
+  const mockupImgRef = useRef<HTMLImageElement>(null);
+  const [mockupLoading, setMockupLoading] = useState(false);
+
+  useEffect(() => {
+    if (!baseImage) {
+      setMockupLoading(false);
+      return;
+    }
+
+    setMockupLoading(true);
+    const img = mockupImgRef.current;
+    if (img?.complete && img.naturalWidth > 0) {
+      setMockupLoading(false);
+    }
+  }, [baseImage]);
 
   return (
     <div
       ref={containerRef}
       className={`relative flex aspect-square w-full items-center justify-center rounded-2xl bg-gradient-to-br from-ink-50 to-ink-100 shadow-inner touch-pan-y ${isCapturing ? 'opacity-90' : ''}`}
     >
+      {mockupLoading && !isCapturing ? (
+        <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-white/75 backdrop-blur-sm">
+          <LoadingIndicator label={t('previewLoading')} size="sm" />
+        </div>
+      ) : null}
+
       <div className={`${PRODUCT_MOCKUP_INNER_CLASS} pointer-events-none`}>
         {baseImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
+            ref={mockupImgRef}
+            key={baseImage}
             src={baseImage}
             alt={typeLabel}
             draggable={false}
             crossOrigin="anonymous"
             className="pointer-events-none h-full w-full object-contain"
+            onLoad={() => setMockupLoading(false)}
+            onError={() => setMockupLoading(false)}
           />
         ) : (
           <div className="flex h-full items-center justify-center">
