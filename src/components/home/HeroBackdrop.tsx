@@ -6,7 +6,7 @@ import { BrandWatermark } from '@/components/brand/BrandWatermark';
 export function HeroBackdrop() {
   return (
     <ParallaxFloat
-      strength={0.24}
+      strength={0.16}
       scaleStrength={0.0002}
       className="pointer-events-none absolute inset-0"
     >
