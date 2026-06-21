@@ -24,7 +24,6 @@ import {
 } from '@/lib/data/catalog';
 import { useCart } from '@/components/cart/CartProvider';
 import { useUploadSession } from '@/hooks/useUploadSession';
-import { SecureUpload } from '@/components/upload/SecureUpload';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { formatPrice } from '@/lib/utils';
@@ -42,6 +41,12 @@ import {
   type UploadedFile,
 } from '@/lib/products/design-state';
 import {
+  PRODUCT_PHOTO_MIN_SCALE,
+  PRODUCT_PRINT_AREA_MAX_SCALE,
+} from '@/lib/products/customizer-constants';
+import { clampPhotoScale } from '@/lib/products/crop-image';
+import { ProductPhotoUpload } from '@/components/products/ProductPhotoUpload';
+import {
   Shirt,
   Type,
   ImageIcon,
@@ -55,10 +60,6 @@ import {
 } from 'lucide-react';
 
 type EditorPanel = 'text' | 'photo' | null;
-
-function isImageFile(fileName: string) {
-  return /\.(jpe?g|png|webp|gif|avif|svg)$/i.test(fileName);
-}
 
 function useDraggablePosition(
   position: { x: number; y: number },
@@ -188,7 +189,7 @@ function OverlayRemoveButton({
         event.stopPropagation();
         onRemove();
       }}
-      className="absolute -right-2 -top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-ink-900/90 text-white shadow-md transition hover:bg-ink-900"
+      className="absolute -left-2 -top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-ink-900/90 text-white shadow-md transition hover:bg-ink-900"
       aria-label={label}
     >
       <X className="h-3.5 w-3.5" />
@@ -206,6 +207,7 @@ function ResizableImageOverlay({
   onRemove,
   removeLabel,
   hideControls,
+  maxScale,
 }: {
   src: string;
   alt: string;
@@ -216,9 +218,15 @@ function ResizableImageOverlay({
   onRemove?: () => void;
   removeLabel?: string;
   hideControls?: boolean;
+  maxScale?: number;
 }) {
   const drag = useDraggablePosition(position, onPositionChange);
-  const resize = useScaleResize(scale, onScaleChange);
+  const resize = useScaleResize(
+    scale,
+    (next) => onScaleChange(clampPhotoScale(next)),
+    PRODUCT_PHOTO_MIN_SCALE,
+    maxScale ?? PRODUCT_PRINT_AREA_MAX_SCALE,
+  );
 
   return (
     <div
@@ -592,7 +600,9 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
                 updateCurrentSide({ uploadedImagePosition: pos })
               }
               onImageScaleChange={(scale) =>
-                updateCurrentSide({ uploadedImageScale: scale })
+                updateCurrentSide({
+                  uploadedImageScale: clampPhotoScale(scale),
+                })
               }
               onRemoveText={() => updateCurrentSide({ customText: '' })}
               onRemoveImage={() => updateCurrentSide({ uploadedFile: null })}
@@ -1080,13 +1090,37 @@ function EditorPanelContent({
             <p className="text-sm font-medium text-ink-900">
               {currentDesign.uploadedFile.name}
             </p>
+            <ProductPhotoUpload
+              token={token}
+              uploadLoading={uploadLoading}
+              uploadError={uploadError}
+              refreshSession={refreshSession}
+              hasPhoto
+              previewUrl={currentDesign.uploadedFile.previewUrl}
+              onUploadComplete={(fileId, name, previewUrl) => {
+                updateCurrentSide({
+                  uploadedFile: {
+                    fileId,
+                    name,
+                    isImage: true,
+                    previewUrl,
+                  },
+                  showPhotoGuide: false,
+                  uploadedImageScale: clampPhotoScale(
+                    currentDesign.uploadedImageScale,
+                  ),
+                });
+              }}
+            />
             <div className="flex items-center justify-between">
               <span className="text-sm text-ink-600">{t('imageSize')}</span>
               <StepperInput
                 value={currentDesign.uploadedImageScale}
-                onChange={(v) => updateCurrentSide({ uploadedImageScale: v })}
-                min={15}
-                max={120}
+                onChange={(v) =>
+                  updateCurrentSide({ uploadedImageScale: clampPhotoScale(v) })
+                }
+                min={PRODUCT_PHOTO_MIN_SCALE}
+                max={PRODUCT_PRINT_AREA_MAX_SCALE}
                 step={5}
               />
             </div>
@@ -1100,30 +1134,27 @@ function EditorPanelContent({
             </Button>
           </>
         ) : (
-          <>
-            <p className="text-sm text-ink-600">
-              {t('photoUploadInstructions')}
-            </p>
-            <SecureUpload
-              token={token}
-              loading={uploadLoading}
-              sessionError={uploadError}
-              onRefreshSession={refreshSession}
-              onUpload={(fileId, name) => {
-                updateCurrentSide({
-                  uploadedFile: {
-                    fileId,
-                    name,
-                    isImage: isImageFile(name),
-                    previewUrl: isImageFile(name)
-                      ? `/api/files/${fileId}`
-                      : undefined,
-                  },
-                  showPhotoGuide: false,
-                });
-              }}
-            />
-          </>
+          <ProductPhotoUpload
+            token={token}
+            uploadLoading={uploadLoading}
+            uploadError={uploadError}
+            refreshSession={refreshSession}
+            hasPhoto={false}
+            onUploadComplete={(fileId, name, previewUrl) => {
+              updateCurrentSide({
+                uploadedFile: {
+                  fileId,
+                  name,
+                  isImage: true,
+                  previewUrl,
+                },
+                showPhotoGuide: false,
+                uploadedImageScale: clampPhotoScale(
+                  currentDesign.uploadedImageScale,
+                ),
+              });
+            }}
+          />
         )}
       </div>
     );
