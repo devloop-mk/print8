@@ -2,6 +2,7 @@ import type {
   ProductDesignTemplate,
   ProductDesignTextStyle,
 } from "@/lib/data/catalog";
+import type { PlacedSticker } from "@/lib/products/sticker-library";
 
 export interface UploadedFile {
   fileId: string;
@@ -26,6 +27,7 @@ export interface SideDesign {
   premadeDesignId: string | null;
   isTextTemplate: boolean;
   showPhotoGuide: boolean;
+  stickers: PlacedSticker[];
 }
 
 export const DEFAULT_TEXT_SHADOW =
@@ -48,6 +50,7 @@ export function createDefaultSideDesign(): SideDesign {
     premadeDesignId: null,
     isTextTemplate: false,
     showPhotoGuide: false,
+    stickers: [],
   };
 }
 
@@ -111,6 +114,7 @@ export interface RestoredSideDesign {
   uploadedFileId: string | null;
   uploadedPreviewUrl: string | null;
   showPhotoGuide: boolean;
+  stickers: PlacedSticker[];
 }
 
 export function sideDesignFromRestored(data: RestoredSideDesign): SideDesign {
@@ -139,5 +143,6 @@ export function sideDesignFromRestored(data: RestoredSideDesign): SideDesign {
             isImage: true,
           }
         : null,
+    stickers: data.stickers,
   };
 }

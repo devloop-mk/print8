@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <circle cx="100" cy="96" r="70" fill="#FEF08A" stroke="#EAB308" stroke-width="4"/>
+  <circle cx="72" cy="84" r="12" fill="#fff"/>
+  <circle cx="128" cy="84" r="12" fill="#fff"/>
+  <circle cx="72" cy="84" r="6" fill="#1F2937"/>
+  <circle cx="128" cy="84" r="6" fill="#1F2937"/>
+  <ellipse cx="100" cy="118" rx="18" ry="22" fill="#1F2937"/>
+  <ellipse cx="100" cy="112" rx="10" ry="12" fill="#FEF08A"/>
+  <text x="100" y="182" text-anchor="middle" font-family="Arial Black, sans-serif" font-size="24" font-weight="900" fill="#EAB308">WOW</text>
+</svg>

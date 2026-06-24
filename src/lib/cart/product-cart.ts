@@ -45,7 +45,11 @@ export function isCustomizedCartItem(item: CartItem): boolean {
       m.frontUploadedPreviewUrl ||
       m.backUploadedPreviewUrl ||
       m.leftUploadedPreviewUrl ||
-      m.rightUploadedPreviewUrl,
+      m.rightUploadedPreviewUrl ||
+      m.frontStickers ||
+      m.backStickers ||
+      m.leftStickers ||
+      m.rightStickers,
   );
 }
 
@@ -107,6 +111,7 @@ import {
   DEFAULT_TEXT_SHADOW,
   type RestoredSideDesign,
 } from "@/lib/products/design-state";
+import { parsePlacedStickers } from "@/lib/products/sticker-library";
 
 function num(value: unknown, fallback: number): number {
   return typeof value === "number" ? value : fallback;
@@ -121,11 +126,13 @@ export function restoreSideDesignFromMetadata(
   side: ProductSide,
 ): RestoredSideDesign | null {
   const prefix = getSideMetadataPrefix(side);
+  const stickers = parsePlacedStickers(metadata[`${prefix}Stickers`]);
   const hasContent =
     metadata[`${prefix}CustomText`] ||
     metadata[`${prefix}PremadeDesignImage`] ||
     metadata[`${prefix}UploadedPreviewUrl`] ||
-    metadata[`${prefix}UploadedFileId`];
+    metadata[`${prefix}UploadedFileId`] ||
+    stickers.length > 0;
 
   if (!hasContent) return null;
 
@@ -160,6 +167,7 @@ export function restoreSideDesignFromMetadata(
     uploadedFileId: str(metadata[`${prefix}UploadedFileId`]) || null,
     uploadedPreviewUrl: str(metadata[`${prefix}UploadedPreviewUrl`]) || null,
     showPhotoGuide: false,
+    stickers,
   };
 }
 

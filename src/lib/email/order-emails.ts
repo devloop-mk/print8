@@ -3,6 +3,16 @@ import type { CheckoutInput } from "@/lib/validations/order";
 import { getUploadedFile } from "@/lib/upload";
 import { getSupabaseAdmin } from "@/lib/supabase/client";
 import { formatPrice } from "@/lib/utils";
+import {
+  collectOrderFileIds,
+  collectOrderStickers,
+} from "@/lib/orders/order-assets";
+import { buildStickerAttachments } from "@/lib/email/sticker-attachments";
+import {
+  PRODUCT_SIDES,
+  getSideMetadataPrefix,
+} from "@/lib/products/product-sides";
+import { parsePlacedStickers } from "@/lib/products/sticker-library";
 
 interface EmailAttachment {
   filename: string;
@@ -34,24 +44,60 @@ function parseDataUrl(dataUrl: string) {
   };
 }
 
-function collectOrderFileIds(data: CheckoutInput): string[] {
-  const ids = new Set<string>();
-  for (const id of data.fileIds ?? []) ids.add(id);
-  for (const item of data.items) {
-    for (const id of item.fileIds ?? []) ids.add(id);
+function buildDesignDetailsHtml(data: CheckoutInput) {
+  const blocks: string[] = [];
+
+  data.items.forEach((item, itemIndex) => {
     const meta = item.metadata;
-    if (!meta) continue;
-    for (const [key, value] of Object.entries(meta)) {
-      if (
-        (key.endsWith("UploadedFileId") || key === "uploadedFileId") &&
-        typeof value === "string" &&
-        value
-      ) {
-        ids.add(value);
+    if (!meta) return;
+
+    const sideLines: string[] = [];
+
+    for (const side of PRODUCT_SIDES) {
+      const prefix = getSideMetadataPrefix(side);
+      const parts: string[] = [];
+
+      const customText = meta[`${prefix}CustomText`];
+      if (typeof customText === "string" && customText.trim()) {
+        parts.push(`Text: “${escapeHtml(customText.trim())}”`);
       }
+
+      const stickers = parsePlacedStickers(meta[`${prefix}Stickers`]);
+      if (stickers.length > 0) {
+        const ids = stickers.map((s) => s.stickerId).join(", ");
+        parts.push(`Stickers: ${escapeHtml(ids)}`);
+      }
+
+      const uploadedFileId = meta[`${prefix}UploadedFileId`];
+      if (typeof uploadedFileId === "string" && uploadedFileId) {
+        parts.push("Photo: attached (original upload)");
+      }
+
+      const premade = meta[`${prefix}PremadeDesignImage`];
+      if (typeof premade === "string" && premade) {
+        parts.push("Premade design applied");
+      }
+
+      if (parts.length === 0) continue;
+
+      const sideLabel = side.charAt(0).toUpperCase() + side.slice(1);
+      sideLines.push(
+        `<li><strong>${sideLabel}</strong> — ${parts.join(" · ")}</li>`,
+      );
     }
-  }
-  return [...ids];
+
+    if (sideLines.length === 0) return;
+
+    blocks.push(
+      `<div style="margin:12px 0;padding:12px;border:1px solid #e5e7eb;border-radius:8px;">
+        <p style="margin:0 0 8px;font-weight:600;">${escapeHtml(item.name)}</p>
+        <ul style="margin:0;padding-left:18px;font-size:14px;color:#374151;">${sideLines.join("")}</ul>
+      </div>`,
+    );
+  });
+
+  if (blocks.length === 0) return "";
+  return `<h3>Design breakdown</h3>${blocks.join("")}`;
 }
 
 async function downloadStoredFile(storedName: string): Promise<Buffer | null> {
@@ -185,11 +231,14 @@ export async function sendOrderEmails(
   }
 
   const fileIds = collectOrderFileIds(data);
+  const stickerRefs = collectOrderStickers(data.items);
   const designAttachments = await buildDesignPreviewAttachments(data);
+  const stickerAttachments = await buildStickerAttachments(stickerRefs);
   const originalAttachments = await buildOriginalUploadAttachments(fileIds);
   const total = formatPrice(totalAmount, data.locale);
   const itemsHtml = buildItemsHtml(data, data.locale);
   const designHtml = buildDesignImagesHtml(data);
+  const designDetailsHtml = buildDesignDetailsHtml(data);
   const isMk = data.locale === "mk";
 
   const customerHtml = isMk
@@ -234,6 +283,11 @@ export async function sendOrderEmails(
         content: a.content,
         contentType: a.contentType,
       })),
+      ...stickerAttachments.map((a) => ({
+        filename: a.filename,
+        content: a.content,
+        contentType: a.contentType,
+      })),
       ...originalAttachments.map((a) => ({
         filename: `original-${a.filename}`,
         content: a.content,
@@ -256,7 +310,8 @@ export async function sendOrderEmails(
         <ul>${itemsHtml}</ul>
         <p><strong>Total:</strong> ${total}</p>
         ${designHtml ? `<h3>Design previews</h3>${designHtml}` : ""}
-        <p>${adminAttachments.length} file(s) attached (design previews + original uploads).</p>
+        ${designDetailsHtml}
+        <p>${adminAttachments.length} file(s) attached (${designAttachments.length} preview(s), ${stickerAttachments.length} sticker(s), ${originalAttachments.length} original upload(s)).</p>
       `,
       attachments: adminAttachments.map((a) => ({
         filename: a.filename,

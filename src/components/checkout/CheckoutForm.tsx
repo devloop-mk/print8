@@ -7,6 +7,11 @@ import { useCart } from "@/components/cart/CartProvider";
 import { useUploadSession } from "@/hooks/useUploadSession";
 import { SecureUpload } from "@/components/upload/SecureUpload";
 import { formatPrice } from "@/lib/utils";
+import {
+  MAX_PHOTOS_PER_ORDER,
+  MAX_STICKERS_PER_ORDER,
+  validateOrderAssetLimits,
+} from "@/lib/orders/order-assets";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 
@@ -48,6 +53,43 @@ export function CheckoutForm() {
     if (!termsAccepted) {
       newErrors.terms = t("acceptTermsRequired");
     }
+
+    const assetLimits = validateOrderAssetLimits({
+      items: items.map(
+        ({
+          type,
+          name,
+          price,
+          quantity,
+          metadata,
+          designPreview,
+          backDesignPreview,
+          leftDesignPreview,
+          rightDesignPreview,
+          fileIds: itemFileIds,
+        }) => ({
+          type,
+          name,
+          price,
+          quantity,
+          metadata,
+          designPreview,
+          backDesignPreview,
+          leftDesignPreview,
+          rightDesignPreview,
+          fileIds: itemFileIds,
+        }),
+      ),
+      fileIds,
+    });
+
+    if (!assetLimits.ok) {
+      newErrors.form =
+        assetLimits.error === "too_many_stickers"
+          ? t("orderStickerLimit", { max: MAX_STICKERS_PER_ORDER })
+          : t("orderPhotoLimit", { max: MAX_PHOTOS_PER_ORDER });
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }
@@ -95,7 +137,21 @@ export function CheckoutForm() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      if (!res.ok) {
+        if (data.code === "too_many_stickers") {
+          setErrors({
+            form: t("orderStickerLimit", { max: MAX_STICKERS_PER_ORDER }),
+          });
+          return;
+        }
+        if (data.code === "too_many_photos") {
+          setErrors({
+            form: t("orderPhotoLimit", { max: MAX_PHOTOS_PER_ORDER }),
+          });
+          return;
+        }
+        throw new Error(data.error);
+      }
 
       clearCart();
       sessionStorage.removeItem("print8-upload-token");
@@ -249,6 +305,10 @@ export function CheckoutForm() {
           </label>
           {errors.terms ? (
             <p className="mt-2 text-xs text-red-600">{errors.terms}</p>
+          ) : null}
+
+          {errors.form ? (
+            <p className="mt-2 text-sm text-red-600">{errors.form}</p>
           ) : null}
 
           <Button

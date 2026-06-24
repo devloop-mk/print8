@@ -10,7 +10,12 @@ import { Link } from "@/i18n/routing";
 
 import { useCart } from "@/components/cart/CartProvider";
 
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, cn } from "@/lib/utils";
+import {
+  MAX_PHOTOS_PER_ORDER,
+  MAX_STICKERS_PER_ORDER,
+  validateOrderAssetLimits,
+} from "@/lib/orders/order-assets";
 
 import { Button } from "@/components/ui/Button";
 
@@ -51,6 +56,26 @@ export function CartPageContent() {
   const locale = useLocale();
 
   const { items, removeItem, updateQuantity, updateItem, total } = useCart();
+
+  const assetLimits = validateOrderAssetLimits({
+    items: items.map(
+      ({ type, name, price, quantity, metadata, fileIds }) => ({
+        type,
+        name,
+        price,
+        quantity,
+        metadata,
+        fileIds,
+      }),
+    ),
+    fileIds: [],
+  });
+
+  const cartLimitMessage = !assetLimits.ok
+    ? assetLimits.error === "too_many_stickers"
+      ? t("orderStickerLimit", { max: MAX_STICKERS_PER_ORDER })
+      : t("orderPhotoLimit", { max: MAX_PHOTOS_PER_ORDER })
+    : null;
 
   const [lightbox, setLightbox] = useState<{
 
@@ -130,16 +155,29 @@ export function CartPageContent() {
             const editUrl = buildCustomizerEditUrl(item);
 
             const customized = isCustomizedCartItem(item);
-
-
+            const multiSidePreviews = previewImages.length > 2;
 
             return (
 
-              <Card key={item.id} className="flex gap-4">
+              <Card
+                key={item.id}
+                className={cn(
+                  "flex gap-4",
+                  multiSidePreviews
+                    ? "flex-col sm:flex-row sm:items-start"
+                    : "flex-row",
+                )}
+              >
 
                 {previewImages.length > 0 && (
 
-                  <div className="flex shrink-0 gap-1">
+                  <div
+                    className={cn(
+                      multiSidePreviews
+                        ? "grid w-full max-w-xs grid-cols-2 items-start gap-1.5 sm:max-w-none sm:flex sm:shrink-0 sm:gap-1"
+                        : "flex shrink-0 gap-1",
+                    )}
+                  >
 
                     {previewImages.map((img, index) => (
 
@@ -155,7 +193,12 @@ export function CartPageContent() {
 
                         }
 
-                        className="group relative overflow-hidden rounded-lg border border-ink-200 transition hover:border-brand-400 hover:ring-2 hover:ring-brand-200"
+                        className={cn(
+                          "group relative flex items-center justify-center overflow-hidden rounded-lg border border-ink-200 bg-ink-50 transition hover:border-brand-400 hover:ring-2 hover:ring-brand-200",
+                          multiSidePreviews
+                            ? "aspect-square w-full sm:h-20 sm:w-20"
+                            : "h-20 w-20 shrink-0",
+                        )}
 
                         aria-label={t("zoomPreview")}
 
@@ -167,7 +210,7 @@ export function CartPageContent() {
 
                           alt={img.label ?? ""}
 
-                          className="h-20 w-20 object-cover transition group-hover:scale-105"
+                          className="max-h-full max-w-full object-contain transition group-hover:scale-105"
 
                         />
 
@@ -189,7 +232,7 @@ export function CartPageContent() {
 
                 )}
 
-                <div className="flex flex-1 flex-col">
+                <div className="flex min-w-0 flex-1 flex-col">
 
                   <div className="flex items-start justify-between gap-2">
 
@@ -403,15 +446,23 @@ export function CartPageContent() {
 
           <p className="mt-2 text-xs text-ink-400">Payment on delivery</p>
 
-          <Link href="/checkout" className="mt-6 block">
+          {cartLimitMessage ? (
+            <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              {cartLimitMessage}
+            </p>
+          ) : null}
 
-            <Button size="lg" className="w-full">
-
+          {cartLimitMessage ? (
+            <Button size="lg" className="mt-6 w-full" disabled>
               {t("checkout")}
-
             </Button>
-
-          </Link>
+          ) : (
+            <Link href="/checkout" className="mt-6 block">
+              <Button size="lg" className="w-full">
+                {t("checkout")}
+              </Button>
+            </Link>
+          )}
 
         </Card>
 

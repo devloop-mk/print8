@@ -22,7 +22,10 @@ export default async function AdminOrderDetailPage({
   if (!order) notFound();
 
   const t = adminStrings.orderDetail;
-  const allFileIds = collectOrderFileIds(order);
+  const allFileIds = collectOrderFileIds({
+    items: order.items,
+    fileIds: order.fileIds,
+  });
   const files = await Promise.all(
     allFileIds.map(async (fileId) => {
       const file = await db.uploadedFiles.findById(fileId);

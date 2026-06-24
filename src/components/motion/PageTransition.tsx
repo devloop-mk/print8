@@ -35,8 +35,8 @@ export function PageTransition({ children }: PageTransitionProps) {
   return (
     <div
       className={cn(
-        'transition-[opacity,transform] duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)]',
-        visible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0',
+        'transition-opacity duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)]',
+        visible ? 'opacity-100' : 'opacity-0',
       )}
     >
       {children}

@@ -9,7 +9,10 @@ import {
   type RefObject,
 } from 'react';
 import { flushSync } from 'react-dom';
-import html2canvas from 'html2canvas';
+import {
+  capturePreviewElement,
+  waitForPaint,
+} from '@/lib/products/capture-preview';
 import { useTranslations, useLocale } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { Link, useRouter } from '@/i18n/routing';
@@ -22,6 +25,11 @@ import {
   type ProductSide,
   type ProductType,
 } from '@/lib/data/catalog';
+import {
+  evaluateCartAssetLimits,
+  MAX_PHOTOS_PER_ORDER,
+  MAX_STICKERS_PER_ORDER,
+} from '@/lib/orders/order-assets';
 import { useCart } from '@/components/cart/CartProvider';
 import { useUploadSession } from '@/hooks/useUploadSession';
 import { Button } from '@/components/ui/Button';
@@ -52,10 +60,19 @@ import {
 } from '@/lib/products/customizer-constants';
 import { clampPhotoScale } from '@/lib/products/crop-image';
 import { ProductPhotoUpload } from '@/components/products/ProductPhotoUpload';
+import { StickerPicker } from '@/components/products/StickerPicker';
+import {
+  createPlacedSticker,
+  getStickerById,
+  MAX_STICKERS_PER_SIDE,
+  serializePlacedStickers,
+  type PlacedSticker,
+} from '@/lib/products/sticker-library';
 import {
   Shirt,
   Type,
   ImageIcon,
+  Sparkles,
   ArrowLeft,
   Minus,
   Plus,
@@ -65,7 +82,7 @@ import {
   X,
 } from 'lucide-react';
 
-type EditorPanel = 'text' | 'photo' | null;
+type EditorPanel = 'text' | 'photo' | 'stickers' | null;
 
 function useDraggablePosition(
   position: { x: number; y: number },
@@ -298,6 +315,85 @@ function ResizableImageOverlay({
   );
 }
 
+function ResizableStickerOverlay({
+  sticker,
+  onScaleChange,
+  onPositionChange,
+  onRemove,
+  removeLabel,
+  hideControls,
+}: {
+  sticker: PlacedSticker;
+  onScaleChange: (scale: number) => void;
+  onPositionChange: (pos: { x: number; y: number }) => void;
+  onRemove?: () => void;
+  removeLabel?: string;
+  hideControls?: boolean;
+}) {
+  const definition = getStickerById(sticker.stickerId);
+  if (!definition) return null;
+
+  const drag = useDraggablePosition(sticker.position, onPositionChange);
+  const resize = useScaleResize(sticker.scale, onScaleChange, 12, 52);
+
+  return (
+    <div
+      ref={drag.ref}
+      className="absolute cursor-grab active:cursor-grabbing pointer-events-auto"
+      style={{
+        left: `${sticker.position.x}%`,
+        top: `${sticker.position.y}%`,
+        width: `${sticker.scale}%`,
+        transform: 'translate(-50%, -50%)',
+        touchAction: 'none',
+      }}
+      onPointerDown={drag.onPointerDown}
+      onPointerMove={drag.onPointerMove}
+      onPointerUp={drag.onPointerUp}
+      onPointerCancel={drag.onPointerCancel}
+    >
+      <div className="relative">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={definition.src}
+          alt=""
+          draggable={false}
+          crossOrigin="anonymous"
+          className="pointer-events-none block w-full object-contain drop-shadow-md"
+        />
+        {onRemove && removeLabel ? (
+          <OverlayRemoveButton
+            onRemove={onRemove}
+            label={removeLabel}
+            hideControls={hideControls}
+          />
+        ) : null}
+        <div
+          role="button"
+          tabIndex={0}
+          aria-label="Resize sticker"
+          className={`absolute -bottom-2 -right-2 flex h-6 w-6 cursor-se-resize items-center justify-center rounded-full border-2 border-white bg-brand-600 shadow-md ${hideControls ? 'hidden' : ''}`}
+          style={{ touchAction: 'none' }}
+          onPointerDown={resize.onPointerDown}
+          onPointerMove={resize.onPointerMove}
+          onPointerUp={resize.onPointerUp}
+          onPointerCancel={resize.onPointerCancel}
+        >
+          <svg viewBox="0 0 10 10" className="h-3 w-3 text-white" aria-hidden>
+            <path
+              d="M9 1v8H1"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+          </svg>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ProductSideTabs({
   sides,
   activeSide,
@@ -398,6 +494,9 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
 
   const previewRef = useRef<HTMLDivElement | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
+  const [cartLimitError, setCartLimitError] = useState<
+    'stickers' | 'photos' | null
+  >(null);
 
   const currentDesign =
     sideDesigns[activeSide] ?? createDefaultSideDesign();
@@ -411,6 +510,62 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
           ...updates,
         },
       }));
+    },
+    [activeSide],
+  );
+
+  const addSticker = useCallback(
+    (stickerId: string) => {
+      setSideDesigns((prev) => {
+        const current = prev[activeSide] ?? createDefaultSideDesign();
+        if (current.stickers.length >= MAX_STICKERS_PER_SIDE) return prev;
+        const placed = createPlacedSticker(stickerId, current.stickers.length);
+        return {
+          ...prev,
+          [activeSide]: {
+            ...current,
+            stickers: [...current.stickers, placed],
+          },
+        };
+      });
+    },
+    [activeSide],
+  );
+
+  const updateSticker = useCallback(
+    (instanceId: string, updates: Partial<PlacedSticker>) => {
+      setSideDesigns((prev) => {
+        const current = prev[activeSide] ?? createDefaultSideDesign();
+        return {
+          ...prev,
+          [activeSide]: {
+            ...current,
+            stickers: current.stickers.map((sticker) =>
+              sticker.instanceId === instanceId
+                ? { ...sticker, ...updates }
+                : sticker,
+            ),
+          },
+        };
+      });
+    },
+    [activeSide],
+  );
+
+  const removeSticker = useCallback(
+    (instanceId: string) => {
+      setSideDesigns((prev) => {
+        const current = prev[activeSide] ?? createDefaultSideDesign();
+        return {
+          ...prev,
+          [activeSide]: {
+            ...current,
+            stickers: current.stickers.filter(
+              (sticker) => sticker.instanceId !== instanceId,
+            ),
+          },
+        };
+      });
     },
     [activeSide],
   );
@@ -503,21 +658,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     ref: RefObject<HTMLDivElement | null>,
   ): Promise<string | undefined> {
     if (!ref.current) return undefined;
-    try {
-      await new Promise<void>((resolve) => {
-        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
-      });
-      const canvas = await html2canvas(ref.current, {
-        backgroundColor: '#f4f4f5',
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        logging: false,
-      });
-      return canvas.toDataURL('image/png');
-    } catch {
-      return undefined;
-    }
+    return capturePreviewElement(ref.current);
   }
 
   async function captureAllSidePreviews(): Promise<
@@ -528,9 +669,8 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
 
     for (const side of sides) {
       flushSync(() => setActiveSide(side));
-      await new Promise<void>((resolve) => {
-        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
-      });
+      await waitForPaint();
+      if (!previewRef.current) continue;
       const captured = await capturePreview(previewRef);
       if (captured) results[side] = captured;
     }
@@ -540,6 +680,29 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   }
 
   async function handleAddToCart() {
+    const incomingStickers = sides.reduce(
+      (total, side) => total + (sideDesigns[side]?.stickers.length ?? 0),
+      0,
+    );
+    const incomingPhotos = new Set(
+      sides
+        .map((side) => sideDesigns[side]?.uploadedFile?.fileId)
+        .filter((id): id is string => Boolean(id)),
+    ).size;
+
+    const limits = evaluateCartAssetLimits(cartItems, {
+      stickerCount: incomingStickers,
+      photoCount: incomingPhotos,
+      excludingItemId: editCartItemId ?? undefined,
+    });
+
+    if (!limits.ok) {
+      setCartLimitError(limits.stickersOver > 0 ? 'stickers' : 'photos');
+      return;
+    }
+
+    setCartLimitError(null);
+
     flushSync(() => setIsCapturing(true));
 
     let captured: Partial<Record<ProductSide, string>> = {};
@@ -592,6 +755,9 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       }
       if (d.uploadedFile?.previewUrl) {
         metadata[`${prefix}UploadedPreviewUrl`] = d.uploadedFile.previewUrl;
+      }
+      if (d.stickers.length > 0) {
+        metadata[`${prefix}Stickers`] = serializePlacedStickers(d.stickers);
       }
     }
 
@@ -646,14 +812,16 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   const sideHasContent = (side: ProductSide) => {
     const d = sideDesigns[side];
     if (!d) return false;
-    return Boolean(d.customText || d.uploadedFile || d.premadeDesignImage);
+    return Boolean(
+      d.customText || d.uploadedFile || d.premadeDesignImage || d.stickers.length,
+    );
   };
 
   const hasPremadeImage = Boolean(currentDesign.premadeDesignImage);
   const hasTextTemplate = Boolean(currentDesign.isTextTemplate);
 
   return (
-    <div className="pb-28 md:pb-0">
+    <div className="pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))] md:pb-0">
       <Link
         href={`/products/${product.id}`}
         className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-ink-600 transition hover:text-brand-600"
@@ -661,6 +829,14 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         <ArrowLeft className="h-4 w-4" />
         {t('backToProduct')}
       </Link>
+
+      {cartLimitError ? (
+        <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          {cartLimitError === 'stickers'
+            ? t('orderStickerLimit', { max: MAX_STICKERS_PER_ORDER })
+            : t('orderPhotoLimit', { max: MAX_PHOTOS_PER_ORDER })}
+        </p>
+      ) : null}
 
       <div className="grid gap-6 xl:grid-cols-2 xl:items-start xl:gap-8">
         {/* Preview column */}
@@ -702,6 +878,15 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
                 onRemoveImage={() => updateCurrentSide({ uploadedFile: null })}
                 removeTextLabel={t('removeText')}
                 removeImageLabel={t('removePhoto')}
+                stickers={currentDesign.stickers}
+                onStickerPositionChange={(instanceId, pos) =>
+                  updateSticker(instanceId, { position: pos })
+                }
+                onStickerScaleChange={(instanceId, scale) =>
+                  updateSticker(instanceId, { scale })
+                }
+                onRemoveSticker={removeSticker}
+                removeStickerLabel={t('removeSticker')}
               />
             </div>
           </Card>
@@ -731,6 +916,10 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
             currentDesign={currentDesign}
             updateCurrentSide={updateCurrentSide}
             setPositionPreset={setPositionPreset}
+            onAddSticker={addSticker}
+            stickersAtLimit={
+              currentDesign.stickers.length >= MAX_STICKERS_PER_SIDE
+            }
             token={token}
             uploadLoading={uploadLoading}
             uploadError={uploadError}
@@ -742,25 +931,27 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         </div>
       </div>
 
-      {/* Phone bottom toolbar */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-ink-200 bg-white/95 px-4 py-3 backdrop-blur md:hidden">
-        <div className="mx-auto flex max-w-lg items-center justify-between gap-2">
-          {hasMultipleSides && sides.length === 2 && (
-            <ProductSideTabs
-              sides={sides}
-              activeSide={activeSide}
-              onSelect={setActiveSide}
-              sideHasContent={sideHasContent}
-              label={sideLabel}
-              compact
-            />
-          )}
+      {/* Phone bottom toolbar — fixed to viewport so actions stay reachable while scrolling */}
+      <div className="fixed inset-x-0 bottom-0 z-[55] border-t border-ink-200 bg-white/95 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] shadow-[0_-4px_24px_rgba(15,23,42,0.08)] backdrop-blur md:hidden">
+        <div className="mx-auto grid max-w-lg grid-cols-4 gap-1">
+          {hasMultipleSides && sides.length === 2 ? (
+            <div className="col-span-4 mb-2">
+              <ProductSideTabs
+                sides={sides}
+                activeSide={activeSide}
+                onSelect={setActiveSide}
+                sideHasContent={sideHasContent}
+                label={sideLabel}
+                compact
+              />
+            </div>
+          ) : null}
           <button
             type="button"
             onClick={() =>
               setActivePanel(activePanel === 'text' ? null : 'text')
             }
-            className={`flex flex-col items-center gap-0.5 rounded-lg px-3 py-1.5 text-xs font-medium ${
+            className={`flex flex-col items-center gap-0.5 rounded-lg px-2 py-1.5 text-[11px] font-medium ${
               activePanel === 'text'
                 ? 'text-brand-700'
                 : 'text-ink-600'
@@ -774,7 +965,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
             onClick={() =>
               setActivePanel(activePanel === 'photo' ? null : 'photo')
             }
-            className={`flex flex-col items-center gap-0.5 rounded-lg px-3 py-1.5 text-xs font-medium ${
+            className={`flex flex-col items-center gap-0.5 rounded-lg px-2 py-1.5 text-[11px] font-medium ${
               activePanel === 'photo'
                 ? 'text-brand-700'
                 : 'text-ink-600'
@@ -783,10 +974,24 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
             <ImageIcon className="h-5 w-5" />
             {t('photo')}
           </button>
+          <button
+            type="button"
+            onClick={() =>
+              setActivePanel(activePanel === 'stickers' ? null : 'stickers')
+            }
+            className={`flex flex-col items-center gap-0.5 rounded-lg px-2 py-1.5 text-[11px] font-medium ${
+              activePanel === 'stickers'
+                ? 'text-brand-700'
+                : 'text-ink-600'
+            }`}
+          >
+            <Sparkles className="h-5 w-5" />
+            {t('stickers')}
+          </button>
           <Button
             size="sm"
             onClick={handleAddToCart}
-            className="shrink-0"
+            className="h-full min-h-[3rem] w-full px-2"
             disabled={isCapturing}
           >
             {isCapturing ? t('capturing') : t('addToCart')}
@@ -796,17 +1001,28 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
 
       {/* Phone editor sheet */}
       {activePanel && (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div className="fixed inset-0 z-[60] md:hidden">
           <button
             type="button"
             className="absolute inset-0 bg-ink-900/40"
             onClick={() => setActivePanel(null)}
             aria-label={t('close')}
           />
-          <div className="absolute inset-x-0 bottom-0 max-h-[75vh] overflow-y-auto rounded-t-2xl bg-white p-5 shadow-2xl">
-            <div className="mb-4 flex items-center justify-between">
+          <div
+            className={cn(
+              'absolute inset-x-0 bottom-0 flex flex-col rounded-t-2xl bg-white shadow-2xl',
+              activePanel === 'stickers'
+                ? 'h-[min(58vh,30rem)]'
+                : 'max-h-[min(72vh,32rem)]',
+            )}
+          >
+            <div className="flex shrink-0 items-center justify-between border-b border-ink-100 px-5 py-3">
               <h3 className="font-semibold text-ink-900">
-                {activePanel === 'text' ? t('addText') : t('addPhoto')}
+                {activePanel === 'text'
+                  ? t('addText')
+                  : activePanel === 'photo'
+                    ? t('addPhoto')
+                    : t('addStickers')}
               </h3>
               <button
                 type="button"
@@ -816,16 +1032,29 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
                 {t('close')}
               </button>
             </div>
-            <EditorPanelContent
-              panel={activePanel}
-              currentDesign={currentDesign}
-              updateCurrentSide={updateCurrentSide}
-              setPositionPreset={setPositionPreset}
-              token={token}
-              uploadLoading={uploadLoading}
-              uploadError={uploadError}
-              refreshSession={refreshSession}
-            />
+            <div
+              className={cn(
+                'min-h-0 flex-1',
+                activePanel === 'stickers'
+                  ? 'overflow-hidden px-5 pb-1 pt-3'
+                  : 'overflow-y-auto px-5 py-4',
+              )}
+            >
+              <EditorPanelContent
+                panel={activePanel}
+                currentDesign={currentDesign}
+                updateCurrentSide={updateCurrentSide}
+                setPositionPreset={setPositionPreset}
+                onAddSticker={addSticker}
+                stickersAtLimit={
+                  currentDesign.stickers.length >= MAX_STICKERS_PER_SIDE
+                }
+                token={token}
+                uploadLoading={uploadLoading}
+                uploadError={uploadError}
+                refreshSession={refreshSession}
+              />
+            </div>
           </div>
         </div>
       )}
@@ -942,6 +1171,11 @@ function InteractivePreview({
   onRemoveImage,
   removeTextLabel,
   removeImageLabel,
+  stickers,
+  onStickerPositionChange,
+  onStickerScaleChange,
+  onRemoveSticker,
+  removeStickerLabel,
 }: {
   mockupImage: string;
   sideDesign: SideDesign;
@@ -957,6 +1191,14 @@ function InteractivePreview({
   onRemoveImage?: () => void;
   removeTextLabel?: string;
   removeImageLabel?: string;
+  stickers: PlacedSticker[];
+  onStickerPositionChange: (
+    instanceId: string,
+    pos: { x: number; y: number },
+  ) => void;
+  onStickerScaleChange: (instanceId: string, scale: number) => void;
+  onRemoveSticker: (instanceId: string) => void;
+  removeStickerLabel?: string;
 }) {
   const t = useTranslations('products.customizer');
   const baseImage = sideDesign.premadeDesignImage ?? mockupImage;
@@ -1044,6 +1286,22 @@ function InteractivePreview({
             hideControls={isCapturing}
           />
         )}
+
+        {stickers.map((sticker) => (
+          <ResizableStickerOverlay
+            key={sticker.instanceId}
+            sticker={sticker}
+            onPositionChange={(pos) =>
+              onStickerPositionChange(sticker.instanceId, pos)
+            }
+            onScaleChange={(scale) =>
+              onStickerScaleChange(sticker.instanceId, scale)
+            }
+            onRemove={() => onRemoveSticker(sticker.instanceId)}
+            removeLabel={removeStickerLabel}
+            hideControls={isCapturing}
+          />
+        ))}
 
         {sideDesign.showPhotoGuide &&
           !sideDesign.uploadedFile?.previewUrl &&
@@ -1143,6 +1401,8 @@ function EditorPanelContent({
   currentDesign,
   updateCurrentSide,
   setPositionPreset,
+  onAddSticker,
+  stickersAtLimit,
   token,
   uploadLoading,
   uploadError,
@@ -1152,12 +1412,32 @@ function EditorPanelContent({
   currentDesign: SideDesign;
   updateCurrentSide: (u: Partial<SideDesign>) => void;
   setPositionPreset: (p: 'center' | 'top' | 'bottom') => void;
+  onAddSticker: (stickerId: string) => void;
+  stickersAtLimit: boolean;
   token: string | null;
   uploadLoading: boolean;
   uploadError: string | null;
   refreshSession: () => Promise<string | null>;
 }) {
   const t = useTranslations('products.customizer');
+
+  if (panel === 'stickers') {
+    return (
+      <div className="flex h-full min-h-0 flex-col">
+        {stickersAtLimit ? (
+          <p className="mb-3 shrink-0 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            {t('stickerLimit')}
+          </p>
+        ) : null}
+        <StickerPicker
+          onSelect={onAddSticker}
+          disabled={stickersAtLimit}
+          compact
+          className="min-h-0 flex-1"
+        />
+      </div>
+    );
+  }
 
   if (panel === 'text') {
     return (
@@ -1371,6 +1651,8 @@ function ProductControls({
   currentDesign,
   updateCurrentSide,
   setPositionPreset,
+  onAddSticker,
+  stickersAtLimit,
   token,
   uploadLoading,
   uploadError,
@@ -1392,6 +1674,8 @@ function ProductControls({
   currentDesign: SideDesign;
   updateCurrentSide: (u: Partial<SideDesign>) => void;
   setPositionPreset: (p: 'center' | 'top' | 'bottom') => void;
+  onAddSticker: (stickerId: string) => void;
+  stickersAtLimit: boolean;
   token: string | null;
   uploadLoading: boolean;
   uploadError: string | null;
@@ -1445,7 +1729,23 @@ function ProductControls({
           <ImageIcon className="h-4 w-4" />
           {currentDesign.uploadedFile ? t('editPhoto') : t('addPhoto')}
         </Button>
+        <Button
+          variant={activePanel === 'stickers' ? 'primary' : 'secondary'}
+          onClick={() =>
+            setActivePanel(activePanel === 'stickers' ? null : 'stickers')
+          }
+          className="gap-2"
+        >
+          <Sparkles className="h-4 w-4" />
+          {currentDesign.stickers.length > 0
+            ? t('editStickers')
+            : t('addStickers')}
+        </Button>
       </div>
+
+      {stickersAtLimit && activePanel === 'stickers' ? (
+        <p className="text-sm text-amber-700">{t('stickerLimit')}</p>
+      ) : null}
 
       {activePanel && (
         <Card>
@@ -1454,6 +1754,8 @@ function ProductControls({
             currentDesign={currentDesign}
             updateCurrentSide={updateCurrentSide}
             setPositionPreset={setPositionPreset}
+            onAddSticker={onAddSticker}
+            stickersAtLimit={stickersAtLimit}
             token={token}
             uploadLoading={uploadLoading}
             uploadError={uploadError}

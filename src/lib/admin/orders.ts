@@ -4,6 +4,7 @@ import {
   type OrderStatus,
 } from '@/lib/db';
 import type { CheckoutInput } from '@/lib/validations/order';
+import { collectOrderFileIds } from '@/lib/orders/order-assets';
 
 export type OrderSort = 'newest' | 'oldest' | 'amount_high' | 'amount_low';
 
@@ -11,26 +12,6 @@ export type OrderListItem = OrderRecord & {
   items: CheckoutInput['items'];
   fileIds: string[];
 };
-
-export function collectOrderFileIds(order: OrderListItem): string[] {
-  const ids = new Set<string>();
-  for (const id of order.fileIds) ids.add(id);
-  for (const item of order.items) {
-    for (const id of item.fileIds ?? []) ids.add(id);
-    const meta = item.metadata;
-    if (!meta) continue;
-    for (const [key, value] of Object.entries(meta)) {
-      if (
-        (key.endsWith('UploadedFileId') || key === 'uploadedFileId') &&
-        typeof value === 'string' &&
-        value
-      ) {
-        ids.add(value);
-      }
-    }
-  }
-  return [...ids];
-}
 
 export interface AdminMetrics {
   totalOrders: number;

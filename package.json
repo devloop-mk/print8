@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "compress:images": "node scripts/compress-images.mjs"
+    "compress:images": "node scripts/compress-images.mjs",
+    "build:flag-stickers": "node scripts/build-flag-stickers.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.1",
@@ -35,6 +36,7 @@
     "@types/react-dom": "^19.0.3",
     "eslint": "^9.19.0",
     "eslint-config-next": "^15.1.6",
+    "flag-icons": "^7.5.0",
     "postcss": "^8.5.1",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.3"

@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { checkoutSchema } from '@/lib/validations/order';
 import { generateOrderNumber } from '@/lib/utils';
 import { sendOrderEmails } from '@/lib/email/order-emails';
+import { validateOrderAssetLimits } from '@/lib/orders/order-assets';
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,6 +19,21 @@ export async function POST(request: NextRequest) {
     }
 
     const data = parsed.data;
+
+    const assetLimits = validateOrderAssetLimits(data);
+    if (!assetLimits.ok) {
+      return NextResponse.json(
+        {
+          error:
+            assetLimits.error === 'too_many_stickers'
+              ? 'Order sticker limit exceeded'
+              : 'Order photo limit exceeded',
+          code: assetLimits.error,
+        },
+        { status: 400 },
+      );
+    }
+
     const totalAmount = data.items.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0,
