@@ -60,23 +60,23 @@ export function StickerPicker({
   }, [category]);
 
   useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
+    const scrollEl = scrollRef.current;
+    if (!scrollEl) return;
 
     function updateScrollHint() {
-      const canScroll = el.scrollHeight > el.clientHeight + 4;
+      const canScroll = scrollEl.scrollHeight > scrollEl.clientHeight + 4;
       const nearBottom =
-        el.scrollTop + el.clientHeight >= el.scrollHeight - 8;
+        scrollEl.scrollTop + scrollEl.clientHeight >= scrollEl.scrollHeight - 8;
       setShowScrollHint(canScroll && !nearBottom);
     }
 
     updateScrollHint();
-    el.addEventListener('scroll', updateScrollHint, { passive: true });
+    scrollEl.addEventListener('scroll', updateScrollHint, { passive: true });
     const observer = new ResizeObserver(updateScrollHint);
-    observer.observe(el);
+    observer.observe(scrollEl);
 
     return () => {
-      el.removeEventListener('scroll', updateScrollHint);
+      scrollEl.removeEventListener('scroll', updateScrollHint);
       observer.disconnect();
     };
   }, [category, stickers.length, compact]);
