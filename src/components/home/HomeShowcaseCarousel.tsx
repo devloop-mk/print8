@@ -30,22 +30,38 @@ const slides: ShowcaseSlide[] = [
   {
     id: 'merch',
     href: '/products',
-    image: '/t-shirts/tshirt-white.png',
+    image: '/hoodies/hoodie-charcoal.jpg',
     icon: Shirt,
     accent: 'from-brand-600/75',
     badgeClass: 'bg-brand-600/90',
   },
   {
     id: 'mugs',
-    href: '/products',
-    image: '/mugs/mug-milkyblue.png',
+    href: '/products?type=thermos',
+    image: '/thermoses/thermos-blue.jpg',
     icon: Sparkles,
     accent: 'from-sky-600/75',
     badgeClass: 'bg-sky-600/90',
   },
   {
+    id: 'gifts',
+    href: '/services#gifts',
+    image: '/bags/bag-beige.jpg',
+    icon: Sparkles,
+    accent: 'from-amber-600/75',
+    badgeClass: 'bg-amber-600/90',
+  },
+  {
+    id: 'finishing',
+    href: '/services#finishing',
+    image: '/designs/menu-elegant.svg',
+    icon: Printer,
+    accent: 'from-emerald-700/75',
+    badgeClass: 'bg-emerald-800/90',
+  },
+  {
     id: 'printing',
-    href: '/services',
+    href: '/services#print',
     image: '/designs/bc-classic.svg',
     icon: Printer,
     accent: 'from-ink-700/75',
@@ -70,7 +86,7 @@ const slides: ShowcaseSlide[] = [
   {
     id: 'textTemplates',
     href: '/products/text-templates',
-    image: '/bags/bag-beige.png',
+    image: '/bags/bag-beige.jpg',
     icon: Type,
     accent: 'from-emerald-600/75',
     badgeClass: 'bg-emerald-600/90',
@@ -95,7 +111,7 @@ export function HomeShowcaseCarousel() {
   }
 
   return (
-    <section className="border-b border-ink-100 bg-white py-8 sm:py-10">
+    <section className="section-band border-b-0 py-10 sm:py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-5 flex items-end justify-between gap-4">
           <div className="max-w-2xl">
@@ -112,7 +128,7 @@ export function HomeShowcaseCarousel() {
             <button
               type="button"
               onClick={() => scrollByCard('prev')}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-ink-200 bg-white text-ink-700 transition hover:border-brand-200 hover:text-brand-600"
+              className="inline-flex h-10 w-10 items-center justify-center border-2 border-ink-300 bg-white text-ink-700 shadow-lift transition hover:-translate-y-0.5 hover:border-brand-500 hover:text-brand-600"
               aria-label={t('scrollPrev')}
             >
               <ChevronLeft className="h-5 w-5" />
@@ -120,7 +136,7 @@ export function HomeShowcaseCarousel() {
             <button
               type="button"
               onClick={() => scrollByCard('next')}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-ink-200 bg-white text-ink-700 transition hover:border-brand-200 hover:text-brand-600"
+              className="inline-flex h-10 w-10 items-center justify-center border-2 border-ink-300 bg-white text-ink-700 shadow-lift transition hover:-translate-y-0.5 hover:border-brand-500 hover:text-brand-600"
               aria-label={t('scrollNext')}
             >
               <ChevronRight className="h-5 w-5" />
@@ -146,7 +162,7 @@ export function HomeShowcaseCarousel() {
                 data-showcase-card
                 className="group w-[78vw] shrink-0 snap-start sm:w-[300px] lg:w-[320px]"
               >
-                <article className="relative h-full overflow-hidden rounded-2xl border border-ink-200 bg-ink-50 shadow-sm transition hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-md">
+                <article className="surface-panel relative h-full overflow-hidden transition hover:-translate-y-1 hover:shadow-lift-brand">
                   <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-b from-ink-50/50 to-white">
                     <Image
                       src={slide.image}
@@ -157,7 +173,8 @@ export function HomeShowcaseCarousel() {
                         'object-contain p-5 pb-10 transition duration-500 group-hover:scale-105',
                         slide.id === 'printing' ||
                           slide.id === 'readyDesigns' ||
-                          slide.id === 'photoDesigns'
+                          slide.id === 'photoDesigns' ||
+                          slide.id === 'finishing'
                           ? 'p-7 pb-11'
                           : 'p-4 pb-10',
                       )}
@@ -172,7 +189,7 @@ export function HomeShowcaseCarousel() {
                     <div className="absolute bottom-3 left-3">
                       <span
                         className={cn(
-                          'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1',
+                          'inline-flex items-center gap-1.5 border border-white/30 px-2.5 py-1',
                           'text-[11px] font-semibold uppercase tracking-wide text-white shadow-sm backdrop-blur-sm',
                           slide.badgeClass,
                         )}

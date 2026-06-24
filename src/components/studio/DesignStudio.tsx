@@ -94,8 +94,8 @@ export function DesignStudio() {
   const [text, setText] = useState('');
   const [fontSize, setFontSize] = useState(32);
   const [textColor, setTextColor] = useState('#000000');
-  const [primaryColor, setPrimaryColor] = useState('#2563eb');
-  const prevPrimaryColorRef = useRef('#2563eb');
+  const [primaryColor, setPrimaryColor] = useState('#2f7cb2');
+  const prevPrimaryColorRef = useRef('#2f7cb2');
   const [backgroundColor, setBackgroundColor] = useState('#ffffff');
   const [studioNotice, setStudioNotice] = useState<string | null>(null);
   const [canvasMountKey, setCanvasMountKey] = useState(0);

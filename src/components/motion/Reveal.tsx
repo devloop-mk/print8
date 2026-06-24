@@ -17,8 +17,8 @@ export function Reveal({
   children,
   className,
   delay = 0,
-  y = 24,
-  duration = 620,
+  y = 28,
+  duration = 650,
 }: RevealProps) {
   const reducedMotion = useReducedMotion();
   const { ref, inView } = useInView<HTMLDivElement>({

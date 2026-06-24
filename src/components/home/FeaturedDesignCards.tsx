@@ -60,7 +60,7 @@ export function FeaturedDesignCards({ designs }: { designs: DesignTemplate[] }) 
       />
 
       {visible.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-ink-200 bg-ink-50 px-4 py-10 text-center text-sm text-ink-500">
+        <p className="border border-dashed border-ink-300 bg-ink-50 px-4 py-10 text-center text-sm text-ink-500">
           {th('noDesignsInCategory')}
         </p>
       ) : (
@@ -80,7 +80,7 @@ export function FeaturedDesignCards({ designs }: { designs: DesignTemplate[] }) 
                         design={design}
                         alt={t(`templates.${design.id}`)}
                       />
-                      <span className="absolute left-3 top-3 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-brand-700 shadow-sm">
+                      <span className="badge-brand absolute left-3 top-3 bg-white/95 shadow-sm">
                         {isFixed ? t('fixedBadge') : t('customizableBadge')}
                       </span>
                     </div>
@@ -105,7 +105,7 @@ export function FeaturedDesignCards({ designs }: { designs: DesignTemplate[] }) 
             <div className="flex justify-center pt-2">
               <Link
                 href={seeAllHref}
-                className="rounded-full border border-brand-200 bg-brand-50 px-5 py-2.5 text-sm font-medium text-brand-700 transition hover:border-brand-300 hover:bg-brand-100"
+                className="link-cta"
               >
                 {th('viewAllDesigns')} →
               </Link>

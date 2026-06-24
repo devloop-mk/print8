@@ -61,12 +61,12 @@ function NavigationProgressBar() {
 
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 top-0 z-[100] h-1 overflow-hidden bg-brand-100"
+      className="pointer-events-none fixed inset-x-0 top-0 z-[100] h-1.5 overflow-hidden border-b border-brand-800 bg-ink-900"
       aria-hidden
     >
       <div
         className={cn(
-          'h-full bg-brand-600 transition-all duration-500 ease-out',
+          'h-full bg-gradient-to-r from-brand-400 via-brand-600 to-brand-800 transition-all duration-500 ease-out',
           complete ? 'w-full opacity-0' : 'w-2/3 opacity-100',
         )}
       />

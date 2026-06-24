@@ -5,8 +5,9 @@ import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import { ArrowLeft } from 'lucide-react';
-import { products, productTypes, type ProductType } from '@/lib/data/catalog';
+import { products, type ProductType } from '@/lib/data/catalog';
 import { parseProductTypeFilter } from '@/lib/data/service-routes';
+import { buildProductTypeFilterOptions } from '@/lib/products/product-type-icons';
 import { PRODUCT_OFFERING_PATHS } from '@/lib/products/paths';
 import { ProductCardGrid } from '@/components/products/ProductCardGrid';
 import { FilterChipBar } from '@/components/catalog/FilterChipBar';
@@ -26,12 +27,11 @@ export function ProductCustomCatalog() {
     setTypeFilter(parseProductTypeFilter(searchParams.get('type')));
   }, [searchParams]);
 
-  const filterOptions = useMemo(
+  const { allOption, options: filterOptions } = useMemo(
     () =>
-      productTypes.map((type) => ({
-        value: type as ProductFilter,
-        label: t(`types.${type}`),
-      })),
+      buildProductTypeFilterOptions((type) =>
+        type === 'all' ? t('allTypes') : t(`types.${type}`),
+      ),
     [t],
   );
 
@@ -60,12 +60,13 @@ export function ProductCustomCatalog() {
           ariaLabel={t('filterLabel')}
           showFiltersLabel={t('showFilters')}
           hideFiltersLabel={t('hideFilters')}
-          allOption={{ value: 'all', label: t('allTypes') }}
+          allOption={allOption}
           options={filterOptions}
           value={typeFilter}
           onChange={setTypeFilter}
           resultsCount={filtered.length}
           resultsLabel={(count) => t('resultsCount', { count })}
+          mobileLayout="scroll"
         />
       </Reveal>
 

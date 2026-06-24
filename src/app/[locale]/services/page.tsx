@@ -1,7 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
-import { services } from "@/lib/data/catalog";
-import { ServiceCard } from "@/components/services/ServiceCard";
+import { ServicesGroupedCatalog } from "@/components/services/ServicesGroupedCatalog";
 import { ServicesExploreCta } from "@/components/services/ServicesExploreCta";
 import { PageIntro } from "@/components/brand/PageIntro";
 import { buildSectionMetadata } from "@/lib/seo/page-metadata";
@@ -29,11 +28,7 @@ export default async function ServicesPage({
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <PageIntro title={t("title")} subtitle={t("subtitle")} centered />
 
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {services.map((service) => (
-          <ServiceCard key={service.id} service={service} variant="list" />
-        ))}
-      </div>
+      <ServicesGroupedCatalog />
 
       <ServicesExploreCta />
     </div>

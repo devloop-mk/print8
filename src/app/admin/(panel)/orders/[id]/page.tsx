@@ -76,30 +76,31 @@ export default async function AdminOrderDetailPage({
                     <OrderItemMetadata metadata={item.metadata} />
                   ) : null}
 
-                  {(item.designPreview || item.backDesignPreview) ? (
+                  {(item.designPreview ||
+                    item.backDesignPreview ||
+                    item.leftDesignPreview ||
+                    item.rightDesignPreview) ? (
                     <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                      {item.designPreview ? (
-                        <div>
-                          <p className="mb-1 text-xs text-ink-500">{t.frontPreview}</p>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={item.designPreview}
-                            alt={t.frontPreview}
-                            className="w-full max-h-48 rounded border border-ink-200 bg-white object-contain"
-                          />
-                        </div>
-                      ) : null}
-                      {item.backDesignPreview ? (
-                        <div>
-                          <p className="mb-1 text-xs text-ink-500">{t.backPreview}</p>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={item.backDesignPreview}
-                            alt={t.backPreview}
-                            className="w-full max-h-48 rounded border border-ink-200 bg-white object-contain"
-                          />
-                        </div>
-                      ) : null}
+                      {(
+                        [
+                          { src: item.designPreview, label: t.frontPreview },
+                          { src: item.backDesignPreview, label: t.backPreview },
+                          { src: item.leftDesignPreview, label: t.leftPreview },
+                          { src: item.rightDesignPreview, label: t.rightPreview },
+                        ] as const
+                      )
+                        .filter((preview) => Boolean(preview.src))
+                        .map((preview) => (
+                          <div key={preview.label}>
+                            <p className="mb-1 text-xs text-ink-500">{preview.label}</p>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={preview.src}
+                              alt={preview.label}
+                              className="max-h-48 w-full rounded border border-ink-200 bg-white object-contain"
+                            />
+                          </div>
+                        ))}
                     </div>
                   ) : null}
                 </div>

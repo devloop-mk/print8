@@ -1,11 +1,17 @@
 import {
   products,
   getProductMockup,
+  getProductSides,
   type Product,
   type ProductSide,
   type ProductType,
 } from "@/lib/data/catalog";
 import type { CartItem } from "@/components/cart/CartProvider";
+import {
+  getSideMetadataPrefix,
+  getSidePreviewFromCartItem,
+  SIDE_PREVIEW_CART_KEYS,
+} from "@/lib/products/product-sides";
 
 export function getProductById(id: string): Product | undefined {
   return products.find((p) => p.id === id);
@@ -30,10 +36,16 @@ export function isCustomizedCartItem(item: CartItem): boolean {
   return Boolean(
     m.frontCustomText ||
       m.backCustomText ||
+      m.leftCustomText ||
+      m.rightCustomText ||
       m.frontPremadeDesignImage ||
       m.backPremadeDesignImage ||
+      m.leftPremadeDesignImage ||
+      m.rightPremadeDesignImage ||
       m.frontUploadedPreviewUrl ||
-      m.backUploadedPreviewUrl,
+      m.backUploadedPreviewUrl ||
+      m.leftUploadedPreviewUrl ||
+      m.rightUploadedPreviewUrl,
   );
 }
 
@@ -55,28 +67,26 @@ export function getCartItemProduct(item: CartItem): Product | undefined {
 
 export function getCartItemPreviewImages(
   item: CartItem,
-  frontLabel: string,
-  backLabel: string,
+  labels: Partial<Record<ProductSide, string>>,
 ): { src: string; label?: string }[] {
   const images: { src: string; label?: string }[] = [];
-  if (item.designPreview) {
-    images.push({ src: item.designPreview, label: frontLabel });
-  }
-  if (item.backDesignPreview) {
-    images.push({ src: item.backDesignPreview, label: backLabel });
+
+  for (const side of Object.keys(SIDE_PREVIEW_CART_KEYS) as ProductSide[]) {
+    const src = getSidePreviewFromCartItem(item, side);
+    if (src) {
+      images.push({ src, label: labels[side] });
+    }
   }
 
   if (images.length === 0) {
     const product = getCartItemProduct(item);
     const color = getCartItemColor(item) ?? product?.colors?.[0] ?? "#ffffff";
     if (product) {
-      const front = getProductMockup(product, color, "front");
-      if (front) images.push({ src: front, label: frontLabel });
-      if (product.sides?.includes("back")) {
-        const back = getProductMockup(product, color, "back");
-        if (back && back !== front) {
-          images.push({ src: back, label: backLabel });
-        }
+      for (const side of getProductSides(product)) {
+        const src = getProductMockup(product, color, side);
+        if (!src) continue;
+        if (images.some((image) => image.src === src)) continue;
+        images.push({ src, label: labels[side] });
       }
     }
   }
@@ -110,7 +120,7 @@ export function restoreSideDesignFromMetadata(
   metadata: Record<string, string | number | boolean>,
   side: ProductSide,
 ): RestoredSideDesign | null {
-  const prefix = side === "front" ? "front" : "back";
+  const prefix = getSideMetadataPrefix(side);
   const hasContent =
     metadata[`${prefix}CustomText`] ||
     metadata[`${prefix}PremadeDesignImage`] ||

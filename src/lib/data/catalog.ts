@@ -5,19 +5,47 @@ export type ServiceId =
   | 'color-bw-printing'
   | 'plastification'
   | 't-shirt-printing'
+  | 'hoodie-printing'
+  | 'cap-printing'
   | 'cup-printing'
   | 'bag-printing'
+  | 'thermos-printing'
+  | 'magnet-printing'
+  | 'promotional-items'
+  | 'wooden-plaques'
+  | 'photo-stone'
   | 'bookbinding'
+  | 'thesis-hardcover'
   | 'wedding-invitations'
   | 'birthday-invitations'
-  | 'gift-sets';
+  | 'thank-you-cards'
+  | 'gift-sets'
+  | 'club-membership-cards'
+  | 'loyalty-points-cards'
+  | 'upload-pickup'
+  | 'temporary-tattoos'
+  | 'tattoo-services';
+
+export const serviceCategoryOrder = [
+  'merch',
+  'gifts',
+  'print',
+  'finishing',
+  'special',
+] as const;
+
+export type ServiceCategoryId = (typeof serviceCategoryOrder)[number];
 
 export type ServiceCustomization = 'none' | 'designs' | 'products';
 
 export interface Service {
   id: ServiceId;
   icon: string;
+  category: ServiceCategoryId;
   startingPrice: number;
+  featured?: boolean;
+  /** Link to contact instead of add-to-cart */
+  contactOnly?: boolean;
   /** Whether the service has design/product options on its detail page */
   customization: ServiceCustomization;
   designCategory?: DesignCategory;
@@ -26,84 +54,208 @@ export interface Service {
 
 export const services: Service[] = [
   {
+    id: 't-shirt-printing',
+    icon: 'Shirt',
+    category: 'merch',
+    startingPrice: 600,
+    featured: true,
+    customization: 'products',
+    productTypes: ['t-shirt'],
+  },
+  {
+    id: 'hoodie-printing',
+    icon: 'Shirt',
+    category: 'merch',
+    startingPrice: 1200,
+    featured: true,
+    customization: 'products',
+    productTypes: ['hoodie'],
+  },
+  {
+    id: 'cap-printing',
+    icon: 'CircleUserRound',
+    category: 'merch',
+    startingPrice: 500,
+    customization: 'products',
+    productTypes: ['cap'],
+  },
+  {
+    id: 'bag-printing',
+    icon: 'ShoppingBag',
+    category: 'merch',
+    startingPrice: 300,
+    featured: true,
+    customization: 'products',
+    productTypes: ['bag'],
+  },
+  {
+    id: 'cup-printing',
+    icon: 'Coffee',
+    category: 'merch',
+    startingPrice: 250,
+    customization: 'products',
+    productTypes: ['mug', 'cup'],
+  },
+  {
+    id: 'thermos-printing',
+    icon: 'FlaskConical',
+    category: 'merch',
+    startingPrice: 800,
+    featured: true,
+    customization: 'products',
+    productTypes: ['thermos'],
+  },
+  {
+    id: 'magnet-printing',
+    icon: 'Magnet',
+    category: 'gifts',
+    startingPrice: 150,
+    customization: 'none',
+  },
+  {
+    id: 'promotional-items',
+    icon: 'KeyRound',
+    category: 'gifts',
+    startingPrice: 200,
+    customization: 'none',
+  },
+  {
+    id: 'wooden-plaques',
+    icon: 'Award',
+    category: 'gifts',
+    startingPrice: 900,
+    customization: 'none',
+  },
+  {
+    id: 'photo-stone',
+    icon: 'Gem',
+    category: 'gifts',
+    startingPrice: 1200,
+    customization: 'none',
+  },
+  {
+    id: 'gift-sets',
+    icon: 'Gift',
+    category: 'gifts',
+    startingPrice: 1200,
+    customization: 'products',
+    productTypes: ['gift-set'],
+  },
+  {
     id: 'business-cards',
     icon: 'CreditCard',
+    category: 'print',
     startingPrice: 500,
+    featured: true,
     customization: 'designs',
     designCategory: 'business-cards',
   },
   {
     id: 'restaurant-menus',
     icon: 'BookOpen',
+    category: 'print',
     startingPrice: 800,
     customization: 'designs',
     designCategory: 'menus',
   },
   {
-    id: 'laminating',
-    icon: 'Layers',
-    startingPrice: 50,
-    customization: 'none',
-  },
-  {
-    id: 'color-bw-printing',
-    icon: 'Printer',
-    startingPrice: 10,
-    customization: 'none',
-  },
-  {
-    id: 'plastification',
-    icon: 'Shield',
-    startingPrice: 100,
-    customization: 'none',
-  },
-  {
-    id: 't-shirt-printing',
-    icon: 'Shirt',
-    startingPrice: 600,
-    customization: 'products',
-    productTypes: ['t-shirt'],
-  },
-  {
-    id: 'cup-printing',
-    icon: 'Coffee',
-    startingPrice: 250,
-    customization: 'products',
-    productTypes: ['mug', 'cup'],
-  },
-  {
-    id: 'bag-printing',
-    icon: 'ShoppingBag',
-    startingPrice: 300,
-    customization: 'products',
-    productTypes: ['bag'],
-  },
-  {
-    id: 'bookbinding',
-    icon: 'BookMarked',
-    startingPrice: 400,
-    customization: 'none',
-  },
-  {
     id: 'wedding-invitations',
     icon: 'Heart',
+    category: 'print',
     startingPrice: 1500,
+    featured: true,
     customization: 'designs',
     designCategory: 'wedding',
   },
   {
     id: 'birthday-invitations',
     icon: 'PartyPopper',
+    category: 'print',
     startingPrice: 800,
     customization: 'designs',
     designCategory: 'birthday',
   },
   {
-    id: 'gift-sets',
-    icon: 'Gift',
-    startingPrice: 1200,
-    customization: 'products',
-    productTypes: ['gift-set'],
+    id: 'thank-you-cards',
+    icon: 'Mail',
+    category: 'print',
+    startingPrice: 600,
+    customization: 'none',
+  },
+  {
+    id: 'color-bw-printing',
+    icon: 'Printer',
+    category: 'print',
+    startingPrice: 10,
+    featured: true,
+    customization: 'none',
+  },
+  {
+    id: 'club-membership-cards',
+    icon: 'IdCard',
+    category: 'print',
+    startingPrice: 400,
+    customization: 'none',
+  },
+  {
+    id: 'loyalty-points-cards',
+    icon: 'BadgePercent',
+    category: 'print',
+    startingPrice: 350,
+    customization: 'none',
+  },
+  {
+    id: 'laminating',
+    icon: 'Layers',
+    category: 'finishing',
+    startingPrice: 50,
+    customization: 'none',
+  },
+  {
+    id: 'plastification',
+    icon: 'Shield',
+    category: 'finishing',
+    startingPrice: 100,
+    customization: 'none',
+  },
+  {
+    id: 'bookbinding',
+    icon: 'BookMarked',
+    category: 'finishing',
+    startingPrice: 400,
+    featured: true,
+    customization: 'none',
+  },
+  {
+    id: 'thesis-hardcover',
+    icon: 'GraduationCap',
+    category: 'finishing',
+    startingPrice: 1500,
+    featured: true,
+    customization: 'none',
+  },
+  {
+    id: 'upload-pickup',
+    icon: 'Upload',
+    category: 'special',
+    startingPrice: 0,
+    featured: true,
+    customization: 'none',
+  },
+  {
+    id: 'temporary-tattoos',
+    icon: 'Sticker',
+    category: 'special',
+    startingPrice: 300,
+    customization: 'none',
+  },
+  {
+    id: 'tattoo-services',
+    icon: 'PenTool',
+    category: 'special',
+    startingPrice: 0,
+    contactOnly: true,
+    customization: 'none',
   },
 ];
 
@@ -214,12 +366,22 @@ export const designTemplates: DesignTemplate[] = [
   },
 ];
 
-export type ProductType = 't-shirt' | 'mug' | 'cup' | 'bag' | 'gift-set';
-export type ProductSide = 'front' | 'back';
+export type ProductType =
+  | 't-shirt'
+  | 'hoodie'
+  | 'cap'
+  | 'mug'
+  | 'cup'
+  | 'bag'
+  | 'thermos'
+  | 'gift-set';
+export type ProductSide = 'front' | 'back' | 'left' | 'right';
 
 export interface ProductSideImages {
   front: string;
   back: string;
+  left?: string;
+  right?: string;
 }
 
 export type ProductColorImages = Record<string, string | ProductSideImages>;
@@ -414,10 +576,22 @@ export function productSupportsSides(product: Product): boolean {
 
 export function getProductSides(product: Product): ProductSide[] {
   if (product.sides?.length) return product.sides;
-  if (product.type === 't-shirt' || product.type === 'bag') {
+  if (
+    product.type === 't-shirt' ||
+    product.type === 'hoodie' ||
+    product.type === 'bag'
+  ) {
     return ['front', 'back'];
   }
+  if (product.type === 'cap') {
+    return ['front', 'back', 'left', 'right'];
+  }
   return ['front'];
+}
+
+function mockupPathForSide(basePath: string, side: ProductSide): string {
+  if (side === 'front') return basePath;
+  return basePath.replace(/(\.[a-z]+)$/i, `-${side}$1`);
 }
 
 export function getProductMockup(
@@ -428,10 +602,17 @@ export function getProductMockup(
   const entry = product.colorsImages?.[color];
   if (!entry) return product.image;
   if (typeof entry === 'string') {
-    if (side === 'front') return entry;
-    return entry.replace(/(\.[a-z]+)$/i, '-back$1');
+    return mockupPathForSide(entry, side);
   }
-  return side === 'front' ? entry.front : entry.back || entry.front;
+
+  const bySide: Partial<Record<ProductSide, string | undefined>> = {
+    front: entry.front,
+    back: entry.back,
+    left: entry.left,
+    right: entry.right,
+  };
+
+  return bySide[side] ?? entry.front;
 }
 
 export function getProductDesignTemplates(product: Product) {
@@ -464,6 +645,17 @@ export function getService(id: string) {
   return services.find((s) => s.id === id);
 }
 
+export function getFeaturedServices() {
+  return services.filter((service) => service.featured);
+}
+
+export function getServicesByCategory() {
+  return serviceCategoryOrder.map((category) => ({
+    category,
+    services: services.filter((service) => service.category === category),
+  }));
+}
+
 export function serviceHasDetailOptions(service: Service) {
   return service.customization !== 'none';
 }
@@ -484,23 +676,23 @@ export const products: Product[] = [
   {
     id: 'tshirt-basic-white',
     type: 't-shirt',
-    image: '/t-shirts/tshirt-white.png',
+    image: '/t-shirts/tshirt-white.jpg',
     colorsImages: {
       '#ffffff': {
-        front: '/t-shirts/tshirt-white.png',
-        back: '/t-shirts/tshirt-white-back.png',
+        front: '/t-shirts/tshirt-white.jpg',
+        back: '/t-shirts/tshirt-white-back.jpg',
       },
       '#000000': {
-        front: '/t-shirts/tshirt-black.png',
-        back: '/t-shirts/tshirt-black-back.png',
+        front: '/t-shirts/tshirt-black.jpg',
+        back: '/t-shirts/tshirt-black-back.jpg',
       },
       '#1e40af': {
-        front: '/t-shirts/tshirt-blue.png',
-        back: '/t-shirts/tshirt-blue-back.png',
+        front: '/t-shirts/tshirt-blue.jpg',
+        back: '/t-shirts/tshirt-blue-back.jpg',
       },
       '#dc2626': {
-        front: '/t-shirts/tshirt-red.png',
-        back: '/t-shirts/tshirt-red-back.png',
+        front: '/t-shirts/tshirt-red.jpg',
+        back: '/t-shirts/tshirt-red-back.jpg',
       },
     },
     basePrice: 600,
@@ -511,11 +703,11 @@ export const products: Product[] = [
   {
     id: 'mug-classic',
     type: 'mug',
-    image: '/mugs/mug-milkyblue.png',
+    image: '/mugs/mug-milkyblue.jpg',
     colorsImages: {
-      '#ffffff': '/mugs/mug-white.png',
-      '#ADD8E6': '/mugs/mug-milkyblue.png',
-      '#000000': '/mugs/mug-black.png',
+      '#ffffff': '/mugs/mug-white.jpg',
+      '#ADD8E6': '/mugs/mug-milkyblue.jpg',
+      '#000000': '/mugs/mug-black.jpg',
     },
     basePrice: 250,
     colors: ['#ffffff', '#ADD8E6', '#000000'],
@@ -523,38 +715,90 @@ export const products: Product[] = [
   {
     id: 'bag-tote',
     type: 'bag',
-    image: '/bags/bag-beige.png',
+    image: '/bags/bag-beige.jpg',
     colorsImages: {
       '#D8C3A5': {
-        front: '/bags/bag-beige.png',
-        back: '/bags/bag-beige-back.png',
+        front: '/bags/bag-beige.jpg',
+        back: '/bags/bag-beige-back.jpg',
       },
     },
     basePrice: 300,
     colors: ['#D8C3A5'],
     sides: ['front', 'back'],
   },
-  // {
-  //   id: 'cup-paper',
-  //   type: 'cup',
-  //   image: '/products/cup-paper.svg',
-  //   basePrice: 150,
-  //   colors: ['#ffffff', '#fef3c7'],
-  // },
-
-  // {
-  //   id: 'gift-set-premium',
-  //   type: 'gift-set',
-  //   image: '/products/gift-set.svg',
-  //   basePrice: 1200,
-  // },
+  {
+    id: 'hoodie-basic',
+    type: 'hoodie',
+    image: '/hoodies/hoodie-charcoal.jpg',
+    colorsImages: {
+      '#1f2937': {
+        front: '/hoodies/hoodie-charcoal.jpg',
+        back: '/hoodies/hoodie-charcoal-back.jpg',
+      },
+      '#ffffff': {
+        front: '/hoodies/hoodie-white.jpg',
+        back: '/hoodies/hoodie-white-back.jpg',
+      },
+      '#1e40af': {
+        front: '/hoodies/hoodie-blue.jpg',
+        back: '/hoodies/hoodie-blue-back.jpg',
+      },
+    },
+    basePrice: 1200,
+    colors: ['#1f2937', '#ffffff', '#1e40af'],
+    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    sides: ['front', 'back'],
+  },
+  {
+    id: 'cap-classic',
+    type: 'cap',
+    image: '/caps/cap-charcoal-front.jpg',
+    colorsImages: {
+      '#1f2937': {
+        front: '/caps/cap-charcoal-front.jpg',
+        back: '/caps/cap-charcoal-back.jpg',
+        left: '/caps/cap-charcoal-left.jpg',
+        right: '/caps/cap-charcoal-right.jpg',
+      },
+      '#ffffff': {
+        front: '/caps/cap-white-front.jpg',
+        back: '/caps/cap-white-back.jpg',
+        left: '/caps/cap-white-left.jpg',
+        right: '/caps/cap-white-right.jpg',
+      },
+      '#dc2626': {
+        front: '/caps/cap-red-front.jpg',
+        back: '/caps/cap-red-back.jpg',
+        left: '/caps/cap-red-left.jpg',
+        right: '/caps/cap-red-right.jpg',
+      },
+    },
+    basePrice: 500,
+    colors: ['#1f2937', '#ffffff', '#dc2626'],
+    sides: ['front', 'back', 'left', 'right'],
+  },
+  {
+    id: 'thermos-classic',
+    type: 'thermos',
+    image: '/thermoses/thermos-blue.jpg',
+    colorsImages: {
+      '#374151': '/thermoses/thermos-charcoal.jpg',
+      '#ffffff': '/thermoses/thermos-white.jpg',
+      '#2f7cb2': '/thermoses/thermos-blue.jpg',
+    },
+    basePrice: 800,
+    colors: ['#374151', '#ffffff', '#2f7cb2'],
+  },
 ];
 
 export const productTypes: ProductType[] = [
   't-shirt',
+  'hoodie',
+  'cap',
   'mug',
   'cup',
   'bag',
+  'thermos',
   'gift-set',
 ];
 

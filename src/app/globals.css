@@ -7,9 +7,64 @@
     scroll-behavior: smooth;
   }
 
+  body {
+    @apply bg-ink-50 text-ink-900;
+    background-image: theme('backgroundImage.mesh-light');
+    background-attachment: fixed;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display tracking-tight;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     html {
       scroll-behavior: auto;
     }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .eyebrow {
+    @apply inline-flex items-center gap-2 bg-brand-50 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-brand-800;
+  }
+
+  .eyebrow-on-dark {
+    @apply inline-flex items-center gap-2 border border-white/25 bg-white/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-brand-100;
+  }
+
+  .section-band {
+    @apply border-y border-ink-200 bg-white/80 backdrop-blur-sm;
+  }
+
+  .section-band-muted {
+    @apply border-y border-ink-200 bg-ink-100/60 backdrop-blur-sm;
+  }
+
+  .link-cta {
+    @apply inline-flex items-center border border-ink-300 bg-white px-5 py-2.5 text-sm font-semibold text-ink-800 shadow-lift transition hover:-translate-y-0.5 hover:border-ink-400 hover:bg-ink-50;
+  }
+
+  .surface-panel {
+    @apply border border-ink-200 bg-white shadow-lift;
+  }
+
+  .badge-sharp {
+    @apply inline-flex items-center border border-ink-200 bg-ink-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-ink-700;
+  }
+
+  .badge-brand {
+    @apply inline-flex items-center bg-brand-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-800;
   }
 }

@@ -2,7 +2,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
 import { routing, type Locale } from "@/i18n/routing";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -17,6 +17,12 @@ import "@/app/globals.css";
 const inter = Inter({
   variable: "--font-geist-sans",
   subsets: ["latin", "latin-ext"],
+});
+
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-display",
+  subsets: ["latin", "latin-ext"],
+  weight: ["500", "600", "700"],
 });
 
 export function generateStaticParams() {
@@ -64,7 +70,7 @@ export default async function LocaleLayout({
   return (
     <html lang={locale}>
       <body
-        className={`${inter.variable} min-h-screen bg-white font-sans antialiased`}
+        className={`${inter.variable} ${spaceGrotesk.variable} min-h-screen font-sans antialiased`}
       >
         <NextIntlClientProvider messages={messages}>
           <CartProvider>

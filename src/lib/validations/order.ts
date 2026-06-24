@@ -8,6 +8,8 @@ export const orderItemSchema = z.object({
   metadata: z.record(z.union([z.string(), z.number(), z.boolean()])).optional(),
   designPreview: z.string().optional(),
   backDesignPreview: z.string().optional(),
+  leftDesignPreview: z.string().optional(),
+  rightDesignPreview: z.string().optional(),
   fileIds: z.array(z.string()).optional(),
 });
 

@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { products, productTypes } from '@/lib/data/catalog';
+import { products } from '@/lib/data/catalog';
 import { parseProductTypeFilter } from '@/lib/data/service-routes';
+import { buildProductTypeFilterOptions } from '@/lib/products/product-type-icons';
 import { ProductCardGrid } from '@/components/products/ProductCardGrid';
 import { FilterChipBar } from '@/components/catalog/FilterChipBar';
 import { ProductJourneyGuide } from '@/components/products/ProductJourneyGuide';
@@ -24,12 +25,11 @@ export function ProductsCatalog() {
     setTypeFilter(parseProductTypeFilter(searchParams.get('type')));
   }, [searchParams]);
 
-  const filterOptions = useMemo(
+  const { allOption, options: filterOptions } = useMemo(
     () =>
-      productTypes.map((type) => ({
-        value: type as ProductFilter,
-        label: t(`types.${type}`),
-      })),
+      buildProductTypeFilterOptions((type) =>
+        type === 'all' ? t('allTypes') : t(`types.${type}`),
+      ),
     [t],
   );
 
@@ -47,12 +47,13 @@ export function ProductsCatalog() {
         ariaLabel={t('filterLabel')}
         showFiltersLabel={t('showFilters')}
         hideFiltersLabel={t('hideFilters')}
-        allOption={{ value: 'all', label: t('allTypes') }}
+        allOption={allOption}
         options={filterOptions}
         value={typeFilter}
         onChange={setTypeFilter}
         resultsCount={filtered.length}
         resultsLabel={(count) => t('resultsCount', { count })}
+        mobileLayout="scroll"
         />
       </Reveal>
 

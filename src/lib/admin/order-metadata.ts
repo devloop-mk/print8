@@ -42,7 +42,7 @@ function formatMetadataKey(key: string) {
   if (KEY_LABELS[key]) return KEY_LABELS[key];
 
   const normalized = key
-    .replace(/^(front|back)/, (_, side: string) => `${side.charAt(0).toUpperCase()}${side.slice(1)} `)
+    .replace(/^(front|back|left|right)/, (_, side: string) => `${side.charAt(0).toUpperCase()}${side.slice(1)} `)
     .replace(/([A-Z])/g, ' $1')
     .replace(/_/g, ' ')
     .trim();

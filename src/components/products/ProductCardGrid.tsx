@@ -32,9 +32,9 @@ export function ProductCardGrid({ items }: { items: Product[] }) {
           <Reveal key={product.id} delay={Math.min(index * 40, 120)}>
             <Link
               href={`/products/${product.id}`}
-              className="group block transition hover:-translate-y-0.5"
+              className="group block transition hover:-translate-y-1"
             >
-              <Card className="h-full overflow-hidden p-0 transition group-hover:shadow-md">
+              <Card className="h-full overflow-hidden p-0 transition group-hover:shadow-lift-brand">
                 <div className="p-4 pb-0">
                   <ProductImageCarousel
                     product={product}
@@ -52,11 +52,11 @@ export function ProductCardGrid({ items }: { items: Product[] }) {
                   </p>
 
                   <div className="mt-3 flex flex-wrap gap-1.5">
-                    <span className="rounded-full bg-brand-50 px-2.5 py-1 text-[11px] font-semibold text-brand-700">
+                    <span className="badge-brand">
                       {t('card.customOption')}
                     </span>
                     {offering.hasPremade ? (
-                      <span className="rounded-full bg-ink-100 px-2.5 py-1 text-[11px] font-semibold text-ink-700">
+                      <span className="badge-sharp">
                         {t('card.readyDesigns', { count: offering.premadeCount })}
                       </span>
                     ) : null}
@@ -83,10 +83,10 @@ export function ProductCardGrid({ items }: { items: Product[] }) {
                               [product.id]: c,
                             }));
                           }}
-                          className={`h-5 w-5 rounded-full border-2 transition ${
+                          className={`h-5 w-5 border-2 transition ${
                             cardColor === c
                               ? 'border-brand-600 ring-2 ring-brand-200'
-                              : 'border-ink-200 hover:border-ink-300'
+                              : 'border-ink-300 hover:border-ink-400'
                           }`}
                           style={{ backgroundColor: c }}
                           aria-label={c}

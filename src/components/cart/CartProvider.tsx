@@ -20,6 +20,8 @@ export interface CartItem {
   metadata?: Record<string, string | number | boolean>;
   designPreview?: string;
   backDesignPreview?: string;
+  leftDesignPreview?: string;
+  rightDesignPreview?: string;
   fileIds?: string[];
 }
 

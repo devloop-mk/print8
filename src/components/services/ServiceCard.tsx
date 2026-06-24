@@ -26,11 +26,16 @@ export function ServiceCard({
   const hasOptions = serviceHasDetailOptions(service);
   const optionsHref = getServiceDestination(service);
   const isCompact = variant === 'home' || variant === 'homeCompact';
+  const showContactOnly = service.contactOnly;
+  const priceLabel =
+    service.startingPrice > 0
+      ? `${t('startingFrom')} ${formatPrice(service.startingPrice, locale)}`
+      : t('priceOnRequest');
 
   if (isCompact) {
     const compactBody = (
       <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center border border-brand-300 bg-brand-50 text-brand-700">
           <Icon className="h-4 w-4" aria-hidden="true" />
         </div>
         <div className="min-w-0 flex-1">
@@ -38,7 +43,7 @@ export function ServiceCard({
             {ts(`${service.id}.title`)}
           </h3>
           <p className="text-xs font-medium text-brand-600">
-            {t('startingFrom')} {formatPrice(service.startingPrice, locale)}
+            {priceLabel}
           </p>
         </div>
         {hasOptions && (
@@ -66,7 +71,7 @@ export function ServiceCard({
 
   const body = (
     <>
-      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-brand-50 text-brand-600 sm:mb-4 sm:h-12 sm:w-12">
+      <div className="mb-3 flex h-10 w-10 items-center justify-center border border-brand-300 bg-brand-50 text-brand-700 sm:mb-4 sm:h-12 sm:w-12">
         <Icon className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
       </div>
       <h3 className="text-base font-semibold text-ink-900 sm:text-lg">
@@ -76,7 +81,7 @@ export function ServiceCard({
         {ts(`${service.id}.description`)}
       </p>
       <p className="mt-3 text-sm font-medium text-brand-600 sm:mt-4">
-        {t('startingFrom')} {formatPrice(service.startingPrice, locale)}
+        {priceLabel}
       </p>
     </>
   );
@@ -85,7 +90,14 @@ export function ServiceCard({
     <Card className="flex h-full flex-col">
       {body}
       <div className="mt-auto pt-4">
-        {hasOptions && optionsHref ? (
+        {showContactOnly ? (
+          <Link
+            href="/contact"
+            className="inline-flex text-sm font-medium text-brand-600 hover:text-brand-700"
+          >
+            {t('contactUs')} →
+          </Link>
+        ) : hasOptions && optionsHref ? (
           <Link
             href={optionsHref}
             className="inline-flex text-sm font-medium text-brand-600 hover:text-brand-700"

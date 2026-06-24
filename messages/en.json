@@ -1,10 +1,10 @@
 {
   "metadata": {
     "title": "Print 8 — Professional Printing",
-    "description": "Print 8 offers business cards, menus, invitations, t-shirt printing, cups, bags, and personalized gift sets.",
+    "description": "Print 8 — t-shirts, hoodies, caps, bags, cups, thermoses, magnets, menus, invitations, binding, thesis printing, photocopying, and cargo delivery.",
     "ogImageTitle": "Print 8",
     "ogImageSubtitle": "Professional printing",
-    "ogImageDescription": "Business cards, invitations, apparel, mugs and personalized products.",
+    "ogImageDescription": "Apparel, invitations, menus, magnets, thesis binding, and personalized products.",
     "ogImageBadge": "Print shop",
     "badges": {
       "product": "Product",
@@ -43,11 +43,15 @@
   "home": {
     "heroBadge": "Print 8 · Professional printing",
     "heroTitle": "Professional printing for your business and events",
-    "heroSubtitle": "Business cards, invitations, menus, and custom products — prepared and printed with care. Choose a ready-made design, enter your details, and order online. Pay on delivery.",
+    "heroSubtitle": "T-shirts, hoodies, caps, bags, cups, thermoses, invitations, menus, binding, thesis printing, and much more — upload your document online and pick it up in store. Nationwide cargo delivery.",
     "heroCta": "Browse products",
     "heroSecondary": "Ready-made designs",
+    "heroStatProducts": "Custom products",
+    "heroStatDesigns": "Ready designs",
+    "heroStatServices": "Print services",
+    "heroStatDelivery": "Cargo delivery",
     "featuredServices": "Popular services",
-    "featuredServicesDesc": "Professional printing for everyday business needs — cards, documents, menus, and more.",
+    "featuredServicesDesc": "From custom merch and promo gifts to photocopying, plastification, and binding — everything in one place.",
     "featuredDesigns": "Ready-made designs",
     "featuredDesignsDesc": "Business cards, invitations, menus, and more — pick a template, send your details, or customize online.",
     "designFilterLabel": "Filter by category",
@@ -59,17 +63,36 @@
     "contactCtaButton": "Contact us",
     "contactCtaFaq": "View FAQ",
     "featuredProducts": "Products",
-    "featuredProductsDesc": "T-shirts, mugs, bags, and more — customize with your design or order as shown.",
+    "featuredProductsDesc": "T-shirts, hoodies, caps, bags, mugs, cups, thermoses, and more — customize with your design or order as shown.",
     "whyUs": "Why Print 8?",
     "whyQuality": "High print quality",
     "whyQualityDesc": "We use professional equipment and materials for lasting results.",
     "whyCustom": "Personalization",
     "whyCustomDesc": "From business cards to gift sets — every project is tailored to you.",
-    "whyDelivery": "Pay on delivery",
-    "whyDeliveryDesc": "Order online, pay when you receive your product.",
+    "whyDelivery": "Nationwide delivery",
+    "whyDeliveryDesc": "We ship all products via cargo across the country. Order online — we deliver to your address.",
     "viewAll": "View all",
     "viewAllProducts": "View all products",
     "viewAllDesigns": "View all designs",
+    "highlights": {
+      "eyebrow": "Why Print 8",
+      "title": "What sets us apart",
+      "upload": {
+        "title": "Upload online — pick up in store",
+        "description": "A unique service in the country: upload your document on the website, we print it — you only come to collect it.",
+        "cta": "See how it works"
+      },
+      "cargo": {
+        "title": "Cargo delivery",
+        "description": "We ship all products via cargo nationwide — secure packaging and reliable delivery.",
+        "cta": "Delivery questions"
+      },
+      "range": {
+        "title": "Full range of services",
+        "description": "From t-shirts and magnets to thesis binding, club cards, menus, and temporary tattoos.",
+        "cta": "Browse all services"
+      }
+    },
     "showcase": {
       "eyebrow": "What we offer",
       "title": "Everything in one place",
@@ -80,13 +103,23 @@
       "slides": {
         "merch": {
           "badge": "Merch",
-          "title": "Personalized t-shirts & bags",
-          "description": "Pick a product, color, and size — then add your own design or a ready layout."
+          "title": "T-shirts, hoodies, caps & bags",
+          "description": "Custom apparel and accessories — pick a product, add your design, and order."
         },
         "mugs": {
-          "badge": "Mugs",
-          "title": "Mugs & cups with your logo",
-          "description": "Great for gifts, promos, and events — order as shown or customize."
+          "badge": "Drinkware",
+          "title": "Mugs, cups & thermoses",
+          "description": "With your logo or message — perfect for gifts, promos, and events."
+        },
+        "gifts": {
+          "badge": "Gifts",
+          "title": "Magnets, plaques & photo stone",
+          "description": "Promo gifts, thank-you cards, keychains, and personalized keepsakes."
+        },
+        "finishing": {
+          "badge": "Finishing",
+          "title": "Binding & thesis printing",
+          "description": "Metal and plastic binding, hardcover thesis printing ready for submission."
         },
         "printing": {
           "badge": "Printing",
@@ -113,8 +146,10 @@
   },
   "services": {
     "title": "Our services",
-    "subtitle": "Complete printing solutions — from business cards to personalized gift sets.",
+    "subtitle": "Complete printing solutions — from t-shirts and magnets to thesis binding, menus, and invitations.",
     "startingFrom": "from",
+    "priceOnRequest": "On request",
+    "contactUs": "Contact us",
     "orderService": "Order service",
     "seeOptions": "See options",
     "backToServices": "Back to services",
@@ -128,6 +163,28 @@
     "ctaProducts": "Browse products",
     "ctaDesigns": "Browse designs",
     "ctaStudio": "Make your own design",
+    "categories": {
+      "merch": {
+        "title": "Merch & apparel",
+        "description": "T-shirts, hoodies, caps, bags, cups, mugs, and thermoses with your design."
+      },
+      "gifts": {
+        "title": "Gifts & promo",
+        "description": "Magnets, wooden plaques, photo stone, keychains, and personalized gift sets."
+      },
+      "print": {
+        "title": "Print & cards",
+        "description": "Business cards, menus, invitations, thank-you cards, photocopying, and club cards."
+      },
+      "finishing": {
+        "title": "Finishing",
+        "description": "Laminating, plastification, metal and plastic binding, and hardcover thesis printing."
+      },
+      "special": {
+        "title": "Special services",
+        "description": "Online upload & in-store pickup, temporary tattoos, and tattoo appointments."
+      }
+    },
     "items": {
       "business-cards": {
         "title": "Business cards",
@@ -145,9 +202,9 @@
         "detail": "Bring or upload your documents for professional laminating. No design setup needed."
       },
       "color-bw-printing": {
-        "title": "Color & B&W printing",
-        "description": "Documents, brochures, flyers, and posters — in color or black and white.",
-        "detail": "Standard printing service for documents and marketing materials. Upload files at checkout."
+        "title": "Photocopying & printing",
+        "description": "Photocopying on a latest-generation multifunction printer — color and black & white.",
+        "detail": "Documents, brochures, flyers, and posters. Upload files at checkout."
       },
       "plastification": {
         "title": "Plastification",
@@ -159,20 +216,65 @@
         "description": "Custom t-shirt printing — perfect for events, promotions, and gifts.",
         "detail": "Choose a t-shirt, customize with your design, or use one of our pre-made layouts."
       },
-      "cup-printing": {
-        "title": "Cup printing",
-        "description": "Personalized cups and mugs — great for promo or gifts.",
-        "detail": "Select a mug or cup and personalize it with your logo or message."
+      "hoodie-printing": {
+        "title": "Hoodie printing",
+        "description": "Personalized hoodies with quality print — for teams, events, and gifts.",
+        "detail": "Pick a hoodie, add front and back designs, and order online."
+      },
+      "cap-printing": {
+        "title": "Cap printing",
+        "description": "Branded caps with your logo or text — a great promo product.",
+        "detail": "Choose a cap and personalize it with your design."
       },
       "bag-printing": {
         "title": "Bag printing",
         "description": "Branded bags for your business or event.",
         "detail": "Pick a bag style and add your branding through our product customizer."
       },
+      "cup-printing": {
+        "title": "Cup & mug printing",
+        "description": "Personalized cups and mugs — great for promo or gifts.",
+        "detail": "Select a mug or cup and personalize it with your logo or message."
+      },
+      "thermos-printing": {
+        "title": "Thermos printing",
+        "description": "Custom thermoses with your brand — practical and long-lasting gifts.",
+        "detail": "Choose a thermos and add your design or logo."
+      },
+      "magnet-printing": {
+        "title": "Magnets",
+        "description": "Custom magnets for promos, souvenirs, and gifts.",
+        "detail": "Send us your design or upload files at checkout."
+      },
+      "promotional-items": {
+        "title": "Keychains & promo items",
+        "description": "Keychains, holders, and small branded promo products.",
+        "detail": "Contact us for type and quantity — we prepare a custom quote."
+      },
+      "wooden-plaques": {
+        "title": "Wooden plaques",
+        "description": "Elegant plaques and awards on wood — for recognition and keepsakes.",
+        "detail": "Send text, logo, or photo — we prepare and print it for you."
+      },
+      "photo-stone": {
+        "title": "Photo stone",
+        "description": "A lasting keepsake with your photo on stone.",
+        "detail": "Upload your photo at checkout — we prepare it for print."
+      },
+      "gift-sets": {
+        "title": "Personalized gift sets",
+        "description": "Complete gift sets with your brand or message.",
+        "detail": "Browse gift set products and customize them for your occasion."
+      },
       "bookbinding": {
-        "title": "Bookbinding",
-        "description": "Professional binding of documents, theses, catalogs, and books.",
-        "detail": "Professional binding for theses, catalogs, and documents. Order directly — no design step."
+        "title": "Binding",
+        "description": "Metal and plastic binding for documents, catalogs, theses, and books.",
+        "detail": "Professional binding with your choice of material and finish."
+      },
+      "thesis-hardcover": {
+        "title": "Thesis printing",
+        "description": "Hardcover thesis printing — ready for submission.",
+        "detail": "Upload your file or bring it in — we bind it with quality hard covers."
       },
       "wedding-invitations": {
         "title": "Wedding invitations",
@@ -184,10 +286,35 @@
         "description": "Creative birthday invitations — for kids and adults.",
         "detail": "Choose a birthday design and send us the party details to personalize."
       },
-      "gift-sets": {
-        "title": "Personalized gift sets",
-        "description": "Complete gift sets with your brand or message.",
-        "detail": "Browse gift set products and customize them for your occasion."
+      "thank-you-cards": {
+        "title": "Thank-you cards",
+        "description": "Elegant thank-you cards for weddings, events, and business occasions.",
+        "detail": "Send your text and style — we print them in your preferred format."
+      },
+      "club-membership-cards": {
+        "title": "Club membership cards",
+        "description": "Plastified club membership cards — durable and professional.",
+        "detail": "Send club details and design — we prepare and print them."
+      },
+      "loyalty-points-cards": {
+        "title": "Loyalty points cards",
+        "description": "Loyalty and points cards for your business or club.",
+        "detail": "Branded cards tailored to you — contact us for details."
+      },
+      "upload-pickup": {
+        "title": "Upload online — pick up in store",
+        "description": "A unique service in the country: upload your document on the site, just come to collect it.",
+        "detail": "Order the service, upload your file at checkout, and visit the store when it's ready."
+      },
+      "temporary-tattoos": {
+        "title": "Temporary tattoos",
+        "description": "Custom temporary tattoos — for events, promos, and fun.",
+        "detail": "Send your design or idea — we prepare it for print."
+      },
+      "tattoo-services": {
+        "title": "Tattoos",
+        "description": "Tattoos by appointment — contact us for a consultation.",
+        "detail": "Book a session or ask about design and pricing through our contact form."
       }
     }
   },
@@ -440,6 +567,8 @@
       "allSides": "All sides",
       "sideFront": "Front",
       "sideBack": "Back",
+      "sideLeft": "Left",
+      "sideRight": "Right",
       "resultsDesigns": "{count, plural, one {# design} other {# designs}}",
       "noDesigns": "No designs match the selected filters.",
       "viewProduct": "View product"
@@ -507,9 +636,12 @@
     },
     "types": {
       "t-shirt": "T-shirts",
+      "hoodie": "Hoodies",
+      "cap": "Caps",
       "mug": "Mugs",
       "cup": "Cups",
       "bag": "Bags",
+      "thermos": "Thermoses",
       "gift-set": "Gift sets"
     },
     "customizer": {
@@ -551,6 +683,8 @@
       "close": "Close",
       "front": "Front",
       "back": "Back",
+      "left": "Left",
+      "right": "Right",
       "text": "Text",
       "photo": "Photo",
       "addToCart": "Add to cart",

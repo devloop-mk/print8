@@ -27,12 +27,17 @@ import { useUploadSession } from '@/hooks/useUploadSession';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { LoadingIndicator } from '@/components/ui/LoadingIndicator';
-import { formatPrice } from '@/lib/utils';
+import { cn, formatPrice } from '@/lib/utils';
 import {
   formatProductCartName,
   restoreSideDesignFromMetadata,
 } from '@/lib/cart/product-cart';
 import { PRODUCT_MOCKUP_INNER_CLASS } from '@/components/products/ProductMockupFrame';
+import {
+  createSideDesignsForSides,
+  getSideMetadataPrefix,
+  isProductSide,
+} from '@/lib/products/product-sides';
 import {
   createDefaultSideDesign,
   sideDesignFromImageTemplate,
@@ -293,6 +298,60 @@ function ResizableImageOverlay({
   );
 }
 
+function ProductSideTabs({
+  sides,
+  activeSide,
+  onSelect,
+  sideHasContent,
+  label,
+  compact = false,
+}: {
+  sides: ProductSide[];
+  activeSide: ProductSide;
+  onSelect: (side: ProductSide) => void;
+  sideHasContent: (side: ProductSide) => boolean;
+  label: (side: ProductSide) => string;
+  compact?: boolean;
+}) {
+  const isScrollable = sides.length > 2;
+
+  return (
+    <div
+      className={cn(
+        'flex gap-1 rounded-xl bg-ink-100 p-1',
+        isScrollable &&
+          'overflow-x-auto snap-x snap-mandatory scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+      )}
+      role="tablist"
+    >
+      {sides.map((side) => (
+        <button
+          key={side}
+          type="button"
+          role="tab"
+          aria-selected={activeSide === side}
+          onClick={() => onSelect(side)}
+          className={cn(
+            'relative rounded-lg font-semibold transition',
+            isScrollable
+              ? 'min-w-[4.25rem] shrink-0 snap-start px-2 py-2 text-[11px] leading-tight'
+              : 'flex-1 px-4 py-2.5 text-sm',
+            compact && !isScrollable && 'px-3 py-2 text-xs',
+            activeSide === side
+              ? 'bg-white text-brand-700 shadow-sm'
+              : 'text-ink-600 hover:text-ink-900',
+          )}
+        >
+          {label(side)}
+          {sideHasContent(side) && activeSide !== side ? (
+            <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-brand-500" />
+          ) : null}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export function ProductCustomizer({ type }: { type: ProductType }) {
   const t = useTranslations('products.customizer');
   const tp = useTranslations('products.types');
@@ -317,34 +376,72 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     () => (product ? getProductSides(product) : ['front' as ProductSide]),
     [product],
   );
-  const hasTwoSides = product ? productSupportsSides(product) : false;
+  const hasMultipleSides = product ? productSupportsSides(product) : false;
+  const sideLabel = useCallback(
+    (side: ProductSide) => {
+      if (side === 'front') return t('front');
+      if (side === 'back') return t('back');
+      if (side === 'left') return t('left');
+      return t('right');
+    },
+    [t],
+  );
 
   const [color, setColor] = useState(product?.colors?.[0] || '#ffffff');
   const [size, setSize] = useState(product?.sizes?.[0] ?? '');
   const [quantity, setQuantity] = useState(1);
   const [activeSide, setActiveSide] = useState<ProductSide>('front');
-  const [sideDesigns, setSideDesigns] = useState<
-    Record<ProductSide, SideDesign>
-  >({
-    front: createDefaultSideDesign(),
-    back: createDefaultSideDesign(),
-  });
+  const [sideDesigns, setSideDesigns] = useState<Record<ProductSide, SideDesign>>(
+    () => createSideDesignsForSides(sides),
+  );
   const [activePanel, setActivePanel] = useState<EditorPanel>(null);
 
   const previewRef = useRef<HTMLDivElement | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
 
-  const currentDesign = sideDesigns[activeSide];
+  const currentDesign =
+    sideDesigns[activeSide] ?? createDefaultSideDesign();
 
   const updateCurrentSide = useCallback(
     (updates: Partial<SideDesign>) => {
       setSideDesigns((prev) => ({
         ...prev,
-        [activeSide]: { ...prev[activeSide], ...updates },
+        [activeSide]: {
+          ...(prev[activeSide] ?? createDefaultSideDesign()),
+          ...updates,
+        },
       }));
     },
     [activeSide],
   );
+
+  useEffect(() => {
+    if (editCartItemId) return;
+    setSideDesigns((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      for (const side of sides) {
+        if (!next[side]) {
+          next[side] = createDefaultSideDesign();
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [sides, editCartItemId]);
+
+  useEffect(() => {
+    if (!product || editCartItemId) return;
+    const productSides = getProductSides(product);
+    setSideDesigns((prev) => {
+      const next = createSideDesignsForSides(productSides);
+      for (const side of productSides) {
+        if (prev[side]) next[side] = prev[side];
+      }
+      return next;
+    });
+    setActiveSide('front');
+  }, [product?.id, product, editCartItemId]);
 
   useEffect(() => {
     if (!designId || editCartItemId) return;
@@ -380,10 +477,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     if (typeof meta.size === 'string') setSize(meta.size);
     if (typeof cartItem.quantity === 'number') setQuantity(cartItem.quantity);
 
-    const restored: Record<ProductSide, SideDesign> = {
-      front: createDefaultSideDesign(),
-      back: createDefaultSideDesign(),
-    };
+    const restored = createSideDesignsForSides(sides);
 
     for (const side of sides) {
       const data = restoreSideDesignFromMetadata(meta, side);
@@ -392,7 +486,11 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     }
 
     setSideDesigns(restored);
-    if (typeof meta.activeSide === 'string' && (meta.activeSide === 'front' || meta.activeSide === 'back')) {
+    if (
+      typeof meta.activeSide === 'string' &&
+      isProductSide(meta.activeSide) &&
+      sides.includes(meta.activeSide)
+    ) {
       setActiveSide(meta.activeSide);
     }
   }, [editCartItemId, product, cartItems, sides]);
@@ -422,11 +520,10 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     }
   }
 
-  async function captureAllSidePreviews(): Promise<{
-    front?: string;
-    back?: string;
-  }> {
-    const results: { front?: string; back?: string } = {};
+  async function captureAllSidePreviews(): Promise<
+    Partial<Record<ProductSide, string>>
+  > {
+    const results: Partial<Record<ProductSide, string>> = {};
     const originalSide = activeSide;
 
     for (const side of sides) {
@@ -445,16 +542,14 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   async function handleAddToCart() {
     flushSync(() => setIsCapturing(true));
 
-    let frontPreview: string | undefined;
-    let backPreview: string | undefined;
+    let captured: Partial<Record<ProductSide, string>> = {};
 
     try {
-      if (hasTwoSides) {
-        const captured = await captureAllSidePreviews();
-        frontPreview = captured.front;
-        backPreview = captured.back;
+      if (hasMultipleSides) {
+        captured = await captureAllSidePreviews();
       } else {
-        frontPreview = await capturePreview(previewRef);
+        const front = await capturePreview(previewRef);
+        if (front) captured.front = front;
       }
     } finally {
       flushSync(() => setIsCapturing(false));
@@ -471,8 +566,8 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     }
 
     for (const side of sides) {
-      const d = sideDesigns[side];
-      const prefix = side === 'front' ? 'front' : 'back';
+      const d = sideDesigns[side] ?? createDefaultSideDesign();
+      const prefix = getSideMetadataPrefix(side);
       metadata[`${prefix}CustomText`] = d.customText;
       metadata[`${prefix}CustomTextColor`] = d.customTextColor;
       metadata[`${prefix}CustomTextSize`] = d.customTextSize;
@@ -515,8 +610,10 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       name: formatProductCartName(tp(type), size, product),
       price: product?.basePrice ?? 0,
       quantity,
-      designPreview: frontPreview,
-      backDesignPreview: backPreview,
+      designPreview: captured.front,
+      backDesignPreview: captured.back,
+      leftDesignPreview: captured.left,
+      rightDesignPreview: captured.right,
       metadata,
       fileIds,
     };
@@ -548,6 +645,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
 
   const sideHasContent = (side: ProductSide) => {
     const d = sideDesigns[side];
+    if (!d) return false;
     return Boolean(d.customText || d.uploadedFile || d.premadeDesignImage);
   };
 
@@ -567,26 +665,14 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       <div className="grid gap-6 xl:grid-cols-2 xl:items-start xl:gap-8">
         {/* Preview column */}
         <div className="space-y-4 touch-pan-y">
-          {hasTwoSides && (
-            <div className="flex rounded-xl bg-ink-100 p-1">
-              {sides.map((side) => (
-                <button
-                  key={side}
-                  type="button"
-                  onClick={() => setActiveSide(side)}
-                  className={`relative flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
-                    activeSide === side
-                      ? 'bg-white text-brand-700 shadow-sm'
-                      : 'text-ink-600 hover:text-ink-900'
-                  }`}
-                >
-                  {side === 'front' ? t('front') : t('back')}
-                  {sideHasContent(side) && activeSide !== side && (
-                    <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-brand-500" />
-                  )}
-                </button>
-              ))}
-            </div>
+          {hasMultipleSides && (
+            <ProductSideTabs
+              sides={sides}
+              activeSide={activeSide}
+              onSelect={setActiveSide}
+              sideHasContent={sideHasContent}
+              label={sideLabel}
+            />
           )}
 
           <Card className="flex items-center justify-center p-4 sm:p-6">
@@ -659,23 +745,15 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       {/* Phone bottom toolbar */}
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-ink-200 bg-white/95 px-4 py-3 backdrop-blur md:hidden">
         <div className="mx-auto flex max-w-lg items-center justify-between gap-2">
-          {hasTwoSides && (
-            <div className="flex rounded-lg bg-ink-100 p-0.5">
-              {sides.map((side) => (
-                <button
-                  key={side}
-                  type="button"
-                  onClick={() => setActiveSide(side)}
-                  className={`rounded-md px-3 py-2 text-xs font-semibold ${
-                    activeSide === side
-                      ? 'bg-white text-brand-700 shadow-sm'
-                      : 'text-ink-600'
-                  }`}
-                >
-                  {side === 'front' ? t('front') : t('back')}
-                </button>
-              ))}
-            </div>
+          {hasMultipleSides && sides.length === 2 && (
+            <ProductSideTabs
+              sides={sides}
+              activeSide={activeSide}
+              onSelect={setActiveSide}
+              sideHasContent={sideHasContent}
+              label={sideLabel}
+              compact
+            />
           )}
           <button
             type="button"

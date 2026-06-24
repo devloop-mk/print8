@@ -114,15 +114,12 @@ export function CartPageContent() {
 
           {items.map((item) => {
 
-            const previewImages = getCartItemPreviewImages(
-
-              item,
-
-              tc("front"),
-
-              tc("back"),
-
-            );
+            const previewImages = getCartItemPreviewImages(item, {
+              front: tc('front'),
+              back: tc('back'),
+              left: tc('left'),
+              right: tc('right'),
+            });
 
             const product = getCartItemProduct(item);
 

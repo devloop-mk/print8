@@ -46,7 +46,12 @@ export function ProductImageCarousel({
     e.stopPropagation();
   };
 
-  const sideLabel = (s: ProductSide) => (s === 'front' ? t('front') : t('back'));
+  const sideLabel = (s: ProductSide) => {
+    if (s === 'front') return t('front');
+    if (s === 'back') return t('back');
+    if (s === 'left') return t('left');
+    return t('right');
+  };
 
   return (
     <div className="relative flex aspect-square w-full max-w-sm items-center justify-center rounded-2xl bg-gradient-to-br from-ink-50 to-ink-100 shadow-inner">

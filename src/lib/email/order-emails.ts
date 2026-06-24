@@ -71,6 +71,8 @@ async function buildDesignPreviewAttachments(
     const previews: { url?: string; label: string }[] = [
       { url: item.designPreview, label: "front" },
       { url: item.backDesignPreview, label: "back" },
+      { url: item.leftDesignPreview, label: "left" },
+      { url: item.rightDesignPreview, label: "right" },
     ];
 
     previews.forEach(({ url, label }) => {
@@ -123,22 +125,22 @@ function buildItemsHtml(data: CheckoutInput, locale: CheckoutInput["locale"]) {
 
 function buildDesignImagesHtml(data: CheckoutInput) {
   const blocks: string[] = [];
+  const previewFields = [
+    { key: "designPreview" as const, label: "Front" },
+    { key: "backDesignPreview" as const, label: "Back" },
+    { key: "leftDesignPreview" as const, label: "Left" },
+    { key: "rightDesignPreview" as const, label: "Right" },
+  ];
 
   data.items.forEach((item) => {
     const images: string[] = [];
-    if (item.designPreview?.startsWith("data:")) {
+    for (const { key, label } of previewFields) {
+      const url = item[key];
+      if (!url?.startsWith("data:")) continue;
       images.push(
         `<div style="display:inline-block;vertical-align:top;margin:8px 12px 8px 0;">
-          <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">Front</p>
-          <img src="${item.designPreview}" alt="${escapeHtml(item.name)} front" style="max-width:280px;border-radius:8px;border:1px solid #e5e7eb;display:block;" />
-        </div>`,
-      );
-    }
-    if (item.backDesignPreview?.startsWith("data:")) {
-      images.push(
-        `<div style="display:inline-block;vertical-align:top;margin:8px 12px 8px 0;">
-          <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">Back</p>
-          <img src="${item.backDesignPreview}" alt="${escapeHtml(item.name)} back" style="max-width:280px;border-radius:8px;border:1px solid #e5e7eb;display:block;" />
+          <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">${label}</p>
+          <img src="${url}" alt="${escapeHtml(item.name)} ${label.toLowerCase()}" style="max-width:280px;border-radius:8px;border:1px solid #e5e7eb;display:block;" />
         </div>`,
       );
     }

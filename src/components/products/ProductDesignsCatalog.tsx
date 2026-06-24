@@ -6,11 +6,11 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import { ArrowLeft } from 'lucide-react';
 import {
-  productTypes,
   type ProductDesignCategory,
   type ProductSide,
   type ProductType,
 } from '@/lib/data/catalog';
+import { buildProductTypeFilterOptions } from '@/lib/products/product-type-icons';
 import { parseProductTypeFilter } from '@/lib/data/service-routes';
 import {
   filterDesignCatalogEntries,
@@ -46,12 +46,11 @@ export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) 
   const [colorFilter, setColorFilter] = useState<string | 'all'>('all');
   const [sideFilter, setSideFilter] = useState<SideFilter>('all');
 
-  const typeOptions = useMemo(
+  const { allOption, options: typeOptions } = useMemo(
     () =>
-      productTypes.map((type) => ({
-        value: type as TypeFilter,
-        label: t(`types.${type}`),
-      })),
+      buildProductTypeFilterOptions((type) =>
+        type === 'all' ? t('allTypes') : t(`types.${type}`),
+      ),
     [t],
   );
 
@@ -99,12 +98,13 @@ export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) 
           ariaLabel={t('filterLabel')}
           showFiltersLabel={t('showFilters')}
           hideFiltersLabel={t('hideFilters')}
-          allOption={{ value: 'all', label: t('allTypes') }}
+          allOption={allOption}
           options={typeOptions}
           value={typeFilter}
           onChange={setTypeFilter}
           resultsCount={filtered.length}
           resultsLabel={(count) => tc('resultsDesigns', { count })}
+          mobileLayout="scroll"
         />
       </Reveal>
 
@@ -156,6 +156,8 @@ export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) 
                   { value: 'all' as const, label: tc('allSides') },
                   { value: 'front' as const, label: tc('sideFront') },
                   { value: 'back' as const, label: tc('sideBack') },
+                  { value: 'left' as const, label: tc('sideLeft') },
+                  { value: 'right' as const, label: tc('sideRight') },
                 ] as const
               ).map((option) => (
                 <button

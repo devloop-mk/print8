@@ -34,7 +34,7 @@ export const designLayouts: DesignLayout[] = [
     aspectRatio: 9 / 5,
     defaultColors: {
       background: '#ffffff',
-      accent: '#2563eb',
+      accent: '#2f7cb2',
       text: '#0f172a',
       secondary: '#64748b',
     },
@@ -43,7 +43,7 @@ export const designLayouts: DesignLayout[] = [
         id: 'ocean',
         colors: {
           background: '#ffffff',
-          accent: '#2563eb',
+          accent: '#2f7cb2',
           text: '#0f172a',
           secondary: '#64748b',
         },

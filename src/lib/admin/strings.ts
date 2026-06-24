@@ -79,6 +79,8 @@ export const adminStrings = {
     items: 'Артикли',
     frontPreview: 'Преден преглед',
     backPreview: 'Заден преглед',
+    leftPreview: 'Лев преглед',
+    rightPreview: 'Десен преглед',
     uploadedFiles: 'Прикачени датотеки',
     customer: 'Клиент',
     name: 'Име',
