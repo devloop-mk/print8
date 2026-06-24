@@ -6,6 +6,8 @@ import {
 import type { CheckoutInput } from '@/lib/validations/order';
 import { collectOrderFileIds } from '@/lib/orders/order-assets';
 
+export { collectOrderFileIds };
+
 export type OrderSort = 'newest' | 'oldest' | 'amount_high' | 'amount_low';
 
 export type OrderListItem = OrderRecord & {
