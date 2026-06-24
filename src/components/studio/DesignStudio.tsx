@@ -130,7 +130,7 @@ export function DesignStudio() {
     setSelectedSize(categorySizes[0].key);
     setCustomWidth(categorySizes[0].widthCm);
     setCustomHeight(categorySizes[0].heightCm);
-  }, [selectedCategory]);
+  }, [selectedCategory, categorySizes]);
 
   const categorySizeLimits =
     selectedCategory === 'business-cards'

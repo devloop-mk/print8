@@ -91,6 +91,7 @@ export function ImageLightbox({
         {current.label && (
           <p className="text-sm font-medium text-white/80">{current.label}</p>
         )}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={current.src}
           alt={current.label ?? ''}

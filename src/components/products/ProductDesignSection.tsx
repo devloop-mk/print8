@@ -10,6 +10,7 @@ import {
   type ProductDesignTemplate,
 } from '@/lib/data/catalog';
 import { buildCustomizerUrl } from '@/lib/products/paths';
+import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { useCart } from '@/components/cart/CartProvider';
 import { useRouter } from '@/i18n/routing';

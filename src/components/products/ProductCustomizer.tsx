@@ -331,10 +331,10 @@ function ResizableStickerOverlay({
   hideControls?: boolean;
 }) {
   const definition = getStickerById(sticker.stickerId);
-  if (!definition) return null;
-
   const drag = useDraggablePosition(sticker.position, onPositionChange);
   const resize = useScaleResize(sticker.scale, onScaleChange, 12, 52);
+
+  if (!definition) return null;
 
   return (
     <div
