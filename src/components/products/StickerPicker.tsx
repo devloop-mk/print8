@@ -64,9 +64,12 @@ export function StickerPicker({
     if (!scrollEl) return;
 
     function updateScrollHint() {
-      const canScroll = scrollEl.scrollHeight > scrollEl.clientHeight + 4;
+      const node = scrollRef.current;
+      if (!node) return;
+
+      const canScroll = node.scrollHeight > node.clientHeight + 4;
       const nearBottom =
-        scrollEl.scrollTop + scrollEl.clientHeight >= scrollEl.scrollHeight - 8;
+        node.scrollTop + node.clientHeight >= node.scrollHeight - 8;
       setShowScrollHint(canScroll && !nearBottom);
     }
 
