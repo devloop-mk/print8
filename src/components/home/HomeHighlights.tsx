@@ -14,7 +14,7 @@ export function HomeHighlights() {
       icon: Upload,
       accent: 'border-brand-400/50 bg-gradient-to-br from-brand-50 to-white',
       iconClass: 'border-brand-300 bg-brand-100 text-brand-700',
-      href: '/services#special',
+      href: '/products/custom',
     },
     {
       id: 'cargo',

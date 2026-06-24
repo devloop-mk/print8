@@ -9,7 +9,7 @@ import {
   type Product,
   type ProductDesignTemplate,
 } from '@/lib/data/catalog';
-import { Card } from '@/components/ui/Card';
+import { buildCustomizerUrl } from '@/lib/products/paths';
 import { Button } from '@/components/ui/Button';
 import { useCart } from '@/components/cart/CartProvider';
 import { useRouter } from '@/i18n/routing';
@@ -23,6 +23,7 @@ type ProductDesignSectionProps = {
   hint: string;
   product: Product;
   color: string;
+  size?: string;
   designs: ProductDesignTemplate[];
   limit?: number;
   seeAllHref?: string;
@@ -36,6 +37,7 @@ export function ProductDesignSection({
   hint,
   product,
   color,
+  size,
   designs,
   limit,
   seeAllHref,
@@ -71,6 +73,7 @@ export function ProductDesignSection({
             product={product}
             design={design}
             color={color}
+            size={size}
           />
         ))}
       </div>
@@ -92,10 +95,12 @@ function DesignCard({
   product,
   design,
   color,
+  size,
 }: {
   product: Product;
   design: ProductDesignTemplate;
   color: string;
+  size?: string;
 }) {
   const t = useTranslations('products');
   const td = useTranslations('products.detail');
@@ -133,7 +138,11 @@ function DesignCard({
         )}
         <div className="flex flex-col gap-2">
           <Link
-            href={`/products/customize/${product.type}?id=${product.id}&design=${design.id}`}
+            href={buildCustomizerUrl(product.id, product.type, {
+              design: design.id,
+              color,
+              size,
+            })}
           >
             <Button size="sm" className="w-full">
               {isTextDesignTemplate(design)

@@ -96,6 +96,15 @@ export function Header() {
               )}
             </Link>
 
+            {itemCount > 0 ? (
+              <Link
+                href="/checkout"
+                className="hidden rounded-lg bg-brand-600 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-white transition hover:bg-brand-700 sm:inline-flex"
+              >
+                {t('order')}
+              </Link>
+            ) : null}
+
             <button
               type="button"
               className="border-2 border-transparent p-2 text-ink-600 transition hover:border-ink-200 hover:bg-ink-50 md:hidden"

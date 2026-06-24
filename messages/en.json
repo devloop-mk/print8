@@ -43,7 +43,7 @@
   "home": {
     "heroBadge": "Print 8 · Professional printing",
     "heroTitle": "Professional printing for your business and events",
-    "heroSubtitle": "T-shirts, hoodies, caps, bags, cups, thermoses, invitations, menus, binding, thesis printing, and much more — upload your document online and pick it up in store. Nationwide cargo delivery.",
+    "heroSubtitle": "T-shirts, hoodies, caps, bags, cups, thermoses, invitations, menus, binding, thesis printing, and much more — personalize products online and pick them up in store. Nationwide cargo delivery.",
     "heroCta": "Browse products",
     "heroSecondary": "Ready-made designs",
     "heroStatProducts": "Custom products",
@@ -76,11 +76,11 @@
     "viewAllDesigns": "View all designs",
     "highlights": {
       "eyebrow": "Why Print 8",
-      "title": "What sets us apart",
+      "title": "Why choose Print 8",
       "upload": {
-        "title": "Upload online — pick up in store",
-        "description": "A unique service in the country: upload your document on the website, we print it — you only come to collect it.",
-        "cta": "See how it works"
+        "title": "Personalize online",
+        "description": "Pick a product, add photos, text, and stickers — order from home and pick up in store or request delivery.",
+        "cta": "Start designing"
       },
       "cargo": {
         "title": "Cargo delivery",
@@ -182,7 +182,7 @@
       },
       "special": {
         "title": "Special services",
-        "description": "Online upload & in-store pickup, temporary tattoos, and tattoo appointments."
+        "description": "Temporary tattoos and tattoo appointments."
       }
     },
     "items": {
@@ -300,11 +300,6 @@
         "title": "Loyalty points cards",
         "description": "Loyalty and points cards for your business or club.",
         "detail": "Branded cards tailored to you — contact us for details."
-      },
-      "upload-pickup": {
-        "title": "Upload online — pick up in store",
-        "description": "A unique service in the country: upload your document on the site, just come to collect it.",
-        "detail": "Order the service, upload your file at checkout, and visit the store when it's ready."
       },
       "temporary-tattoos": {
         "title": "Temporary tattoos",
@@ -521,7 +516,7 @@
   },
   "products": {
     "title": "Products",
-    "subtitle": "Browse ready-made products or customize t-shirts, cups, bags, and more. Each product offers custom design, ready photo designs, and/or text templates.",
+    "subtitle": "Pick a product, personalize it online, and order — pick up in store or delivery.",
     "filterLabel": "Filter by type",
     "allTypes": "All types",
     "showFilters": "Filters",
@@ -537,7 +532,7 @@
       "step2Title": "Pick how to personalize",
       "step2Desc": "Your own design, ready photo designs, or text templates with your photo.",
       "step3Title": "Order & receive",
-      "step3Desc": "Pay on delivery. We'll contact you to confirm.",
+      "step3Desc": "Order online with your personalized design — pick up in store or get cargo delivery. Payment on delivery.",
       "waysTitle": "3 ways to personalize",
       "waysSubtitle": "Pick a path — each opens a catalog with the right options.",
       "wayCustomTitle": "Your own design",
@@ -551,7 +546,10 @@
       "wayTemplateBadge": "Add your photo",
       "waysCtaCustom": "Browse products",
       "waysCtaReady": "Browse designs",
-      "waysCtaTemplates": "Browse templates"
+      "waysCtaTemplates": "Browse templates",
+      "focusedTitle": "Choose a product below",
+      "focusedDesc": "Filter by type if you need to, then open a product to personalize and order.",
+      "focusedCta": "See products"
     },
     "catalog": {
       "customTitle": "Your own design",
@@ -631,6 +629,8 @@
       "backToProduct": "Back to product",
       "seeAllPhotoDesigns": "See all photo designs",
       "seeAllTextDesigns": "See all templates",
+      "mobileQuickOrder": "Ready designs",
+      "mobileDesignOwn": "Design your own",
       "imageDesignsPageHint": "Browse all ready photo designs for this product.",
       "textDesignsPageHint": "Browse all text templates for this product."
     },
@@ -875,6 +875,9 @@
     "editDesign": "Edit design",
     "orderStickerLimit": "This order can include at most {max} stickers in total. Remove stickers from cart items before checkout.",
     "orderPhotoLimit": "This order can include at most {max} uploaded photos in total. Remove photos from cart items before checkout.",
+    "paymentOnDelivery": "Payment on delivery",
+    "browseProducts": "Browse products",
+    "browseServices": "Browse services",
     "itemTypes": {
       "service": "Service",
       "design": "Design",
@@ -908,14 +911,31 @@
     "acceptTermsRequired": "You must accept the terms before placing an order.",
     "orderStickerLimit": "This order can include at most {max} stickers in total. Remove stickers from your cart items.",
     "orderPhotoLimit": "This order can include at most {max} uploaded photos in total. Remove photos from your cart items.",
+    "emptyCart": "Your cart is empty.",
+    "total": "Total",
+    "backToCart": "Back to cart",
+    "browseProducts": "Browse products",
+    "filesAttached": "{count} file(s) attached",
+    "uploadRecommended": "Your order includes print services — upload your files below so we can start production.",
+    "uploadOptional": "You can upload extra reference files below if needed for your custom products.",
     "termsLink": "Terms & Conditions",
     "privacyLink": "Privacy Policy"
+  },
+  "checkoutSteps": {
+    "ariaLabel": "Order progress",
+    "cart": "Cart",
+    "details": "Your details",
+    "done": "Done"
   },
   "orderSuccess": {
     "title": "Order received!",
     "subtitle": "Thank you. We'll contact you soon to confirm.",
     "confirmationEmail": "A confirmation email with your design preview has been sent to your inbox.",
     "orderNumber": "Order number",
+    "whatNext": "What happens next?",
+    "whatNextDesc": "We'll review your order and contact you within one business day to confirm details and delivery.",
+    "continueShopping": "Browse products",
+    "browseServices": "Browse services",
     "backHome": "Back to home"
   },
   "common": {

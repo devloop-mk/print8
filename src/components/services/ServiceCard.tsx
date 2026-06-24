@@ -64,6 +64,22 @@ export function ServiceCard({
       );
     }
 
+    if (!showContactOnly) {
+      return (
+        <Card className="flex h-full flex-col p-3 sm:p-4">
+          {compactBody}
+          <div className="mt-3">
+            <ServiceOrderButton
+              serviceId={service.id}
+              name={ts(`${service.id}.title`)}
+              price={service.startingPrice}
+              className="w-full"
+            />
+          </div>
+        </Card>
+      );
+    }
+
     return (
       <Card className="h-full p-3 sm:p-4">{compactBody}</Card>
     );

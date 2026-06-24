@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 
 import { ImageLightbox } from "@/components/ui/ImageLightbox";
+import { CheckoutSteps } from "@/components/checkout/CheckoutSteps";
 
 import { Trash2, Pencil } from "lucide-react";
 
@@ -95,11 +96,21 @@ export function CartPageContent() {
 
         <p className="text-lg text-ink-500">{t("empty")}</p>
 
-        <Link href="/services" className="mt-6 inline-block">
+        <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
 
-          <Button>{t("continueShopping")}</Button>
+          <Link href="/products">
 
-        </Link>
+            <Button>{t("browseProducts")}</Button>
+
+          </Link>
+
+          <Link href="/services">
+
+            <Button variant="outline">{t("browseServices")}</Button>
+
+          </Link>
+
+        </div>
 
       </div>
 
@@ -132,6 +143,8 @@ export function CartPageContent() {
   return (
 
     <>
+
+      <CheckoutSteps current="cart" />
 
       <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
 
@@ -444,7 +457,7 @@ export function CartPageContent() {
 
           </div>
 
-          <p className="mt-2 text-xs text-ink-400">Payment on delivery</p>
+          <p className="mt-2 text-xs text-ink-400">{t("paymentOnDelivery")}</p>
 
           {cartLimitMessage ? (
             <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">

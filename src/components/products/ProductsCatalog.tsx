@@ -40,25 +40,25 @@ export function ProductsCatalog() {
 
   return (
     <>
-      <ProductJourneyGuide />
-
-      <Reveal delay={80}>
+      <Reveal>
         <FilterChipBar
-        ariaLabel={t('filterLabel')}
-        showFiltersLabel={t('showFilters')}
-        hideFiltersLabel={t('hideFilters')}
-        allOption={allOption}
-        options={filterOptions}
-        value={typeFilter}
-        onChange={setTypeFilter}
-        resultsCount={filtered.length}
-        resultsLabel={(count) => t('resultsCount', { count })}
-        mobileLayout="scroll"
+          ariaLabel={t('filterLabel')}
+          showFiltersLabel={t('showFilters')}
+          hideFiltersLabel={t('hideFilters')}
+          allOption={allOption}
+          options={filterOptions}
+          value={typeFilter}
+          onChange={setTypeFilter}
+          resultsCount={filtered.length}
+          resultsLabel={(count) => t('resultsCount', { count })}
+          mobileLayout="scroll"
         />
       </Reveal>
 
-      <Reveal delay={160}>
-        <div id="products-grid">
+      <ProductJourneyGuide />
+
+      <Reveal delay={80}>
+        <div id="products-grid" className="scroll-mt-24">
           <ProductCardGrid items={filtered} />
         </div>
       </Reveal>

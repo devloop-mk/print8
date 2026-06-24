@@ -22,7 +22,6 @@ export type ServiceId =
   | 'gift-sets'
   | 'club-membership-cards'
   | 'loyalty-points-cards'
-  | 'upload-pickup'
   | 'temporary-tattoos'
   | 'tattoo-services';
 
@@ -231,14 +230,6 @@ export const services: Service[] = [
     icon: 'GraduationCap',
     category: 'finishing',
     startingPrice: 1500,
-    featured: true,
-    customization: 'none',
-  },
-  {
-    id: 'upload-pickup',
-    icon: 'Upload',
-    category: 'special',
-    startingPrice: 0,
     featured: true,
     customization: 'none',
   },

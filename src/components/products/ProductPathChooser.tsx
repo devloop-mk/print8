@@ -12,6 +12,8 @@ type ProductPathChooserProps = {
   productId: string;
   productType: string;
   offering: ProductOffering;
+  color?: string;
+  size?: string;
 };
 
 const primaryCta =
@@ -23,9 +25,11 @@ export function ProductPathChooser({
   productId,
   productType,
   offering,
+  color,
+  size,
 }: ProductPathChooserProps) {
   const t = useTranslations('products.paths');
-  const paths = getProductPaths(productId, productType);
+  const paths = getProductPaths(productId, productType, { color, size });
 
   const pathOptions = [
     {

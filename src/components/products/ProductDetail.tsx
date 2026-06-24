@@ -56,7 +56,20 @@ export function ProductDetail({ productId }: { productId: string }) {
     return <p>{td('notFound')}</p>;
   }
 
-  const paths = getProductPaths(product.id, product.type);
+  const paths = getProductPaths(product.id, product.type, { color, size });
+
+  function scrollToDesigns(sectionId: string) {
+    document.getElementById(sectionId)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  }
+
+  const quickDesignSection = offering.hasPhotoDesigns
+    ? 'photo-designs'
+    : offering.hasTextTemplates
+      ? 'text-designs'
+      : null;
 
   return (
     <div className="space-y-10 pb-24 lg:pb-0">
@@ -169,6 +182,8 @@ export function ProductDetail({ productId }: { productId: string }) {
         productId={product.id}
         productType={product.type}
         offering={offering}
+        color={color}
+        size={size}
       />
 
       {offering.hasPremade ? (
@@ -182,6 +197,7 @@ export function ProductDetail({ productId }: { productId: string }) {
                 hint={td('imageDesignsHint')}
                 product={product}
                 color={color}
+                size={size}
                 designs={imageDesigns}
                 limit={PRODUCT_DESIGN_PREVIEW_LIMIT}
                 seeAllHref={
@@ -203,6 +219,7 @@ export function ProductDetail({ productId }: { productId: string }) {
                 hint={td('textDesignsHint')}
                 product={product}
                 color={color}
+                size={size}
                 designs={textDesigns}
                 limit={PRODUCT_DESIGN_PREVIEW_LIMIT}
                 seeAllHref={
@@ -219,13 +236,37 @@ export function ProductDetail({ productId }: { productId: string }) {
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-ink-200 bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
         <div className="mx-auto max-w-lg">
-          <Link
-            href={paths.custom}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand-600 px-6 py-3 text-base font-medium text-white transition hover:bg-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
-          >
-            <Palette className="h-5 w-5" aria-hidden />
-            {t('customize')}
-          </Link>
+          {offering.hasPremade && quickDesignSection ? (
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => scrollToDesigns(quickDesignSection)}
+                className="inline-flex min-h-[3rem] items-center justify-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2.5 text-sm font-medium text-white transition hover:bg-brand-700"
+              >
+                {offering.hasPhotoDesigns ? (
+                  <Sparkles className="h-4 w-4 shrink-0" aria-hidden />
+                ) : (
+                  <Type className="h-4 w-4 shrink-0" aria-hidden />
+                )}
+                {td('mobileQuickOrder')}
+              </button>
+              <Link
+                href={paths.custom}
+                className="inline-flex min-h-[3rem] items-center justify-center gap-1.5 rounded-lg border border-ink-200 bg-white px-3 py-2.5 text-sm font-medium text-ink-800 transition hover:bg-ink-50"
+              >
+                <Palette className="h-4 w-4 shrink-0" aria-hidden />
+                {td('mobileDesignOwn')}
+              </Link>
+            </div>
+          ) : (
+            <Link
+              href={paths.custom}
+              className="inline-flex w-full min-h-[3rem] items-center justify-center gap-2 rounded-lg bg-brand-600 px-6 py-3 text-base font-medium text-white transition hover:bg-brand-700"
+            >
+              <Palette className="h-5 w-5" aria-hidden />
+              {t('customize')}
+            </Link>
+          )}
         </div>
       </div>
     </div>

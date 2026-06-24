@@ -14,6 +14,7 @@ import {
 } from "@/lib/orders/order-assets";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { CheckoutSteps } from "@/components/checkout/CheckoutSteps";
 
 export function CheckoutForm() {
   const t = useTranslations("checkout");
@@ -34,6 +35,9 @@ export function CheckoutForm() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [processing, setProcessing] = useState(false);
+
+  const hasServiceItems = items.some((item) => item.type === "service");
+  const hasCustomProductItems = items.some((item) => item.type === "product");
 
   function updateField(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -165,12 +169,19 @@ export function CheckoutForm() {
 
   if (items.length === 0) {
     return (
-      <p className="py-16 text-center text-ink-500">Cart is empty</p>
+      <div className="py-16 text-center">
+        <p className="text-ink-500">{t("emptyCart")}</p>
+        <Link href="/products" className="mt-6 inline-block">
+          <Button>{t("browseProducts")}</Button>
+        </Link>
+      </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-8 lg:grid-cols-[1fr_360px]">
+    <>
+      <CheckoutSteps current="checkout" />
+      <form onSubmit={handleSubmit} className="grid gap-8 lg:grid-cols-[1fr_360px]">
       <div className="space-y-6">
         <Card>
           <h2 className="mb-4 text-lg font-semibold text-ink-900">
@@ -234,6 +245,11 @@ export function CheckoutForm() {
           <h2 className="mb-4 text-lg font-semibold text-ink-900">
             {t("uploadFiles")}
           </h2>
+          {(hasServiceItems || hasCustomProductItems) && (
+            <p className="mb-4 rounded-lg border border-brand-100 bg-brand-50 px-3 py-2 text-sm text-brand-800">
+              {hasServiceItems ? t("uploadRecommended") : t("uploadOptional")}
+            </p>
+          )}
           <p className="mb-4 text-sm text-ink-500">{t("uploadHint")}</p>
           <SecureUpload
             token={token}
@@ -246,7 +262,7 @@ export function CheckoutForm() {
           />
           {fileIds.length > 0 && (
             <p className="mt-2 text-sm text-green-600">
-              {fileIds.length} file(s) attached
+              {t("filesAttached", { count: fileIds.length })}
             </p>
           )}
         </Card>
@@ -275,11 +291,18 @@ export function CheckoutForm() {
             ))}
           </div>
           <div className="mt-4 flex justify-between border-t border-ink-200 pt-4">
-            <span className="font-semibold">Total</span>
+            <span className="font-semibold">{t("total")}</span>
             <span className="text-lg font-bold text-brand-600">
               {formatPrice(total, locale)}
             </span>
           </div>
+
+          <Link
+            href="/cart"
+            className="mt-4 inline-block text-sm font-medium text-brand-600 hover:text-brand-700"
+          >
+            ← {t("backToCart")}
+          </Link>
 
           <label className="mt-4 flex items-start gap-3 text-sm text-ink-600">
             <input
@@ -323,6 +346,7 @@ export function CheckoutForm() {
         </Card>
       </div>
     </form>
+    </>
   );
 }
 

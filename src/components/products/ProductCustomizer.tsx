@@ -460,6 +460,8 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   const productId = searchParams.get('id');
   const designId = searchParams.get('design');
   const editCartItemId = searchParams.get('edit');
+  const colorParam = searchParams.get('color');
+  const sizeParam = searchParams.get('size');
 
   const product = useMemo(
     () =>
@@ -597,6 +599,21 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     });
     setActiveSide('front');
   }, [product?.id, product, editCartItemId]);
+
+  useEffect(() => {
+    if (editCartItemId || !product) return;
+    if (
+      colorParam &&
+      product.colors?.some(
+        (value) => value.toLowerCase() === colorParam.toLowerCase(),
+      )
+    ) {
+      setColor(colorParam);
+    }
+    if (sizeParam && product.sizes?.includes(sizeParam)) {
+      setSize(sizeParam);
+    }
+  }, [product, colorParam, sizeParam, editCartItemId]);
 
   useEffect(() => {
     if (!designId || editCartItemId) return;
