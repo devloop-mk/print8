@@ -7,7 +7,7 @@ import { parsePlacedStickers } from '@/lib/products/sticker-library';
 export const MAX_STICKERS_PER_ORDER = 24;
 export const MAX_PHOTOS_PER_ORDER = 10;
 
-type OrderItemLike = {
+export type OrderItemLike = {
   metadata?: Record<string, string | number | boolean>;
   fileIds?: string[];
 };
@@ -19,9 +19,10 @@ export interface OrderStickerRef {
   stickerId: string;
 }
 
-export function collectOrderFileIds(
-  data: Pick<CheckoutInput, 'items' | 'fileIds'>,
-): string[] {
+export function collectOrderFileIds(data: {
+  items: OrderItemLike[];
+  fileIds?: string[];
+}): string[] {
   const ids = new Set<string>();
   for (const id of data.fileIds ?? []) ids.add(id);
   for (const item of data.items) {
