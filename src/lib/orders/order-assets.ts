@@ -1,6 +1,7 @@
 import type { CartItem } from '@/components/cart/CartProvider';
 import type { CheckoutInput } from '@/lib/validations/order';
-import { PRODUCT_SIDES, getSideMetadataPrefix, type ProductSide } from '@/lib/products/product-sides';
+import type { ProductSide } from '@/lib/data/catalog';
+import { PRODUCT_SIDES, getSideMetadataPrefix } from '@/lib/products/product-sides';
 import { parsePlacedStickers } from '@/lib/products/sticker-library';
 
 export const MAX_STICKERS_PER_ORDER = 24;
