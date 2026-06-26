@@ -5,6 +5,7 @@ import {
   FlaskConical,
   Gift,
   LayoutGrid,
+  Magnet,
   Shirt,
   ShoppingBag,
   type LucideIcon,
@@ -22,6 +23,7 @@ export const productTypeIconMap: Record<ProductTypeFilterValue, LucideIcon> = {
   cup: CupSoda,
   bag: ShoppingBag,
   thermos: FlaskConical,
+  magnet: Magnet,
   'gift-set': Gift,
 };
 

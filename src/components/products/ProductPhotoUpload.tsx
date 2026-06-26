@@ -14,6 +14,7 @@ type ProductPhotoUploadProps = {
   refreshSession: () => Promise<string | null>;
   hasPhoto: boolean;
   previewUrl?: string;
+  cropAspect?: number;
   onUploadComplete: (fileId: string, name: string, previewUrl: string) => void;
 };
 
@@ -56,6 +57,7 @@ export function ProductPhotoUpload({
   refreshSession,
   hasPhoto,
   previewUrl,
+  cropAspect,
   onUploadComplete,
 }: ProductPhotoUploadProps) {
   const t = useTranslations('products.customizer');
@@ -199,6 +201,7 @@ export function ProductPhotoUpload({
       {cropSource ? (
         <ImageCropModal
           imageSrc={cropSource}
+          aspect={cropAspect}
           onCancel={() => setCropSource(null)}
           onComplete={handleCropComplete}
         />

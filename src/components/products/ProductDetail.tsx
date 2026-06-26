@@ -6,6 +6,7 @@ import { Link } from '@/i18n/routing';
 import {
   products,
   getProductDesignTemplatesByCategory,
+  isMagnetProduct,
 } from '@/lib/data/catalog';
 import { getProductOffering } from '@/lib/products/offering';
 import { getProductPaths, PRODUCT_DESIGN_PREVIEW_LIMIT } from '@/lib/products/paths';
@@ -15,12 +16,13 @@ import { ProductImageCarousel } from '@/components/products/ProductImageCarousel
 import { ProductPathChooser } from '@/components/products/ProductPathChooser';
 import { ProductDesignSection } from '@/components/products/ProductDesignSection';
 import { Reveal } from '@/components/motion/Reveal';
-import { ArrowLeft, Palette, Sparkles, Type } from 'lucide-react';
+import { ArrowLeft, Palette, Sparkles, Type, Upload } from 'lucide-react';
 
 export function ProductDetail({ productId }: { productId: string }) {
   const t = useTranslations('products');
   const td = useTranslations('products.detail');
   const tp = useTranslations('products.types');
+  const ti = useTranslations('products.items');
   const locale = useLocale();
 
   const product = useMemo(
@@ -57,6 +59,10 @@ export function ProductDetail({ productId }: { productId: string }) {
   }
 
   const paths = getProductPaths(product.id, product.type, { color, size });
+  const productLabel = product.nameKey
+    ? ti(product.nameKey)
+    : tp(product.type);
+  const isMagnet = isMagnetProduct(product);
 
   function scrollToDesigns(sectionId: string) {
     document.getElementById(sectionId)?.scrollIntoView({
@@ -81,7 +87,7 @@ export function ProductDetail({ productId }: { productId: string }) {
         {td('backToProducts')}
       </Link>
 
-      <div className="grid gap-8 lg:grid-cols-2">
+      <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
         <Reveal>
           <Card className="flex flex-col items-center justify-center p-6">
             <p className="mb-4 text-sm font-medium text-ink-500">
@@ -90,7 +96,7 @@ export function ProductDetail({ productId }: { productId: string }) {
             <ProductImageCarousel
               product={product}
               color={color}
-              typeLabel={tp(product.type)}
+              typeLabel={productLabel}
             />
 
             {product.colors && (
@@ -144,18 +150,28 @@ export function ProductDetail({ productId }: { productId: string }) {
         </Reveal>
 
         <Reveal delay={100}>
-          <div className="space-y-4">
+          <div className="flex flex-col gap-6 lg:min-h-full">
             <div>
               <h1 className="text-3xl font-bold text-ink-900">
-                {tp(product.type)}
+                {productLabel}
               </h1>
               <p className="mt-2 text-xl text-brand-600">
                 {t('startingFrom')} {formatPrice(product.basePrice, locale)}
               </p>
-              <p className="mt-4 text-ink-600">{td('description')}</p>
+              <p className="mt-4 text-ink-600">
+                {isMagnet ? td('magnetDescription') : td('description')}
+              </p>
             </div>
 
-            {offering.hasPremade ? (
+            {isMagnet ? (
+              <Link
+                href={paths.custom}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand-600 px-6 py-3 text-base font-medium text-white transition hover:bg-brand-700 sm:w-auto"
+              >
+                <Upload className="h-5 w-5" />
+                {td('magnetUploadCta')}
+              </Link>
+            ) : offering.hasPremade ? (
               <div className="flex flex-wrap gap-2">
                 <span className="rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">
                   {t('card.customOption')}
@@ -174,19 +190,22 @@ export function ProductDetail({ productId }: { productId: string }) {
                 ) : null}
               </div>
             ) : null}
+
+            {!isMagnet ? (
+              <ProductPathChooser
+                productId={product.id}
+                productType={product.type}
+                offering={offering}
+                color={color}
+                size={size}
+                variant="sidebar"
+              />
+            ) : null}
           </div>
         </Reveal>
       </div>
 
-      <ProductPathChooser
-        productId={product.id}
-        productType={product.type}
-        offering={offering}
-        color={color}
-        size={size}
-      />
-
-      {offering.hasPremade ? (
+      {!isMagnet && offering.hasPremade ? (
         <div className="space-y-10">
           {imageDesigns.length > 0 && (
             <Reveal>
@@ -236,7 +255,15 @@ export function ProductDetail({ productId }: { productId: string }) {
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-ink-200 bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
         <div className="mx-auto max-w-lg">
-          {offering.hasPremade && quickDesignSection ? (
+          {isMagnet ? (
+            <Link
+              href={paths.custom}
+              className="inline-flex w-full min-h-[3rem] items-center justify-center gap-2 rounded-lg bg-brand-600 px-6 py-3 text-base font-medium text-white transition hover:bg-brand-700"
+            >
+              <Upload className="h-5 w-5" aria-hidden />
+              {td('magnetUploadCta')}
+            </Link>
+          ) : offering.hasPremade && quickDesignSection ? (
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"

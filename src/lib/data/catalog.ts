@@ -108,8 +108,10 @@ export const services: Service[] = [
     id: 'magnet-printing',
     icon: 'Magnet',
     category: 'gifts',
-    startingPrice: 150,
-    customization: 'none',
+    startingPrice: 49,
+    featured: true,
+    customization: 'products',
+    productTypes: ['magnet'],
   },
   {
     id: 'promotional-items',
@@ -365,6 +367,7 @@ export type ProductType =
   | 'cup'
   | 'bag'
   | 'thermos'
+  | 'magnet'
   | 'gift-set';
 export type ProductSide = 'front' | 'back' | 'left' | 'right';
 
@@ -375,11 +378,48 @@ export interface ProductSideImages {
   right?: string;
 }
 
-export type ProductColorImages = Record<string, string | ProductSideImages>;
+/** Primary catalog mockup plus optional second angle / alternate view */
+export interface ProductColorPair {
+  primary: string;
+  secondary?: string;
+}
+
+export type ProductColorImages = Record<
+  string,
+  string | ProductColorPair | ProductSideImages
+>;
+
+export type ProductGallerySlide = {
+  image: string;
+  /** Customization side — only for multi-side products */
+  labelKey?: 'front' | 'back' | 'left' | 'right';
+  kind: 'photo' | 'side';
+};
+
+export function productHasPhotoGallery(product: Product, color: string): boolean {
+  const entry = product.colorsImages?.[color];
+  return Boolean(
+    entry && typeof entry !== 'string' && isProductColorPair(entry) && entry.secondary,
+  );
+}
+
+export function isProductColorPair(
+  entry: string | ProductColorPair | ProductSideImages,
+): entry is ProductColorPair {
+  return typeof entry === 'object' && 'primary' in entry;
+}
+
+export function isProductSideImages(
+  entry: string | ProductColorPair | ProductSideImages,
+): entry is ProductSideImages {
+  return typeof entry === 'object' && 'front' in entry && !('primary' in entry);
+}
 
 export interface Product {
   id: string;
   type: ProductType;
+  /** Translation key under `products.items` — falls back to product type */
+  nameKey?: string;
   image: string;
   basePrice: number;
   colors?: string[];
@@ -387,6 +427,24 @@ export interface Product {
   sizes?: string[];
   /** Products that support separate front/back customization */
   sides?: ProductSide[];
+  /** Default crop aspect for upload-only products (e.g. magnets) */
+  uploadAspect?: number;
+}
+
+export function isMagnetProduct(product: Product): boolean {
+  return product.type === 'magnet';
+}
+
+export function getMagnetDisplayMockup(product: Product, color: string): string {
+  const entry = product.colorsImages?.[color];
+  if (entry && typeof entry !== 'string' && isProductColorPair(entry)) {
+    return entry.secondary ?? entry.primary;
+  }
+  return getProductMockup(product, color, 'front');
+}
+
+export function getProductNameKey(product: Product): string {
+  return product.nameKey ?? product.type;
 }
 
 export type ProductDesignKind = 'image' | 'text';
@@ -538,8 +596,89 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
     kind: 'image',
     category: 'image-designs',
     productTypes: ['mug'],
+    productIds: ['mug-classic'],
     nameKey: 'mugDesign1',
     image: '/product-designs/mug-design-1.jpg',
+    defaultSide: 'front',
+  },
+  {
+    id: 'mug-design-coffee-bear',
+    kind: 'image',
+    category: 'image-designs',
+    productTypes: ['mug'],
+    productIds: ['mug-b5kf-white'],
+    nameKey: 'mugCoffeeBear',
+    image: '/mugs/design-coffee-bear.jpg',
+    defaultSide: 'front',
+  },
+  {
+    id: 'mug-design-quality-organic',
+    kind: 'image',
+    category: 'image-designs',
+    productTypes: ['mug'],
+    productIds: ['mug-frosted'],
+    nameKey: 'mugQualityOrganic',
+    image: '/mugs/design-quality-organic.jpg',
+    defaultSide: 'front',
+  },
+  {
+    id: 'mug-design-portrait-red',
+    kind: 'image',
+    category: 'image-designs',
+    productTypes: ['mug'],
+    productIds: ['mug-red-patch'],
+    nameKey: 'mugPortraitRed',
+    image: '/mugs/design-portrait-red.jpg',
+    defaultSide: 'front',
+  },
+  {
+    id: 'mug-inside-daddy-design',
+    kind: 'image',
+    category: 'image-designs',
+    productTypes: ['mug'],
+    productIds: ['mug-inside-daddy'],
+    nameKey: 'mugInsideDaddy',
+    image: '/mugs/mug-inside-daddy.jpg',
+    defaultSide: 'front',
+  },
+  {
+    id: 'mug-inside-love-design',
+    kind: 'image',
+    category: 'image-designs',
+    productTypes: ['mug'],
+    productIds: ['mug-inside-love'],
+    nameKey: 'mugInsideLove',
+    image: '/mugs/mug-inside-love.jpg',
+    defaultSide: 'front',
+  },
+  {
+    id: 'mug-inside-birthday-design',
+    kind: 'image',
+    category: 'image-designs',
+    productTypes: ['mug'],
+    productIds: ['mug-inside-birthday'],
+    nameKey: 'mugInsideBirthday',
+    image: '/mugs/mug-inside-birthday.jpg',
+    defaultSide: 'front',
+  },
+  {
+    id: 'mug-inside-mothers-day-design',
+    kind: 'image',
+    category: 'image-designs',
+    productTypes: ['mug'],
+    productIds: ['mug-inside-mothers-day'],
+    nameKey: 'mugInsideMothersDay',
+    image: '/mugs/mug-inside-mothers-day.jpg',
+    defaultSide: 'front',
+  },
+  {
+    id: 'mug-inside-thanksgiving-design',
+    kind: 'image',
+    category: 'image-designs',
+    productTypes: ['mug'],
+    productIds: ['mug-inside-thanksgiving'],
+    nameKey: 'mugInsideThanksgiving',
+    image: '/mugs/mug-inside-thanksgiving.jpg',
     defaultSide: 'front',
   },
 ];
@@ -595,6 +734,9 @@ export function getProductMockup(
   if (typeof entry === 'string') {
     return mockupPathForSide(entry, side);
   }
+  if (isProductColorPair(entry)) {
+    return entry.primary;
+  }
 
   const bySide: Partial<Record<ProductSide, string | undefined>> = {
     front: entry.front,
@@ -604,6 +746,49 @@ export function getProductMockup(
   };
 
   return bySide[side] ?? entry.front;
+}
+
+export function getProductGallerySlides(
+  product: Product,
+  color: string,
+): ProductGallerySlide[] {
+  const entry = product.colorsImages?.[color];
+
+  if (entry && typeof entry !== 'string' && isProductColorPair(entry)) {
+    const slides: ProductGallerySlide[] = [
+      { image: entry.primary, kind: 'photo' },
+    ];
+    if (entry.secondary) {
+      slides.push({ image: entry.secondary, kind: 'photo' });
+    }
+    return slides;
+  }
+
+  if (productSupportsSides(product) && (product.sides?.length ?? 0) > 1) {
+    return getProductSides(product).map((side) => ({
+      image: getProductMockup(product, color, side),
+      kind: 'side' as const,
+      labelKey:
+        side === 'front'
+          ? 'front'
+          : side === 'back'
+            ? 'back'
+            : side === 'left'
+              ? 'left'
+              : 'right',
+    }));
+  }
+
+  const image = getProductMockup(product, color, 'front');
+  return image ? [{ image, kind: 'photo' as const }] : [];
+}
+
+export function getProductSecondaryImage(
+  product: Product,
+  color: string,
+): string | null {
+  const slides = getProductGallerySlides(product, color);
+  return slides.length > 1 ? slides[1].image : null;
 }
 
 export function getProductDesignTemplates(product: Product) {
@@ -694,14 +879,179 @@ export const products: Product[] = [
   {
     id: 'mug-classic',
     type: 'mug',
+    nameKey: 'mugClassic',
     image: '/mugs/mug-milkyblue.jpg',
     colorsImages: {
-      '#ffffff': '/mugs/mug-white.jpg',
+      '#ffffff': '/mugs/mug-white-classic.jpg',
       '#ADD8E6': '/mugs/mug-milkyblue.jpg',
       '#000000': '/mugs/mug-black.jpg',
     },
     basePrice: 250,
     colors: ['#ffffff', '#ADD8E6', '#000000'],
+  },
+  {
+    id: 'mug-heart-handle',
+    type: 'mug',
+    nameKey: 'mugHeartHandle',
+    image: '/mugs/mug-heart-handle.jpg',
+    colorsImages: {
+      '#ffffff': '/mugs/mug-heart-handle.jpg',
+    },
+    basePrice: 280,
+    colors: ['#ffffff'],
+  },
+  {
+    id: 'mug-chrome-handle',
+    type: 'mug',
+    nameKey: 'mugChromeHandle',
+    image: '/mugs/mug-chrome-handle.png',
+    colorsImages: {
+      '#ffffff': '/mugs/mug-chrome-handle.png',
+    },
+    basePrice: 300,
+    colors: ['#ffffff'],
+  },
+  {
+    id: 'mug-gold-handle',
+    type: 'mug',
+    nameKey: 'mugGoldHandle',
+    image: '/mugs/mug-gold-handle.jpg',
+    colorsImages: {
+      '#ffffff': '/mugs/mug-gold-handle.jpg',
+    },
+    basePrice: 300,
+    colors: ['#ffffff'],
+  },
+  {
+    id: 'mug-b5kf-white',
+    type: 'mug',
+    nameKey: 'mugB5kfWhite',
+    image: '/mugs/mug-b5kf-white.jpg',
+    colorsImages: {
+      '#ffffff': {
+        primary: '/mugs/mug-b5kf-white.jpg',
+        secondary: '/mugs/mug-b5kf-angle.jpg',
+      },
+    },
+    basePrice: 250,
+    colors: ['#ffffff'],
+  },
+  {
+    id: 'mug-purple-interior',
+    type: 'mug',
+    nameKey: 'mugPurpleInterior',
+    image: '/mugs/mug-purple-interior.png',
+    colorsImages: {
+      '#ffffff': '/mugs/mug-purple-interior.png',
+    },
+    basePrice: 280,
+    colors: ['#ffffff'],
+  },
+  {
+    id: 'mug-red-patch',
+    type: 'mug',
+    nameKey: 'mugRedPatch',
+    image: '/mugs/mug-red-patch.jpg',
+    colorsImages: {
+      '#dc2626': {
+        primary: '/mugs/mug-red-patch.jpg',
+        secondary: '/mugs/mug-red-patch-side.jpg',
+      },
+    },
+    basePrice: 300,
+    colors: ['#dc2626'],
+  },
+  {
+    id: 'mug-frosted',
+    type: 'mug',
+    nameKey: 'mugFrosted',
+    image: '/mugs/mug-frosted.jpg',
+    colorsImages: {
+      '#f5f5f4': '/mugs/mug-frosted.jpg',
+    },
+    basePrice: 280,
+    colors: ['#f5f5f4'],
+  },
+  {
+    id: 'cup-glass-beer',
+    type: 'cup',
+    nameKey: 'cupGlassBeer',
+    image: '/cups/cup-glass-beer.jpg',
+    colorsImages: {
+      '#e8f4fc': '/cups/cup-glass-beer.jpg',
+    },
+    basePrice: 250,
+    colors: ['#e8f4fc'],
+  },
+  {
+    id: 'mug-inside-daddy',
+    type: 'mug',
+    nameKey: 'mugInsideDaddy',
+    image: '/mugs/mug-inside-daddy.jpg',
+    colorsImages: {
+      '#ffffff': {
+        primary: '/mugs/mug-inside-daddy.jpg',
+        secondary: '/mugs/mug-b5kf-white.jpg',
+      },
+    },
+    basePrice: 350,
+    colors: ['#ffffff'],
+  },
+  {
+    id: 'mug-inside-love',
+    type: 'mug',
+    nameKey: 'mugInsideLove',
+    image: '/mugs/mug-inside-love.jpg',
+    colorsImages: {
+      '#ffffff': {
+        primary: '/mugs/mug-inside-love.jpg',
+        secondary: '/mugs/mug-b5kf-white.jpg',
+      },
+    },
+    basePrice: 350,
+    colors: ['#ffffff'],
+  },
+  {
+    id: 'mug-inside-birthday',
+    type: 'mug',
+    nameKey: 'mugInsideBirthday',
+    image: '/mugs/mug-inside-birthday.jpg',
+    colorsImages: {
+      '#ffffff': {
+        primary: '/mugs/mug-inside-birthday.jpg',
+        secondary: '/mugs/mug-b5kf-white.jpg',
+      },
+    },
+    basePrice: 350,
+    colors: ['#ffffff'],
+  },
+  {
+    id: 'mug-inside-mothers-day',
+    type: 'mug',
+    nameKey: 'mugInsideMothersDay',
+    image: '/mugs/mug-inside-mothers-day.jpg',
+    colorsImages: {
+      '#ffffff': {
+        primary: '/mugs/mug-inside-mothers-day.jpg',
+        secondary: '/mugs/mug-b5kf-white.jpg',
+      },
+    },
+    basePrice: 350,
+    colors: ['#ffffff'],
+  },
+  {
+    id: 'mug-inside-thanksgiving',
+    type: 'mug',
+    nameKey: 'mugInsideThanksgiving',
+    image: '/mugs/mug-inside-thanksgiving.jpg',
+    colorsImages: {
+      '#ffffff': {
+        primary: '/mugs/mug-inside-thanksgiving.jpg',
+        secondary: '/mugs/mug-b5kf-white.jpg',
+      },
+    },
+    basePrice: 380,
+    colors: ['#ffffff'],
   },
   {
     id: 'bag-tote',
@@ -780,6 +1130,99 @@ export const products: Product[] = [
     basePrice: 800,
     colors: ['#374151', '#ffffff', '#2f7cb2'],
   },
+  {
+    id: 'magnet-ceramic-5x7',
+    type: 'magnet',
+    nameKey: 'magnetCeramic5x7',
+    image: '/magnets/magnet-ceramic-5x7.jpg',
+    colorsImages: {
+      '#ffffff': {
+        primary: '/magnets/magnet-ceramic-5x7.jpg',
+        secondary: '/magnets/magnet-ceramic-5x7-plain.jpg',
+      },
+    },
+    basePrice: 98,
+    colors: ['#ffffff'],
+    uploadAspect: 5 / 7,
+  },
+  {
+    id: 'magnet-ceramic-heart',
+    type: 'magnet',
+    nameKey: 'magnetCeramicHeart',
+    image: '/magnets/magnet-ceramic-heart.jpg',
+    colorsImages: {
+      '#ffffff': {
+        primary: '/magnets/magnet-ceramic-heart.jpg',
+        secondary: '/magnets/magnet-ceramic-heart-plain.jpg',
+      },
+    },
+    basePrice: 115,
+    colors: ['#ffffff'],
+    uploadAspect: 6 / 6.8,
+  },
+  {
+    id: 'magnet-glass-5x7',
+    type: 'magnet',
+    nameKey: 'magnetGlass5x7',
+    image: '/magnets/magnet-glass-5x7.jpg',
+    colorsImages: {
+      '#e8f4fc': {
+        primary: '/magnets/magnet-glass-5x7.jpg',
+        secondary: '/magnets/magnet-glass-5x7-plain.jpg',
+      },
+    },
+    basePrice: 85,
+    colors: ['#e8f4fc'],
+    uploadAspect: 5 / 7,
+  },
+  {
+    id: 'magnet-hardboard-square',
+    type: 'magnet',
+    nameKey: 'magnetHardboardSquare',
+    image: '/magnets/magnet-hardboard-square.jpg',
+    colorsImages: {
+      '#f5f5f4': '/magnets/magnet-hardboard-square.jpg',
+    },
+    basePrice: 62,
+    colors: ['#f5f5f4'],
+    uploadAspect: 1,
+  },
+  {
+    id: 'magnet-hardboard-6x6',
+    type: 'magnet',
+    nameKey: 'magnetHardboard6x6',
+    image: '/magnets/magnet-hardboard-6x6.jpg',
+    colorsImages: {
+      '#f5f5f4': '/magnets/magnet-hardboard-6x6.jpg',
+    },
+    basePrice: 49,
+    colors: ['#f5f5f4'],
+    uploadAspect: 1,
+  },
+  {
+    id: 'magnet-hardboard-oval',
+    type: 'magnet',
+    nameKey: 'magnetHardboardOval',
+    image: '/magnets/magnet-hardboard-oval.jpg',
+    colorsImages: {
+      '#f5f5f4': '/magnets/magnet-hardboard-oval.jpg',
+    },
+    basePrice: 49,
+    colors: ['#f5f5f4'],
+    uploadAspect: 9 / 6.5,
+  },
+  {
+    id: 'magnet-hardboard-round',
+    type: 'magnet',
+    nameKey: 'magnetHardboardRound',
+    image: '/magnets/magnet-hardboard-round.jpg',
+    colorsImages: {
+      '#f5f5f4': '/magnets/magnet-hardboard-round.jpg',
+    },
+    basePrice: 62,
+    colors: ['#f5f5f4'],
+    uploadAspect: 1,
+  },
 ];
 
 export const productTypes: ProductType[] = [
@@ -790,6 +1233,7 @@ export const productTypes: ProductType[] = [
   'cup',
   'bag',
   'thermos',
+  'magnet',
   'gift-set',
 ];
 

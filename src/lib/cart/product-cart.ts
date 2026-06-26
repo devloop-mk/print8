@@ -2,6 +2,7 @@ import {
   products,
   getProductMockup,
   getProductSides,
+  getMagnetDisplayMockup,
   type Product,
   type ProductSide,
   type ProductType,
@@ -71,8 +72,31 @@ export function getCartItemProduct(item: CartItem): Product | undefined {
 
 export function getCartItemPreviewImages(
   item: CartItem,
-  labels: Partial<Record<ProductSide, string>>,
+  labels: Partial<Record<ProductSide, string>> & {
+    magnet?: string;
+    upload?: string;
+  },
 ): { src: string; label?: string }[] {
+  const product = getCartItemProduct(item);
+
+  if (product?.type === 'magnet') {
+    const color = getCartItemColor(item) ?? product.colors?.[0] ?? '#ffffff';
+    const mockup = getMagnetDisplayMockup(product, color);
+    const upload =
+      typeof item.metadata?.frontUploadedPreviewUrl === 'string'
+        ? item.metadata.frontUploadedPreviewUrl
+        : undefined;
+
+    const images: { src: string; label?: string }[] = [];
+    if (mockup) {
+      images.push({ src: mockup, label: labels.magnet });
+    }
+    if (upload) {
+      images.push({ src: upload, label: labels.upload });
+    }
+    if (images.length > 0) return images;
+  }
+
   const images: { src: string; label?: string }[] = [];
 
   for (const side of Object.keys(SIDE_PREVIEW_CART_KEYS) as ProductSide[]) {

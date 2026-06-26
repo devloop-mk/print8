@@ -1,19 +1,20 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link, usePathname } from '@/i18n/routing';
 import { useCart } from '@/components/cart/CartProvider';
 import { LanguageSwitcher } from '@/components/layout/LanguageSwitcher';
+import { ProductsNavMenu } from '@/components/layout/ProductsNavMenu';
 import { Logo } from '@/components/brand/Logo';
 import { cn } from '@/lib/utils';
-import { ShoppingCart, X } from 'lucide-react';
+import { isProductsNavActive } from '@/lib/products/product-nav';
+import { ChevronDown, ShoppingCart, X } from 'lucide-react';
 
 const navItems = [
   { href: '/', key: 'home' },
   { href: '/services', key: 'services' },
   { href: '/designs', key: 'designs' },
-  { href: '/products', key: 'products' },
   { href: '/about', key: 'about' },
   { href: '/contact', key: 'contact' },
   { href: '/faq', key: 'faq' },
@@ -28,6 +29,8 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
   const t = useTranslations('nav');
   const pathname = usePathname();
   const { itemCount } = useCart();
+  const [productsOpen, setProductsOpen] = useState(false);
+  const productsActive = isProductsNavActive(pathname);
 
   useEffect(() => {
     if (!open) return;
@@ -46,6 +49,14 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [open, onClose]);
+
+  useEffect(() => {
+    if (productsActive) setProductsOpen(true);
+  }, [productsActive]);
+
+  useEffect(() => {
+    if (!open) setProductsOpen(false);
+  }, [open]);
 
   return (
     <div
@@ -67,7 +78,7 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
 
       <aside
         className={cn(
-          'absolute inset-y-0 right-0 flex w-[min(100vw-2.5rem,20rem)] flex-col bg-white shadow-2xl transition-transform duration-300 ease-out',
+          'absolute inset-y-0 right-0 flex w-[min(100vw-2.5rem,22rem)] flex-col bg-white shadow-2xl transition-transform duration-300 ease-out',
           open ? 'translate-x-0' : 'translate-x-full',
         )}
         role="dialog"
@@ -88,7 +99,55 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
 
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           <ul className="space-y-1">
-            {navItems.map((item) => {
+            {navItems.slice(0, 3).map((item) => {
+              const active = pathname === item.href;
+              return (
+                <li key={item.key}>
+                  <Link
+                    href={item.href}
+                    onClick={onClose}
+                    className={cn(
+                      'block rounded-xl px-4 py-3 text-base font-medium transition',
+                      active
+                        ? 'bg-brand-50 text-brand-700'
+                        : 'text-ink-700 hover:bg-ink-50',
+                    )}
+                  >
+                    {t(item.key)}
+                  </Link>
+                </li>
+              );
+            })}
+
+            <li>
+              <button
+                type="button"
+                onClick={() => setProductsOpen((value) => !value)}
+                aria-expanded={productsOpen}
+                className={cn(
+                  'flex w-full items-center justify-between rounded-xl px-4 py-3 text-base font-medium transition',
+                  productsActive || productsOpen
+                    ? 'bg-brand-50 text-brand-700'
+                    : 'text-ink-700 hover:bg-ink-50',
+                )}
+              >
+                {t('products')}
+                <ChevronDown
+                  className={cn(
+                    'h-5 w-5 shrink-0 transition',
+                    productsOpen && 'rotate-180',
+                  )}
+                  aria-hidden
+                />
+              </button>
+              {productsOpen ? (
+                <div className="mt-1 rounded-xl border border-ink-100 bg-ink-50/80 p-3">
+                  <ProductsNavMenu variant="mobile" onNavigate={onClose} />
+                </div>
+              ) : null}
+            </li>
+
+            {navItems.slice(3).map((item) => {
               const active = pathname === item.href;
               return (
                 <li key={item.key}>

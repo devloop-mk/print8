@@ -18,10 +18,11 @@ export async function buildProductMetadata(locale: Locale, id: string) {
 
   const t = await getTranslations({ locale, namespace: 'products' });
   const tp = await getTranslations({ locale, namespace: 'products.types' });
+  const ti = await getTranslations({ locale, namespace: 'products.items' });
   const td = await getTranslations({ locale, namespace: 'products.detail' });
   const tm = await getTranslations({ locale, namespace: 'metadata' });
 
-  const productName = tp(product.type);
+  const productName = product.nameKey ? ti(product.nameKey) : tp(product.type);
   const title = `${productName} | Print 8`;
   const description = td('description');
 
@@ -50,10 +51,11 @@ export async function buildProductDesignsMetadata(
 
   const t = await getTranslations({ locale, namespace: 'products' });
   const tp = await getTranslations({ locale, namespace: 'products.types' });
+  const ti = await getTranslations({ locale, namespace: 'products.items' });
   const td = await getTranslations({ locale, namespace: 'products.detail' });
   const tm = await getTranslations({ locale, namespace: 'metadata' });
 
-  const productName = tp(product.type);
+  const productName = product.nameKey ? ti(product.nameKey) : tp(product.type);
   const isPhoto = category === 'image-designs';
   const sectionTitle = isPhoto ? td('imageDesigns') : td('textDesigns');
   const description = isPhoto

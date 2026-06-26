@@ -38,6 +38,29 @@
     "languages": {
       "mk": "Macedonian",
       "en": "English"
+    },
+    "productsMenu": {
+      "eyebrow": "Products",
+      "subtitle": "Browse by type or pick how to personalize.",
+      "viewAll": "View all",
+      "browseByType": "Browse by type",
+      "personalize": "Personalize",
+      "categories": {
+        "apparel": "Apparel",
+        "drinkware": "Drinkware",
+        "bags": "Bags",
+        "gifts": "Gifts & magnets"
+      },
+      "links": {
+        "allProducts": "All products",
+        "allProductsDesc": "Full catalog with filters",
+        "customDesign": "Your own design",
+        "customDesignDesc": "Upload photos, text, and stickers",
+        "readyDesigns": "Ready photo designs",
+        "readyDesignsDesc": "Order complete designs as shown",
+        "textTemplates": "Text templates",
+        "textTemplatesDesc": "Phrases with a spot for your photo"
+      }
     }
   },
   "home": {
@@ -244,7 +267,7 @@
       "magnet-printing": {
         "title": "Magnets",
         "description": "Custom magnets for promos, souvenirs, and gifts.",
-        "detail": "Send us your design or upload files at checkout."
+        "detail": "Choose a magnet shape and size, then add your photo or design."
       },
       "promotional-items": {
         "title": "Keychains & promo items",
@@ -605,6 +628,14 @@
       "design3": "Design 3",
       "backDesign1": "Back design 1",
       "mugDesign1": "Mug design 1",
+      "mugCoffeeBear": "Start your day with coffee",
+      "mugQualityOrganic": "Quality organic food",
+      "mugPortraitRed": "Color portrait",
+      "mugInsideDaddy": "World's best daddy",
+      "mugInsideLove": "I love you",
+      "mugInsideBirthday": "Happy birthday",
+      "mugInsideMothersDay": "Happy Mother's Day",
+      "mugInsideThanksgiving": "Thanksgiving",
       "loveFamily": "I love my family",
       "bestMother": "Best mother",
       "bestFather": "Best father",
@@ -632,7 +663,26 @@
       "mobileQuickOrder": "Ready designs",
       "mobileDesignOwn": "Design your own",
       "imageDesignsPageHint": "Browse all ready photo designs for this product.",
-      "textDesignsPageHint": "Browse all text templates for this product."
+      "textDesignsPageHint": "Browse all text templates for this product.",
+      "magnetDescription": "Upload your photo — we print it on this magnet. You can crop the image before ordering.",
+      "magnetUploadCta": "Upload image & order"
+    },
+    "magnetOrder": {
+      "title": "Order magnet",
+      "notFound": "Magnet not found.",
+      "backToMagnets": "Back to magnets",
+      "backToProduct": "Back to product",
+      "productPreview": "Magnet",
+      "instructions": "Upload the image you want printed on this magnet. Crop it to fit the magnet shape, then add to cart.",
+      "uploadTitle": "Your image",
+      "uploadHint": "Choose a photo — you can crop it before uploading.",
+      "yourImage": "Your image",
+      "removeImage": "Remove image",
+      "quantity": "Quantity",
+      "uploadRequired": "Please upload an image before adding to cart.",
+      "photoLimit": "Too many photos in this order. Remove some from your cart first.",
+      "addToCart": "Add to cart",
+      "updateCart": "Update cart"
     },
     "types": {
       "t-shirt": "T-shirts",
@@ -642,7 +692,31 @@
       "cup": "Cups",
       "bag": "Bags",
       "thermos": "Thermoses",
+      "magnet": "Magnets",
       "gift-set": "Gift sets"
+    },
+    "items": {
+      "mugClassic": "Classic mug",
+      "mugHeartHandle": "Heart handle mug",
+      "mugChromeHandle": "Chrome handle mug",
+      "mugGoldHandle": "Gold handle mug",
+      "mugB5kfWhite": "White ceramic mug",
+      "mugPurpleInterior": "White mug, purple interior",
+      "mugRedPatch": "Red mug with print area",
+      "mugFrosted": "Frosted glass mug",
+      "cupGlassBeer": "Glass beer mug",
+      "mugInsideDaddy": "Mug — World's best daddy (inside)",
+      "mugInsideLove": "Mug — I love you (inside)",
+      "mugInsideBirthday": "Mug — Happy birthday (inside)",
+      "mugInsideMothersDay": "Mug — Mother's Day (inside)",
+      "mugInsideThanksgiving": "Mug — Thanksgiving (inside)",
+      "magnetCeramic5x7": "Ceramic magnet 5×7 cm",
+      "magnetCeramicHeart": "Ceramic heart magnet 6×6.8 cm",
+      "magnetGlass5x7": "Glass magnet 5×7 cm",
+      "magnetHardboardSquare": "Hardboard magnet 9.5×9.5 cm",
+      "magnetHardboard6x6": "Hardboard magnet 6×6 cm",
+      "magnetHardboardOval": "Hardboard oval magnet 9×6.5 cm",
+      "magnetHardboardRound": "Hardboard round magnet Ø9.5 cm"
     },
     "customizer": {
       "editText": "Edit text",
@@ -685,6 +759,7 @@
       "back": "Back",
       "left": "Left",
       "right": "Right",
+      "alternateView": "Alternate view",
       "text": "Text",
       "photo": "Photo",
       "stickers": "Stickers",
@@ -873,6 +948,8 @@
     "size": "Size",
     "changeSize": "Change size",
     "editDesign": "Edit design",
+    "magnetPreview": "Magnet",
+    "uploadPreview": "Your image",
     "orderStickerLimit": "This order can include at most {max} stickers in total. Remove stickers from cart items before checkout.",
     "orderPhotoLimit": "This order can include at most {max} uploaded photos in total. Remove photos from cart items before checkout.",
     "paymentOnDelivery": "Payment on delivery",

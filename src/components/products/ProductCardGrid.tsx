@@ -6,13 +6,14 @@ import { Link } from '@/i18n/routing';
 import { formatPrice } from '@/lib/utils';
 import { getProductOffering } from '@/lib/products/offering';
 import { Card } from '@/components/ui/Card';
-import { ProductImageCarousel } from '@/components/products/ProductImageCarousel';
+import { ProductCatalogImage } from '@/components/products/ProductCatalogImage';
 import { Reveal } from '@/components/motion/Reveal';
 import type { Product } from '@/lib/data/catalog';
 
 export function ProductCardGrid({ items }: { items: Product[] }) {
   const t = useTranslations('products');
   const tp = useTranslations('products.types');
+  const ti = useTranslations('products.items');
   const locale = useLocale();
   const [previewColors, setPreviewColors] = useState<Record<string, string>>({});
 
@@ -27,6 +28,9 @@ export function ProductCardGrid({ items }: { items: Product[] }) {
         const defaultColor = product.colors?.[0] ?? '#ffffff';
         const cardColor = previewColors[product.id] ?? defaultColor;
         const offering = offerings.get(product.id)!;
+        const productLabel = product.nameKey
+          ? ti(product.nameKey)
+          : tp(product.type);
 
         return (
           <Reveal key={product.id} delay={Math.min(index * 40, 120)}>
@@ -36,16 +40,15 @@ export function ProductCardGrid({ items }: { items: Product[] }) {
             >
               <Card className="h-full overflow-hidden p-0 transition group-hover:shadow-lift-brand">
                 <div className="p-4 pb-0">
-                  <ProductImageCarousel
+                  <ProductCatalogImage
                     product={product}
                     color={cardColor}
-                    typeLabel={tp(product.type)}
-                    stopLinkNavigation
+                    typeLabel={productLabel}
                   />
                 </div>
                 <div className="p-4">
                   <p className="font-medium text-ink-900 group-hover:text-brand-700">
-                    {tp(product.type)}
+                    {productLabel}
                   </p>
                   <p className="mt-1 text-sm text-brand-600">
                     {t('startingFrom')} {formatPrice(product.basePrice, locale)}

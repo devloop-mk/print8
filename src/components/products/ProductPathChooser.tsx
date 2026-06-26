@@ -14,6 +14,8 @@ type ProductPathChooserProps = {
   offering: ProductOffering;
   color?: string;
   size?: string;
+  /** Tighter single-column layout for the product detail sidebar */
+  variant?: 'default' | 'sidebar';
 };
 
 const primaryCta =
@@ -27,6 +29,7 @@ export function ProductPathChooser({
   offering,
   color,
   size,
+  variant = 'default',
 }: ProductPathChooserProps) {
   const t = useTranslations('products.paths');
   const paths = getProductPaths(productId, productType, { color, size });
@@ -73,26 +76,47 @@ export function ProductPathChooser({
     },
   ].filter((path) => path.show);
 
+  const isSidebar = variant === 'sidebar';
+
   return (
-    <Reveal className="rounded-2xl border border-ink-200 bg-gradient-to-br from-white to-ink-50 p-5 shadow-sm sm:p-6">
-      <div className="mb-5 max-w-2xl">
+    <Reveal
+      className={cn(
+        'rounded-2xl border border-ink-200 bg-gradient-to-br from-white to-ink-50 shadow-sm',
+        isSidebar ? 'flex h-full flex-col p-4 lg:p-5' : 'p-5 sm:p-6',
+      )}
+    >
+      <div className={cn('mb-4', isSidebar ? '' : 'mb-5 max-w-2xl')}>
         <p className="text-xs font-semibold uppercase tracking-wider text-brand-600">
           {t('eyebrow')}
         </p>
-        <h2 className="mt-1 text-xl font-bold text-ink-900 sm:text-2xl">
+        <h2
+          className={cn(
+            'mt-1 font-bold text-ink-900',
+            isSidebar ? 'text-lg' : 'text-xl sm:text-2xl',
+          )}
+        >
           {t('title')}
         </h2>
-        <p className="mt-2 text-sm text-ink-600 sm:text-base">{t('subtitle')}</p>
+        <p
+          className={cn(
+            'mt-2 text-ink-600',
+            isSidebar ? 'text-sm' : 'text-sm sm:text-base',
+          )}
+        >
+          {t('subtitle')}
+        </p>
       </div>
 
       <div
         className={cn(
           'grid gap-3',
-          pathOptions.length === 1
-            ? 'max-w-md'
-            : pathOptions.length === 2
-              ? 'sm:grid-cols-2'
-              : 'lg:grid-cols-3',
+          isSidebar
+            ? 'flex-1 grid-cols-1'
+            : pathOptions.length === 1
+              ? 'max-w-md'
+              : pathOptions.length === 2
+                ? 'sm:grid-cols-2'
+                : 'lg:grid-cols-3',
         )}
       >
         {pathOptions.map((path) => {

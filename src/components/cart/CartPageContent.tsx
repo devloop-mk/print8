@@ -157,6 +157,8 @@ export function CartPageContent() {
               back: tc('back'),
               left: tc('left'),
               right: tc('right'),
+              magnet: t('magnetPreview'),
+              upload: t('uploadPreview'),
             });
 
             const product = getCartItemProduct(item);
@@ -168,7 +170,8 @@ export function CartPageContent() {
             const editUrl = buildCustomizerEditUrl(item);
 
             const customized = isCustomizedCartItem(item);
-            const multiSidePreviews = previewImages.length > 2;
+            const isMagnet = product?.type === 'magnet';
+            const multiSidePreviews = !isMagnet && previewImages.length > 2;
 
             return (
 

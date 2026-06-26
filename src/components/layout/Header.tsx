@@ -7,6 +7,7 @@ import { useCart } from "@/components/cart/CartProvider";
 import { cn } from "@/lib/utils";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { MobileNav } from "@/components/layout/MobileNav";
+import { ProductsNavDropdown } from "@/components/layout/ProductsNavDropdown";
 import { Logo } from "@/components/brand/Logo";
 import { Menu, ShoppingCart } from "lucide-react";
 import { usePathname } from "@/i18n/routing";
@@ -61,6 +62,10 @@ export function Header() {
 
           <nav className="hidden items-stretch gap-0.5 md:flex">
             {navItems.map((item) => {
+              if (item.key === "products") {
+                return <ProductsNavDropdown key={item.key} />;
+              }
+
               const active = pathname === item.href;
               return (
                 <Link

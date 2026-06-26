@@ -5,11 +5,9 @@ import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { ChevronLeft, ChevronRight, Shirt } from 'lucide-react';
 import {
-  getProductMockup,
-  getProductSides,
-  productSupportsSides,
+  getProductGallerySlides,
   type Product,
-  type ProductSide,
+  type ProductGallerySlide,
 } from '@/lib/data/catalog';
 import { PRODUCT_MOCKUP_INNER_CLASS } from '@/components/products/ProductMockupFrame';
 
@@ -26,19 +24,20 @@ export function ProductImageCarousel({
   stopLinkNavigation?: boolean;
 }) {
   const t = useTranslations('products.customizer');
-  const sides = getProductSides(product);
-  const hasCarousel = productSupportsSides(product) && sides.length > 1;
+  const slides = getProductGallerySlides(product, color);
+  const hasCarousel = slides.length > 1;
+  const isPhotoGallery = slides.every((slide) => slide.kind === 'photo');
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
     setIndex(0);
   }, [color]);
 
-  const side = sides[index] ?? 'front';
-  const image = getProductMockup(product, color, side);
+  const slide = slides[index];
+  const image = slide?.image;
 
   function goTo(delta: number) {
-    setIndex((i) => (i + delta + sides.length) % sides.length);
+    setIndex((i) => (i + delta + slides.length) % slides.length);
   }
 
   const stopNav = (e: React.MouseEvent) => {
@@ -46,11 +45,14 @@ export function ProductImageCarousel({
     e.stopPropagation();
   };
 
-  const sideLabel = (s: ProductSide) => {
-    if (s === 'front') return t('front');
-    if (s === 'back') return t('back');
-    if (s === 'left') return t('left');
-    return t('right');
+  const imageAlt = (s: ProductGallerySlide, i: number) => {
+    if (s.kind === 'side' && s.labelKey) {
+      return `${typeLabel} — ${t(s.labelKey)}`;
+    }
+    if (slides.length > 1) {
+      return `${typeLabel} (${i + 1}/${slides.length})`;
+    }
+    return typeLabel;
   };
 
   return (
@@ -58,13 +60,13 @@ export function ProductImageCarousel({
       {image ? (
         <div className={PRODUCT_MOCKUP_INNER_CLASS}>
           <Image
-            key={`${color}-${side}`}
+            key={`${color}-${index}-${image}`}
             src={image}
-            alt={`${typeLabel} — ${sideLabel(side)}`}
+            alt={imageAlt(slide, index)}
             fill
             sizes="(max-width: 768px) 100vw, 400px"
             className="object-contain"
-            priority
+            priority={index === 0}
           />
         </div>
       ) : (
@@ -96,25 +98,44 @@ export function ProductImageCarousel({
             <ChevronRight className="h-5 w-5 text-ink-700" />
           </button>
 
-          <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 shadow-sm">
-            {sides.map((s, i) => (
-              <button
-                key={s}
-                type="button"
-                onClick={(e) => {
-                  stopNav(e);
-                  setIndex(i);
-                }}
-                className={`rounded-full px-2.5 py-0.5 text-xs font-semibold transition ${
-                  i === index
-                    ? 'bg-brand-600 text-white'
-                    : 'text-ink-600 hover:bg-ink-100'
-                }`}
-              >
-                {sideLabel(s)}
-              </button>
-            ))}
-          </div>
+          {isPhotoGallery ? (
+            <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-2 shadow-sm">
+              {slides.map((s, i) => (
+                <button
+                  key={`${s.image}-${i}`}
+                  type="button"
+                  onClick={(e) => {
+                    stopNav(e);
+                    setIndex(i);
+                  }}
+                  className={`h-2 w-2 rounded-full transition ${
+                    i === index ? 'bg-brand-600' : 'bg-ink-300 hover:bg-ink-400'
+                  }`}
+                  aria-label={`${i + 1} / ${slides.length}`}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 shadow-sm">
+              {slides.map((s, i) => (
+                <button
+                  key={`${s.image}-${i}`}
+                  type="button"
+                  onClick={(e) => {
+                    stopNav(e);
+                    setIndex(i);
+                  }}
+                  className={`rounded-full px-2.5 py-0.5 text-xs font-semibold transition ${
+                    i === index
+                      ? 'bg-brand-600 text-white'
+                      : 'text-ink-600 hover:bg-ink-100'
+                  }`}
+                >
+                  {s.labelKey ? t(s.labelKey) : i + 1}
+                </button>
+              ))}
+            </div>
+          )}
         </>
       )}
     </div>

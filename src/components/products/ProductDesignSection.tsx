@@ -106,6 +106,10 @@ function DesignCard({
   const t = useTranslations('products');
   const td = useTranslations('products.detail');
   const tp = useTranslations('products.types');
+  const ti = useTranslations('products.items');
+  const productLabel = product.nameKey
+    ? ti(product.nameKey)
+    : tp(product.type);
 
   return (
     <Card className="overflow-hidden p-0">
@@ -114,7 +118,7 @@ function DesignCard({
           product={product}
           color={color}
           design={design}
-          typeLabel={tp(product.type)}
+          typeLabel={productLabel}
         />
       ) : isImageDesignTemplate(design) ? (
         <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-brand-50 to-brand-100">
@@ -175,9 +179,13 @@ function OrderWithDesignButton({
 }) {
   const td = useTranslations('products.detail');
   const tp = useTranslations('products.types');
+  const ti = useTranslations('products.items');
   const t = useTranslations('products');
   const { addItem } = useCart();
   const router = useRouter();
+  const productLabel = product.nameKey
+    ? ti(product.nameKey)
+    : tp(product.type);
 
   function handleOrder() {
     const metadata: Record<string, string | number | boolean> = {
@@ -190,7 +198,7 @@ function OrderWithDesignButton({
 
     addItem({
       type: 'product',
-      name: `${tp(product.type)} — ${t(`designs.${design.nameKey}`)}`,
+      name: `${productLabel} — ${t(`designs.${design.nameKey}`)}`,
       price: product.basePrice,
       quantity: 1,
       designPreview:

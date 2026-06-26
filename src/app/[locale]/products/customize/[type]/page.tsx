@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { ProductCustomizer } from "@/components/products/ProductCustomizer";
+import { MagnetOrderForm } from "@/components/products/MagnetOrderForm";
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { LocalePageLoading } from "@/components/ui/LocalePageLoading";
@@ -26,16 +27,25 @@ export default async function CustomizeProductPage({
 }) {
   const { type } = await params;
   const t = await getTranslations("products.customizer");
+  const tm = await getTranslations("products.magnetOrder");
 
   if (!productTypes.includes(type as ProductType)) {
     notFound();
   }
 
+  const isMagnet = type === "magnet";
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 md:py-10 xl:px-8 xl:py-12">
-      <h1 className="mb-6 text-2xl font-bold text-ink-900 md:mb-8 md:text-3xl">{t("title")}</h1>
+      <h1 className="mb-6 text-2xl font-bold text-ink-900 md:mb-8 md:text-3xl">
+        {isMagnet ? tm("title") : t("title")}
+      </h1>
       <Suspense fallback={<LocalePageLoading />}>
-        <ProductCustomizer type={type as ProductType} />
+        {isMagnet ? (
+          <MagnetOrderForm />
+        ) : (
+          <ProductCustomizer type={type as ProductType} />
+        )}
       </Suspense>
     </div>
   );
