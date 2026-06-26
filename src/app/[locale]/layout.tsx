@@ -72,7 +72,7 @@ export default async function LocaleLayout({
       <body
         className={`${inter.variable} ${spaceGrotesk.variable} min-h-screen font-sans antialiased`}
       >
-        <NextIntlClientProvider messages={messages}>
+        <NextIntlClientProvider locale={locale} messages={messages}>
           <CartProvider>
             <NavigationProgress />
             <SiteAnalytics />

@@ -97,7 +97,7 @@ export const services: Service[] = [
   },
   {
     id: 'thermos-printing',
-    icon: 'FlaskConical',
+    icon: 'GlassWater',
     category: 'merch',
     startingPrice: 800,
     featured: true,
@@ -161,7 +161,7 @@ export const services: Service[] = [
   },
   {
     id: 'wedding-invitations',
-    icon: 'Heart',
+    icon: 'ScrollText',
     category: 'print',
     startingPrice: 1500,
     featured: true,

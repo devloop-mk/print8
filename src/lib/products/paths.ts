@@ -5,6 +5,8 @@ export const PRODUCT_OFFERING_PATHS = {
   custom: '/products/custom',
   readyDesigns: '/products/ready-designs',
   textTemplates: '/products/text-templates',
+  category: (categoryId: string) => `/products/category/${categoryId}`,
+  type: (type: string) => `/products/type/${type}`,
 } as const;
 
 export type CustomizerUrlOptions = {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/routing';
+import { Link } from '@/i18n/navigation';
 import {
   getProductMockup,
   isImageDesignTemplate,
@@ -13,7 +13,7 @@ import { buildCustomizerUrl } from '@/lib/products/paths';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { useCart } from '@/components/cart/CartProvider';
-import { useRouter } from '@/i18n/routing';
+import { useRouter } from '@/i18n/navigation';
 import { DesignTemplatePreview } from '@/components/products/DesignTemplatePreview';
 import Image from 'next/image';
 

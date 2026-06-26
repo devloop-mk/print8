@@ -3,32 +3,43 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { products } from '@/lib/data/catalog';
+import { useRouter } from '@/i18n/navigation';
+import { products, productTypes, type ProductType } from '@/lib/data/catalog';
 import { parseProductTypeFilter } from '@/lib/data/service-routes';
+import { productTypeHref } from '@/lib/products/product-nav';
 import { buildProductTypeFilterOptions } from '@/lib/products/product-type-icons';
 import { ProductCardGrid } from '@/components/products/ProductCardGrid';
 import { FilterChipBar } from '@/components/catalog/FilterChipBar';
 import { ProductJourneyGuide } from '@/components/products/ProductJourneyGuide';
 import { Reveal } from '@/components/motion/Reveal';
-import type { ProductType } from '@/lib/data/catalog';
 
 type ProductFilter = ProductType | 'all';
+
+function isProductType(value: string): value is ProductType {
+  return (productTypes as readonly string[]).includes(value);
+}
 
 export function ProductsCatalog() {
   const t = useTranslations('products');
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [typeFilter, setTypeFilter] = useState<ProductFilter>(() =>
     parseProductTypeFilter(searchParams.get('type')),
   );
 
   useEffect(() => {
-    setTypeFilter(parseProductTypeFilter(searchParams.get('type')));
-  }, [searchParams]);
+    const typeParam = searchParams.get('type');
+    if (typeParam && isProductType(typeParam)) {
+      router.replace(productTypeHref(typeParam));
+      return;
+    }
+    setTypeFilter(parseProductTypeFilter(typeParam));
+  }, [searchParams, router]);
 
   const { allOption, options: filterOptions } = useMemo(
     () =>
       buildProductTypeFilterOptions((type) =>
-        type === 'all' ? t('allTypes') : t(`types.${type}`),
+        type === 'all' ? t('allTypes') : t(`typesPlural.${type}`),
       ),
     [t],
   );

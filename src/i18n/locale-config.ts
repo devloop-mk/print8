@@ -1,4 +1,4 @@
-import type { Locale } from '@/i18n/routing';
+import type { Locale } from '@/i18n/navigation';
 
 export const localeConfig: Record<Locale, { shortLabel: string }> = {
   mk: { shortLabel: 'MK' },

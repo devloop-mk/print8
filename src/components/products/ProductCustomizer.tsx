@@ -15,7 +15,7 @@ import {
 } from '@/lib/products/capture-preview';
 import { useTranslations, useLocale } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
-import { Link, useRouter } from '@/i18n/routing';
+import { Link, useRouter } from '@/i18n/navigation';
 import {
   products,
   getProductMockup,

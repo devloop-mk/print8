@@ -6,11 +6,13 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatPrice(amount: number, locale: string): string {
-  return new Intl.NumberFormat(locale === "mk" ? "mk-MK" : "en-US", {
-    style: "currency",
-    currency: "MKD",
+  // Use a fixed number format — Node and browsers disagree on MKD currency
+  // strings for mk-MK, which causes hydration mismatches in client components.
+  const value = new Intl.NumberFormat("en-US", {
     maximumFractionDigits: 0,
   }).format(amount);
+
+  return locale === "mk" ? `${value} ден.` : `MKD ${value}`;
 }
 
 export function generateOrderNumber(): string {

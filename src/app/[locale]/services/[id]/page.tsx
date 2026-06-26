@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { redirect } from "@/i18n/routing";
+import { redirect } from "@/i18n/navigation";
 import { getService } from "@/lib/data/catalog";
 import { getServiceDestination } from "@/lib/data/service-routes";
 

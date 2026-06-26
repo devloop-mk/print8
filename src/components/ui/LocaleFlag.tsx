@@ -1,4 +1,4 @@
-import type { Locale } from '@/i18n/routing';
+import type { Locale } from '@/i18n/navigation';
 import MK from 'country-flag-icons/react/3x2/MK';
 import GB from 'country-flag-icons/react/3x2/GB';
 import { cn } from '@/lib/utils';

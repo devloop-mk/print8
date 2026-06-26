@@ -2,15 +2,22 @@
 
 import { useMemo, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Link } from '@/i18n/routing';
+import { Link } from '@/i18n/navigation';
 import { formatPrice } from '@/lib/utils';
 import { getProductOffering } from '@/lib/products/offering';
 import { Card } from '@/components/ui/Card';
 import { ProductCatalogImage } from '@/components/products/ProductCatalogImage';
 import { Reveal } from '@/components/motion/Reveal';
+import { cn } from '@/lib/utils';
 import type { Product } from '@/lib/data/catalog';
 
-export function ProductCardGrid({ items }: { items: Product[] }) {
+export function ProductCardGrid({
+  items,
+  gridClassName,
+}: {
+  items: Product[];
+  gridClassName?: string;
+}) {
   const t = useTranslations('products');
   const tp = useTranslations('products.types');
   const ti = useTranslations('products.items');
@@ -23,7 +30,12 @@ export function ProductCardGrid({ items }: { items: Product[] }) {
   );
 
   return (
-    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div
+      className={cn(
+        'grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3',
+        gridClassName,
+      )}
+    >
       {items.map((product, index) => {
         const defaultColor = product.colors?.[0] ?? '#ffffff';
         const cardColor = previewColors[product.id] ?? defaultColor;

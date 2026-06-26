@@ -2,8 +2,8 @@ import {
   CircleUserRound,
   Coffee,
   CupSoda,
-  FlaskConical,
   Gift,
+  GlassWater,
   LayoutGrid,
   Magnet,
   Shirt,
@@ -22,7 +22,7 @@ export const productTypeIconMap: Record<ProductTypeFilterValue, LucideIcon> = {
   mug: Coffee,
   cup: CupSoda,
   bag: ShoppingBag,
-  thermos: FlaskConical,
+  thermos: GlassWater,
   magnet: Magnet,
   'gift-set': Gift,
 };

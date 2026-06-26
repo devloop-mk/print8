@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
-import { Link, redirect } from '@/i18n/routing';
+import { Link, redirect } from '@/i18n/navigation';
 import {
   getDesignTemplate,
   isCustomizableDesign,

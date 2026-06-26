@@ -3,7 +3,8 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Check, ChevronDown } from 'lucide-react';
-import { Link, usePathname, routing, type Locale } from '@/i18n/routing';
+import { Link, usePathname } from '@/i18n/navigation';
+import { routing, type Locale } from '@/i18n/routing';
 import { localeConfig } from '@/i18n/locale-config';
 import { LocaleFlag } from '@/components/ui/LocaleFlag';
 import { cn } from '@/lib/utils';

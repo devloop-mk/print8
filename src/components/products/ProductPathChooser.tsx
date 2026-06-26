@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/routing';
+import { Link } from '@/i18n/navigation';
 import { ImageIcon, Palette, Type } from 'lucide-react';
 import { Reveal } from '@/components/motion/Reveal';
 import { getProductPaths } from '@/lib/products/paths';

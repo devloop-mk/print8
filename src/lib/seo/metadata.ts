@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import type { Locale } from '@/i18n/routing';
+import type { Locale } from '@/i18n/navigation';
 import { absoluteUrl, getSiteUrl, localePath, openGraphLocale } from '@/lib/seo/site';
 
 type BuildMetadataOptions = {

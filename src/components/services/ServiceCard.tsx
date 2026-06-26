@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations, useLocale } from 'next-intl';
-import { Link } from '@/i18n/routing';
+import { Link } from '@/i18n/navigation';
 import { formatPrice } from '@/lib/utils';
 import { Card } from '@/components/ui/Card';
 import { getServiceIcon } from '@/lib/data/service-icons';
@@ -64,7 +64,7 @@ export function ServiceCard({
       );
     }
 
-    if (!showContactOnly) {
+    if (!showContactOnly && variant !== 'home') {
       return (
         <Card className="flex h-full flex-col p-3 sm:p-4">
           {compactBody}

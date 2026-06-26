@@ -1,6 +1,6 @@
 # Print 8
 
-Professional printing company website built with Next.js 15, featuring bilingual support (Macedonian/English), design studio, product customizer, and cash-on-delivery ordering.
+Professional printing company website built with Next.js 16, featuring bilingual support (Macedonian/English), design studio, product customizer, and cash-on-delivery ordering.
 
 ## Features
 
@@ -42,7 +42,7 @@ No required env vars for local development. Orders and upload sessions are store
 
 ## Tech Stack
 
-- Next.js 15 (App Router)
+- Next.js 16 (App Router)
 - TypeScript
 - Tailwind CSS
 - next-intl

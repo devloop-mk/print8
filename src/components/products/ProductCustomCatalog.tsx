@@ -3,10 +3,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/routing';
+import { useRouter, Link } from '@/i18n/navigation';
 import { ArrowLeft } from 'lucide-react';
-import { products, type ProductType } from '@/lib/data/catalog';
+import { products, productTypes, type ProductType } from '@/lib/data/catalog';
 import { parseProductTypeFilter } from '@/lib/data/service-routes';
+import { productTypeHref } from '@/lib/products/product-nav';
 import { buildProductTypeFilterOptions } from '@/lib/products/product-type-icons';
 import { PRODUCT_OFFERING_PATHS } from '@/lib/products/paths';
 import { ProductCardGrid } from '@/components/products/ProductCardGrid';
@@ -19,18 +20,27 @@ export function ProductCustomCatalog() {
   const t = useTranslations('products');
   const tc = useTranslations('products.catalog');
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [typeFilter, setTypeFilter] = useState<ProductFilter>(() =>
     parseProductTypeFilter(searchParams.get('type')),
   );
 
   useEffect(() => {
-    setTypeFilter(parseProductTypeFilter(searchParams.get('type')));
-  }, [searchParams]);
+    const typeParam = searchParams.get('type');
+    if (
+      typeParam &&
+      (productTypes as readonly string[]).includes(typeParam)
+    ) {
+      router.replace(productTypeHref(typeParam as ProductType));
+      return;
+    }
+    setTypeFilter(parseProductTypeFilter(typeParam));
+  }, [searchParams, router]);
 
   const { allOption, options: filterOptions } = useMemo(
     () =>
       buildProductTypeFilterOptions((type) =>
-        type === 'all' ? t('allTypes') : t(`types.${type}`),
+        type === 'all' ? t('allTypes') : t(`typesPlural.${type}`),
       ),
     [t],
   );

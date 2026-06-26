@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Link, usePathname } from '@/i18n/routing';
+import { Link, usePathname } from '@/i18n/navigation';
 import { useCart } from '@/components/cart/CartProvider';
 import { LanguageSwitcher } from '@/components/layout/LanguageSwitcher';
 import { ProductsNavMenu } from '@/components/layout/ProductsNavMenu';

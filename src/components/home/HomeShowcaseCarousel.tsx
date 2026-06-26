@@ -3,15 +3,13 @@
 import { useRef } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/routing';
+import { Link } from '@/i18n/navigation';
 import {
   ChevronLeft,
   ChevronRight,
   ImageIcon,
   Palette,
   Printer,
-  Shirt,
-  Sparkles,
   Type,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -20,7 +18,7 @@ type ShowcaseSlide = {
   id: string;
   href: string;
   image: string;
-  icon: typeof Shirt;
+  icon: typeof Printer;
   /** Bottom fade: transparent → accent color */
   accent: string;
   badgeClass: string;
@@ -28,49 +26,25 @@ type ShowcaseSlide = {
 
 const slides: ShowcaseSlide[] = [
   {
-    id: 'merch',
-    href: '/products',
-    image: '/hoodies/hoodie-charcoal.jpg',
-    icon: Shirt,
-    accent: 'from-brand-600/75',
-    badgeClass: 'bg-brand-600/90',
-  },
-  {
-    id: 'mugs',
-    href: '/products?type=thermos',
-    image: '/thermoses/thermos-blue.jpg',
-    icon: Sparkles,
-    accent: 'from-sky-600/75',
-    badgeClass: 'bg-sky-600/90',
-  },
-  {
-    id: 'gifts',
-    href: '/services#gifts',
-    image: '/bags/bag-beige.jpg',
-    icon: Sparkles,
-    accent: 'from-amber-600/75',
-    badgeClass: 'bg-amber-600/90',
-  },
-  {
-    id: 'finishing',
-    href: '/services#finishing',
-    image: '/designs/menu-elegant.svg',
-    icon: Printer,
-    accent: 'from-emerald-700/75',
-    badgeClass: 'bg-emerald-800/90',
-  },
-  {
     id: 'printing',
     href: '/services#print',
-    image: '/designs/bc-classic.svg',
+    image: '/showcase/showcase-printing.svg',
     icon: Printer,
     accent: 'from-ink-700/75',
     badgeClass: 'bg-ink-800/90',
   },
   {
+    id: 'finishing',
+    href: '/services#finishing',
+    image: '/showcase/showcase-finishing.svg',
+    icon: Printer,
+    accent: 'from-emerald-700/75',
+    badgeClass: 'bg-emerald-800/90',
+  },
+  {
     id: 'readyDesigns',
     href: '/designs',
-    image: '/designs/wedding-floral.svg',
+    image: '/showcase/showcase-ready-designs.svg',
     icon: Palette,
     accent: 'from-rose-600/75',
     badgeClass: 'bg-rose-600/90',
@@ -78,7 +52,7 @@ const slides: ShowcaseSlide[] = [
   {
     id: 'photoDesigns',
     href: '/products/ready-designs',
-    image: '/product-designs/floral.svg',
+    image: '/showcase/showcase-photo-designs.svg',
     icon: ImageIcon,
     accent: 'from-violet-600/75',
     badgeClass: 'bg-violet-600/90',
@@ -86,7 +60,7 @@ const slides: ShowcaseSlide[] = [
   {
     id: 'textTemplates',
     href: '/products/text-templates',
-    image: '/bags/bag-beige.jpg',
+    image: '/showcase/showcase-text-templates.svg',
     icon: Type,
     accent: 'from-emerald-600/75',
     badgeClass: 'bg-emerald-600/90',
@@ -169,15 +143,7 @@ export function HomeShowcaseCarousel() {
                       alt={t(`slides.${slide.id}.title`)}
                       fill
                       sizes="(max-width: 640px) 78vw, 320px"
-                      className={cn(
-                        'object-contain p-5 pb-10 transition duration-500 group-hover:scale-105',
-                        slide.id === 'printing' ||
-                          slide.id === 'readyDesigns' ||
-                          slide.id === 'photoDesigns' ||
-                          slide.id === 'finishing'
-                          ? 'p-7 pb-11'
-                          : 'p-4 pb-10',
-                      )}
+                      className="object-contain p-4 pb-10 transition duration-500 group-hover:scale-105"
                     />
                     <div
                       className={cn(

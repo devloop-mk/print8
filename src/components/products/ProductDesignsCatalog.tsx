@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/routing';
+import { Link } from '@/i18n/navigation';
 import { ArrowLeft } from 'lucide-react';
 import {
   type ProductDesignCategory,
@@ -49,7 +49,7 @@ export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) 
   const { allOption, options: typeOptions } = useMemo(
     () =>
       buildProductTypeFilterOptions((type) =>
-        type === 'all' ? t('allTypes') : t(`types.${type}`),
+        type === 'all' ? t('allTypes') : t(`typesPlural.${type}`),
       ),
     [t],
   );

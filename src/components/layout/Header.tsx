@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/routing";
+import { Link } from "@/i18n/navigation";
 import { useCart } from "@/components/cart/CartProvider";
 import { cn } from "@/lib/utils";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
@@ -10,7 +10,7 @@ import { MobileNav } from "@/components/layout/MobileNav";
 import { ProductsNavDropdown } from "@/components/layout/ProductsNavDropdown";
 import { Logo } from "@/components/brand/Logo";
 import { Menu, ShoppingCart } from "lucide-react";
-import { usePathname } from "@/i18n/routing";
+import { usePathname } from "@/i18n/navigation";
 
 const navItems = [
   { href: "/", key: "home" },

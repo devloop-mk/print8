@@ -9,6 +9,7 @@ import {
   FlaskConical,
   Gem,
   Gift,
+  GlassWater,
   GraduationCap,
   Heart,
   IdCard,
@@ -19,6 +20,7 @@ import {
   PartyPopper,
   PenTool,
   Printer,
+  ScrollText,
   Shield,
   Shirt,
   ShoppingBag,
@@ -41,6 +43,7 @@ export const serviceIconMap: Record<string, LucideIcon> = {
   PartyPopper,
   Gift,
   FlaskConical,
+  GlassWater,
   CircleUserRound,
   Magnet,
   KeyRound,
@@ -53,6 +56,7 @@ export const serviceIconMap: Record<string, LucideIcon> = {
   Upload,
   Sticker,
   PenTool,
+  ScrollText,
 };
 
 export function getServiceIcon(iconName: string): LucideIcon {

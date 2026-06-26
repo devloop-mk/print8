@@ -6,7 +6,7 @@ import { useState } from "react";
 
 import { useTranslations, useLocale } from "next-intl";
 
-import { Link } from "@/i18n/routing";
+import { Link } from "@/i18n/navigation";
 
 import { useCart } from "@/components/cart/CartProvider";
 

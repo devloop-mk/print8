@@ -1,10 +1,36 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800" fill="none">
   <defs>
-    <linearGradient id="g" x1="0" x2="1">
-      <stop offset="0" stop-color="#fff7ed"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="600" y2="800" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff7ed"/>
       <stop offset="1" stop-color="#fff1f2"/>
     </linearGradient>
+    <filter id="shadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#9f1239" flood-opacity="0.14"/>
+    </filter>
   </defs>
-  <rect width="100%" height="100%" fill="url(#g)"/>
-  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#c026d3" font-family="Inter, Arial, sans-serif" font-size="34">wedding-floral</text>
+  <rect width="600" height="800" fill="url(#bg)"/>
+  <g filter="url(#shadow)">
+    <rect x="72" y="64" width="456" height="672" rx="16" fill="#fffdfa" stroke="#e7d5c4"/>
+    <rect x="92" y="84" width="416" height="632" rx="8" fill="none" stroke="#c026d340" stroke-width="2"/>
+    <ellipse cx="300" cy="120" rx="120" ry="28" fill="none" stroke="#fda4af" stroke-width="2" opacity="0.7"/>
+    <ellipse cx="300" cy="120" rx="100" ry="22" fill="none" stroke="#f472b6" stroke-width="1.5" opacity="0.5"/>
+    <circle cx="180" cy="120" r="16" fill="#fda4af" opacity="0.55"/>
+    <circle cx="420" cy="120" r="16" fill="#fda4af" opacity="0.55"/>
+    <circle cx="150" cy="150" r="12" fill="#fbbf24" opacity="0.5"/>
+    <circle cx="450" cy="150" r="12" fill="#fbbf24" opacity="0.5"/>
+    <ellipse cx="300" cy="680" rx="110" ry="24" fill="none" stroke="#fda4af" stroke-width="2" opacity="0.6"/>
+    <circle cx="190" cy="670" r="14" fill="#fb7185" opacity="0.45"/>
+    <circle cx="410" cy="670" r="14" fill="#fb7185" opacity="0.45"/>
+    <ellipse cx="300" cy="200" rx="28" ry="10" fill="none" stroke="#c026d3" stroke-width="2"/>
+    <circle cx="286" cy="200" r="10" fill="none" stroke="#c026d3" stroke-width="2"/>
+    <circle cx="314" cy="200" r="10" fill="none" stroke="#c026d3" stroke-width="2"/>
+    <text x="300" y="248" text-anchor="middle" fill="#be185d" font-family="Inter, Arial, sans-serif" font-size="11" letter-spacing="4">WEDDING INVITATION</text>
+    <line x1="200" y1="262" x2="400" y2="262" stroke="#c026d3" stroke-width="1" opacity="0.4"/>
+    <text x="300" y="340" text-anchor="middle" fill="#c026d3" font-family="Georgia, serif" font-size="38" font-style="italic" font-weight="700">Ana &amp; Marko</text>
+    <line x1="220" y1="368" x2="380" y2="368" stroke="#be185d" stroke-width="1" opacity="0.35"/>
+    <text x="300" y="420" text-anchor="middle" fill="#831843" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="500">15.08.2026</text>
+    <text x="300" y="452" text-anchor="middle" fill="#be185d" font-family="Inter, Arial, sans-serif" font-size="14">Hotel Continental</text>
+    <path d="M100 620 C120 600 140 640 120 660 C100 670 80 650 100 620Z" fill="#fda4af" opacity="0.35"/>
+    <path d="M500 180 C520 160 540 200 520 220 C500 230 480 210 500 180Z" fill="#fde68a" opacity="0.4"/>
+  </g>
 </svg>

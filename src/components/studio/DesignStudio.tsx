@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { designTemplates } from '@/lib/data/catalog';
 import { useSearchParams } from 'next/navigation';
-import { useRouter } from '@/i18n/routing';
+import { useRouter } from '@/i18n/navigation';
 import { useCart } from '@/components/cart/CartProvider';
 import { useUploadSession } from '@/hooks/useUploadSession';
 import { useSavedDesigns } from '@/hooks/useSavedDesigns';
@@ -293,9 +293,8 @@ export function DesignStudio() {
       });
     }
 
-    canvas.setWidth(canvasWidth);
-    canvas.setHeight(canvasHeight);
-    canvas.calcOffset?.();
+    canvas.setDimensions({ width: canvasWidth, height: canvasHeight });
+    canvas.calcOffset();
     canvas.renderAll();
 
     prevCanvasSizeRef.current = { width: canvasWidth, height: canvasHeight };

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/routing';
+import { Link } from '@/i18n/navigation';
 import { Card } from '@/components/ui/Card';
 import { DesignCardThumbnail } from '@/components/designs/DesignCardThumbnail';
 import { FilterChipBar } from '@/components/catalog/FilterChipBar';

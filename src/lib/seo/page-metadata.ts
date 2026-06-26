@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import type { Locale } from '@/i18n/routing';
+import type { Locale } from '@/i18n/navigation';
 import {
   LEGAL_PAGE_PATHS,
   type LegalPageKey,
@@ -10,6 +10,7 @@ import {
   type ProductType,
   type ProductDesignCategory,
 } from '@/lib/data/catalog';
+import type { ProductNavCategoryId } from '@/lib/products/product-nav';
 import { buildOgImageUrl, buildPageMetadata } from '@/lib/seo/metadata';
 
 export async function buildProductMetadata(locale: Locale, id: string) {
@@ -183,6 +184,60 @@ export async function buildProductCustomizeMetadata(
       title: productName,
       description: tc('title'),
       badge: tm('badges.customize'),
+      image: product?.image,
+    }),
+  });
+}
+
+export async function buildProductCategoryMetadata(
+  locale: Locale,
+  category: ProductNavCategoryId,
+) {
+  const tNav = await getTranslations({
+    locale,
+    namespace: 'nav.productsMenu.categories',
+  });
+  const tc = await getTranslations({ locale, namespace: 'products.categoryPages' });
+  const tm = await getTranslations({ locale, namespace: 'metadata' });
+  const title = `${tNav(category)} | Print 8`;
+  const description = tc(`${category}.subtitle`);
+
+  return buildPageMetadata({
+    locale,
+    title,
+    description,
+    path: `/products/category/${category}`,
+    image: buildOgImageUrl({
+      locale,
+      title: tNav(category),
+      description,
+      badge: tm('badges.products'),
+    }),
+  });
+}
+
+export async function buildProductTypePageMetadata(
+  locale: Locale,
+  type: ProductType,
+) {
+  const tp = await getTranslations({ locale, namespace: 'products.typesPlural' });
+  const tt = await getTranslations({ locale, namespace: 'products.typePages' });
+  const tm = await getTranslations({ locale, namespace: 'metadata' });
+  const productName = tp(type);
+  const title = `${productName} | Print 8`;
+  const description = tt(`${type}.subtitle`);
+  const product = products.find((item) => item.type === type);
+
+  return buildPageMetadata({
+    locale,
+    title,
+    description,
+    path: `/products/type/${type}`,
+    image: buildOgImageUrl({
+      locale,
+      title: productName,
+      description,
+      badge: tm('badges.products'),
       image: product?.image,
     }),
   });

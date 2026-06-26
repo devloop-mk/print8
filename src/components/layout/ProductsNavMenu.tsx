@@ -1,11 +1,12 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/routing';
+import { Link } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
 import {
   productNavCategories,
   productNavQuickLinks,
+  productCategoryHref,
   productTypeHref,
 } from '@/lib/products/product-nav';
 import { getProductTypeIcon } from '@/lib/products/product-type-icons';
@@ -26,7 +27,7 @@ function TypeLink({
   onNavigate?: () => void;
   compact?: boolean;
 }) {
-  const t = useTranslations('products.types');
+  const t = useTranslations('products.typesPlural');
   const Icon = getProductTypeIcon(type);
 
   return (
@@ -70,15 +71,19 @@ export function ProductsNavMenu({
             const CategoryIcon = category.icon;
             return (
               <div key={category.id}>
-                <div className="mb-1.5 flex items-center gap-2 px-1">
+                <Link
+                  href={productCategoryHref(category.id)}
+                  onClick={onNavigate}
+                  className="group mb-1.5 flex items-center gap-2 rounded-lg px-1 py-1 transition hover:bg-brand-50"
+                >
                   <CategoryIcon
-                    className="h-4 w-4 shrink-0 text-ink-500"
+                    className="h-4 w-4 shrink-0 text-ink-500 transition group-hover:text-brand-600"
                     aria-hidden
                   />
-                  <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-ink-500 transition group-hover:text-brand-700">
                     {t(`categories.${category.id}`)}
                   </span>
-                </div>
+                </Link>
                 <div
                   className={cn(
                     'grid gap-0.5',

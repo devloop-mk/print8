@@ -46,8 +46,8 @@
       "browseByType": "Browse by type",
       "personalize": "Personalize",
       "categories": {
-        "apparel": "Apparel",
-        "drinkware": "Drinkware",
+        "apparel": "T-shirts, hoodies & caps",
+        "drinkware": "Mugs, cups & thermoses",
         "bags": "Bags",
         "gifts": "Gifts & magnets"
       },
@@ -86,7 +86,10 @@
     "contactCtaButton": "Contact us",
     "contactCtaFaq": "View FAQ",
     "featuredProducts": "Products",
-    "featuredProductsDesc": "T-shirts, hoodies, caps, bags, mugs, cups, thermoses, and more — customize with your design or order as shown.",
+    "featuredProductsDesc": "Browse by category and product type — from apparel and drinkware to bags and gifts.",
+    "featuredCategories": {
+      "typesLabel": "Types"
+    },
     "whyUs": "Why Print 8?",
     "whyQuality": "High print quality",
     "whyQualityDesc": "We use professional equipment and materials for lasting results.",
@@ -119,7 +122,7 @@
     "showcase": {
       "eyebrow": "What we offer",
       "title": "Everything in one place",
-      "subtitle": "Browse our options — from personalized merch to ready-made print designs.",
+      "subtitle": "Services, ready-made designs, and ways to personalize — all in one place.",
       "explore": "Explore",
       "scrollPrev": "Previous card",
       "scrollNext": "Next card",
@@ -594,6 +597,54 @@
       "noDesigns": "No designs match the selected filters.",
       "viewProduct": "View product"
     },
+    "categoryPages": {
+      "backToAll": "Back to all products",
+      "allInCategory": "All in category",
+      "apparel": {
+        "subtitle": "T-shirts, hoodies, and caps — customize with your design or order ready-made styles."
+      },
+      "drinkware": {
+        "subtitle": "Mugs, cups, and thermoses — great for gifts, promotions, and events."
+      },
+      "bags": {
+        "subtitle": "Bags with your brand or message — for events, promos, and everyday use."
+      },
+      "gifts": {
+        "subtitle": "Magnets and gift sets — personalized presents for home and work."
+      }
+    },
+    "typePages": {
+      "backToAll": "All products",
+      "suggestionsTitle": "You might also like",
+      "suggestionsSubtitle": "Browse more products from our catalog.",
+      "t-shirt": {
+        "subtitle": "Custom t-shirts with your design — pick color, size, and print options."
+      },
+      "hoodie": {
+        "subtitle": "Hoodies with your logo or artwork — comfortable and durable for daily wear."
+      },
+      "cap": {
+        "subtitle": "Branded caps — great for teams, events, and promotions."
+      },
+      "mug": {
+        "subtitle": "Mugs with your photo or text — a popular gift for home and office."
+      },
+      "cup": {
+        "subtitle": "Cups with custom printing — for cafés, events, and promos."
+      },
+      "bag": {
+        "subtitle": "Bags with your design — practical and visible for your brand."
+      },
+      "thermos": {
+        "subtitle": "Thermoses with your branding — long-lasting use and quality print."
+      },
+      "magnet": {
+        "subtitle": "Magnets with your photo — ideal for gifts and souvenirs."
+      },
+      "gift-set": {
+        "subtitle": "Personalized gift sets — complete solutions for your brand or event."
+      }
+    },
     "paths": {
       "eyebrow": "Next step",
       "title": "How do you want to personalize?",
@@ -685,6 +736,17 @@
       "updateCart": "Update cart"
     },
     "types": {
+      "t-shirt": "T-shirt",
+      "hoodie": "Hoodie",
+      "cap": "Cap",
+      "mug": "Mug",
+      "cup": "Cup",
+      "bag": "Bag",
+      "thermos": "Thermos",
+      "magnet": "Magnet",
+      "gift-set": "Gift set"
+    },
+    "typesPlural": {
       "t-shirt": "T-shirts",
       "hoodie": "Hoodies",
       "cap": "Caps",

@@ -3,11 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "dev:webpack": "next dev",
+    "dev": "next dev",
+    "dev:webpack": "next dev --webpack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "compress:images": "node scripts/compress-images.mjs",
     "build:flag-stickers": "node scripts/build-flag-stickers.mjs"
   },
@@ -15,14 +15,14 @@
     "@supabase/supabase-js": "^2.108.1",
     "clsx": "^2.1.1",
     "country-flag-icons": "^1.6.17",
-    "fabric": "^6.6.1",
+    "fabric": "^7.4.0",
     "html2canvas": "^1.4.1",
     "lucide-react": "^0.475.0",
     "nanoid": "^5.1.0",
-    "next": "^15.1.6",
-    "next-intl": "^3.26.3",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "next": "^16.2.9",
+    "next-intl": "^4.13.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
     "react-easy-crop": "^6.0.2",
     "resend": "^6.12.4",
     "sharp": "^0.33.5",
@@ -35,10 +35,14 @@
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "eslint": "^9.19.0",
-    "eslint-config-next": "^15.1.6",
+    "eslint-config-next": "^16.2.9",
     "flag-icons": "^7.5.0",
-    "postcss": "^8.5.1",
+    "postcss": "^8.5.10",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.3"
+  },
+  "overrides": {
+    "postcss": "$postcss",
+    "tar": "^7.5.16"
   }
 }

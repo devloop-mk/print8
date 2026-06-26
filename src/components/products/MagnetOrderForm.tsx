@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
-import { Link, useRouter } from '@/i18n/routing';
+import { Link, useRouter } from '@/i18n/navigation';
 import {
   products,
   getMagnetDisplayMockup,
@@ -18,6 +18,7 @@ import { Card } from '@/components/ui/Card';
 import { formatPrice } from '@/lib/utils';
 import { ArrowLeft, ShoppingCart } from 'lucide-react';
 import { evaluateCartAssetLimits } from '@/lib/orders/order-assets';
+import { productTypeHref } from '@/lib/products/product-nav';
 
 type UploadedPhoto = {
   fileId: string;
@@ -80,7 +81,7 @@ export function MagnetOrderForm() {
     return (
       <Card className="p-8 text-center">
         <p className="text-ink-600">{t('notFound')}</p>
-        <Link href="/products?type=magnet" className="mt-4 inline-block">
+        <Link href={productTypeHref('magnet')} className="mt-4 inline-block">
           <Button variant="outline">{t('backToMagnets')}</Button>
         </Link>
       </Card>

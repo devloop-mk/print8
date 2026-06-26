@@ -1,4 +1,4 @@
-import type { Locale } from '@/i18n/routing';
+import type { Locale } from '@/i18n/navigation';
 
 const DEFAULT_SITE_URL = 'https://print8.mk';
 

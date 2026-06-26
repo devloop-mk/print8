@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
-import { Link } from '@/i18n/routing';
+import { Link } from '@/i18n/navigation';
 import { Sparkles, Palette, Truck, Printer, Shirt, Layers } from 'lucide-react';
-import { getFeaturedServices, designTemplates, products } from '@/lib/data/catalog';
+import { getFeaturedServices, designTemplates } from '@/lib/data/catalog';
 import { HomeShowcaseCarousel } from '@/components/home/HomeShowcaseCarousel';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -11,7 +11,7 @@ import { HeroBackdrop } from '@/components/home/HeroBackdrop';
 import { HomeHighlights } from '@/components/home/HomeHighlights';
 import { FeaturedDesignCards } from '@/components/home/FeaturedDesignCards';
 import { HomeContactCta } from '@/components/home/HomeContactCta';
-import { ProductCardGrid } from '@/components/products/ProductCardGrid';
+import { FeaturedProductCategories } from '@/components/home/FeaturedProductCategories';
 import { ServiceCard } from '@/components/services/ServiceCard';
 import { Reveal } from '@/components/motion/Reveal';
 
@@ -137,7 +137,7 @@ export default async function HomePage({
                 {t('viewAll')} →
               </Link>
             </div>
-            <ProductCardGrid items={products} />
+            <FeaturedProductCategories />
             <div className="mt-10 flex justify-center">
               <Link href="/products" className="link-cta">
                 {t('viewAllProducts')} →

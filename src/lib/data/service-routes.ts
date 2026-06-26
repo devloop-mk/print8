@@ -1,5 +1,6 @@
 import type { DesignCategory, ProductType, Service } from "@/lib/data/catalog";
 import { productTypes, designCategories } from "@/lib/data/catalog";
+import { productTypeHref } from "@/lib/products/product-nav";
 
 function isProductType(value: string): value is ProductType {
   return (productTypes as readonly string[]).includes(value);
@@ -14,7 +15,7 @@ export function getServiceDestination(service: Service): string | null {
   if (service.customization === "products" && service.productTypes?.length) {
     const type = service.productTypes[0];
     if (isProductType(type)) {
-      return `/products?type=${type}`;
+      return productTypeHref(type);
     }
     return "/products";
   }

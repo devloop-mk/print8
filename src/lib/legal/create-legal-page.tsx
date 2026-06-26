@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { LegalDocument } from '@/components/legal/LegalDocument';
 import { buildLegalMetadata } from '@/lib/seo/page-metadata';
-import type { Locale } from '@/i18n/routing';
+import type { Locale } from '@/i18n/navigation';
 import type { LegalPageKey } from '@/lib/legal/pages';
 
 type LegalPageProps = {

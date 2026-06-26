@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { useRouter, Link } from "@/i18n/routing";
+import { useRouter, Link } from "@/i18n/navigation";
 import { useCart } from "@/components/cart/CartProvider";
 import { useUploadSession } from "@/hooks/useUploadSession";
 import { SecureUpload } from "@/components/upload/SecureUpload";

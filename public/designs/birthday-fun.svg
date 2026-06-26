@@ -1,7 +1,38 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
-  <rect width="100%" height="100%" fill="#fffbeb"/>
-  <g transform="translate(120,180)">
-    <rect width="560" height="240" rx="12" fill="#fff1f2" stroke="#fecaca"/>
-    <text x="280" y="120" text-anchor="middle" dominant-baseline="middle" fill="#dc2626" font-size="32" font-family="Inter, Arial, sans-serif">birthday-fun</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="600" y2="800" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fffbeb"/>
+      <stop offset="1" stop-color="#fff1f2"/>
+    </linearGradient>
+    <filter id="shadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#dc2626" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+  <rect width="600" height="800" fill="url(#bg)"/>
+  <circle cx="80" cy="120" r="8" fill="#facc15" opacity="0.7"/>
+  <circle cx="520" cy="100" r="6" fill="#f472b6" opacity="0.7"/>
+  <circle cx="540" cy="680" r="8" fill="#38bdf8" opacity="0.6"/>
+  <circle cx="60" cy="640" r="6" fill="#4ade80" opacity="0.6"/>
+  <rect x="100" y="80" width="12" height="16" rx="2" fill="#f97316" transform="rotate(-15 106 88)"/>
+  <rect x="480" y="70" width="12" height="16" rx="2" fill="#ef4444" transform="rotate(20 486 78)"/>
+  <g filter="url(#shadow)">
+    <rect x="72" y="120" width="456" height="560" rx="24" fill="#fff1f2" stroke="#fecaca" stroke-width="2"/>
+    <path d="M120 160 Q300 120 480 160" fill="none" stroke="#f472b6" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="160" cy="148" rx="28" ry="34" fill="#f472b6" opacity="0.85"/>
+    <ellipse cx="300" cy="132" rx="32" ry="38" fill="#fb7185" opacity="0.9"/>
+    <ellipse cx="440" cy="148" rx="28" ry="34" fill="#f472b6" opacity="0.85"/>
+    <line x1="160" y1="182" x2="160" y2="220" stroke="#64748b" stroke-width="2"/>
+    <line x1="300" y1="170" x2="300" y2="220" stroke="#64748b" stroke-width="2"/>
+    <line x1="440" y1="182" x2="440" y2="220" stroke="#64748b" stroke-width="2"/>
+    <text x="300" y="300" text-anchor="middle" fill="#dc2626" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="600" letter-spacing="4">YOU ARE INVITED!</text>
+    <text x="300" y="380" text-anchor="middle" fill="#0f172a" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="800">Happy</text>
+    <text x="300" y="440" text-anchor="middle" fill="#ea580c" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="800">Birthday!</text>
+    <text x="300" y="500" text-anchor="middle" fill="#be123c" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700">Petar</text>
+    <text x="300" y="560" text-anchor="middle" fill="#64748b" font-family="Inter, Arial, sans-serif" font-size="16">15.08.2026</text>
+    <path d="M140 600 L160 580 L180 600 L160 620Z" fill="#facc15" opacity="0.6"/>
+    <path d="M420 600 L440 580 L460 600 L440 620Z" fill="#38bdf8" opacity="0.6"/>
+    <circle cx="200" cy="620" r="5" fill="#f472b6"/>
+    <circle cx="400" cy="610" r="5" fill="#4ade80"/>
+    <circle cx="300" cy="630" r="5" fill="#facc15"/>
   </g>
 </svg>
