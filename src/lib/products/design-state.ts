@@ -2,7 +2,12 @@ import type {
   ProductDesignTemplate,
   ProductDesignTextStyle,
 } from "@/lib/data/catalog";
+import { getProductDesignTemplate } from "@/lib/data/catalog";
 import type { PlacedSticker } from "@/lib/products/sticker-library";
+import {
+  ensureInkContrast,
+  type OverlaySvgColors,
+} from "@/lib/products/design-overlay";
 
 export interface UploadedFile {
   fileId: string;
@@ -25,6 +30,11 @@ export interface SideDesign {
   uploadedImagePosition: { x: number; y: number };
   premadeDesignImage: string | null;
   premadeDesignId: string | null;
+  overlaySvg: string | null;
+  overlaySvgColors: OverlaySvgColors | null;
+  overlayColorVariants: Record<string, string> | null;
+  overlayRaster: string | null;
+  isRecolorableOverlay: boolean;
   isTextTemplate: boolean;
   showPhotoGuide: boolean;
   stickers: PlacedSticker[];
@@ -48,6 +58,11 @@ export function createDefaultSideDesign(): SideDesign {
     uploadedImagePosition: { x: 50, y: 48 },
     premadeDesignImage: null,
     premadeDesignId: null,
+    overlaySvg: null,
+    overlaySvgColors: null,
+    overlayColorVariants: null,
+    overlayRaster: null,
+    isRecolorableOverlay: false,
     isTextTemplate: false,
     showPhotoGuide: false,
     stickers: [],
@@ -97,6 +112,64 @@ export function sideDesignFromImageTemplate(
   };
 }
 
+export function sideDesignFromOverlayTemplate(
+  template: ProductDesignTemplate,
+  shirtColor?: string,
+): SideDesign | null {
+  if (template.kind !== "overlay") return null;
+
+  const base = {
+    ...createDefaultSideDesign(),
+    uploadedImageScale: template.overlayScale ?? 50,
+    uploadedImagePosition:
+      template.overlayPosition ?? createDefaultSideDesign().uploadedImagePosition,
+    premadeDesignId: template.id,
+    isTextTemplate: false,
+    showPhotoGuide: false,
+  };
+
+  if (template.overlaySvg && template.overlayRecolor) {
+    const primary = shirtColor
+      ? ensureInkContrast(template.overlayRecolor.primary, shirtColor)
+      : template.overlayRecolor.primary;
+    const secondary = template.overlayRecolor.secondary
+      ? shirtColor
+        ? ensureInkContrast(template.overlayRecolor.secondary, shirtColor)
+        : template.overlayRecolor.secondary
+      : undefined;
+
+    return {
+      ...base,
+      overlaySvg: template.overlaySvg,
+      overlaySvgColors: { primary, secondary },
+      isRecolorableOverlay: true,
+    };
+  }
+
+  if (template.overlayColorVariants) {
+    return {
+      ...base,
+      overlayColorVariants: template.overlayColorVariants,
+      overlayRaster: template.overlayImage ?? null,
+      isRecolorableOverlay: false,
+    };
+  }
+
+  if (!template.overlayImage) return null;
+
+  return {
+    ...base,
+    uploadedFile: {
+      fileId: "",
+      name: `${template.id}.png`,
+      previewUrl: template.overlayImage,
+      isImage: true,
+    },
+    overlayRaster: template.overlayImage,
+    isRecolorableOverlay: false,
+  };
+}
+
 export interface RestoredSideDesign {
   customText: string;
   customTextColor: string;
@@ -111,6 +184,12 @@ export interface RestoredSideDesign {
   uploadedImagePosition: { x: number; y: number };
   premadeDesignImage: string | null;
   premadeDesignId: string | null;
+  overlaySvg: string | null;
+  overlaySvgPrimary: string | null;
+  overlaySvgSecondary: string | null;
+  overlayColorVariants: Record<string, string> | null;
+  overlayRaster: string | null;
+  isRecolorableOverlay: boolean;
   uploadedFileId: string | null;
   uploadedPreviewUrl: string | null;
   showPhotoGuide: boolean;
@@ -118,6 +197,10 @@ export interface RestoredSideDesign {
 }
 
 export function sideDesignFromRestored(data: RestoredSideDesign): SideDesign {
+  const template = data.premadeDesignId
+    ? getProductDesignTemplate(data.premadeDesignId)
+    : null;
+
   return {
     ...createDefaultSideDesign(),
     customText: data.customText,
@@ -132,6 +215,24 @@ export function sideDesignFromRestored(data: RestoredSideDesign): SideDesign {
     uploadedImagePosition: data.uploadedImagePosition,
     premadeDesignImage: data.premadeDesignImage,
     premadeDesignId: data.premadeDesignId,
+    overlaySvg: data.overlaySvg ?? template?.overlaySvg ?? null,
+    overlaySvgColors:
+      data.overlaySvgPrimary
+        ? {
+            primary: data.overlaySvgPrimary,
+            secondary: data.overlaySvgSecondary ?? undefined,
+          }
+        : template?.overlayRecolor
+          ? {
+              primary: template.overlayRecolor.primary,
+              secondary: template.overlayRecolor.secondary,
+            }
+          : null,
+    overlayColorVariants: template?.overlayColorVariants ?? null,
+    overlayRaster:
+      data.overlayRaster ?? template?.overlayImage ?? null,
+    isRecolorableOverlay:
+      data.isRecolorableOverlay || Boolean(template?.overlayRecolor),
     isTextTemplate: data.isTextTemplate,
     showPhotoGuide: data.showPhotoGuide,
     uploadedFile:

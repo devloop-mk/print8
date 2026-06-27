@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1500" fill="none">
+  <defs>
+    <style>:root,svg{--ink-primary:#F4EDE4;--ink-secondary:#8B7355}</style>
+    <path id="liftArc" d="M 200 430 A 400 400 0 0 1 1000 430"/>
+    <filter id="distress" x="-8%" y="-8%" width="116%" height="116%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.82" numOctaves="4" seed="17" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <linearGradient id="barShine" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="var(--ink-primary)" stop-opacity="0.95"/>
+      <stop offset="45%" stop-color="var(--ink-primary)" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="var(--ink-primary)" stop-opacity="0.9"/>
+    </linearGradient>
+  </defs>
+  <g filter="url(#distress)">
+    <text fill="var(--ink-primary)" font-family="Impact, Arial Narrow Bold, sans-serif" font-size="86" font-weight="900" letter-spacing="8">
+      <textPath href="#liftArc" startOffset="50%" text-anchor="middle">LIFT HEAVY</textPath>
+    </text>
+    <g transform="translate(600 760) rotate(-28)">
+      <rect x="-250" y="-11" width="500" height="22" rx="5" fill="url(#barShine)"/>
+      <circle cx="-250" cy="0" r="58" fill="var(--ink-primary)" fill-opacity="0.92"/>
+      <circle cx="-250" cy="0" r="34" fill="var(--ink-primary)" fill-opacity="0.45"/>
+      <circle cx="-250" cy="0" r="18" fill="var(--ink-primary)"/>
+      <circle cx="250" cy="0" r="58" fill="var(--ink-primary)" fill-opacity="0.92"/>
+      <circle cx="250" cy="0" r="34" fill="var(--ink-primary)" fill-opacity="0.45"/>
+      <circle cx="250" cy="0" r="18" fill="var(--ink-primary)"/>
+      <rect x="-258" y="-18" width="16" height="36" rx="3" fill="var(--ink-primary)" fill-opacity="0.75"/>
+      <rect x="242" y="-18" width="16" height="36" rx="3" fill="var(--ink-primary)" fill-opacity="0.75"/>
+      <path d="M-220-42 L-205-62 L-190-42" fill="var(--ink-primary)" fill-opacity="0.35"/>
+      <path d="M220-42 L205-62 L190-42" fill="var(--ink-primary)" fill-opacity="0.35"/>
+    </g>
+    <text x="600" y="1020" text-anchor="middle" fill="var(--ink-primary)" fill-opacity="0.85" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700" letter-spacing="12">EST. MMXXIV</text>
+  </g>
+</svg>

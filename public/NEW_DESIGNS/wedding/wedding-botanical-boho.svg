@@ -1,0 +1,48 @@
+<svg viewBox="0 0 1500 2100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&amp;family=Montserrat:wght@300;400&amp;family=Playfair+Display&amp;display=swap');
+      .text-dark { fill: #2C3E50; }
+      .text-green { fill: #4F6354; }
+    </style>
+  </defs>
+  <rect width="1500" height="2100" fill="#FDFBF7"/>
+  
+  <!-- Top Left Branch -->
+  <g fill="#4F6354" opacity="0.8" transform="translate(0,0)">
+    <path d="M-50,-50 C150,150 300,100 450,300" fill="none" stroke="#4F6354" stroke-width="4"/>
+    <path d="M100,100 C150,80 200,120 150,150 C120,130 90,120 100,100 Z"/>
+    <path d="M200,180 C260,150 300,200 250,240 C210,220 190,200 200,180 Z"/>
+    <path d="M300,250 C350,230 400,280 350,320 C320,290 290,270 300,250 Z"/>
+    <path d="M150,250 C120,200 80,220 100,270 C130,280 160,270 150,250 Z"/>
+  </g>
+  
+  <!-- Bottom Right Branch -->
+  <g fill="#4F6354" opacity="0.8" transform="translate(1500,2100) rotate(180)">
+    <path d="M-50,-50 C150,150 300,100 450,300" fill="none" stroke="#4F6354" stroke-width="4"/>
+    <path d="M100,100 C150,80 200,120 150,150 C120,130 90,120 100,100 Z"/>
+    <path d="M200,180 C260,150 300,200 250,240 C210,220 190,200 200,180 Z"/>
+    <path d="M300,250 C350,230 400,280 350,320 C320,290 290,270 300,250 Z"/>
+    <path d="M150,250 C120,200 80,220 100,270 C130,280 160,270 150,250 Z"/>
+  </g>
+  
+  <g text-anchor="middle">
+    <text x="750" y="450" class="text-green" font-family="'Montserrat', sans-serif" font-weight="300" font-size="24" letter-spacing="6">WITH JOY IN OUR HEARTS</text>
+    
+    <text x="750" y="700" class="text-dark" font-family="'Playfair Display', serif" font-size="140">Sophia</text>
+    <text x="750" y="880" class="text-green" font-family="'Great Vibes', cursive" font-size="100">&amp;</text>
+    <text x="750" y="1050" class="text-dark" font-family="'Playfair Display', serif" font-size="140">William</text>
+    
+    <text x="750" y="1250" class="text-dark" font-family="'Montserrat', sans-serif" font-weight="300" font-size="24" letter-spacing="4">INVITE YOU TO CELEBRATE THEIR MARRIAGE</text>
+    
+    <line x1="650" y1="1350" x2="850" y2="1350" stroke="#4F6354" stroke-width="2"/>
+    
+    <text x="750" y="1480" class="text-dark" font-family="'Playfair Display', serif" font-size="45" letter-spacing="2">OCTOBER 12, 2026</text>
+    <text x="750" y="1550" class="text-dark" font-family="'Playfair Display', serif" font-size="30" letter-spacing="2">AT FIVE O'CLOCK IN THE EVENING</text>
+    
+    <text x="750" y="1750" class="text-green" font-family="'Montserrat', sans-serif" font-weight="400" font-size="28" letter-spacing="4">BOTANICAL GARDENS</text>
+    <text x="750" y="1800" class="text-dark" font-family="'Montserrat', sans-serif" font-weight="300" font-size="20" letter-spacing="2">456 NATURE PATH, SEATTLE, WA</text>
+    
+    <text x="750" y="1950" class="text-dark" font-family="'Montserrat', sans-serif" font-weight="300" font-size="18" letter-spacing="2">RECEPTION TO FOLLOW</text>
+  </g>
+</svg>

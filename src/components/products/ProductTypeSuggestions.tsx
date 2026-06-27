@@ -27,10 +27,7 @@ export function ProductTypeSuggestions({ type }: { type: ProductType }) {
             {t('suggestionsSubtitle')}
           </p>
         </div>
-        <ProductCardGrid
-          items={suggestions}
-          gridClassName="grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
-        />
+        <ProductCardGrid items={suggestions} />
       </section>
     </Reveal>
   );

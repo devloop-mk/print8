@@ -885,7 +885,7 @@ export function CustomizableDesignPreview({
 }: CustomizableDesignPreviewProps) {
   return (
     <div
-      className={`w-full ${className ?? ''}`}
+      className={`w-full max-w-full min-w-0 ${className ?? ''}`}
       style={{ aspectRatio: `${layout.aspectRatio}`, containerType: 'inline-size' }}
     >
       {(frontLabel || backLabel) && (

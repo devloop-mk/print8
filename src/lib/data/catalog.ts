@@ -6,6 +6,7 @@ export type ServiceId =
   | 'plastification'
   | 't-shirt-printing'
   | 'hoodie-printing'
+  | 'bodysuit-printing'
   | 'cap-printing'
   | 'cup-printing'
   | 'bag-printing'
@@ -69,6 +70,15 @@ export const services: Service[] = [
     featured: true,
     customization: 'products',
     productTypes: ['hoodie'],
+  },
+  {
+    id: 'bodysuit-printing',
+    icon: 'Baby',
+    category: 'merch',
+    startingPrice: 500,
+    featured: true,
+    customization: 'products',
+    productTypes: ['bodysuit'],
   },
   {
     id: 'cap-printing',
@@ -268,6 +278,8 @@ export interface DesignTemplate {
   tags: string[];
   kind: DesignTemplateKind;
   layoutId?: string;
+  /** Raw SVG template from `public/NEW_DESIGNS` with editable text & colors */
+  svgTemplateId?: string;
 }
 
 export const designTemplates: DesignTemplate[] = [
@@ -357,11 +369,172 @@ export const designTemplates: DesignTemplate[] = [
     kind: 'customizable',
     layoutId: 'menu-modern',
   },
+  {
+    id: 'svg-bcard-tech-wave',
+    category: 'business-cards',
+    image: '/NEW_DESIGNS/business card/bcard-tech-wave-front.svg',
+    tags: ['modern', 'tech', 'editable'],
+    kind: 'customizable',
+    svgTemplateId: 'svg-bcard-tech-wave',
+  },
+  {
+    id: 'svg-bcard-luxury-gold',
+    category: 'business-cards',
+    image: '/NEW_DESIGNS/business card/bcard-luxury-gold-front.svg',
+    tags: ['luxury', 'gold', 'editable'],
+    kind: 'customizable',
+    svgTemplateId: 'svg-bcard-luxury-gold',
+  },
+  {
+    id: 'svg-bcard-corporate-geo',
+    category: 'business-cards',
+    image: '/NEW_DESIGNS/business card/bcard-corporate-geo-front.svg',
+    tags: ['corporate', 'professional', 'editable'],
+    kind: 'customizable',
+    svgTemplateId: 'svg-bcard-corporate-geo',
+  },
+  {
+    id: 'svg-bcard-creative-abstract',
+    category: 'business-cards',
+    image: '/NEW_DESIGNS/business card/bcard-creative-abstract-front.svg',
+    tags: ['creative', 'abstract', 'editable'],
+    kind: 'customizable',
+    svgTemplateId: 'svg-bcard-creative-abstract',
+  },
+  {
+    id: 'svg-wedding-modern-arch',
+    category: 'wedding',
+    image: '/NEW_DESIGNS/wedding/wedding-modern-arch.svg',
+    tags: ['modern', 'minimal', 'editable'],
+    kind: 'customizable',
+    svgTemplateId: 'svg-wedding-modern-arch',
+  },
+  {
+    id: 'svg-wedding-romantic-blush',
+    category: 'wedding',
+    image: '/NEW_DESIGNS/wedding/wedding-romantic-blush.svg',
+    tags: ['romantic', 'blush', 'editable'],
+    kind: 'customizable',
+    svgTemplateId: 'svg-wedding-romantic-blush',
+  },
+  {
+    id: 'svg-wedding-classic-navy-gold',
+    category: 'wedding',
+    image: '/NEW_DESIGNS/wedding/wedding-classic-navy-gold.svg',
+    tags: ['classic', 'navy', 'gold', 'editable'],
+    kind: 'customizable',
+    svgTemplateId: 'svg-wedding-classic-navy-gold',
+  },
+  {
+    id: 'svg-wedding-botanical-boho',
+    category: 'wedding',
+    image: '/NEW_DESIGNS/wedding/wedding-botanical-boho.svg',
+    tags: ['botanical', 'boho', 'editable'],
+    kind: 'customizable',
+    svgTemplateId: 'svg-wedding-botanical-boho',
+  },
+  {
+    id: 'svg-wedding-print-beach',
+    category: 'wedding',
+    image: '/NEW_DESIGNS/wedding/wedding-print-beach.svg',
+    tags: ['beach', 'coastal', 'editable'],
+    kind: 'customizable',
+    svgTemplateId: 'svg-wedding-print-beach',
+  },
+  {
+    id: 'svg-wedding-print-autumn',
+    category: 'wedding',
+    image: '/NEW_DESIGNS/wedding/wedding-print-autumn.svg',
+    tags: ['autumn', 'rustic', 'editable'],
+    kind: 'customizable',
+    svgTemplateId: 'svg-wedding-print-autumn',
+  },
+  {
+    id: 'svg-wedding-print-celestial',
+    category: 'wedding',
+    image: '/NEW_DESIGNS/wedding/wedding-print-celestial.svg',
+    tags: ['celestial', 'stars', 'editable'],
+    kind: 'customizable',
+    svgTemplateId: 'svg-wedding-print-celestial',
+  },
+  {
+    id: 'svg-wedding-print-terracotta',
+    category: 'wedding',
+    image: '/NEW_DESIGNS/wedding/wedding-print-terracotta.svg',
+    tags: ['terracotta', 'desert', 'editable'],
+    kind: 'customizable',
+    svgTemplateId: 'svg-wedding-print-terracotta',
+  },
+  {
+    id: 'svg-wedding-print-watercolor',
+    category: 'wedding',
+    image: '/NEW_DESIGNS/wedding/wedding-print-watercolor.svg',
+    tags: ['watercolor', 'garden', 'editable'],
+    kind: 'customizable',
+    svgTemplateId: 'svg-wedding-print-watercolor',
+  },
+  {
+    id: 'svg-wedding-print-winter',
+    category: 'wedding',
+    image: '/NEW_DESIGNS/wedding/wedding-print-winter.svg',
+    tags: ['winter', 'snow', 'editable'],
+    kind: 'customizable',
+    svgTemplateId: 'svg-wedding-print-winter',
+  },
+  {
+    id: 'svg-bday-gold',
+    category: 'birthday',
+    image: '/NEW_DESIGNS/birthday/bday-print-gold.svg',
+    tags: ['gold', 'elegant', 'editable'],
+    kind: 'customizable',
+    svgTemplateId: 'svg-bday-gold',
+  },
+  {
+    id: 'svg-bday-rosegold',
+    category: 'birthday',
+    image: '/NEW_DESIGNS/birthday/bday-print-rosegold.svg',
+    tags: ['rose-gold', 'elegant', 'editable'],
+    kind: 'customizable',
+    svgTemplateId: 'svg-bday-rosegold',
+  },
+  {
+    id: 'svg-bday-princess',
+    category: 'birthday',
+    image: '/NEW_DESIGNS/birthday/bday-print-princess.svg',
+    tags: ['princess', 'kids', 'editable'],
+    kind: 'customizable',
+    svgTemplateId: 'svg-bday-princess',
+  },
+  {
+    id: 'svg-bday-dino',
+    category: 'birthday',
+    image: '/NEW_DESIGNS/birthday/bday-print-dino.svg',
+    tags: ['dinosaur', 'kids', 'editable'],
+    kind: 'customizable',
+    svgTemplateId: 'svg-bday-dino',
+  },
+  {
+    id: 'svg-menu-rustic',
+    category: 'menus',
+    image: '/NEW_DESIGNS/menu-print-rustic-front.svg',
+    tags: ['rustic', 'italian', 'editable'],
+    kind: 'customizable',
+    svgTemplateId: 'svg-menu-rustic',
+  },
+  {
+    id: 'svg-menu-finedining',
+    category: 'menus',
+    image: '/NEW_DESIGNS/menu-print-finedining-front.svg',
+    tags: ['fine-dining', 'steakhouse', 'editable'],
+    kind: 'customizable',
+    svgTemplateId: 'svg-menu-finedining',
+  },
 ];
 
 export type ProductType =
   | 't-shirt'
   | 'hoodie'
+  | 'bodysuit'
   | 'cap'
   | 'mug'
   | 'cup'
@@ -396,10 +569,16 @@ export type ProductGallerySlide = {
   kind: 'photo' | 'side';
 };
 
-export function productHasPhotoGallery(product: Product, color: string): boolean {
+export function productHasPhotoGallery(
+  product: Product,
+  color: string,
+): boolean {
   const entry = product.colorsImages?.[color];
   return Boolean(
-    entry && typeof entry !== 'string' && isProductColorPair(entry) && entry.secondary,
+    entry &&
+    typeof entry !== 'string' &&
+    isProductColorPair(entry) &&
+    entry.secondary,
   );
 }
 
@@ -435,7 +614,10 @@ export function isMagnetProduct(product: Product): boolean {
   return product.type === 'magnet';
 }
 
-export function getMagnetDisplayMockup(product: Product, color: string): string {
+export function getMagnetDisplayMockup(
+  product: Product,
+  color: string,
+): string {
   const entry = product.colorsImages?.[color];
   if (entry && typeof entry !== 'string' && isProductColorPair(entry)) {
     return entry.secondary ?? entry.primary;
@@ -447,7 +629,7 @@ export function getProductNameKey(product: Product): string {
   return product.nameKey ?? product.type;
 }
 
-export type ProductDesignKind = 'image' | 'text';
+export type ProductDesignKind = 'image' | 'text' | 'overlay';
 export type ProductDesignCategory = 'image-designs' | 'text-designs';
 
 export interface ProductDesignTextStyle {
@@ -474,6 +656,21 @@ export interface ProductDesignTemplate {
   defaultSide: ProductSide;
   /** Full product JPEG — used for `image` kind thumbnails & customizer base */
   image?: string;
+  /** Transparent print artwork (PNG) — overlaid on product mockup */
+  overlayImage?: string;
+  /** Recolorable SVG source (1–2 ink slots via CSS variables) */
+  overlaySvg?: string;
+  overlayRecolor?: {
+    primary: string;
+    secondary?: string;
+    slots?: 1 | 2;
+  };
+  /** Fixed multi-color art — map shirt hex to tuned PNG/SVG variant */
+  overlayColorVariants?: Record<string, string>;
+  overlayScale?: number;
+  overlayPosition?: { x: number; y: number };
+  /** Recommended shirt color hex for this ink (e.g. cream on black) */
+  recommendedColor?: string;
   /** Styled Macedonian text layout — used for `text` kind */
   textStyle?: ProductDesignTextStyle;
 }
@@ -514,6 +711,199 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
     nameKey: 'backDesign1',
     image: '/product-designs/tee-back-design-1.jpg',
     defaultSide: 'back',
+  },
+  {
+    id: 'tee-print-keep-working-out',
+    kind: 'overlay',
+    category: 'image-designs',
+    productTypes: ['t-shirt', 'hoodie'],
+    nameKey: 'printKeepWorkingOut',
+    overlayImage: '/product-designs/prints/keep-working-out/on-black.png',
+    overlayColorVariants: {
+      '#000000': '/product-designs/prints/keep-working-out/on-black.png',
+      '#1f2937': '/product-designs/prints/keep-working-out/on-black.png',
+      '#ffffff': '/product-designs/prints/keep-working-out/on-white.png',
+      '#1e40af': '/product-designs/prints/keep-working-out/on-blue.png',
+      '#dc2626': '/product-designs/prints/keep-working-out/on-red.png',
+    },
+    overlayScale: 54,
+    overlayPosition: { x: 50, y: 44 },
+    recommendedColor: '#000000',
+    defaultSide: 'front',
+  },
+  {
+    id: 'tee-print-lift-heavy',
+    kind: 'overlay',
+    category: 'image-designs',
+    productTypes: ['t-shirt', 'hoodie'],
+    nameKey: 'printLiftHeavy',
+    overlaySvg: '/product-designs/prints/recolor/lift-heavy.svg',
+    overlayRecolor: { primary: '#F4EDE4', slots: 1 },
+    overlayScale: 52,
+    overlayPosition: { x: 50, y: 44 },
+    recommendedColor: '#000000',
+    defaultSide: 'front',
+  },
+  {
+    id: 'tee-print-gym-alfa-mentalitet',
+    kind: 'overlay',
+    category: 'image-designs',
+    productTypes: ['t-shirt', 'hoodie'],
+    nameKey: 'gymAlfaMentalitet',
+    overlayImage: '/NEW_DESIGNS/t-shirts/gym-alfa-mentalitet.png',
+    overlayScale: 52,
+    overlayPosition: { x: 50, y: 49 },
+    recommendedColor: '#000000',
+    defaultSide: 'front',
+  },
+  {
+    id: 'tee-print-gym-zver-gorilla',
+    kind: 'overlay',
+    category: 'image-designs',
+    productTypes: ['t-shirt', 'hoodie'],
+    nameKey: 'gymZverGorilla',
+    overlayImage: '/NEW_DESIGNS/t-shirts/gym-zver-gorilla-v2.png',
+    overlayScale: 52,
+    overlayPosition: { x: 50, y: 49 },
+    recommendedColor: '#000000',
+    defaultSide: 'front',
+  },
+  {
+    id: 'tee-print-gym-posilen-od-vcera',
+    kind: 'overlay',
+    category: 'image-designs',
+    productTypes: ['t-shirt', 'hoodie'],
+    nameKey: 'gymPosilenOdVcera',
+    overlayImage: '/NEW_DESIGNS/t-shirts/gym-posilen-od-vcera-v2.png',
+    overlayScale: 49,
+    overlayPosition: { x: 50, y: 54 },
+    recommendedColor: '#000000',
+    defaultSide: 'front',
+  },
+  {
+    id: 'tee-print-gym-oslobodi-go-zverot',
+    kind: 'overlay',
+    category: 'image-designs',
+    productTypes: ['t-shirt', 'hoodie'],
+    nameKey: 'gymOslobodiGoZverot',
+    overlayImage: '/NEW_DESIGNS/t-shirts/gym-oslobodi-go-zverot.png',
+    overlayScale: 52,
+    overlayPosition: { x: 50, y: 47 },
+    recommendedColor: '#000000',
+    defaultSide: 'front',
+  },
+  {
+    id: 'tee-print-baby-loading-boy',
+    kind: 'overlay',
+    category: 'image-designs',
+    productTypes: ['t-shirt', 'hoodie'],
+    nameKey: 'babyLoadingBoy',
+    overlayImage: '/NEW_DESIGNS/t-shirts/baby-loading-boy.png',
+    overlayScale: 52,
+    overlayPosition: { x: 50, y: 52 },
+    recommendedColor: '#000000',
+    defaultSide: 'front',
+  },
+  {
+    id: 'tee-print-baby-loading-girl',
+    kind: 'overlay',
+    category: 'image-designs',
+    productTypes: ['t-shirt', 'hoodie'],
+    nameKey: 'babyLoadingGirl',
+    overlayImage: '/NEW_DESIGNS/t-shirts/baby-loading-girl.png',
+    overlayScale: 52,
+    overlayPosition: { x: 50, y: 52 },
+    recommendedColor: '#000000',
+    defaultSide: 'front',
+  },
+  {
+    id: 'tee-print-baby-zipper-boy',
+    kind: 'overlay',
+    category: 'image-designs',
+    productTypes: ['t-shirt', 'hoodie'],
+    nameKey: 'babyZipperBoy',
+    overlayImage: '/NEW_DESIGNS/t-shirts/baby-zipper-boy.png',
+    overlayScale: 52,
+    overlayPosition: { x: 50, y: 68 },
+    recommendedColor: '#000000',
+    defaultSide: 'front',
+  },
+  {
+    id: 'tee-print-baby-zipper-girl',
+    kind: 'overlay',
+    category: 'image-designs',
+    productTypes: ['t-shirt', 'hoodie'],
+    nameKey: 'babyZipperGirl',
+    overlayImage: '/NEW_DESIGNS/t-shirts/baby-zipper-girl.png',
+    overlayScale: 52,
+    overlayPosition: { x: 50, y: 68 },
+    recommendedColor: '#000000',
+    defaultSide: 'front',
+  },
+  {
+    id: 'bodysuit-print-vujko',
+    kind: 'overlay',
+    category: 'image-designs',
+    productTypes: ['bodysuit'],
+    productIds: ['bodysuit-basic'],
+    nameKey: 'bodysuitVujko',
+    overlayImage: '/spikozni/dizajni/spikozna-dizajn-vujko-1.png',
+    overlayScale: 36,
+    overlayPosition: { x: 50, y: 49 },
+    recommendedColor: '#ffffff',
+    defaultSide: 'front',
+  },
+  {
+    id: 'bodysuit-print-tato',
+    kind: 'overlay',
+    category: 'image-designs',
+    productTypes: ['bodysuit'],
+    productIds: ['bodysuit-basic'],
+    nameKey: 'bodysuitTato',
+    overlayImage: '/spikozni/dizajni/spikozna-dizajn-tato-1.png',
+    overlayScale: 32,
+    overlayPosition: { x: 50, y: 48 },
+    recommendedColor: '#ffffff',
+    defaultSide: 'front',
+  },
+  {
+    id: 'bodysuit-print-tetka',
+    kind: 'overlay',
+    category: 'image-designs',
+    productTypes: ['bodysuit'],
+    productIds: ['bodysuit-basic'],
+    nameKey: 'bodysuitTetka',
+    overlayImage: '/spikozni/dizajni/spikozna-dizajn-tetka-1.png',
+    overlayScale: 35,
+    overlayPosition: { x: 50, y: 50 },
+    recommendedColor: '#ffffff',
+    defaultSide: 'front',
+  },
+  {
+    id: 'bodysuit-print-babadedo',
+    kind: 'overlay',
+    category: 'image-designs',
+    productTypes: ['bodysuit'],
+    productIds: ['bodysuit-basic'],
+    nameKey: 'bodysuitBabaDedo',
+    overlayImage: '/spikozni/dizajni/spikozna-dizajn-babadedo-1.png',
+    overlayScale: 34,
+    overlayPosition: { x: 50, y: 50 },
+    recommendedColor: '#ffffff',
+    defaultSide: 'front',
+  },
+  {
+    id: 'bodysuit-print-mamatato',
+    kind: 'overlay',
+    category: 'image-designs',
+    productTypes: ['bodysuit'],
+    productIds: ['bodysuit-basic'],
+    nameKey: 'bodysuitMamaTato',
+    overlayImage: '/spikozni/dizajni/spikozna-dizajn-mamatato-1.png',
+    overlayScale: 34,
+    overlayPosition: { x: 50, y: 49 },
+    recommendedColor: '#ffffff',
+    defaultSide: 'front',
   },
   {
     id: 'tee-text-family',
@@ -696,6 +1086,17 @@ export function isImageDesignTemplate(d: ProductDesignTemplate) {
   return d.kind === 'image' && Boolean(d.image);
 }
 
+export function isRecolorableOverlayTemplate(d: ProductDesignTemplate) {
+  return Boolean(d.overlaySvg && d.overlayRecolor);
+}
+
+export function isOverlayDesignTemplate(d: ProductDesignTemplate) {
+  return (
+    d.kind === 'overlay' &&
+    Boolean(d.overlayImage || d.overlaySvg || d.overlayColorVariants)
+  );
+}
+
 export function isTextDesignTemplate(d: ProductDesignTemplate) {
   return d.kind === 'text' && Boolean(d.textStyle);
 }
@@ -814,7 +1215,10 @@ export function getDesignHref(design: DesignTemplate) {
 }
 
 export function isCustomizableDesign(template: DesignTemplate) {
-  return template.kind === 'customizable' && Boolean(template.layoutId);
+  return (
+    template.kind === 'customizable' &&
+    Boolean(template.layoutId || template.svgTemplateId)
+  );
 }
 
 export function getService(id: string) {
@@ -875,6 +1279,19 @@ export const products: Product[] = [
     colors: ['#ffffff', '#000000', '#1e40af', '#dc2626'],
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
     sides: ['front', 'back'],
+  },
+  {
+    id: 'bodysuit-basic',
+    type: 'bodysuit',
+    nameKey: 'bodysuitBasic',
+    image: '/spikozni/mockup-bodysuit-white.png',
+    colorsImages: {
+      '#ffffff': '/spikozni/mockup-bodysuit-white.png',
+      '#7eb8da': '/spikozni/mockup-bodysuit-blue.png',
+    },
+    basePrice: 500,
+    colors: ['#ffffff', '#7eb8da'],
+    sizes: ['0-3', '3-6', '6-9', '9-12', '12-18'],
   },
   {
     id: 'mug-classic',
@@ -1228,6 +1645,7 @@ export const products: Product[] = [
 export const productTypes: ProductType[] = [
   't-shirt',
   'hoodie',
+  'bodysuit',
   'cap',
   'mug',
   'cup',

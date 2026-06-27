@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { ProductsNavDropdown } from "@/components/layout/ProductsNavDropdown";
+import { DesignsNavDropdown } from "@/components/layout/DesignsNavDropdown";
+import { OngoingDesignsNav } from "@/components/drafts/OngoingDesignsNav";
 import { Logo } from "@/components/brand/Logo";
 import { Menu, ShoppingCart } from "lucide-react";
 import { usePathname } from "@/i18n/navigation";
@@ -66,6 +68,10 @@ export function Header() {
                 return <ProductsNavDropdown key={item.key} />;
               }
 
+              if (item.key === "designs") {
+                return <DesignsNavDropdown key={item.key} />;
+              }
+
               const active = pathname === item.href;
               return (
                 <Link
@@ -88,6 +94,8 @@ export function Header() {
             <div className="hidden md:block">
               <LanguageSwitcher />
             </div>
+
+            <OngoingDesignsNav />
 
             <Link
               href="/cart"

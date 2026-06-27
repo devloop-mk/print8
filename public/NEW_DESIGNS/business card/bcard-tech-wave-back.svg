@@ -1,0 +1,19 @@
+<svg viewBox="0 0 1050 600" xmlns="http://www.w3.org/2000/svg" style="font-family: Arial, sans-serif;">
+
+  <defs>
+    <linearGradient id="primary-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F46E5" />
+      <stop offset="50%" stop-color="#EC4899" />
+      <stop offset="100%" stop-color="#F59E0B" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1050" height="600" fill="#0F172A" />
+  <path d="M0,0 C300,100 400,300 1050,200 L1050,0 Z" fill="url(#primary-gradient)" opacity="0.3" />
+  <path d="M0,600 C400,500 600,300 1050,400 L1050,600 Z" fill="url(#primary-gradient)" opacity="0.3" />
+  
+  <circle cx="525" cy="240" r="60" fill="url(#primary-gradient)" />
+  <text x="525" y="260" fill="#FFF" font-size="60" font-weight="bold" text-anchor="middle">L</text>
+  <text x="525" y="360" fill="#FFF" font-size="48" font-weight="bold" text-anchor="middle">COMPANY</text>
+  <text x="525" y="410" fill="#9CA3AF" font-size="20" letter-spacing="4" text-anchor="middle">INNOVATION AT SCALE</text>
+</svg>

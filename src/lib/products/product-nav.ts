@@ -44,7 +44,7 @@ export const productNavCategories: ProductNavCategory[] = [
   {
     id: 'apparel',
     icon: Shirt,
-    types: ['t-shirt', 'hoodie', 'cap'],
+    types: ['t-shirt', 'hoodie', 'bodysuit', 'cap'],
   },
   {
     id: 'drinkware',

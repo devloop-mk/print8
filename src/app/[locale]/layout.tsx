@@ -5,8 +5,9 @@ import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import { routing, type Locale } from "@/i18n/routing";
 import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
+import { FooterGate } from "@/components/layout/FooterGate";
 import { CartProvider } from "@/components/cart/CartProvider";
+import { OngoingDesignsProvider } from "@/components/drafts/OngoingDesignsProvider";
 import { SiteAnalytics } from "@/components/analytics/SiteAnalytics";
 import { CookieConsent } from "@/components/legal/CookieConsent";
 import { NavigationProgress } from "@/components/navigation/NavigationProgress";
@@ -70,18 +71,20 @@ export default async function LocaleLayout({
   return (
     <html lang={locale}>
       <body
-        className={`${inter.variable} ${spaceGrotesk.variable} min-h-screen font-sans antialiased`}
+        className={`${inter.variable} ${spaceGrotesk.variable} flex min-h-dvh min-w-0 flex-col font-sans antialiased`}
       >
         <NextIntlClientProvider locale={locale} messages={messages}>
           <CartProvider>
+            <OngoingDesignsProvider>
             <NavigationProgress />
             <SiteAnalytics />
             <CookieConsent />
             <Header />
-            <main className="min-h-[calc(100vh-8rem)]">
+            <main className="flex min-h-0 min-w-0 flex-1 flex-col">
               <PageTransition>{children}</PageTransition>
             </main>
-            <Footer />
+            <FooterGate />
+            </OngoingDesignsProvider>
           </CartProvider>
         </NextIntlClientProvider>
       </body>

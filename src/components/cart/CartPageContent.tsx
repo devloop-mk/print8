@@ -171,6 +171,12 @@ export function CartPageContent() {
 
             const customized = isCustomizedCartItem(item);
             const isMagnet = product?.type === 'magnet';
+            const designAspect =
+              item.type === 'design' &&
+              typeof item.metadata?.previewAspectRatio === 'number'
+                ? item.metadata.previewAspectRatio
+                : null;
+            const isWideDesign = Boolean(designAspect && designAspect > 1.1);
             const multiSidePreviews = !isMagnet && previewImages.length > 2;
 
             return (
@@ -213,7 +219,9 @@ export function CartPageContent() {
                           "group relative flex items-center justify-center overflow-hidden rounded-lg border border-ink-200 bg-ink-50 transition hover:border-brand-400 hover:ring-2 hover:ring-brand-200",
                           multiSidePreviews
                             ? "aspect-square w-full sm:h-20 sm:w-20"
-                            : "h-20 w-20 shrink-0",
+                            : isWideDesign
+                              ? "h-20 w-[7.5rem] shrink-0"
+                              : "h-20 w-20 shrink-0",
                         )}
 
                         aria-label={t("zoomPreview")}

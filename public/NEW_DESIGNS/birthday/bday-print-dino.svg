@@ -1,0 +1,30 @@
+<svg viewBox="0 0 1500 2100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&amp;family=Nunito:wght@600;800&amp;display=swap');
+      .text-orange { fill: #F97316; }
+      .text-green { fill: #15803D; }
+      .text-dark { fill: #1F2937; }
+    </style>
+  </defs>
+  <image href="/NEW_DESIGNS/backgrounds/bday-bg-dino.png" width="1500" height="2100" preserveAspectRatio="xMidYMid slice"/>
+  
+  <g text-anchor="middle">
+    <text x="750" y="550" class="text-orange" font-family="'Fredoka One', cursive" font-size="180" letter-spacing="8">ROAR!</text>
+    
+    <text x="750" y="750" class="text-dark" font-family="'Nunito', sans-serif" font-weight="800" font-size="40" letter-spacing="2">JOIN US FOR A DINO-MITE BIRTHDAY PARTY!</text>
+    
+    <text x="750" y="950" class="text-green" font-family="'Fredoka One', cursive" font-size="110">LEO IS TURNING 5</text>
+    
+    <rect x="450" y="1050" width="600" height="8" fill="#F97316" rx="4" />
+    
+    <text x="750" y="1200" class="text-dark" font-family="'Nunito', sans-serif" font-weight="800" font-size="45">SATURDAY, JULY 18TH</text>
+    <text x="750" y="1280" class="text-dark" font-family="'Nunito', sans-serif" font-weight="600" font-size="35">2:00 PM TO 5:00 PM</text>
+    
+    <text x="750" y="1450" class="text-green" font-family="'Nunito', sans-serif" font-weight="800" font-size="40">JURASSIC PARK (LEO'S HOUSE)</text>
+    <text x="750" y="1520" class="text-dark" font-family="'Nunito', sans-serif" font-weight="600" font-size="30">123 DINOSAUR LANE, BEDROCK</text>
+    
+    <text x="750" y="1700" class="text-orange" font-family="'Nunito', sans-serif" font-weight="800" font-size="35">RSVP TO MOM BY JULY 10TH</text>
+    <text x="750" y="1760" class="text-dark" font-family="'Nunito', sans-serif" font-weight="600" font-size="30">555-123-4567</text>
+  </g>
+</svg>

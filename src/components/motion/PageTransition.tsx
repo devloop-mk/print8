@@ -29,13 +29,13 @@ export function PageTransition({ children }: PageTransitionProps) {
   }, [pathname, reducedMotion]);
 
   if (reducedMotion) {
-    return <>{children}</>;
+    return <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>;
   }
 
   return (
     <div
       className={cn(
-        'transition-opacity duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)]',
+        'flex min-h-0 min-w-0 flex-1 flex-col transition-opacity duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)]',
         visible ? 'opacity-100' : 'opacity-0',
       )}
     >

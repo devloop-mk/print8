@@ -9,6 +9,7 @@ import {
 } from '@/lib/products/design-catalog';
 import {
   isImageDesignTemplate,
+  isOverlayDesignTemplate,
   isTextDesignTemplate,
 } from '@/lib/data/catalog';
 import { Card } from '@/components/ui/Card';
@@ -35,7 +36,7 @@ export function ProductDesignCatalogCard({
 
   return (
     <Card className="flex h-full flex-col overflow-hidden p-0">
-      {isTextDesignTemplate(design) ? (
+      {isTextDesignTemplate(design) || isOverlayDesignTemplate(design) ? (
         <DesignTemplatePreview
           product={product}
           color={color}

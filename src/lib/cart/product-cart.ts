@@ -156,11 +156,16 @@ export function restoreSideDesignFromMetadata(
     metadata[`${prefix}PremadeDesignImage`] ||
     metadata[`${prefix}UploadedPreviewUrl`] ||
     metadata[`${prefix}UploadedFileId`] ||
+    metadata[`${prefix}OverlaySvg`] ||
+    metadata[`${prefix}HasOverlayVariants`] ||
+    metadata[`${prefix}OverlayRaster`] ||
     stickers.length > 0;
 
   if (!hasContent) return null;
 
   const isTextTemplate = metadata[`${prefix}IsTextTemplate`] === true;
+  const isRecolorableOverlay =
+    metadata[`${prefix}IsRecolorableOverlay`] === true;
 
   return {
     customText: str(metadata[`${prefix}CustomText`]),
@@ -188,6 +193,12 @@ export function restoreSideDesignFromMetadata(
     },
     premadeDesignImage: str(metadata[`${prefix}PremadeDesignImage`]) || null,
     premadeDesignId: str(metadata[`${prefix}PremadeDesignId`]) || null,
+    overlaySvg: str(metadata[`${prefix}OverlaySvg`]) || null,
+    overlaySvgPrimary: str(metadata[`${prefix}OverlaySvgPrimary`]) || null,
+    overlaySvgSecondary: str(metadata[`${prefix}OverlaySvgSecondary`]) || null,
+    overlayColorVariants: null,
+    overlayRaster: str(metadata[`${prefix}OverlayRaster`]) || null,
+    isRecolorableOverlay,
     uploadedFileId: str(metadata[`${prefix}UploadedFileId`]) || null,
     uploadedPreviewUrl: str(metadata[`${prefix}UploadedPreviewUrl`]) || null,
     showPhotoGuide: false,

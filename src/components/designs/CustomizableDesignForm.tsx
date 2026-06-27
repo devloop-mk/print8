@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import html2canvas from 'html2canvas';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
@@ -8,6 +8,11 @@ import { useCart } from '@/components/cart/CartProvider';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { CustomizableDesignPreview } from '@/components/designs/CustomizableDesignPreview';
+import { DesignCustomizerStepNav } from '@/components/designs/DesignCustomizerStepNav';
+import { DesignCustomizerMobileFieldBar } from '@/components/designs/DesignCustomizerMobileFieldBar';
+import { UnsavedWorkDialog } from '@/components/shared/UnsavedWorkDialog';
+import { useDirtySnapshot } from '@/hooks/useDirtySnapshot';
+import { useUnsavedWorkGuard } from '@/hooks/useUnsavedWorkGuard';
 import { formatPrice } from '@/lib/utils';
 import type { DesignTemplate } from '@/lib/data/catalog';
 import {
@@ -21,6 +26,9 @@ import {
   type DesignColorTheme,
   type DesignLayout,
 } from '@/lib/data/design-layouts';
+import { upsertDesignEditorDraft } from '@/lib/drafts/work-drafts';
+import { findDesignEditorDraft } from '@/lib/drafts/ongoing-designs';
+import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight, Palette, FileText, Layers, ShoppingCart, Info } from 'lucide-react';
 
 const fieldInputType: Partial<
@@ -59,6 +67,7 @@ export function CustomizableDesignForm({
   const router = useRouter();
   const { addItem } = useCart();
   const visiblePreviewRef = useRef<HTMLDivElement>(null);
+  const fieldInputRefs = useRef<Partial<Record<DesignOrderFieldId, HTMLElement | null>>>({});
 
   const required = requiredOrderFields[template.category];
   const price = designCategoryPrices[template.category];
@@ -75,8 +84,89 @@ export function CustomizableDesignForm({
     Partial<Record<DesignOrderFieldId, string>>
   >({});
   const [capturing, setCapturing] = useState(false);
+  const [draftHydrated, setDraftHydrated] = useState(false);
+  const [activeField, setActiveField] = useState<DesignOrderFieldId | null>(null);
+
+  useEffect(() => {
+    const draft = findDesignEditorDraft(template.id);
+    if (draft?.kind === 'layout') {
+      const payload = draft.payload;
+      if (payload.values && typeof payload.values === 'object') {
+        setValues(payload.values as Partial<Record<DesignOrderFieldId, string>>);
+      }
+      if (payload.colors && typeof payload.colors === 'object') {
+        setColors(payload.colors as DesignColorTheme);
+      }
+      if (
+        payload.step === 'front' ||
+        payload.step === 'back' ||
+        payload.step === 'colors' ||
+        payload.step === 'review'
+      ) {
+        setStep(payload.step);
+      }
+      if (typeof payload.quantity === 'number' && payload.quantity > 0) {
+        setQuantity(payload.quantity);
+      }
+    }
+    setDraftHydrated(true);
+  }, [template.id]);
+
+  const serializedDraft = useMemo(
+    () => JSON.stringify({ values, colors, step, quantity }),
+    [values, colors, step, quantity],
+  );
+  const { isDirty, markClean } = useDirtySnapshot(serializedDraft, draftHydrated);
+
+  const saveDraft = useCallback(async () => {
+    try {
+      upsertDesignEditorDraft({
+        id: `design-${template.id}`,
+        name: td(`templates.${template.id}`),
+        templateId: template.id,
+        kind: 'layout',
+        payload: { values, colors, step, quantity, layoutId: layout.id },
+        updatedAt: new Date().toISOString(),
+      });
+      markClean();
+      return true;
+    } catch {
+      return false;
+    }
+  }, [colors, layout.id, markClean, quantity, step, td, template.id, values]);
+
+  const unsavedWorkGuard = useUnsavedWorkGuard({
+    isDirty,
+    onSave: saveDraft,
+  });
 
   const stepIndex = steps.indexOf(step);
+  const isTextStep = step === 'front' || step === 'back';
+  const stepFields = step === 'front' ? layout.frontFields : layout.backFields;
+
+  const focusField = useCallback((field: DesignOrderFieldId) => {
+    setActiveField(field);
+    if (window.matchMedia('(min-width: 768px)').matches) {
+      window.requestAnimationFrame(() => {
+        fieldInputRefs.current[field]?.focus();
+        fieldInputRefs.current[field]?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+        });
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isTextStep || stepFields.length === 0) {
+      setActiveField(null);
+      return;
+    }
+
+    setActiveField((current) =>
+      current && stepFields.includes(current) ? current : stepFields[0],
+    );
+  }, [isTextStep, step, stepFields]);
 
   function updateField(id: DesignOrderFieldId, value: string) {
     setValues((prev) => ({ ...prev, [id]: value }));
@@ -188,33 +278,53 @@ export function CustomizableDesignForm({
         backDesignPreview: backPreview ?? undefined,
         metadata,
       });
+      unsavedWorkGuard.allowNavigation();
       router.push('/cart');
     } finally {
       setCapturing(false);
     }
   }
 
-  function renderFields(fields: DesignOrderFieldId[]) {
+  function goAdjacentField(direction: -1 | 1) {
+    if (!activeField || stepFields.length === 0) return;
+    const currentIndex = stepFields.indexOf(activeField);
+    const nextIndex = currentIndex + direction;
+    if (nextIndex < 0 || nextIndex >= stepFields.length) return;
+    focusField(stepFields[nextIndex]);
+  }
+
+  function renderFields(fields: DesignOrderFieldId[], compact = false) {
     return fields.map((field) => {
       const inputType = fieldInputType[field] ?? 'text';
       const isRequired = required.includes(field);
       const errorId = `${field}-error`;
+      const isActive = activeField === field;
 
       if (inputType === 'textarea') {
         return (
-          <div key={field}>
+          <div
+            key={field}
+            className={cn(compact && 'hidden md:block')}
+          >
             <label htmlFor={field} className="mb-1.5 block text-sm font-medium text-ink-700">
               {to(`fields.${field}`)}
               {isRequired && <span className="text-brand-600"> *</span>}
             </label>
             <textarea
               id={field}
+              ref={(node) => {
+                fieldInputRefs.current[field] = node;
+              }}
               rows={3}
               value={values[field] ?? ''}
               onChange={(e) => updateField(field, e.target.value)}
+              onFocus={() => setActiveField(field)}
               aria-invalid={Boolean(errors[field])}
               aria-describedby={errors[field] ? errorId : undefined}
-              className="w-full rounded-lg border border-ink-300 px-3 py-2.5 text-ink-900 placeholder:text-ink-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+              className={cn(
+                'w-full rounded-lg border px-3 py-2.5 text-ink-900 placeholder:text-ink-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200',
+                isActive ? 'border-brand-400 bg-brand-50/40' : 'border-ink-300',
+              )}
               placeholder={to(`placeholders.${field}`)}
             />
             {errors[field] && (
@@ -227,19 +337,29 @@ export function CustomizableDesignForm({
       }
 
       return (
-        <div key={field}>
+        <div
+          key={field}
+          className={cn(compact && 'hidden md:block')}
+        >
           <label htmlFor={field} className="mb-1.5 block text-sm font-medium text-ink-700">
             {to(`fields.${field}`)}
             {isRequired && <span className="text-brand-600"> *</span>}
           </label>
           <input
             id={field}
+            ref={(node) => {
+              fieldInputRefs.current[field] = node;
+            }}
             type={inputType}
             value={values[field] ?? ''}
             onChange={(e) => updateField(field, e.target.value)}
+            onFocus={() => setActiveField(field)}
             aria-invalid={Boolean(errors[field])}
             aria-describedby={errors[field] ? errorId : undefined}
-            className="w-full rounded-lg border border-ink-300 px-3 py-2.5 text-ink-900 placeholder:text-ink-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+            className={cn(
+              'w-full rounded-lg border px-3 py-2.5 text-ink-900 placeholder:text-ink-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200',
+              isActive ? 'border-brand-400 bg-brand-50/40' : 'border-ink-300',
+            )}
             placeholder={to(`placeholders.${field}`)}
           />
           {errors[field] && (
@@ -253,7 +373,8 @@ export function CustomizableDesignForm({
   }
 
   return (
-    <div className="space-y-6">
+    <>
+      <div className="w-full max-w-full min-w-0 space-y-6">
       {template.category === 'menus' && (
         <div className="flex gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-950">
           <Info className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" aria-hidden="true" />
@@ -266,73 +387,23 @@ export function CustomizableDesignForm({
         </div>
       )}
 
-      <nav aria-label={t('editorNav')}>
-        <ol className="flex flex-col gap-1 md:grid md:grid-cols-4 md:gap-2">
-          {steps.map((item, index) => {
-            const Icon = stepIcons[item];
-            const isActive = step === item;
-            const isDone = index < stepIndex;
-            return (
-              <li key={item}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStep(item);
-                    if (item === 'front' || item === 'review') setPreviewSide('front');
-                    if (item === 'back') setPreviewSide('back');
-                  }}
-                  className={`flex w-full items-center rounded-xl border text-left transition ${
-                    isActive
-                      ? 'gap-3 border-brand-500 bg-brand-50 px-3 py-3 shadow-sm'
-                      : `gap-2 px-2.5 py-2 md:gap-3 md:px-3 md:py-3 ${
-                          isDone
-                            ? 'border-ink-200 bg-white hover:border-brand-300'
-                            : 'border-ink-200 bg-ink-50/60 hover:border-ink-300'
-                        }`
-                  }`}
-                >
-                  <span
-                    className={`flex shrink-0 items-center justify-center rounded-full font-bold ${
-                      isActive
-                        ? 'h-8 w-8 bg-brand-600 text-sm text-white'
-                        : isDone
-                          ? 'h-6 w-6 bg-brand-100 text-xs text-brand-700 md:h-8 md:w-8 md:text-sm'
-                          : 'h-6 w-6 bg-ink-200 text-xs text-ink-600 md:h-8 md:w-8 md:text-sm'
-                    }`}
-                  >
-                    {index + 1}
-                  </span>
-                  <Icon
-                    className={`shrink-0 text-brand-600 ${
-                      isActive ? 'h-4 w-4' : 'h-3.5 w-3.5 md:h-4 md:w-4'
-                    }`}
-                    aria-hidden="true"
-                  />
-                  <span className="min-w-0 flex-1">
-                    <span
-                      className={`block font-semibold text-ink-900 ${
-                        isActive ? 'text-sm' : 'text-xs md:text-sm'
-                      }`}
-                    >
-                      {t(`steps.${item}.title`)}
-                    </span>
-                    <span
-                      className={`mt-0.5 block text-xs text-ink-500 ${
-                        isActive ? '' : 'hidden md:block'
-                      }`}
-                    >
-                      {t(`steps.${item}.hint`)}
-                    </span>
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-        </ol>
-      </nav>
+      <DesignCustomizerStepNav
+        steps={steps}
+        step={step}
+        stepIndex={stepIndex}
+        stepIcons={stepIcons}
+        onStepChange={(item) => {
+          setStep(item);
+          if (item === 'front' || item === 'review') setPreviewSide('front');
+          if (item === 'back') setPreviewSide('back');
+        }}
+        label={(item) => t(`steps.${item}.title`)}
+        hint={(item) => t(`steps.${item}.hint`)}
+        ariaLabel={t('editorNav')}
+      />
 
-      <div className="grid gap-6 md:gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
-        <Card className="order-1 overflow-hidden p-4 xl:sticky xl:top-24 xl:self-start">
+      <div className="grid w-full min-w-0 max-w-full grid-cols-[minmax(0,1fr)] gap-4 lg:gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(380px,1fr)] 2xl:grid-cols-[minmax(420px,1.1fr)_minmax(440px,0.95fr)]">
+        <Card className="order-1 w-full max-w-full min-w-0 p-4 sm:p-5 lg:sticky lg:top-20 lg:self-start lg:p-6">
           <div className="mb-3 flex items-center justify-between gap-3">
             <p className="text-sm font-semibold text-ink-900">{t('livePreview')}</p>
             <div className="flex rounded-lg border border-ink-200 bg-ink-50 p-1">
@@ -353,15 +424,40 @@ export function CustomizableDesignForm({
             </div>
           </div>
 
-          <div ref={visiblePreviewRef} className="rounded-lg border border-ink-200 bg-ink-50 p-4">
+          <div ref={visiblePreviewRef} className="max-w-full min-w-0 rounded-lg border border-ink-200 bg-ink-50 p-2 sm:p-4 lg:p-5">
             <CustomizableDesignPreview
               layout={layout}
               colors={colors}
               values={values}
               side={previewSide}
-              className="mx-auto w-full max-w-xl"
+              className="mx-auto w-full max-w-full lg:max-h-[min(78vh,760px)]"
             />
           </div>
+
+          {isTextStep ? (
+            <>
+              <p className="mt-3 text-center text-xs text-ink-500 md:text-sm">
+                {t('tapToEdit')}
+              </p>
+              <div className="mt-3 flex gap-2 overflow-x-auto pb-1 md:hidden">
+                {stepFields.map((field) => (
+                  <button
+                    key={field}
+                    type="button"
+                    onClick={() => focusField(field)}
+                    className={cn(
+                      'shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition',
+                      activeField === field
+                        ? 'border-brand-500 bg-brand-50 text-brand-700'
+                        : 'border-ink-200 bg-white text-ink-600',
+                    )}
+                  >
+                    {to(`fields.${field}`)}
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : null}
 
           {step === 'review' && (
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -403,33 +499,49 @@ export function CustomizableDesignForm({
           )}
         </Card>
 
-        <div className="order-2">
-          <Card className="p-5 sm:p-6">
+        <div className="order-2 w-full max-w-full min-w-0">
+          <Card className="w-full max-w-full min-w-0 p-5 sm:p-6">
             {step === 'front' && (
               <div className="space-y-4">
                 <div>
-                  <h2 className="text-xl font-bold text-ink-900">{t('steps.front.title')}</h2>
-                  <p className="mt-1 text-sm text-ink-600">{t('steps.front.desc')}</p>
+                  <h2 className="break-words text-xl font-bold text-ink-900">{t('steps.front.title')}</h2>
+                  <p className="mt-1 break-words text-sm text-ink-600">{t('steps.front.desc')}</p>
                 </div>
-                {renderFields(layout.frontFields)}
+                <div
+                  className={cn(
+                    'space-y-4',
+                    layout.frontFields.length > 4 &&
+                      'lg:grid lg:grid-cols-2 lg:gap-x-6 lg:gap-y-4 lg:space-y-0',
+                  )}
+                >
+                  {renderFields(layout.frontFields, true)}
+                </div>
               </div>
             )}
 
             {step === 'back' && (
               <div className="space-y-4">
                 <div>
-                  <h2 className="text-xl font-bold text-ink-900">{t('steps.back.title')}</h2>
-                  <p className="mt-1 text-sm text-ink-600">{t('steps.back.desc')}</p>
+                  <h2 className="break-words text-xl font-bold text-ink-900">{t('steps.back.title')}</h2>
+                  <p className="mt-1 break-words text-sm text-ink-600">{t('steps.back.desc')}</p>
                 </div>
-                {renderFields(layout.backFields)}
+                <div
+                  className={cn(
+                    'space-y-4',
+                    layout.backFields.length > 4 &&
+                      'lg:grid lg:grid-cols-2 lg:gap-x-6 lg:gap-y-4 lg:space-y-0',
+                  )}
+                >
+                  {renderFields(layout.backFields, true)}
+                </div>
               </div>
             )}
 
             {step === 'colors' && (
               <div className="space-y-5">
                 <div>
-                  <h2 className="text-xl font-bold text-ink-900">{t('steps.colors.title')}</h2>
-                  <p className="mt-1 text-sm text-ink-600">{t('steps.colors.desc')}</p>
+                  <h2 className="break-words text-xl font-bold text-ink-900">{t('steps.colors.title')}</h2>
+                  <p className="mt-1 break-words text-sm text-ink-600">{t('steps.colors.desc')}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {layout.presets.map((preset) => (
@@ -489,8 +601,8 @@ export function CustomizableDesignForm({
             {step === 'review' && (
               <div className="space-y-5">
                 <div>
-                  <h2 className="text-xl font-bold text-ink-900">{t('steps.review.title')}</h2>
-                  <p className="mt-1 text-sm text-ink-600">{t('steps.review.desc')}</p>
+                  <h2 className="break-words text-xl font-bold text-ink-900">{t('steps.review.title')}</h2>
+                  <p className="mt-1 break-words text-sm text-ink-600">{t('steps.review.desc')}</p>
                 </div>
                 <div>
                   <label htmlFor="quantity" className="mb-1.5 block text-sm font-medium text-ink-700">
@@ -512,25 +624,32 @@ export function CustomizableDesignForm({
               </div>
             )}
 
-            <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-ink-100 pt-5">
+            <div className="mt-8 flex flex-col gap-3 border-t border-ink-100 pt-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
               <Button
                 type="button"
                 variant="outline"
                 onClick={goBack}
                 disabled={stepIndex === 0}
-                className="gap-1"
+                className="w-full gap-1 sm:w-auto"
               >
                 <ChevronLeft className="h-4 w-4" aria-hidden="true" />
                 {t('prevStep')}
               </Button>
 
               {step !== 'review' ? (
-                <Button type="button" onClick={goNext} className="gap-1">
+                <Button type="button" onClick={goNext} className="w-full gap-1 sm:ml-auto sm:w-auto">
                   {t('nextStep')}
                   <ChevronRight className="h-4 w-4" aria-hidden="true" />
                 </Button>
               ) : (
-                <Button type="button" onClick={handleSubmit} loading={capturing} disabled={capturing} size="lg">
+                <Button
+                  type="button"
+                  onClick={handleSubmit}
+                  loading={capturing}
+                  disabled={capturing}
+                  size="lg"
+                  className="w-full sm:ml-auto sm:w-auto"
+                >
                   {capturing ? t('capturing') : to('addToCart')}
                 </Button>
               )}
@@ -538,6 +657,38 @@ export function CustomizableDesignForm({
           </Card>
         </div>
       </div>
-    </div>
+      </div>
+
+      <DesignCustomizerMobileFieldBar
+        open={isTextStep && Boolean(activeField)}
+        inputId={activeField ?? 'mobile-field'}
+        label={activeField ? to(`fields.${activeField}`) : ''}
+        value={activeField ? (values[activeField] ?? '') : ''}
+        onChange={(value) => {
+          if (activeField) updateField(activeField, value);
+        }}
+        onPrev={stepFields.length > 1 ? () => goAdjacentField(-1) : undefined}
+        onNext={stepFields.length > 1 ? () => goAdjacentField(1) : undefined}
+        prevDisabled={!activeField || stepFields.indexOf(activeField) <= 0}
+        nextDisabled={
+          !activeField ||
+          stepFields.indexOf(activeField) < 0 ||
+          stepFields.indexOf(activeField) >= stepFields.length - 1
+        }
+        prevLabel={t('prevField')}
+        nextLabel={t('nextField')}
+        multiline={activeField ? (fieldInputType[activeField] ?? 'text') === 'textarea' : false}
+        placeholder={activeField ? to(`placeholders.${activeField}`) : undefined}
+      />
+
+      <UnsavedWorkDialog
+        open={unsavedWorkGuard.dialogOpen}
+        saving={unsavedWorkGuard.saving}
+        saveNotice={unsavedWorkGuard.saveNotice}
+        onSave={unsavedWorkGuard.handleSave}
+        onCancel={unsavedWorkGuard.cancelNavigation}
+        onLeaveWithoutSaving={unsavedWorkGuard.handleLeaveWithoutSaving}
+      />
+    </>
   );
 }

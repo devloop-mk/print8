@@ -1,0 +1,32 @@
+<svg viewBox="0 0 1050 600" xmlns="http://www.w3.org/2000/svg" style="font-family: Arial, sans-serif;">
+  <defs>
+    <!-- Users can easily change these stop-colors via code -->
+    <linearGradient id="primary-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F46E5" />
+      <stop offset="50%" stop-color="#EC4899" />
+      <stop offset="100%" stop-color="#F59E0B" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1050" height="600" fill="#0F172A" />
+  
+  <!-- Abstract Waves -->
+  <path d="M0,600 C300,500 400,200 1050,300 L1050,600 Z" fill="url(#primary-gradient)" opacity="0.8" />
+  <path d="M0,600 C400,600 600,400 1050,500 L1050,600 Z" fill="url(#primary-gradient)" opacity="0.5" />
+  
+  <!-- Logo Placeholder -->
+  <circle cx="120" cy="120" r="40" fill="url(#primary-gradient)" />
+  <text x="120" y="135" fill="#FFF" font-size="40" font-weight="bold" text-anchor="middle">L</text>
+  <text x="180" y="135" fill="#FFF" font-size="36" font-weight="bold">COMPANY</text>
+  
+  <!-- Personal Info -->
+  <text x="120" y="380" fill="#FFF" font-size="48" font-weight="bold">John Doe</text>
+  <text x="120" y="420" fill="#9CA3AF" font-size="24" letter-spacing="2">CHIEF EXECUTIVE OFFICER</text>
+  
+  <!-- Contact Info -->
+  <text x="900" y="380" fill="#E5E7EB" font-size="20" text-anchor="end">+1 (555) 123-4567</text>
+  <text x="900" y="420" fill="#E5E7EB" font-size="20" text-anchor="end">john.doe@company.com</text>
+  <text x="900" y="460" fill="#E5E7EB" font-size="20" text-anchor="end">www.company.com</text>
+  <text x="900" y="500" fill="#E5E7EB" font-size="20" text-anchor="end">123 Business Rd, Suite 100</text>
+</svg>

@@ -1,0 +1,28 @@
+<svg viewBox="0 0 1600 2400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=Montserrat:wght@300;400&amp;display=swap');
+      .text-gold { fill: #D4AF37; }
+      .text-white { fill: #FFFFFF; }
+      .text-light { fill: #9CA3AF; }
+    </style>
+  </defs>
+  <image href="/NEW_DESIGNS/backgrounds/menu-bg-finedining-back.png" width="1600" height="2400" preserveAspectRatio="xMidYMid slice"/>
+  
+  <g text-anchor="middle">
+    <!-- Content -->
+    <text x="800" y="800" class="text-gold" font-family="'Cinzel', serif" font-weight="600" font-size="60" letter-spacing="8">WINE &amp; SPIRITS</text>
+    <text x="800" y="880" class="text-light" font-family="'Montserrat', sans-serif" font-weight="300" font-size="24" letter-spacing="4">PLEASE ASK YOUR SERVER FOR OUR</text>
+    <text x="800" y="930" class="text-light" font-family="'Montserrat', sans-serif" font-weight="300" font-size="24" letter-spacing="4">EXTENSIVE RESERVE WINE LIST</text>
+    
+    <line x1="700" y1="1100" x2="900" y2="1100" stroke="#D4AF37" stroke-width="1" />
+    
+    <text x="800" y="1300" class="text-white" font-family="'Cinzel', serif" font-weight="400" font-size="40" letter-spacing="6">PRIVATE DINING AVAILABLE</text>
+    <text x="800" y="1360" class="text-light" font-family="'Montserrat', sans-serif" font-weight="300" font-size="22" letter-spacing="2">INQUIRE AT EVENTS@LAURA.COM</text>
+    
+    <!-- Footer Address -->
+    <text x="800" y="2000" class="text-white" font-family="'Cinzel', serif" font-weight="600" font-size="30" letter-spacing="8">L'AURA</text>
+    <text x="800" y="2060" class="text-light" font-family="'Montserrat', sans-serif" font-weight="300" font-size="20" letter-spacing="4">123 LUXURY AVENUE, NEW YORK, NY 10001</text>
+    <text x="800" y="2110" class="text-gold" font-family="'Montserrat', sans-serif" font-weight="400" font-size="20" letter-spacing="4">WWW.LAURARESTAURANT.COM</text>
+  </g>
+</svg>

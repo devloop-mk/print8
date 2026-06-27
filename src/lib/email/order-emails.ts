@@ -13,6 +13,7 @@ import {
   getSideMetadataPrefix,
 } from "@/lib/products/product-sides";
 import { parsePlacedStickers } from "@/lib/products/sticker-library";
+import { getSvgPrintFilesFromMetadata } from "@/lib/designs/svg-order-assets";
 
 interface EmailAttachment {
   filename: string;
@@ -137,6 +138,96 @@ async function buildDesignPreviewAttachments(
   return attachments;
 }
 
+function buildSvgPrintAttachments(data: CheckoutInput): EmailAttachment[] {
+  const attachments: EmailAttachment[] = [];
+
+  data.items.forEach((item, itemIndex) => {
+    const printFiles = getSvgPrintFilesFromMetadata(item.metadata, item.name);
+    printFiles.forEach((file) => {
+      attachments.push({
+        filename: `item-${itemIndex + 1}-${file.filename}`,
+        content: Buffer.from(file.svg, "utf-8"),
+        contentType: "image/svg+xml",
+      });
+    });
+  });
+
+  return attachments;
+}
+
+function buildCustomDesignDetailsHtml(data: CheckoutInput) {
+  const blocks: string[] = [];
+
+  data.items.forEach((item) => {
+    const meta = item.metadata;
+    if (!meta) return;
+
+    if (meta.orderType === "svg-template") {
+      const summary: string[] = [];
+      if (typeof meta.svgTemplateId === "string") {
+        summary.push(`Template: ${escapeHtml(meta.svgTemplateId)}`);
+      }
+      if (typeof meta.svgFrontContent === "string") {
+        summary.push("Front: print-ready SVG attached");
+      }
+      if (typeof meta.svgBackContent === "string") {
+        summary.push("Back: print-ready SVG attached");
+      }
+
+      const textEntries = Object.entries(meta)
+        .filter(([key]) => key.startsWith("text_"))
+        .map(([key, value]) => {
+          const label = key.replace(/^text_/, "").replace(":", " · ");
+          return `<li><strong>${escapeHtml(label)}</strong>: ${escapeHtml(String(value))}</li>`;
+        });
+
+      blocks.push(
+        `<div style="margin:12px 0;padding:12px;border:1px solid #e5e7eb;border-radius:8px;">
+          <p style="margin:0 0 8px;font-weight:600;">${escapeHtml(item.name)}</p>
+          ${summary.length > 0 ? `<p style="margin:0 0 8px;font-size:14px;color:#374151;">${summary.join("<br/>")}</p>` : ""}
+          ${textEntries.length > 0 ? `<ul style="margin:0;padding-left:18px;font-size:14px;color:#374151;">${textEntries.join("")}</ul>` : ""}
+        </div>`,
+      );
+      return;
+    }
+
+    if (meta.orderType === "customizable-template") {
+      const fields = Object.entries(meta).filter(
+        ([key]) =>
+          ![
+            "designTemplateId",
+            "category",
+            "orderType",
+            "layoutId",
+            "accentColor",
+            "backgroundColor",
+            "textColor",
+            "secondaryColor",
+          ].includes(key),
+      );
+
+      if (fields.length === 0) return;
+
+      blocks.push(
+        `<div style="margin:12px 0;padding:12px;border:1px solid #e5e7eb;border-radius:8px;">
+          <p style="margin:0 0 8px;font-weight:600;">${escapeHtml(item.name)}</p>
+          <ul style="margin:0;padding-left:18px;font-size:14px;color:#374151;">
+            ${fields
+              .map(
+                ([key, value]) =>
+                  `<li><strong>${escapeHtml(key)}</strong>: ${escapeHtml(String(value))}</li>`,
+              )
+              .join("")}
+          </ul>
+        </div>`,
+      );
+    }
+  });
+
+  if (blocks.length === 0) return "";
+  return `<h3>Custom design details</h3>${blocks.join("")}`;
+}
+
 async function buildOriginalUploadAttachments(
   fileIds: string[],
 ): Promise<EmailAttachment[]> {
@@ -233,12 +324,14 @@ export async function sendOrderEmails(
   const fileIds = collectOrderFileIds(data);
   const stickerRefs = collectOrderStickers(data.items);
   const designAttachments = await buildDesignPreviewAttachments(data);
+  const svgPrintAttachments = buildSvgPrintAttachments(data);
   const stickerAttachments = await buildStickerAttachments(stickerRefs);
   const originalAttachments = await buildOriginalUploadAttachments(fileIds);
   const total = formatPrice(totalAmount, data.locale);
   const itemsHtml = buildItemsHtml(data, data.locale);
   const designHtml = buildDesignImagesHtml(data);
   const designDetailsHtml = buildDesignDetailsHtml(data);
+  const customDesignDetailsHtml = buildCustomDesignDetailsHtml(data);
   const isMk = data.locale === "mk";
 
   const customerHtml = isMk
@@ -283,6 +376,11 @@ export async function sendOrderEmails(
         content: a.content,
         contentType: a.contentType,
       })),
+      ...svgPrintAttachments.map((a) => ({
+        filename: a.filename,
+        content: a.content,
+        contentType: a.contentType,
+      })),
       ...stickerAttachments.map((a) => ({
         filename: a.filename,
         content: a.content,
@@ -310,8 +408,9 @@ export async function sendOrderEmails(
         <ul>${itemsHtml}</ul>
         <p><strong>Total:</strong> ${total}</p>
         ${designHtml ? `<h3>Design previews</h3>${designHtml}` : ""}
+        ${customDesignDetailsHtml}
         ${designDetailsHtml}
-        <p>${adminAttachments.length} file(s) attached (${designAttachments.length} preview(s), ${stickerAttachments.length} sticker(s), ${originalAttachments.length} original upload(s)).</p>
+        <p>${adminAttachments.length} file(s) attached (${designAttachments.length} preview(s), ${svgPrintAttachments.length} print SVG(s), ${stickerAttachments.length} sticker(s), ${originalAttachments.length} original upload(s)).</p>
       `,
       attachments: adminAttachments.map((a) => ({
         filename: a.filename,

@@ -1,0 +1,31 @@
+<svg viewBox="0 0 1500 2100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&amp;family=Montserrat:wght@300;400;600&amp;display=swap');
+      .text-gold { fill: #D4AF37; }
+      .text-white { fill: #FFFFFF; }
+      .text-light { fill: #D1D5DB; }
+    </style>
+  </defs>
+  <image href="/NEW_DESIGNS/backgrounds/bday-bg-gold.png" width="1500" height="2100" preserveAspectRatio="xMidYMid slice"/>
+  
+  <g text-anchor="middle">
+    <text x="750" y="550" class="text-gold" font-family="'Cinzel', serif" font-weight="700" font-size="100" letter-spacing="8">CHEERS TO</text>
+    <text x="750" y="680" class="text-gold" font-family="'Cinzel', serif" font-weight="700" font-size="100" letter-spacing="8">40 YEARS</text>
+    
+    <line x1="550" y1="780" x2="950" y2="780" stroke="#D4AF37" stroke-width="2" />
+    
+    <text x="750" y="900" class="text-light" font-family="'Montserrat', sans-serif" font-weight="300" font-size="24" letter-spacing="6">PLEASE JOIN US IN CELEBRATING</text>
+    
+    <text x="750" y="1050" class="text-white" font-family="'Cinzel', serif" font-weight="400" font-size="80" letter-spacing="6">MICHAEL'S</text>
+    <text x="750" y="1130" class="text-white" font-family="'Cinzel', serif" font-weight="400" font-size="50" letter-spacing="10">40TH BIRTHDAY</text>
+    
+    <text x="750" y="1350" class="text-gold" font-family="'Montserrat', sans-serif" font-weight="600" font-size="35" letter-spacing="4">FRIDAY, OCTOBER 9TH, 2026</text>
+    <text x="750" y="1420" class="text-light" font-family="'Montserrat', sans-serif" font-weight="300" font-size="26" letter-spacing="2">AT SEVEN O'CLOCK IN THE EVENING</text>
+    
+    <text x="750" y="1600" class="text-white" font-family="'Montserrat', sans-serif" font-weight="600" font-size="30" letter-spacing="4">THE GRAND HOTEL LOUNGE</text>
+    <text x="750" y="1660" class="text-light" font-family="'Montserrat', sans-serif" font-weight="300" font-size="22" letter-spacing="2">789 LUXURY AVENUE, DOWNTOWN</text>
+    
+    <text x="750" y="1820" class="text-gold" font-family="'Montserrat', sans-serif" font-weight="400" font-size="22" letter-spacing="2">DRESS TO IMPRESS  |  RSVP BY OCT 1ST</text>
+  </g>
+</svg>

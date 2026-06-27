@@ -1,4 +1,5 @@
 import {
+  Baby,
   CircleUserRound,
   Coffee,
   CupSoda,
@@ -18,6 +19,7 @@ export const productTypeIconMap: Record<ProductTypeFilterValue, LucideIcon> = {
   all: LayoutGrid,
   't-shirt': Shirt,
   hoodie: Shirt,
+  bodysuit: Baby,
   cap: CircleUserRound,
   mug: Coffee,
   cup: CupSoda,

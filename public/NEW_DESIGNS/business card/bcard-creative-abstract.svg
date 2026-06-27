@@ -1,0 +1,41 @@
+<svg viewBox="0 0 1050 600" xmlns="http://www.w3.org/2000/svg" style="font-family: 'Montserrat', sans-serif;">
+  <defs>
+    <linearGradient id="creative-gradient" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1050" height="600" fill="#F8FAFC" />
+  
+  <!-- Abstract Shapes -->
+  <circle cx="900" cy="100" r="300" fill="url(#creative-gradient)" opacity="0.1" />
+  <circle cx="1000" cy="500" r="200" fill="url(#creative-gradient)" opacity="0.8" />
+  <circle cx="850" cy="450" r="100" fill="#10B981" opacity="0.5" />
+  
+  <!-- Left Accent Bar -->
+  <rect x="0" y="0" width="40" height="600" fill="url(#creative-gradient)" />
+  
+  <!-- Logo Placeholder -->
+  <circle cx="120" cy="120" r="35" fill="none" stroke="url(#creative-gradient)" stroke-width="8" />
+  <circle cx="120" cy="120" r="15" fill="url(#creative-gradient)" />
+  <text x="180" y="130" fill="#0F172A" font-size="32" font-weight="900" letter-spacing="2">STUDIO</text>
+  
+  <!-- Personal Info -->
+  <text x="100" y="320" fill="#0F172A" font-size="50" font-weight="bold">Sarah Jenkins</text>
+  <text x="100" y="360" fill="#10B981" font-size="22" font-weight="bold" letter-spacing="3">ART DIRECTOR</text>
+  
+  <!-- Contact Info Grid -->
+  <text x="100" y="450" fill="#475569" font-size="18" font-weight="bold">T</text>
+  <text x="130" y="450" fill="#64748B" font-size="18">+1 (555) 444-3333</text>
+  
+  <text x="350" y="450" fill="#475569" font-size="18" font-weight="bold">E</text>
+  <text x="380" y="450" fill="#64748B" font-size="18">sarah@studio.com</text>
+  
+  <text x="100" y="490" fill="#475569" font-size="18" font-weight="bold">W</text>
+  <text x="130" y="490" fill="#64748B" font-size="18">www.studio.com</text>
+  
+  <text x="350" y="490" fill="#475569" font-size="18" font-weight="bold">A</text>
+  <text x="380" y="490" fill="#64748B" font-size="18">321 Creative Alley, SF</text>
+</svg>

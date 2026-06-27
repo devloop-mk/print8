@@ -6,9 +6,12 @@ import { Link, usePathname } from '@/i18n/navigation';
 import { useCart } from '@/components/cart/CartProvider';
 import { LanguageSwitcher } from '@/components/layout/LanguageSwitcher';
 import { ProductsNavMenu } from '@/components/layout/ProductsNavMenu';
+import { DesignsNavMenu } from '@/components/layout/DesignsNavMenu';
+import { OngoingDesignsNav } from '@/components/drafts/OngoingDesignsNav';
 import { Logo } from '@/components/brand/Logo';
 import { cn } from '@/lib/utils';
 import { isProductsNavActive } from '@/lib/products/product-nav';
+import { isDesignsNavActive } from '@/lib/designs/design-nav';
 import { ChevronDown, ShoppingCart, X } from 'lucide-react';
 
 const navItems = [
@@ -30,7 +33,9 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
   const pathname = usePathname();
   const { itemCount } = useCart();
   const [productsOpen, setProductsOpen] = useState(false);
+  const [designsOpen, setDesignsOpen] = useState(false);
   const productsActive = isProductsNavActive(pathname);
+  const designsActive = isDesignsNavActive(pathname);
 
   useEffect(() => {
     if (!open) return;
@@ -55,7 +60,14 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
   }, [productsActive]);
 
   useEffect(() => {
-    if (!open) setProductsOpen(false);
+    if (designsActive) setDesignsOpen(true);
+  }, [designsActive]);
+
+  useEffect(() => {
+    if (!open) {
+      setProductsOpen(false);
+      setDesignsOpen(false);
+    }
   }, [open]);
 
   return (
@@ -99,7 +111,7 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
 
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           <ul className="space-y-1">
-            {navItems.slice(0, 3).map((item) => {
+            {navItems.slice(0, 2).map((item) => {
               const active = pathname === item.href;
               return (
                 <li key={item.key}>
@@ -118,6 +130,34 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
                 </li>
               );
             })}
+
+            <li>
+              <button
+                type="button"
+                onClick={() => setDesignsOpen((value) => !value)}
+                aria-expanded={designsOpen}
+                className={cn(
+                  'flex w-full items-center justify-between rounded-xl px-4 py-3 text-base font-medium transition',
+                  designsActive || designsOpen
+                    ? 'bg-brand-50 text-brand-700'
+                    : 'text-ink-700 hover:bg-ink-50',
+                )}
+              >
+                {t('designs')}
+                <ChevronDown
+                  className={cn(
+                    'h-5 w-5 shrink-0 transition',
+                    designsOpen && 'rotate-180',
+                  )}
+                  aria-hidden
+                />
+              </button>
+              {designsOpen ? (
+                <div className="mt-1 rounded-xl border border-ink-100 bg-ink-50/80 p-3">
+                  <DesignsNavMenu variant="mobile" onNavigate={onClose} />
+                </div>
+              ) : null}
+            </li>
 
             <li>
               <button
@@ -167,6 +207,8 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
               );
             })}
           </ul>
+
+          <OngoingDesignsNav variant="mobile" onNavigate={onClose} />
 
           <div className="mt-4 border-t border-ink-100 pt-4">
             <Link

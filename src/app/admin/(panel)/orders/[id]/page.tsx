@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { OrderStatusBadge } from '@/components/admin/OrderStatusBadge';
 import { OrderStatusUpdater } from '@/components/admin/OrderStatusUpdater';
 import { OrderItemMetadata } from '@/components/admin/OrderItemMetadata';
+import { OrderSvgPrintFiles } from '@/components/admin/OrderSvgPrintFiles';
 import { Card } from '@/components/ui/Card';
 import {
   collectOrderFileIds,
@@ -77,6 +78,13 @@ export default async function AdminOrderDetailPage({
 
                   {item.metadata && Object.keys(item.metadata).length > 0 ? (
                     <OrderItemMetadata metadata={item.metadata} />
+                  ) : null}
+
+                  {item.metadata ? (
+                    <OrderSvgPrintFiles
+                      itemName={item.name}
+                      metadata={item.metadata}
+                    />
                   ) : null}
 
                   {(item.designPreview ||

@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { Shirt } from 'lucide-react';
 import { getProductGallerySlides, type Product } from '@/lib/data/catalog';
-import { PRODUCT_MOCKUP_INNER_CLASS } from '@/components/products/ProductMockupFrame';
+import { getProductMockupLayout } from '@/lib/products/product-mockup-layout';
 
 export function ProductCatalogImage({
   product,
@@ -17,11 +17,12 @@ export function ProductCatalogImage({
   const slides = getProductGallerySlides(product, color);
   const primary = slides[0]?.image;
   const secondary = slides[1]?.image;
+  const mockupLayout = getProductMockupLayout(product);
 
   return (
-    <div className="relative flex aspect-square w-full max-w-sm items-center justify-center rounded-2xl bg-gradient-to-br from-ink-50 to-ink-100 shadow-inner">
+    <div className="relative flex aspect-square w-full max-w-sm items-center justify-center rounded-2xl border border-ink-100 bg-white">
       {primary ? (
-        <div className={PRODUCT_MOCKUP_INNER_CLASS}>
+        <div className={mockupLayout.catalogInnerClass}>
           <div
             className={`absolute inset-0 transition-opacity duration-300 ${
               secondary ? 'group-hover:opacity-0' : ''
@@ -32,7 +33,7 @@ export function ProductCatalogImage({
               alt={typeLabel}
               fill
               sizes="(max-width: 768px) 50vw, 320px"
-              className="object-contain"
+              className={mockupLayout.catalogImageClass}
             />
           </div>
           {secondary ? (
@@ -42,7 +43,7 @@ export function ProductCatalogImage({
                 alt={`${typeLabel} — alternate`}
                 fill
                 sizes="(max-width: 768px) 50vw, 320px"
-                className="object-contain"
+                className={mockupLayout.catalogImageClass}
               />
             </div>
           ) : null}

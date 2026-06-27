@@ -21,6 +21,7 @@ import { PRODUCT_OFFERING_PATHS } from '@/lib/products/paths';
 import { FilterChipBar } from '@/components/catalog/FilterChipBar';
 import { ProductDesignCatalogCard } from '@/components/products/ProductDesignCatalogCard';
 import { Reveal } from '@/components/motion/Reveal';
+import { CatalogGridLayout } from '@/components/catalog/CatalogGrid';
 import { cn } from '@/lib/utils';
 
 type ProductDesignsCatalogProps = {
@@ -185,7 +186,7 @@ export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) 
         </p>
       ) : (
         <Reveal delay={80}>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <CatalogGridLayout>
             {filtered.map((entry) => (
               <ProductDesignCatalogCard
                 key={entry.design.id}
@@ -193,7 +194,7 @@ export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) 
                 colorFilter={colorFilter}
               />
             ))}
-          </div>
+          </CatalogGridLayout>
         </Reveal>
       )}
     </div>

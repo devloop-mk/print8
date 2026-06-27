@@ -6,6 +6,7 @@ import { Link } from '@/i18n/navigation';
 import { Card } from '@/components/ui/Card';
 import { DesignCardThumbnail } from '@/components/designs/DesignCardThumbnail';
 import { FilterChipBar } from '@/components/catalog/FilterChipBar';
+import { CatalogGridLayout } from '@/components/catalog/CatalogGrid';
 import {
   designCategories,
   getDesignHref,
@@ -65,7 +66,7 @@ export function FeaturedDesignCards({ designs }: { designs: DesignTemplate[] }) 
         </p>
       ) : (
         <>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <CatalogGridLayout gapClassName="gap-6">
             {visible.map((design) => {
               const isFixed = design.kind === 'fixed';
               return (
@@ -99,7 +100,7 @@ export function FeaturedDesignCards({ designs }: { designs: DesignTemplate[] }) 
                 </Link>
               );
             })}
-          </div>
+          </CatalogGridLayout>
 
           {visible.length > 0 ? (
             <div className="flex justify-center pt-2">

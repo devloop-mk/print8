@@ -10,13 +10,20 @@ import { ProductCatalogImage } from '@/components/products/ProductCatalogImage';
 import { Reveal } from '@/components/motion/Reveal';
 import { cn } from '@/lib/utils';
 import type { Product } from '@/lib/data/catalog';
+import { CatalogGridLayout } from '@/components/catalog/CatalogGrid';
 
 export function ProductCardGrid({
   items,
   gridClassName,
+  desktopColumns = 4,
+  mobileColumnToggle = true,
+  toggleClassName,
 }: {
   items: Product[];
   gridClassName?: string;
+  desktopColumns?: 3 | 4;
+  mobileColumnToggle?: boolean;
+  toggleClassName?: string;
 }) {
   const t = useTranslations('products');
   const tp = useTranslations('products.types');
@@ -30,11 +37,11 @@ export function ProductCardGrid({
   );
 
   return (
-    <div
-      className={cn(
-        'grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3',
-        gridClassName,
-      )}
+    <CatalogGridLayout
+      desktopColumns={desktopColumns}
+      mobileColumnToggle={mobileColumnToggle}
+      toggleClassName={toggleClassName}
+      gridClassName={gridClassName}
     >
       {items.map((product, index) => {
         const defaultColor = product.colors?.[0] ?? '#ffffff';
@@ -98,11 +105,12 @@ export function ProductCardGrid({
                               [product.id]: c,
                             }));
                           }}
-                          className={`h-5 w-5 border-2 transition ${
+                          className={cn(
+                            'h-5 w-5 border-2 transition',
                             cardColor === c
                               ? 'border-brand-600 ring-2 ring-brand-200'
-                              : 'border-ink-300 hover:border-ink-400'
-                          }`}
+                              : 'border-ink-300 hover:border-ink-400',
+                          )}
                           style={{ backgroundColor: c }}
                           aria-label={c}
                         />
@@ -118,6 +126,6 @@ export function ProductCardGrid({
           </Reveal>
         );
       })}
-    </div>
+    </CatalogGridLayout>
   );
 }

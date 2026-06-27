@@ -9,7 +9,9 @@
     "start": "next start",
     "lint": "eslint .",
     "compress:images": "node scripts/compress-images.mjs",
-    "build:flag-stickers": "node scripts/build-flag-stickers.mjs"
+    "build:flag-stickers": "node scripts/build-flag-stickers.mjs",
+    "export:print-designs": "node scripts/export-print-designs.mjs",
+    "export:print-variants": "node scripts/export-print-variants.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.1",

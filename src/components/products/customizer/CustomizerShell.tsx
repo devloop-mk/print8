@@ -1,0 +1,204 @@
+'use client';
+
+import { cn } from '@/lib/utils';
+import {
+  ImageIcon,
+  Palette,
+  Shirt,
+  Sparkles,
+  Type,
+  ZoomIn,
+  ZoomOut,
+} from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import type { EditorPanel } from '@/components/products/customizer/types';
+import type { ProductSide } from '@/lib/data/catalog';
+
+export function CustomizerShell({
+  topBar,
+  contextBar,
+  canvas,
+  panel,
+  activePanel,
+  onPanelChange,
+  showDesignPanel,
+  sides,
+  activeSide,
+  onSideChange,
+  sideLabel,
+  sideHasContent,
+  hasMultipleSides,
+  canvasZoom,
+  onZoomChange,
+  mobileBottomBar,
+  mobileSheet,
+}: {
+  topBar: React.ReactNode;
+  contextBar: React.ReactNode;
+  canvas: React.ReactNode;
+  panel: React.ReactNode;
+  activePanel: EditorPanel;
+  onPanelChange: (panel: EditorPanel) => void;
+  showDesignPanel: boolean;
+  sides: ProductSide[];
+  activeSide: ProductSide;
+  onSideChange: (side: ProductSide) => void;
+  sideLabel: (side: ProductSide) => string;
+  sideHasContent: (side: ProductSide) => boolean;
+  hasMultipleSides: boolean;
+  canvasZoom: number;
+  onZoomChange: (zoom: number) => void;
+  mobileBottomBar: React.ReactNode;
+  mobileSheet: React.ReactNode;
+}) {
+  const t = useTranslations('products.customizer');
+
+  const items = [
+    {
+      id: 'product' as const,
+      label: t('tabProduct'),
+      icon: <Shirt className="h-5 w-5" />,
+    },
+    {
+      id: 'text' as const,
+      label: t('tabText'),
+      icon: <Type className="h-5 w-5" />,
+    },
+    {
+      id: 'photo' as const,
+      label: t('tabUpload'),
+      icon: <ImageIcon className="h-5 w-5" />,
+    },
+    {
+      id: 'stickers' as const,
+      label: t('tabElements'),
+      icon: <Sparkles className="h-5 w-5" />,
+    },
+    {
+      id: 'design' as const,
+      label: t('designColor'),
+      icon: <Palette className="h-5 w-5" />,
+      show: showDesignPanel,
+    },
+  ].filter((item) => item.show !== false);
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white pb-[4.75rem] md:pb-0">
+      {topBar}
+
+      <div className="flex min-h-0 flex-1 overflow-hidden">
+        <aside className="hidden shrink-0 md:flex">
+          <nav className="flex w-[4.25rem] flex-col items-center gap-1 border-r border-ink-100 bg-white py-3">
+            {items.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                title={item.label}
+                onClick={() =>
+                  onPanelChange(activePanel === item.id ? null : item.id)
+                }
+                className={cn(
+                  'flex w-14 flex-col items-center gap-1 rounded-lg px-1 py-2 text-[10px] font-medium leading-tight transition',
+                  activePanel === item.id
+                    ? 'bg-brand-50 text-brand-700'
+                    : 'text-ink-500 hover:bg-ink-50 hover:text-ink-800',
+                )}
+              >
+                {item.icon}
+                <span className="max-w-full truncate">{item.label}</span>
+              </button>
+            ))}
+          </nav>
+
+          {activePanel ? (
+            <div className="flex w-[min(20rem,30vw)] flex-col border-r border-ink-100 bg-white">
+              <div className="border-b border-ink-100 px-4 py-3">
+                <h2 className="text-sm font-semibold text-ink-900">
+                  {items.find((item) => item.id === activePanel)?.label}
+                </h2>
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto p-4">{panel}</div>
+            </div>
+          ) : null}
+        </aside>
+
+        <main className="relative flex min-w-0 flex-1 flex-col bg-[#e9edf2]">
+          {hasMultipleSides ? (
+            <div className="flex shrink-0 justify-center border-b border-ink-200/60 bg-white/80 px-3 py-2 backdrop-blur-sm">
+              <div className="inline-flex rounded-lg bg-ink-100/80 p-1">
+                {sides.map((side) => (
+                  <button
+                    key={side}
+                    type="button"
+                    onClick={() => onSideChange(side)}
+                    className={cn(
+                      'relative rounded-md px-4 py-1.5 text-xs font-semibold transition',
+                      activeSide === side
+                        ? 'bg-white text-brand-700 shadow-sm'
+                        : 'text-ink-600 hover:text-ink-900',
+                    )}
+                  >
+                    {sideLabel(side)}
+                    {sideHasContent(side) && activeSide !== side ? (
+                      <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-brand-500" />
+                    ) : null}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          <div className="relative flex min-h-0 flex-1 flex-col">
+            <div className="pointer-events-none absolute inset-x-0 top-2 z-20 flex justify-center px-4">
+              <div className="pointer-events-auto">{contextBar}</div>
+            </div>
+
+            <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto p-2 md:p-3">
+              <div
+                className="origin-center transition-transform duration-150"
+                style={{ transform: `scale(${canvasZoom / 100})` }}
+              >
+                {canvas}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex h-12 shrink-0 items-center justify-center gap-3 border-t border-ink-200/70 bg-white px-4">
+            <button
+              type="button"
+              onClick={() => onZoomChange(Math.max(40, canvasZoom - 10))}
+              className="flex h-8 w-8 items-center justify-center rounded-md text-ink-500 hover:bg-ink-50"
+              aria-label={t('zoomOut')}
+            >
+              <ZoomOut className="h-4 w-4" />
+            </button>
+            <input
+              type="range"
+              min={40}
+              max={130}
+              step={5}
+              value={canvasZoom}
+              onChange={(e) => onZoomChange(Number(e.target.value))}
+              className="w-32 accent-brand-600 md:w-48"
+              aria-label={t('editorZoom')}
+            />
+            <span className="w-10 text-center text-xs font-medium text-ink-600">
+              {canvasZoom}%
+            </span>
+            <button
+              type="button"
+              onClick={() => onZoomChange(Math.min(130, canvasZoom + 10))}
+              className="flex h-8 w-8 items-center justify-center rounded-md text-ink-500 hover:bg-ink-50"
+              aria-label={t('zoomIn')}
+            >
+              <ZoomIn className="h-4 w-4" />
+            </button>
+          </div>
+        </main>
+      </div>
+
+      {mobileBottomBar}
+      {mobileSheet}
+    </div>
+  );
+}

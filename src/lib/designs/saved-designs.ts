@@ -36,6 +36,9 @@ export function readSavedDesigns(): SavedDesign[] {
   }
 }
 
+import { dispatchDraftsChanged } from '@/lib/drafts/draft-events';
+
 export function writeSavedDesigns(designs: SavedDesign[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(designs));
+  dispatchDraftsChanged();
 }

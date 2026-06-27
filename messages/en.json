@@ -20,6 +20,11 @@
       "legal": "Legal"
     }
   },
+  "catalogGrid": {
+    "view": "Grid view",
+    "oneColumn": "1 column",
+    "twoColumns": "2 columns"
+  },
   "nav": {
     "home": "Home",
     "services": "Services",
@@ -35,6 +40,14 @@
     "menu": "Menu",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
+    "ongoingDesigns": {
+      "title": "Designs in progress",
+      "subtitle": "Saved on this device — not ordered yet",
+      "open": "Open saved designs ({count})",
+      "sourceStudio": "Studio",
+      "sourceProduct": "Product",
+      "sourceTemplate": "Template"
+    },
     "languages": {
       "mk": "Macedonian",
       "en": "English"
@@ -46,7 +59,7 @@
       "browseByType": "Browse by type",
       "personalize": "Personalize",
       "categories": {
-        "apparel": "T-shirts, hoodies & caps",
+        "apparel": "T-shirts, hoodies, bodysuits & caps",
         "drinkware": "Mugs, cups & thermoses",
         "bags": "Bags",
         "gifts": "Gifts & magnets"
@@ -60,6 +73,21 @@
         "readyDesignsDesc": "Order complete designs as shown",
         "textTemplates": "Text templates",
         "textTemplatesDesc": "Phrases with a spot for your photo"
+      }
+    },
+    "designsMenu": {
+      "eyebrow": "Designs",
+      "subtitle": "Browse by category or start from a template.",
+      "viewAll": "View all",
+      "browseByCategory": "Browse by category",
+      "createAndOrder": "Create & order",
+      "links": {
+        "allDesigns": "All designs",
+        "allDesignsDesc": "Full catalog with category filters",
+        "designStudio": "Design studio",
+        "designStudioDesc": "Build a layout from scratch with photos and text",
+        "customizable": "Customizable templates",
+        "customizableDesc": "Edit text and colors with live preview"
       }
     }
   },
@@ -247,6 +275,11 @@
         "description": "Personalized hoodies with quality print — for teams, events, and gifts.",
         "detail": "Pick a hoodie, add front and back designs, and order online."
       },
+      "bodysuit-printing": {
+        "title": "Baby bodysuit printing",
+        "description": "Personalized baby bodysuits with cute family designs — perfect gifts for newborns.",
+        "detail": "Pick a bodysuit color and size, choose a ready design or add your own."
+      },
       "cap-printing": {
         "title": "Cap printing",
         "description": "Branded caps with your logo or text — a great promo product.",
@@ -376,7 +409,27 @@
       "birthday-fun": "Fun birthday invitation",
       "birthday-modern": "Modern birthday invitation",
       "menu-elegant": "Elegant restaurant menu",
-      "menu-modern": "Modern restaurant menu"
+      "menu-modern": "Modern restaurant menu",
+      "svg-bcard-tech-wave": "Tech wave business card",
+      "svg-bcard-luxury-gold": "Luxury gold business card",
+      "svg-bcard-corporate-geo": "Corporate geo business card",
+      "svg-bcard-creative-abstract": "Creative abstract business card",
+      "svg-wedding-modern-arch": "Modern arch wedding invitation",
+      "svg-wedding-romantic-blush": "Romantic blush wedding invitation",
+      "svg-wedding-classic-navy-gold": "Classic navy & gold wedding invitation",
+      "svg-wedding-botanical-boho": "Botanical boho wedding invitation",
+      "svg-wedding-print-beach": "Beach wedding invitation",
+      "svg-wedding-print-autumn": "Autumn wedding invitation",
+      "svg-wedding-print-celestial": "Celestial wedding invitation",
+      "svg-wedding-print-terracotta": "Terracotta wedding invitation",
+      "svg-wedding-print-watercolor": "Watercolor wedding invitation",
+      "svg-wedding-print-winter": "Winter wedding invitation",
+      "svg-bday-gold": "Gold milestone birthday invitation",
+      "svg-bday-rosegold": "Rose gold birthday invitation",
+      "svg-bday-princess": "Princess birthday invitation",
+      "svg-bday-dino": "Dinosaur birthday invitation",
+      "svg-menu-rustic": "Rustic Italian menu cover",
+      "svg-menu-finedining": "Fine dining menu cover"
     },
     "customize": {
       "backToDesigns": "Back to designs",
@@ -391,11 +444,42 @@
       "formTitle": "Personalize your design",
       "formSubtitle": "Change text and colors to match your event or brand.",
       "previewNote": "Live preview — your order includes front and back as shown.",
+      "svgLine": "Text line {n}",
+      "tapToEdit": "Tap any text on the design to edit it. Changes appear instantly.",
+      "editingLine": "Editing line {n}",
+      "prevField": "Previous line",
+      "nextField": "Next line",
+      "scrollPreview": "Swipe sideways to see the full design",
       "colorTheme": "Colors",
       "accentColor": "Accent",
       "backgroundColor": "Background",
       "textColor": "Text",
       "secondaryColor": "Secondary",
+      "svgColors": {
+        "background": "Background",
+        "text": "Text",
+        "secondary": "Secondary",
+        "accent": "Accent",
+        "charcoal": "Charcoal",
+        "gray": "Gray",
+        "gold": "Gold",
+        "white": "Light text",
+        "light": "Muted text",
+        "burgundy": "Burgundy",
+        "warm-grey": "Warm grey",
+        "terra": "Terracotta",
+        "brown": "Brown",
+        "tan": "Tan",
+        "dark": "Dark text",
+        "green": "Green",
+        "navy": "Navy",
+        "slate": "Slate",
+        "blue": "Blue",
+        "rose": "Rose",
+        "pink": "Pink",
+        "purple": "Purple",
+        "orange": "Orange"
+      },
       "capturing": "Saving preview...",
       "menuInsideTitle": "What this price includes",
       "menuInsideNote": "The price shown is for the front and back cover only. It does not include the interior menu pages, food photos, extra sections, or other add-ons. After you place your order, our team will contact you to collect your dishes, prices, and any photos, then prepare a quote for the inside pages.",
@@ -601,7 +685,7 @@
       "backToAll": "Back to all products",
       "allInCategory": "All in category",
       "apparel": {
-        "subtitle": "T-shirts, hoodies, and caps — customize with your design or order ready-made styles."
+        "subtitle": "T-shirts, hoodies, bodysuits, and caps — customize with your design or order ready-made styles."
       },
       "drinkware": {
         "subtitle": "Mugs, cups, and thermoses — great for gifts, promotions, and events."
@@ -617,11 +701,17 @@
       "backToAll": "All products",
       "suggestionsTitle": "You might also like",
       "suggestionsSubtitle": "Browse more products from our catalog.",
+      "gridView": "Grid view",
+      "oneColumn": "1 column",
+      "twoColumns": "2 columns",
       "t-shirt": {
         "subtitle": "Custom t-shirts with your design — pick color, size, and print options."
       },
       "hoodie": {
         "subtitle": "Hoodies with your logo or artwork — comfortable and durable for daily wear."
+      },
+      "bodysuit": {
+        "subtitle": "Baby bodysuits with fun family designs — a sweet gift for newborns and baby showers."
       },
       "cap": {
         "subtitle": "Branded caps — great for teams, events, and promotions."
@@ -690,7 +780,22 @@
       "loveFamily": "I love my family",
       "bestMother": "Best mother",
       "bestFather": "Best father",
-      "loveMacedonia": "I love Macedonia"
+      "loveMacedonia": "I love Macedonia",
+      "printKeepWorkingOut": "Keep working out",
+      "printLiftHeavy": "Lift heavy",
+      "bodysuitVujko": "Meet my uncle",
+      "bodysuitTato": "Dad's birthday gift",
+      "bodysuitTetka": "Meet my aunt",
+      "bodysuitBabaDedo": "Grandma & grandpa",
+      "bodysuitMamaTato": "50% mom, 50% dad",
+      "gymAlfaMentalitet": "Alpha mentality",
+      "gymZverGorilla": "Beast gorilla",
+      "gymPosilenOdVcera": "Stronger than yesterday",
+      "gymOslobodiGoZverot": "Unleash the beast",
+      "babyLoadingBoy": "Loading… boy",
+      "babyLoadingGirl": "Loading… girl",
+      "babyZipperBoy": "Zipper boy",
+      "babyZipperGirl": "Zipper girl"
     },
     "detail": {
       "notFound": "Product not found",
@@ -738,6 +843,7 @@
     "types": {
       "t-shirt": "T-shirt",
       "hoodie": "Hoodie",
+      "bodysuit": "Baby bodysuit",
       "cap": "Cap",
       "mug": "Mug",
       "cup": "Cup",
@@ -749,6 +855,7 @@
     "typesPlural": {
       "t-shirt": "T-shirts",
       "hoodie": "Hoodies",
+      "bodysuit": "Baby bodysuits",
       "cap": "Caps",
       "mug": "Mugs",
       "cup": "Cups",
@@ -758,6 +865,7 @@
       "gift-set": "Gift sets"
     },
     "items": {
+      "bodysuitBasic": "Baby bodysuit",
       "mugClassic": "Classic mug",
       "mugHeartHandle": "Heart handle mug",
       "mugChromeHandle": "Chrome handle mug",
@@ -926,6 +1034,7 @@
       },
       "addToCart": "Add to cart",
       "backToProduct": "Back to product",
+      "savedDraftName": "{product} design",
       "dragHint": "Drag text and images directly on the preview to position them",
       "positionTop": "Top",
       "positionCenter": "Center",
@@ -936,6 +1045,21 @@
       "premadeDesignHint": "Add text or a photo on top of this design",
       "textTemplateHint": "Edit the text and upload a photo of your loved one",
       "photoGuide": "Add photo here",
+      "designColor": "Design color",
+      "designPrimaryColor": "Main ink color",
+      "designSecondaryColor": "Accent color",
+      "designColorHint": "Pick print ink colors. We warn you if contrast with the shirt is too low.",
+      "designLowContrast": "This color may be hard to see on the selected shirt. Try a lighter or darker ink.",
+      "designAutoContrast": "Auto-adjust for shirt",
+      "recolorableDesignHint": "You can change the design ink color below.",
+      "tabProduct": "Product",
+      "tabText": "Text",
+      "tabUpload": "Uploads",
+      "tabElements": "Elements",
+      "editorZoom": "Zoom",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "deleteElement": "Delete element",
       "resizeHint": "Drag to move text, photos, and stickers. Use corner handles to resize"
     }
   },
@@ -1091,6 +1215,14 @@
     "uploadSessionHint": "Check .env.local Supabase settings and run supabase/schema.sql if tables are missing.",
     "uploadRetry": "Retry",
     "chooseFile": "Choose file"
+  },
+  "unsavedWork": {
+    "title": "Unsaved changes",
+    "message": "You have a design in progress. Save it before leaving or your changes may be lost.",
+    "saveDesign": "Save design",
+    "cancel": "Cancel",
+    "leaveWithoutSaving": "Leave without saving",
+    "saved": "Design saved to this device"
   },
   "footer": {
     "tagline": "Professional printing and personalized products.",

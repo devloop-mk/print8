@@ -15,7 +15,7 @@ import {
 } from '@/lib/products/capture-preview';
 import { useTranslations, useLocale } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
-import { Link, useRouter } from '@/i18n/navigation';
+import { useRouter } from '@/i18n/navigation';
 import {
   products,
   getProductMockup,
@@ -33,14 +33,13 @@ import {
 import { useCart } from '@/components/cart/CartProvider';
 import { useUploadSession } from '@/hooks/useUploadSession';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { LoadingIndicator } from '@/components/ui/LoadingIndicator';
 import { cn, formatPrice } from '@/lib/utils';
 import {
   formatProductCartName,
   restoreSideDesignFromMetadata,
 } from '@/lib/cart/product-cart';
-import { PRODUCT_MOCKUP_INNER_CLASS } from '@/components/products/ProductMockupFrame';
+import { getProductMockupLayout } from '@/lib/products/product-mockup-layout';
 import {
   createSideDesignsForSides,
   getSideMetadataPrefix,
@@ -49,6 +48,7 @@ import {
 import {
   createDefaultSideDesign,
   sideDesignFromImageTemplate,
+  sideDesignFromOverlayTemplate,
   sideDesignFromRestored,
   sideDesignFromTextTemplate,
   type SideDesign,
@@ -82,7 +82,26 @@ import {
   X,
 } from 'lucide-react';
 
-type EditorPanel = 'text' | 'photo' | 'stickers' | null;
+import {
+  inksHaveLowContrast,
+  suggestInkForShirt,
+} from '@/lib/products/design-overlay';
+import { useOverlayAssetUrl } from '@/hooks/useOverlayAssetUrl';
+import { Palette } from 'lucide-react';
+import type {
+  EditorPanel,
+  SelectedElement,
+} from '@/components/products/customizer/types';
+import { CustomizerShell } from '@/components/products/customizer/CustomizerShell';
+import { CustomizerContextBar } from '@/components/products/customizer/CustomizerContextBar';
+import { UnsavedWorkDialog } from '@/components/shared/UnsavedWorkDialog';
+import { useDirtySnapshot } from '@/hooks/useDirtySnapshot';
+import { useUnsavedWorkGuard } from '@/hooks/useUnsavedWorkGuard';
+import {
+  serializeSideDesigns,
+  upsertProductCustomizerDraft,
+} from '@/lib/drafts/work-drafts';
+import { findProductCustomizerDraft } from '@/lib/drafts/ongoing-designs';
 
 function useDraggablePosition(
   position: { x: number; y: number },
@@ -226,6 +245,56 @@ function OverlayRemoveButton({
   );
 }
 
+function ResizableDesignOverlay({
+  design,
+  template,
+  shirtColor,
+  scale,
+  position,
+  onScaleChange,
+  onPositionChange,
+  onRemove,
+  removeLabel,
+  hideControls,
+  maxScale,
+  selected,
+  onSelect,
+}: {
+  design: SideDesign;
+  template: ReturnType<typeof getProductDesignTemplate> | null | undefined;
+  shirtColor: string;
+  scale: number;
+  position: { x: number; y: number };
+  onScaleChange: (scale: number) => void;
+  onPositionChange: (pos: { x: number; y: number }) => void;
+  onRemove?: () => void;
+  removeLabel?: string;
+  hideControls?: boolean;
+  maxScale?: number;
+  selected?: boolean;
+  onSelect?: () => void;
+}) {
+  const src = useOverlayAssetUrl({ design, template, shirtColor });
+  if (!src) return null;
+
+  return (
+    <ResizableImageOverlay
+      src={src}
+      alt="design"
+      scale={scale}
+      position={position}
+      onScaleChange={onScaleChange}
+      onPositionChange={onPositionChange}
+      onRemove={onRemove}
+      removeLabel={removeLabel}
+      hideControls={hideControls}
+      maxScale={maxScale}
+      selected={selected}
+      onSelect={onSelect}
+    />
+  );
+}
+
 function ResizableImageOverlay({
   src,
   alt,
@@ -237,6 +306,8 @@ function ResizableImageOverlay({
   removeLabel,
   hideControls,
   maxScale,
+  selected,
+  onSelect,
 }: {
   src: string;
   alt: string;
@@ -248,6 +319,8 @@ function ResizableImageOverlay({
   removeLabel?: string;
   hideControls?: boolean;
   maxScale?: number;
+  selected?: boolean;
+  onSelect?: () => void;
 }) {
   const drag = useDraggablePosition(position, onPositionChange);
   const resize = useScaleResize(
@@ -268,12 +341,21 @@ function ResizableImageOverlay({
         transform: 'translate(-50%, -50%)',
         touchAction: 'none',
       }}
-      onPointerDown={drag.onPointerDown}
+      onPointerDown={(event) => {
+        event.stopPropagation();
+        onSelect?.();
+        drag.onPointerDown(event);
+      }}
       onPointerMove={drag.onPointerMove}
       onPointerUp={drag.onPointerUp}
       onPointerCancel={drag.onPointerCancel}
     >
-      <div className="relative">
+      <div
+        className={cn(
+          'relative rounded-lg',
+          selected && !hideControls && 'ring-2 ring-brand-500 ring-offset-2',
+        )}
+      >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
@@ -322,6 +404,8 @@ function ResizableStickerOverlay({
   onRemove,
   removeLabel,
   hideControls,
+  selected,
+  onSelect,
 }: {
   sticker: PlacedSticker;
   onScaleChange: (scale: number) => void;
@@ -329,6 +413,8 @@ function ResizableStickerOverlay({
   onRemove?: () => void;
   removeLabel?: string;
   hideControls?: boolean;
+  selected?: boolean;
+  onSelect?: () => void;
 }) {
   const definition = getStickerById(sticker.stickerId);
   const drag = useDraggablePosition(sticker.position, onPositionChange);
@@ -347,12 +433,21 @@ function ResizableStickerOverlay({
         transform: 'translate(-50%, -50%)',
         touchAction: 'none',
       }}
-      onPointerDown={drag.onPointerDown}
+      onPointerDown={(event) => {
+        event.stopPropagation();
+        onSelect?.();
+        drag.onPointerDown(event);
+      }}
       onPointerMove={drag.onPointerMove}
       onPointerUp={drag.onPointerUp}
       onPointerCancel={drag.onPointerCancel}
     >
-      <div className="relative">
+      <div
+        className={cn(
+          'relative rounded-lg',
+          selected && !hideControls && 'ring-2 ring-brand-500 ring-offset-2',
+        )}
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={definition.src}
@@ -390,60 +485,6 @@ function ResizableStickerOverlay({
           </svg>
         </div>
       </div>
-    </div>
-  );
-}
-
-function ProductSideTabs({
-  sides,
-  activeSide,
-  onSelect,
-  sideHasContent,
-  label,
-  compact = false,
-}: {
-  sides: ProductSide[];
-  activeSide: ProductSide;
-  onSelect: (side: ProductSide) => void;
-  sideHasContent: (side: ProductSide) => boolean;
-  label: (side: ProductSide) => string;
-  compact?: boolean;
-}) {
-  const isScrollable = sides.length > 2;
-
-  return (
-    <div
-      className={cn(
-        'flex gap-1 rounded-xl bg-ink-100 p-1',
-        isScrollable &&
-          'overflow-x-auto snap-x snap-mandatory scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
-      )}
-      role="tablist"
-    >
-      {sides.map((side) => (
-        <button
-          key={side}
-          type="button"
-          role="tab"
-          aria-selected={activeSide === side}
-          onClick={() => onSelect(side)}
-          className={cn(
-            'relative rounded-lg font-semibold transition',
-            isScrollable
-              ? 'min-w-[4.25rem] shrink-0 snap-start px-2 py-2 text-[11px] leading-tight'
-              : 'flex-1 px-4 py-2.5 text-sm',
-            compact && !isScrollable && 'px-3 py-2 text-xs',
-            activeSide === side
-              ? 'bg-white text-brand-700 shadow-sm'
-              : 'text-ink-600 hover:text-ink-900',
-          )}
-        >
-          {label(side)}
-          {sideHasContent(side) && activeSide !== side ? (
-            <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-brand-500" />
-          ) : null}
-        </button>
-      ))}
     </div>
   );
 }
@@ -492,13 +533,77 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   const [sideDesigns, setSideDesigns] = useState<Record<ProductSide, SideDesign>>(
     () => createSideDesignsForSides(sides),
   );
-  const [activePanel, setActivePanel] = useState<EditorPanel>(null);
+  const [activePanel, setActivePanel] = useState<EditorPanel>('text');
+  const [selectedElement, setSelectedElement] = useState<SelectedElement>(null);
+  const [canvasZoom, setCanvasZoom] = useState(100);
 
   const previewRef = useRef<HTMLDivElement | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [cartLimitError, setCartLimitError] = useState<
     'stickers' | 'photos' | null
   >(null);
+
+  const serializedDraft = useMemo(
+    () =>
+      JSON.stringify({
+        color,
+        size,
+        quantity,
+        activeSide,
+        sideDesigns: serializeSideDesigns(sideDesigns),
+      }),
+    [color, size, quantity, activeSide, sideDesigns],
+  );
+  const [baselineReady, setBaselineReady] = useState(false);
+
+  useEffect(() => {
+    if (!product) return;
+    const timer = window.setTimeout(() => setBaselineReady(true), 500);
+    return () => window.clearTimeout(timer);
+  }, [product?.id, designId, editCartItemId, product]);
+
+  const { isDirty, markClean } = useDirtySnapshot(serializedDraft, baselineReady);
+
+  const saveDraft = useCallback(async () => {
+    if (!product) return false;
+
+    try {
+      upsertProductCustomizerDraft({
+        id: `product-${product.id}-${designId ?? 'blank'}`,
+        name: t('savedDraftName', { product: tp(type) }),
+        productId: product.id,
+        productType: type,
+        designId,
+        color,
+        size,
+        quantity,
+        activeSide,
+        sideDesigns: serializeSideDesigns(sideDesigns),
+        updatedAt: new Date().toISOString(),
+      });
+      markClean();
+      return true;
+    } catch {
+      return false;
+    }
+  }, [
+    activeSide,
+    color,
+    designId,
+    markClean,
+    product,
+    quantity,
+    sideDesigns,
+    size,
+    t,
+    tp,
+    type,
+  ]);
+
+  const unsavedWorkGuard = useUnsavedWorkGuard({
+    isDirty,
+    onSave: saveDraft,
+  });
 
   const currentDesign =
     sideDesigns[activeSide] ?? createDefaultSideDesign();
@@ -616,19 +721,35 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   }, [product, colorParam, sizeParam, editCartItemId]);
 
   useEffect(() => {
-    if (!designId || editCartItemId) return;
+    if (!designId || editCartItemId || !product) return;
+    if (findProductCustomizerDraft(product.id, designId)) return;
+
     const template = getProductDesignTemplate(designId);
     if (!template) return;
 
     const side = template.defaultSide;
     const textDesign = sideDesignFromTextTemplate(template);
     const imageDesign = sideDesignFromImageTemplate(template);
+    const overlayDesign = sideDesignFromOverlayTemplate(template, color);
 
     if (textDesign) {
       setSideDesigns((prev) => ({
         ...prev,
         [side]: textDesign,
       }));
+    } else if (overlayDesign) {
+      setSideDesigns((prev) => ({
+        ...prev,
+        [side]: overlayDesign,
+      }));
+      if (
+        template.recommendedColor &&
+        product?.colors?.some(
+          (value) => value.toLowerCase() === template.recommendedColor!.toLowerCase(),
+        )
+      ) {
+        setColor(template.recommendedColor);
+      }
     } else if (imageDesign) {
       setSideDesigns((prev) => ({
         ...prev,
@@ -637,7 +758,32 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     }
 
     setActiveSide(side);
-  }, [designId, editCartItemId]);
+  }, [designId, editCartItemId, product]);
+
+  useEffect(() => {
+    if (!product || editCartItemId) return;
+
+    const draft = findProductCustomizerDraft(product.id, designId);
+    if (!draft) return;
+
+    setColor(draft.color);
+    setSize(draft.size);
+    setQuantity(draft.quantity);
+    setActiveSide(draft.activeSide);
+
+    const productSides = getProductSides(product);
+    const restored = createSideDesignsForSides(productSides);
+    for (const side of productSides) {
+      const saved = draft.sideDesigns[side];
+      if (saved) {
+        restored[side] = {
+          ...createDefaultSideDesign(),
+          ...saved,
+        };
+      }
+    }
+    setSideDesigns(restored);
+  }, [product, designId, editCartItemId]);
 
   useEffect(() => {
     if (!editCartItemId || !product) return;
@@ -767,6 +913,22 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       if (d.premadeDesignId) {
         metadata[`${prefix}PremadeDesignId`] = d.premadeDesignId;
       }
+      if (d.isRecolorableOverlay) {
+        metadata[`${prefix}IsRecolorableOverlay`] = true;
+        if (d.overlaySvg) metadata[`${prefix}OverlaySvg`] = d.overlaySvg;
+        if (d.overlaySvgColors?.primary) {
+          metadata[`${prefix}OverlaySvgPrimary`] = d.overlaySvgColors.primary;
+        }
+        if (d.overlaySvgColors?.secondary) {
+          metadata[`${prefix}OverlaySvgSecondary`] = d.overlaySvgColors.secondary;
+        }
+      }
+      if (d.overlayColorVariants) {
+        metadata[`${prefix}HasOverlayVariants`] = true;
+      }
+      if (d.overlayRaster) {
+        metadata[`${prefix}OverlayRaster`] = d.overlayRaster;
+      }
       if (d.uploadedFile?.fileId) {
         metadata[`${prefix}UploadedFileId`] = d.uploadedFile.fileId;
       }
@@ -806,6 +968,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     } else {
       addItem(cartPayload);
     }
+    unsavedWorkGuard.allowNavigation();
     router.push('/cart');
   }
 
@@ -817,7 +980,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     };
     if (activePanel === 'text') {
       updateCurrentSide({ customTextPosition: positions[preset] });
-    } else if (activePanel === 'photo') {
+    } else if (activePanel === 'photo' || activePanel === 'design') {
       updateCurrentSide({ uploadedImagePosition: positions[preset] });
     }
   }
@@ -830,265 +993,248 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     const d = sideDesigns[side];
     if (!d) return false;
     return Boolean(
-      d.customText || d.uploadedFile || d.premadeDesignImage || d.stickers.length,
+      d.customText ||
+        d.uploadedFile ||
+        d.premadeDesignImage ||
+        d.overlaySvg ||
+        d.overlayColorVariants ||
+        d.stickers.length,
     );
   };
 
-  const hasPremadeImage = Boolean(currentDesign.premadeDesignImage);
-  const hasTextTemplate = Boolean(currentDesign.isTextTemplate);
+  const activeDesignTemplate = useMemo(() => {
+    const id = designId ?? currentDesign.premadeDesignId;
+    return id ? getProductDesignTemplate(id) : null;
+  }, [designId, currentDesign.premadeDesignId]);
+
+  const hasRecolorableOverlay = Boolean(currentDesign.isRecolorableOverlay);
+
+  function handleRemoveElement(target: SelectedElement) {
+    if (!target) return;
+    if (target === 'text') updateCurrentSide({ customText: '' });
+    if (target === 'photo') updateCurrentSide({ uploadedFile: null });
+    if (target.startsWith('sticker:')) {
+      removeSticker(target.replace('sticker:', ''));
+    }
+    setSelectedElement(null);
+  }
+
+  const previewNode = (
+    <InteractivePreview
+      mockupImage={mockupImage}
+      sideDesign={currentDesign}
+      designTemplate={activeDesignTemplate}
+      shirtColor={color}
+      typeLabel={tp(type)}
+      productType={type}
+      containerRef={previewRef}
+      isCapturing={isCapturing}
+      photoGuideLabel={t('photoGuide')}
+      selectedElement={selectedElement}
+      onSelectElement={setSelectedElement}
+      onTextPositionChange={(pos) =>
+        updateCurrentSide({ customTextPosition: pos })
+      }
+      onTextSizeChange={(size) => updateCurrentSide({ customTextSize: size })}
+      onImagePositionChange={(pos) =>
+        updateCurrentSide({ uploadedImagePosition: pos })
+      }
+      onImageScaleChange={(scale) =>
+        updateCurrentSide({
+          uploadedImageScale: clampPhotoScale(scale),
+        })
+      }
+      onRemoveText={() => updateCurrentSide({ customText: '' })}
+      onRemoveImage={() => updateCurrentSide({ uploadedFile: null })}
+      removeTextLabel={t('removeText')}
+      removeImageLabel={t('removePhoto')}
+      stickers={currentDesign.stickers}
+      onStickerPositionChange={(instanceId, pos) =>
+        updateSticker(instanceId, { position: pos })
+      }
+      onStickerScaleChange={(instanceId, scale) =>
+        updateSticker(instanceId, { scale })
+      }
+      onRemoveSticker={removeSticker}
+      removeStickerLabel={t('removeSticker')}
+    />
+  );
+
+  const panelNode = (
+    <EditorPanelContent
+      panel={activePanel ?? 'text'}
+      currentDesign={currentDesign}
+      designTemplate={activeDesignTemplate}
+      shirtColor={color}
+      product={product}
+      color={color}
+      setColor={setColor}
+      size={size}
+      setSize={setSize}
+      quantity={quantity}
+      setQuantity={setQuantity}
+      updateCurrentSide={updateCurrentSide}
+      setPositionPreset={setPositionPreset}
+      onAddSticker={addSticker}
+      stickersAtLimit={
+        currentDesign.stickers.length >= MAX_STICKERS_PER_SIDE
+      }
+      token={token}
+      uploadLoading={uploadLoading}
+      uploadError={uploadError}
+      refreshSession={refreshSession}
+    />
+  );
 
   return (
-    <div className="pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))] md:pb-0">
-      <Link
-        href={`/products/${product.id}`}
-        className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-ink-600 transition hover:text-brand-600"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {t('backToProduct')}
-      </Link>
-
-      {cartLimitError ? (
-        <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-          {cartLimitError === 'stickers'
-            ? t('orderStickerLimit', { max: MAX_STICKERS_PER_ORDER })
-            : t('orderPhotoLimit', { max: MAX_PHOTOS_PER_ORDER })}
-        </p>
-      ) : null}
-
-      <div className="grid gap-6 xl:grid-cols-2 xl:items-start xl:gap-8">
-        {/* Preview column */}
-        <div className="space-y-4 touch-pan-y">
-          {hasMultipleSides && (
-            <ProductSideTabs
-              sides={sides}
-              activeSide={activeSide}
-              onSelect={setActiveSide}
-              sideHasContent={sideHasContent}
-              label={sideLabel}
-            />
-          )}
-
-          <Card className="flex items-center justify-center p-4 sm:p-6">
-            <div className="mx-auto w-full max-w-[min(18rem,calc(100%-2.5rem))] touch-pan-y md:max-w-md lg:max-w-lg xl:max-w-sm">
-              <InteractivePreview
-                mockupImage={mockupImage}
-                sideDesign={currentDesign}
-                typeLabel={tp(type)}
-                containerRef={previewRef}
-                isCapturing={isCapturing}
-                photoGuideLabel={t('photoGuide')}
-                onTextPositionChange={(pos) =>
-                  updateCurrentSide({ customTextPosition: pos })
-                }
-                onTextSizeChange={(size) =>
-                  updateCurrentSide({ customTextSize: size })
-                }
-                onImagePositionChange={(pos) =>
-                  updateCurrentSide({ uploadedImagePosition: pos })
-                }
-                onImageScaleChange={(scale) =>
-                  updateCurrentSide({
-                    uploadedImageScale: clampPhotoScale(scale),
-                  })
-                }
-                onRemoveText={() => updateCurrentSide({ customText: '' })}
-                onRemoveImage={() => updateCurrentSide({ uploadedFile: null })}
-                removeTextLabel={t('removeText')}
-                removeImageLabel={t('removePhoto')}
-                stickers={currentDesign.stickers}
-                onStickerPositionChange={(instanceId, pos) =>
-                  updateSticker(instanceId, { position: pos })
-                }
-                onStickerScaleChange={(instanceId, scale) =>
-                  updateSticker(instanceId, { scale })
-                }
-                onRemoveSticker={removeSticker}
-                removeStickerLabel={t('removeSticker')}
-              />
+    <>
+      <CustomizerShell
+      topBar={
+        <div className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-ink-100 bg-white px-3 md:px-5">
+          <div className="flex min-w-0 items-center gap-3">
+            <button
+              type="button"
+              onClick={() => unsavedWorkGuard.requestLeave(`/products/${product.id}`)}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-ink-600 hover:text-brand-600"
+            >
+              <ArrowLeft className="h-4 w-4 shrink-0" />
+              <span className="hidden sm:inline">{t('backToProduct')}</span>
+            </button>
+            <div className="hidden h-5 w-px bg-ink-200 sm:block" />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-ink-900">
+                {tp(type)}
+              </p>
+              <p className="text-xs text-brand-600">
+                {formatPrice(product.basePrice, locale)}
+              </p>
             </div>
-          </Card>
-
-          <p className="text-center text-xs text-ink-500">
-            {hasTextTemplate
-              ? t('textTemplateHint')
-              : hasPremadeImage
-                ? t('premadeDesignHint')
-                : t('resizeHint')}
-          </p>
-        </div>
-
-        {/* Controls — inline from tablet up; sidebar on wide desktop */}
-        <div className="hidden space-y-5 md:block xl:sticky xl:top-24 xl:self-start">
-          <ProductControls
-            product={product}
-            type={type}
-            color={color}
-            setColor={setColor}
-            size={size}
-            setSize={setSize}
-            quantity={quantity}
-            setQuantity={setQuantity}
-            activePanel={activePanel}
-            setActivePanel={setActivePanel}
-            currentDesign={currentDesign}
-            updateCurrentSide={updateCurrentSide}
-            setPositionPreset={setPositionPreset}
-            onAddSticker={addSticker}
-            stickersAtLimit={
-              currentDesign.stickers.length >= MAX_STICKERS_PER_SIDE
-            }
-            token={token}
-            uploadLoading={uploadLoading}
-            uploadError={uploadError}
-            refreshSession={refreshSession}
-            onAddToCart={handleAddToCart}
-            isCapturing={isCapturing}
-            locale={locale}
-          />
-        </div>
-      </div>
-
-      {/* Phone bottom toolbar — fixed to viewport so actions stay reachable while scrolling */}
-      <div className="fixed inset-x-0 bottom-0 z-[55] border-t border-ink-200 bg-white/95 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] shadow-[0_-4px_24px_rgba(15,23,42,0.08)] backdrop-blur md:hidden">
-        <div className="mx-auto grid max-w-lg grid-cols-4 gap-1">
-          {hasMultipleSides && sides.length === 2 ? (
-            <div className="col-span-4 mb-2">
-              <ProductSideTabs
-                sides={sides}
-                activeSide={activeSide}
-                onSelect={setActiveSide}
-                sideHasContent={sideHasContent}
-                label={sideLabel}
-                compact
-              />
-            </div>
-          ) : null}
-          <button
-            type="button"
-            onClick={() =>
-              setActivePanel(activePanel === 'text' ? null : 'text')
-            }
-            className={`flex flex-col items-center gap-0.5 rounded-lg px-2 py-1.5 text-[11px] font-medium ${
-              activePanel === 'text'
-                ? 'text-brand-700'
-                : 'text-ink-600'
-            }`}
-          >
-            <Type className="h-5 w-5" />
-            {t('text')}
-          </button>
-          <button
-            type="button"
-            onClick={() =>
-              setActivePanel(activePanel === 'photo' ? null : 'photo')
-            }
-            className={`flex flex-col items-center gap-0.5 rounded-lg px-2 py-1.5 text-[11px] font-medium ${
-              activePanel === 'photo'
-                ? 'text-brand-700'
-                : 'text-ink-600'
-            }`}
-          >
-            <ImageIcon className="h-5 w-5" />
-            {t('photo')}
-          </button>
-          <button
-            type="button"
-            onClick={() =>
-              setActivePanel(activePanel === 'stickers' ? null : 'stickers')
-            }
-            className={`flex flex-col items-center gap-0.5 rounded-lg px-2 py-1.5 text-[11px] font-medium ${
-              activePanel === 'stickers'
-                ? 'text-brand-700'
-                : 'text-ink-600'
-            }`}
-          >
-            <Sparkles className="h-5 w-5" />
-            {t('stickers')}
-          </button>
+          </div>
           <Button
             size="sm"
             onClick={handleAddToCart}
-            className="h-full min-h-[3rem] w-full px-2"
             disabled={isCapturing}
+            className="shrink-0"
           >
             {isCapturing ? t('capturing') : t('addToCart')}
           </Button>
         </div>
-      </div>
-
-      {/* Phone editor sheet */}
-      {activePanel && (
-        <div className="fixed inset-0 z-[60] md:hidden">
-          <button
-            type="button"
-            className="absolute inset-0 bg-ink-900/40"
-            onClick={() => setActivePanel(null)}
-            aria-label={t('close')}
-          />
-          <div
-            className={cn(
-              'absolute inset-x-0 bottom-0 flex flex-col rounded-t-2xl bg-white shadow-2xl',
-              activePanel === 'stickers'
-                ? 'h-[min(58vh,30rem)]'
-                : 'max-h-[min(72vh,32rem)]',
-            )}
-          >
-            <div className="flex shrink-0 items-center justify-between border-b border-ink-100 px-5 py-3">
-              <h3 className="font-semibold text-ink-900">
-                {activePanel === 'text'
-                  ? t('addText')
-                  : activePanel === 'photo'
-                    ? t('addPhoto')
-                    : t('addStickers')}
-              </h3>
+      }
+      contextBar={
+        <CustomizerContextBar
+          selected={selectedElement}
+          currentDesign={currentDesign}
+          designTemplate={activeDesignTemplate}
+          shirtColor={color}
+          onUpdate={updateCurrentSide}
+          onRemove={handleRemoveElement}
+          overlayMaxScale={getProductMockupLayout(product).overlayMaxScale}
+        />
+      }
+      canvas={previewNode}
+      panel={panelNode}
+      activePanel={activePanel}
+      onPanelChange={setActivePanel}
+      showDesignPanel={hasRecolorableOverlay}
+      sides={sides}
+      activeSide={activeSide}
+      onSideChange={setActiveSide}
+      sideLabel={sideLabel}
+      sideHasContent={sideHasContent}
+      hasMultipleSides={hasMultipleSides}
+      canvasZoom={canvasZoom}
+      onZoomChange={setCanvasZoom}
+      mobileBottomBar={
+        <div className="fixed inset-x-0 bottom-0 z-[55] border-t border-ink-200 bg-white/95 px-2 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] shadow-[0_-4px_24px_rgba(15,23,42,0.08)] backdrop-blur md:hidden">
+          {cartLimitError ? (
+            <p className="mb-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              {cartLimitError === 'stickers'
+                ? t('orderStickerLimit', { max: MAX_STICKERS_PER_ORDER })
+                : t('orderPhotoLimit', { max: MAX_PHOTOS_PER_ORDER })}
+            </p>
+          ) : null}
+          <div className="mx-auto flex max-w-lg items-center gap-1">
+            {(
+              [
+                ['product', <Shirt key="p" className="h-5 w-5" />, t('tabProduct')],
+                ['text', <Type key="t" className="h-5 w-5" />, t('tabText')],
+                ['photo', <ImageIcon key="i" className="h-5 w-5" />, t('tabUpload')],
+                ['stickers', <Sparkles key="s" className="h-5 w-5" />, t('tabElements')],
+                ...(hasRecolorableOverlay
+                  ? [['design', <Palette key="d" className="h-5 w-5" />, t('designColor')] as const]
+                  : []),
+              ] as const
+            ).map(([id, icon, label]) => (
               <button
+                key={id}
                 type="button"
-                onClick={() => setActivePanel(null)}
-                className="rounded-full bg-ink-100 px-3 py-1 text-sm text-ink-600"
-              >
-                {t('close')}
-              </button>
-            </div>
-            <div
-              className={cn(
-                'min-h-0 flex-1',
-                activePanel === 'stickers'
-                  ? 'overflow-hidden px-5 pb-1 pt-3'
-                  : 'overflow-y-auto px-5 py-4',
-              )}
-            >
-              <EditorPanelContent
-                panel={activePanel}
-                currentDesign={currentDesign}
-                updateCurrentSide={updateCurrentSide}
-                setPositionPreset={setPositionPreset}
-                onAddSticker={addSticker}
-                stickersAtLimit={
-                  currentDesign.stickers.length >= MAX_STICKERS_PER_SIDE
+                onClick={() =>
+                  setActivePanel(activePanel === id ? null : (id as EditorPanel))
                 }
-                token={token}
-                uploadLoading={uploadLoading}
-                uploadError={uploadError}
-                refreshSession={refreshSession}
-              />
-            </div>
+                className={cn(
+                  'flex flex-1 flex-col items-center gap-0.5 rounded-lg py-1.5 text-[10px] font-medium',
+                  activePanel === id ? 'text-brand-700' : 'text-ink-600',
+                )}
+              >
+                {icon}
+                {label}
+              </button>
+            ))}
           </div>
         </div>
-      )}
-
-      {/* Phone-only options when compact controls are hidden */}
-      <div className="mt-6 space-y-5 md:hidden">
-        <ProductOptions
-          product={product}
-          color={color}
-          setColor={setColor}
-          size={size}
-          setSize={setSize}
-          quantity={quantity}
-          setQuantity={setQuantity}
-        />
-      </div>
-    </div>
+      }
+      mobileSheet={
+        activePanel ? (
+          <div className="fixed inset-0 z-[60] md:hidden">
+            <button
+              type="button"
+              className="absolute inset-0 bg-ink-900/40"
+              onClick={() => setActivePanel(null)}
+              aria-label={t('close')}
+            />
+            <div
+              className={cn(
+                'absolute inset-x-0 bottom-0 flex max-h-[min(72vh,32rem)] flex-col rounded-t-2xl bg-white shadow-2xl',
+                activePanel === 'stickers' && 'h-[min(58vh,30rem)] max-h-none',
+              )}
+            >
+              <div className="flex shrink-0 items-center justify-between border-b border-ink-100 px-5 py-3">
+                <h3 className="font-semibold text-ink-900">
+                  {activePanel === 'product'
+                    ? t('tabProduct')
+                    : activePanel === 'text'
+                      ? t('tabText')
+                      : activePanel === 'photo'
+                        ? t('tabUpload')
+                        : activePanel === 'design'
+                          ? t('designColor')
+                          : t('tabElements')}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setActivePanel(null)}
+                  className="rounded-full bg-ink-100 px-3 py-1 text-sm text-ink-600"
+                >
+                  {t('close')}
+                </button>
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+                {panelNode}
+              </div>
+            </div>
+          </div>
+        ) : null
+      }
+    />
+      <UnsavedWorkDialog
+        open={unsavedWorkGuard.dialogOpen}
+        saving={unsavedWorkGuard.saving}
+        saveNotice={unsavedWorkGuard.saveNotice}
+        onSave={unsavedWorkGuard.handleSave}
+        onCancel={unsavedWorkGuard.cancelNavigation}
+        onLeaveWithoutSaving={unsavedWorkGuard.handleLeaveWithoutSaving}
+      />
+    </>
   );
 }
 
@@ -1106,6 +1252,8 @@ function ResizableTextOverlay({
   onRemove,
   removeLabel,
   hideControls,
+  selected,
+  onSelect,
 }: {
   text: string;
   color: string;
@@ -1120,6 +1268,8 @@ function ResizableTextOverlay({
   onRemove?: () => void;
   removeLabel?: string;
   hideControls?: boolean;
+  selected?: boolean;
+  onSelect?: () => void;
 }) {
   const drag = useDraggablePosition(position, onPositionChange);
   const resize = useScaleResize(size, onSizeChange, 12, 72);
@@ -1142,12 +1292,21 @@ function ResizableTextOverlay({
         maxWidth: '78%',
         whiteSpace: 'pre-line',
       }}
-      onPointerDown={drag.onPointerDown}
+      onPointerDown={(event) => {
+        event.stopPropagation();
+        onSelect?.();
+        drag.onPointerDown(event);
+      }}
       onPointerMove={drag.onPointerMove}
       onPointerUp={drag.onPointerUp}
       onPointerCancel={drag.onPointerCancel}
     >
-      <span className="relative inline-block max-w-full">
+      <span
+        className={cn(
+          'relative inline-block max-w-full rounded px-1',
+          selected && !hideControls && 'ring-2 ring-brand-500 ring-offset-2',
+        )}
+      >
       {text}
       {onRemove && removeLabel ? (
         <OverlayRemoveButton
@@ -1176,7 +1335,10 @@ function ResizableTextOverlay({
 function InteractivePreview({
   mockupImage,
   sideDesign,
+  designTemplate,
+  shirtColor,
   typeLabel,
+  productType,
   containerRef,
   isCapturing,
   photoGuideLabel,
@@ -1193,10 +1355,15 @@ function InteractivePreview({
   onStickerScaleChange,
   onRemoveSticker,
   removeStickerLabel,
+  selectedElement,
+  onSelectElement,
 }: {
   mockupImage: string;
   sideDesign: SideDesign;
+  designTemplate: ReturnType<typeof getProductDesignTemplate> | null;
+  shirtColor: string;
   typeLabel: string;
+  productType: ProductType;
   containerRef: RefObject<HTMLDivElement | null>;
   isCapturing?: boolean;
   photoGuideLabel: string;
@@ -1216,10 +1383,15 @@ function InteractivePreview({
   onStickerScaleChange: (instanceId: string, scale: number) => void;
   onRemoveSticker: (instanceId: string) => void;
   removeStickerLabel?: string;
+  selectedElement: SelectedElement;
+  onSelectElement: (element: SelectedElement) => void;
 }) {
   const t = useTranslations('products.customizer');
   const baseImage = sideDesign.premadeDesignImage ?? mockupImage;
   const isPremade = Boolean(sideDesign.premadeDesignImage);
+  const hasTemplateOverlay = Boolean(
+    sideDesign.overlaySvg || sideDesign.overlayColorVariants,
+  );
   const mockupImgRef = useRef<HTMLImageElement>(null);
   const [mockupLoading, setMockupLoading] = useState(false);
 
@@ -1236,10 +1408,16 @@ function InteractivePreview({
     }
   }, [baseImage]);
 
+  const mockupLayout = getProductMockupLayout(productType);
+
   return (
     <div
       ref={containerRef}
-      className={`relative flex aspect-square w-full items-center justify-center rounded-2xl bg-gradient-to-br from-ink-50 to-ink-100 shadow-inner touch-pan-y ${isCapturing ? 'opacity-90' : ''}`}
+      className={cn(
+        'relative flex aspect-[3/4] w-[min(18rem,78vw)] items-center justify-center rounded-sm bg-white shadow-[0_8px_40px_rgba(15,23,42,0.12)] touch-pan-y md:w-[min(28rem,46vh)] lg:w-[min(32rem,52vh)] xl:w-[min(36rem,58vh)]',
+        isCapturing && 'opacity-90',
+      )}
+      onPointerDown={() => onSelectElement(null)}
     >
       {mockupLoading && !isCapturing ? (
         <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-white/75 backdrop-blur-sm">
@@ -1247,7 +1425,7 @@ function InteractivePreview({
         </div>
       ) : null}
 
-      <div className={`${PRODUCT_MOCKUP_INNER_CLASS} pointer-events-none`}>
+      <div className={`${mockupLayout.innerClass} pointer-events-none`}>
         {baseImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -1257,7 +1435,7 @@ function InteractivePreview({
             alt={typeLabel}
             draggable={false}
             crossOrigin="anonymous"
-            className="pointer-events-none h-full w-full object-contain"
+            className={mockupLayout.imageClass}
             onLoad={() => setMockupLoading(false)}
             onError={() => setMockupLoading(false)}
           />
@@ -1268,11 +1446,28 @@ function InteractivePreview({
         )}
 
         {!isPremade && (
-          <div className="pointer-events-none absolute inset-[12%] rounded-xl border-2 border-dashed border-brand-300/40" />
+          <div className={mockupLayout.printAreaClass} />
         )}
 
+        {hasTemplateOverlay ? (
+          <ResizableDesignOverlay
+            design={sideDesign}
+            template={designTemplate}
+            shirtColor={shirtColor}
+            scale={sideDesign.uploadedImageScale}
+            position={sideDesign.uploadedImagePosition}
+            onScaleChange={onImageScaleChange}
+            onPositionChange={onImagePositionChange}
+            hideControls={isCapturing}
+            maxScale={mockupLayout.overlayMaxScale}
+            selected={selectedElement === 'overlay'}
+            onSelect={() => onSelectElement('overlay')}
+          />
+        ) : null}
+
         {sideDesign.uploadedFile?.isImage &&
-          sideDesign.uploadedFile.previewUrl && (
+          sideDesign.uploadedFile.previewUrl &&
+          !hasTemplateOverlay ? (
             <ResizableImageOverlay
               src={sideDesign.uploadedFile.previewUrl}
               alt={sideDesign.uploadedFile.name}
@@ -1283,8 +1478,11 @@ function InteractivePreview({
               onRemove={onRemoveImage}
               removeLabel={removeImageLabel}
               hideControls={isCapturing}
+              maxScale={mockupLayout.overlayMaxScale}
+              selected={selectedElement === 'photo'}
+              onSelect={() => onSelectElement('photo')}
             />
-          )}
+          ) : null}
 
         {sideDesign.customText && (
           <ResizableTextOverlay
@@ -1301,6 +1499,8 @@ function InteractivePreview({
             onRemove={onRemoveText}
             removeLabel={removeTextLabel}
             hideControls={isCapturing}
+            selected={selectedElement === 'text'}
+            onSelect={() => onSelectElement('text')}
           />
         )}
 
@@ -1317,6 +1517,10 @@ function InteractivePreview({
             onRemove={() => onRemoveSticker(sticker.instanceId)}
             removeLabel={removeStickerLabel}
             hideControls={isCapturing}
+            selected={selectedElement === `sticker:${sticker.instanceId}`}
+            onSelect={() =>
+              onSelectElement(`sticker:${sticker.instanceId}`)
+            }
           />
         ))}
 
@@ -1416,6 +1620,15 @@ function PositionPresets({
 function EditorPanelContent({
   panel,
   currentDesign,
+  designTemplate,
+  shirtColor,
+  product,
+  color,
+  setColor,
+  size,
+  setSize,
+  quantity,
+  setQuantity,
   updateCurrentSide,
   setPositionPreset,
   onAddSticker,
@@ -1427,6 +1640,15 @@ function EditorPanelContent({
 }: {
   panel: EditorPanel;
   currentDesign: SideDesign;
+  designTemplate: ReturnType<typeof getProductDesignTemplate> | null;
+  shirtColor: string;
+  product: (typeof products)[number];
+  color: string;
+  setColor: (c: string) => void;
+  size: string;
+  setSize: (s: string) => void;
+  quantity: number;
+  setQuantity: (q: number) => void;
   updateCurrentSide: (u: Partial<SideDesign>) => void;
   setPositionPreset: (p: 'center' | 'top' | 'bottom') => void;
   onAddSticker: (stickerId: string) => void;
@@ -1437,6 +1659,30 @@ function EditorPanelContent({
   refreshSession: () => Promise<string | null>;
 }) {
   const t = useTranslations('products.customizer');
+  const overlayMaxScale = getProductMockupLayout(product).overlayMaxScale;
+  const hasSecondaryInk = designTemplate?.overlayRecolor?.slots === 2;
+  const primaryInk = currentDesign.overlaySvgColors?.primary ?? '#F4EDE4';
+  const secondaryInk =
+    currentDesign.overlaySvgColors?.secondary ?? primaryInk;
+  const lowContrastPrimary = inksHaveLowContrast(primaryInk, shirtColor);
+  const lowContrastSecondary =
+    hasSecondaryInk && inksHaveLowContrast(secondaryInk, shirtColor);
+
+  if (panel === 'product') {
+    return (
+      <div className="space-y-5">
+        <ProductOptions
+          product={product}
+          color={color}
+          setColor={setColor}
+          size={size}
+          setSize={setSize}
+          quantity={quantity}
+          setQuantity={setQuantity}
+        />
+      </div>
+    );
+  }
 
   if (panel === 'stickers') {
     return (
@@ -1492,6 +1738,87 @@ function EditorPanelContent({
     );
   }
 
+  if (panel === 'design') {
+    return (
+      <div className="space-y-4">
+        <p className="text-sm text-ink-600">{t('designColorHint')}</p>
+        <label className="flex items-center justify-between gap-4">
+          <span className="text-sm text-ink-600">{t('designPrimaryColor')}</span>
+          <input
+            type="color"
+            value={primaryInk}
+            onChange={(e) =>
+              updateCurrentSide({
+                overlaySvgColors: {
+                  primary: e.target.value,
+                  secondary: currentDesign.overlaySvgColors?.secondary,
+                },
+              })
+            }
+            className="h-11 w-20 cursor-pointer rounded-lg border border-ink-200"
+          />
+        </label>
+        {hasSecondaryInk ? (
+          <label className="flex items-center justify-between gap-4">
+            <span className="text-sm text-ink-600">
+              {t('designSecondaryColor')}
+            </span>
+            <input
+              type="color"
+              value={secondaryInk}
+              onChange={(e) =>
+                updateCurrentSide({
+                  overlaySvgColors: {
+                    primary: currentDesign.overlaySvgColors?.primary ?? primaryInk,
+                    secondary: e.target.value,
+                  },
+                })
+              }
+              className="h-11 w-20 cursor-pointer rounded-lg border border-ink-200"
+            />
+          </label>
+        ) : null}
+        {lowContrastPrimary || lowContrastSecondary ? (
+          <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            {t('designLowContrast')}
+          </p>
+        ) : null}
+        <Button
+          type="button"
+          variant="secondary"
+          className="w-full"
+          onClick={() =>
+            updateCurrentSide({
+              overlaySvgColors: {
+                primary: suggestInkForShirt(shirtColor),
+                secondary: designTemplate?.overlayRecolor?.secondary
+                  ? suggestInkForShirt(shirtColor) === '#F4EDE4'
+                    ? '#8B7355'
+                    : '#C4B5A0'
+                  : undefined,
+              },
+            })
+          }
+        >
+          {t('designAutoContrast')}
+        </Button>
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-ink-600">{t('imageSize')}</span>
+          <StepperInput
+            value={currentDesign.uploadedImageScale}
+            onChange={(v) =>
+              updateCurrentSide({ uploadedImageScale: clampPhotoScale(v) })
+            }
+            min={PRODUCT_PHOTO_MIN_SCALE}
+            max={overlayMaxScale}
+            step={2}
+          />
+        </div>
+        <PositionPresets onPreset={setPositionPreset} />
+      </div>
+    );
+  }
+
   if (panel === 'photo') {
     return (
       <div className="space-y-4">
@@ -1530,8 +1857,8 @@ function EditorPanelContent({
                   updateCurrentSide({ uploadedImageScale: clampPhotoScale(v) })
                 }
                 min={PRODUCT_PHOTO_MIN_SCALE}
-                max={PRODUCT_PRINT_AREA_MAX_SCALE}
-                step={5}
+                max={overlayMaxScale}
+                step={2}
               />
             </div>
             <PositionPresets onPreset={setPositionPreset} />
@@ -1650,157 +1977,6 @@ function ProductOptions({
           max={100}
         />
       </div>
-    </>
-  );
-}
-
-function ProductControls({
-  product,
-  type,
-  color,
-  setColor,
-  size,
-  setSize,
-  quantity,
-  setQuantity,
-  activePanel,
-  setActivePanel,
-  currentDesign,
-  updateCurrentSide,
-  setPositionPreset,
-  onAddSticker,
-  stickersAtLimit,
-  token,
-  uploadLoading,
-  uploadError,
-  refreshSession,
-  onAddToCart,
-  isCapturing,
-  locale,
-}: {
-  product: (typeof products)[number];
-  type: ProductType;
-  color: string;
-  setColor: (c: string) => void;
-  size: string;
-  setSize: (s: string) => void;
-  quantity: number;
-  setQuantity: (q: number) => void;
-  activePanel: EditorPanel;
-  setActivePanel: (p: EditorPanel) => void;
-  currentDesign: SideDesign;
-  updateCurrentSide: (u: Partial<SideDesign>) => void;
-  setPositionPreset: (p: 'center' | 'top' | 'bottom') => void;
-  onAddSticker: (stickerId: string) => void;
-  stickersAtLimit: boolean;
-  token: string | null;
-  uploadLoading: boolean;
-  uploadError: string | null;
-  refreshSession: () => Promise<string | null>;
-  onAddToCart: () => void;
-  isCapturing: boolean;
-  locale: string;
-}) {
-  const t = useTranslations('products.customizer');
-  const tp = useTranslations('products.types');
-
-  return (
-    <>
-      <div>
-        <h2 className="text-2xl font-bold text-ink-900">{tp(type)}</h2>
-        <p className="mt-1 text-lg text-brand-600">
-          {formatPrice(product.basePrice, locale)}
-        </p>
-      </div>
-
-      {currentDesign.premadeDesignImage && (
-        <p className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-800">
-          {t('premadeDesignHint')}
-        </p>
-      )}
-
-      {currentDesign.isTextTemplate && (
-        <p className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-800">
-          {t('textTemplateHint')}
-        </p>
-      )}
-
-      <div className="flex flex-wrap gap-2">
-        <Button
-          variant={activePanel === 'text' ? 'primary' : 'secondary'}
-          onClick={() =>
-            setActivePanel(activePanel === 'text' ? null : 'text')
-          }
-          className="gap-2"
-        >
-          <Type className="h-4 w-4" />
-          {currentDesign.customText ? t('editText') : t('addText')}
-        </Button>
-        <Button
-          variant={activePanel === 'photo' ? 'primary' : 'secondary'}
-          onClick={() =>
-            setActivePanel(activePanel === 'photo' ? null : 'photo')
-          }
-          className="gap-2"
-        >
-          <ImageIcon className="h-4 w-4" />
-          {currentDesign.uploadedFile ? t('editPhoto') : t('addPhoto')}
-        </Button>
-        <Button
-          variant={activePanel === 'stickers' ? 'primary' : 'secondary'}
-          onClick={() =>
-            setActivePanel(activePanel === 'stickers' ? null : 'stickers')
-          }
-          className="gap-2"
-        >
-          <Sparkles className="h-4 w-4" />
-          {currentDesign.stickers.length > 0
-            ? t('editStickers')
-            : t('addStickers')}
-        </Button>
-      </div>
-
-      {stickersAtLimit && activePanel === 'stickers' ? (
-        <p className="text-sm text-amber-700">{t('stickerLimit')}</p>
-      ) : null}
-
-      {activePanel && (
-        <Card>
-          <EditorPanelContent
-            panel={activePanel}
-            currentDesign={currentDesign}
-            updateCurrentSide={updateCurrentSide}
-            setPositionPreset={setPositionPreset}
-            onAddSticker={onAddSticker}
-            stickersAtLimit={stickersAtLimit}
-            token={token}
-            uploadLoading={uploadLoading}
-            uploadError={uploadError}
-            refreshSession={refreshSession}
-          />
-        </Card>
-      )}
-
-      <ProductOptions
-        product={product}
-        color={color}
-        setColor={setColor}
-        size={size}
-        setSize={setSize}
-        quantity={quantity}
-        setQuantity={setQuantity}
-      />
-
-      <Button
-        size="lg"
-        onClick={onAddToCart}
-        className="w-full"
-        disabled={isCapturing}
-      >
-        {isCapturing
-          ? t('capturing')
-          : `${t('addToCart')} — ${formatPrice(product.basePrice * quantity, locale)}`}
-      </Button>
     </>
   );
 }

@@ -11,6 +11,9 @@ const ADVANCED_KEY_PATTERNS = [
   /UploadedPreviewUrl$/i,
   /PremadeDesignImage$/i,
   /^activeSide$/i,
+  /^svgState$/i,
+  /^svgFrontContent$/i,
+  /^svgBackContent$/i,
 ];
 
 const KEY_LABELS: Record<string, string> = {
@@ -20,6 +23,8 @@ const KEY_LABELS: Record<string, string> = {
   serviceId: 'Услуга',
   orderType: 'Тип нарачка',
   layoutId: 'Распоред',
+  svgTemplateId: 'SVG шаблон',
+  previewAspectRatio: 'Сооднос на преглед',
   accentColor: 'Акцент боја',
   backgroundColor: 'Позадина',
   textColor: 'Боја на текст',
@@ -61,11 +66,19 @@ export function isAdvancedMetadataKey(key: string) {
   return ADVANCED_KEY_PATTERNS.some((pattern) => pattern.test(key));
 }
 
+const HIDDEN_METADATA_KEYS = new Set([
+  'svgFrontContent',
+  'svgBackContent',
+  'svgState',
+]);
+
 export function splitOrderMetadata(metadata: Record<string, string | number | boolean>) {
   const essential: Array<{ key: string; label: string; value: string }> = [];
   const advanced: Array<{ key: string; label: string; value: string }> = [];
 
   for (const [key, value] of Object.entries(metadata)) {
+    if (HIDDEN_METADATA_KEYS.has(key)) continue;
+    if (key.startsWith('text_') || key.startsWith('color_')) continue;
     const entry = {
       key,
       label: formatMetadataKey(key),

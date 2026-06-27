@@ -8,8 +8,10 @@ import { useRouter } from '@/i18n/navigation';
 import { useCart } from '@/components/cart/CartProvider';
 import { useUploadSession } from '@/hooks/useUploadSession';
 import { useSavedDesigns } from '@/hooks/useSavedDesigns';
+import { useUnsavedWorkGuard } from '@/hooks/useUnsavedWorkGuard';
 import { SecureUpload } from '@/components/upload/SecureUpload';
 import { SavedDesignsPanel } from '@/components/studio/SavedDesignsPanel';
+import { UnsavedWorkDialog } from '@/components/shared/UnsavedWorkDialog';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import type { SavedDesign, SavedDesignCategory } from '@/lib/designs/saved-designs';
@@ -101,6 +103,7 @@ export function DesignStudio() {
   const [canvasMountKey, setCanvasMountKey] = useState(0);
   const [canvasReady, setCanvasReady] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [hasCanvasContent, setHasCanvasContent] = useState(false);
   const [previewDataUrl, setPreviewDataUrl] = useState<string | null>(null);
   const [uploadedFiles, setUploadedFiles] = useState<
     { fileId: string; name: string }[]
@@ -120,6 +123,8 @@ export function DesignStudio() {
   );
 
   const templateId = searchParams.get('template');
+  const draftParam = searchParams.get('draft');
+  const loadedDraftParamRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (suppressCategoryResetRef.current) {
@@ -316,6 +321,30 @@ export function DesignStudio() {
   }, [primaryColor, getCanvas, canvasReady]);
 
   useEffect(() => {
+    if (!canvasReady || !fabricRef.current) return;
+
+    const canvas = fabricRef.current as FabricCanvas;
+    const syncContent = () => {
+      setHasCanvasContent(canvas.getObjects().length > 0);
+    };
+    const markDirty = () => {
+      syncContent();
+      setSaved(false);
+    };
+
+    canvas.on('object:added', markDirty);
+    canvas.on('object:modified', markDirty);
+    canvas.on('object:removed', markDirty);
+    syncContent();
+
+    return () => {
+      canvas.off('object:added', markDirty);
+      canvas.off('object:modified', markDirty);
+      canvas.off('object:removed', markDirty);
+    };
+  }, [canvasReady, canvasMountKey]);
+
+  useEffect(() => {
     if (!pendingDraft || !canvasReady || !fabricRef.current) return;
 
     let cancelled = false;
@@ -429,7 +458,7 @@ export function DesignStudio() {
   }
 
   function saveDesign() {
-    if (!fabricRef.current) return;
+    if (!fabricRef.current) return false;
     const canvas = fabricRef.current as InstanceType<
       Awaited<typeof import('fabric')>['Canvas']
     >;
@@ -464,7 +493,18 @@ export function DesignStudio() {
     setActiveDraftId(draftId);
     setPreviewDataUrl(preview);
     setSaved(true);
+    return true;
   }
+
+  const isStudioDirty =
+    activeTab === 'create' && hasCanvasContent && !saved;
+
+  const saveDraftForGuard = async () => Boolean(saveDesign());
+
+  const unsavedWorkGuard = useUnsavedWorkGuard({
+    isDirty: isStudioDirty,
+    onSave: saveDraftForGuard,
+  });
 
   function loadDraft(design: SavedDesign) {
     suppressCategoryResetRef.current = true;
@@ -478,6 +518,14 @@ export function DesignStudio() {
     setActiveTab('create');
     setPendingDraft(design);
   }
+
+  useEffect(() => {
+    if (!draftParam || loadedDraftParamRef.current === draftParam) return;
+    const design = savedDesigns.find((item) => item.id === draftParam);
+    if (!design) return;
+    loadedDraftParamRef.current = draftParam;
+    loadDraft(design);
+  }, [draftParam, savedDesigns]);
 
   function addSavedDesignToCart(design: SavedDesign) {
     const categorySizesForDraft = categoryPresetSizes[design.selectedCategory];
@@ -513,6 +561,7 @@ export function DesignStudio() {
         heightCm,
       },
     });
+    unsavedWorkGuard.allowNavigation();
     router.push('/cart');
   }
 
@@ -542,6 +591,7 @@ export function DesignStudio() {
         heightCm: activeSize.heightCm,
       },
     });
+    unsavedWorkGuard.allowNavigation();
     router.push('/cart');
   }
 
@@ -571,6 +621,7 @@ export function DesignStudio() {
   }
 
   return (
+    <>
     <div className="space-y-6">
       <div
         className="flex flex-wrap gap-2"
@@ -895,5 +946,14 @@ export function DesignStudio() {
     </div>
       )}
     </div>
+    <UnsavedWorkDialog
+      open={unsavedWorkGuard.dialogOpen}
+      saving={unsavedWorkGuard.saving}
+      saveNotice={unsavedWorkGuard.saveNotice}
+      onSave={unsavedWorkGuard.handleSave}
+      onCancel={unsavedWorkGuard.cancelNavigation}
+      onLeaveWithoutSaving={unsavedWorkGuard.handleLeaveWithoutSaving}
+    />
+    </>
   );
 }

@@ -23,6 +23,7 @@ const categoryMeta: Record<
     images: [
       '/hoodies/hoodie-charcoal.jpg',
       '/t-shirts/tshirt-white.jpg',
+      '/spikozni/mockup-bodysuit-white.png',
       '/caps/cap-charcoal-front.jpg',
     ],
     accent: 'from-brand-900/80',

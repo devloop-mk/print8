@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1500" fill="none">
+  <defs>
+    <style>:root,svg{--ink-primary:#F4EDE4;--ink-secondary:#8B7355}</style>
+    <path id="trainArc" d="M 240 500 A 360 360 0 0 1 960 500"/>
+    <filter id="wear" x="-8%" y="-8%" width="116%" height="116%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.84" numOctaves="4" seed="63" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.6" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+  <g filter="url(#wear)">
+    <text fill="var(--ink-primary)" font-family="Impact, Arial Narrow Bold, sans-serif" font-size="68" font-weight="900" letter-spacing="14">
+      <textPath href="#trainArc" startOffset="50%" text-anchor="middle">TRAIN</textPath>
+    </text>
+    <text x="600" y="760" text-anchor="middle" fill="var(--ink-primary)" font-family="Impact, Arial Narrow Bold, sans-serif" font-size="118" font-weight="900" letter-spacing="4">INSANE</text>
+    <rect x="420" y="790" width="360" height="8" rx="2" fill="var(--ink-primary)" fill-opacity="0.45"/>
+    <g transform="translate(600 920) rotate(-30)">
+      <rect x="-240" y="-11" width="480" height="22" rx="5" fill="var(--ink-primary)"/>
+      <circle cx="-240" cy="0" r="56" fill="var(--ink-primary)" fill-opacity="0.9"/>
+      <circle cx="-240" cy="0" r="32" fill="var(--ink-primary)" fill-opacity="0.4"/>
+      <circle cx="240" cy="0" r="56" fill="var(--ink-primary)" fill-opacity="0.9"/>
+      <circle cx="240" cy="0" r="32" fill="var(--ink-primary)" fill-opacity="0.4"/>
+      <rect x="-248" y="-18" width="14" height="36" rx="3" fill="var(--ink-primary)" fill-opacity="0.7"/>
+      <rect x="234" y="-18" width="14" height="36" rx="3" fill="var(--ink-primary)" fill-opacity="0.7"/>
+    </g>
+    <text x="600" y="1060" text-anchor="middle" fill="var(--ink-primary)" fill-opacity="0.8" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="700" letter-spacing="9">OR STAY THE SAME</text>
+  </g>
+</svg>

@@ -86,12 +86,12 @@ export default async function HomePage({
             ].map(({ icon: Icon, label }) => (
               <div
                 key={label}
-                className="flex items-center gap-3 bg-ink-950/80 px-4 py-4 sm:px-6"
+                className="flex min-w-0 flex-col gap-2.5 bg-ink-950/80 px-3 py-4 sm:flex-row sm:items-center sm:gap-3 sm:px-6"
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-brand-400/40 bg-brand-600/20 text-brand-200">
                   <Icon className="h-5 w-5" aria-hidden />
                 </div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-brand-100 sm:text-sm">
+                <p className="min-w-0 text-[11px] font-semibold uppercase leading-snug tracking-wide text-brand-100 [overflow-wrap:anywhere] sm:text-sm">
                   {label}
                 </p>
               </div>

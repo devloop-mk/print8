@@ -1,0 +1,35 @@
+<svg viewBox="0 0 1500 2100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&amp;family=Montserrat:wght@300;400&amp;family=Playfair+Display:ital@0;1&amp;display=swap');
+    </style>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D4AF37"/>
+      <stop offset="50%" stop-color="#FFF2CD"/>
+      <stop offset="100%" stop-color="#AA771C"/>
+    </linearGradient>
+  </defs>
+  <rect width="1500" height="2100" fill="#0F172A"/>
+  
+  <!-- Borders -->
+  <rect x="100" y="100" width="1300" height="1900" fill="none" stroke="url(#gold)" stroke-width="4"/>
+  <rect x="120" y="120" width="1260" height="1860" fill="none" stroke="url(#gold)" stroke-width="1" opacity="0.6"/>
+  
+  <g text-anchor="middle" fill="url(#gold)">
+    <text x="750" y="450" font-family="'Montserrat', sans-serif" font-weight="300" font-size="28" letter-spacing="8">TOGETHER WITH THEIR FAMILIES</text>
+    
+    <text x="750" y="750" font-family="'Great Vibes', cursive" font-size="160" fill="#FFFFFF">Eleanor Rose</text>
+    <text x="750" y="900" font-family="'Playfair Display', serif" font-style="italic" font-size="60">&amp;</text>
+    <text x="750" y="1070" font-family="'Great Vibes', cursive" font-size="160" fill="#FFFFFF">Alexander James</text>
+    
+    <text x="750" y="1300" font-family="'Montserrat', sans-serif" font-weight="300" font-size="28" letter-spacing="6">REQUEST THE HONOR OF YOUR PRESENCE</text>
+    <text x="750" y="1350" font-family="'Montserrat', sans-serif" font-weight="300" font-size="28" letter-spacing="6">AT THEIR WEDDING CELEBRATION</text>
+    
+    <text x="750" y="1550" font-family="'Playfair Display', serif" font-size="45" letter-spacing="4">SATURDAY, THE TWENTY-FOURTH OF AUGUST</text>
+    <text x="750" y="1620" font-family="'Playfair Display', serif" font-size="35" letter-spacing="2">TWO THOUSAND TWENTY-SIX</text>
+    <text x="750" y="1690" font-family="'Playfair Display', serif" font-size="35" letter-spacing="2">AT FOUR O'CLOCK IN THE AFTERNOON</text>
+    
+    <text x="750" y="1850" font-family="'Montserrat', sans-serif" font-weight="400" font-size="30" letter-spacing="4">THE GRAND ESTATE</text>
+    <text x="750" y="1900" font-family="'Montserrat', sans-serif" font-weight="300" font-size="24" letter-spacing="4">123 VINTAGE AVENUE, NEW YORK</text>
+  </g>
+</svg>

@@ -4,12 +4,15 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Palette } from 'lucide-react';
 import { CustomizableDesignPreview } from '@/components/designs/CustomizableDesignPreview';
+import { SvgDesignPreviewScaled } from '@/components/designs/SvgDesignPreview';
 import {
   getDefaultFieldValues,
   getDesignLayout,
   getLayoutFields,
   type DesignLayout,
 } from '@/lib/data/design-layouts';
+import { getSvgDesignTemplate } from '@/lib/data/svg-design-templates';
+import { buildDefaultSvgTemplateState } from '@/lib/designs/svg-template-engine';
 import type { DesignTemplate } from '@/lib/data/catalog';
 
 const THUMB_RENDER_WIDTH = 300;
@@ -77,6 +80,22 @@ export function DesignCardThumbnail({
   alt: string;
   className?: string;
 }) {
+  if (design.kind === 'customizable' && design.svgTemplateId) {
+    const svgTemplate = getSvgDesignTemplate(design.svgTemplateId);
+    if (svgTemplate) {
+      const state = buildDefaultSvgTemplateState(svgTemplate);
+      return (
+        <div className={`relative h-full w-full ${className ?? ''}`}>
+          <SvgDesignPreviewScaled
+            template={svgTemplate}
+            state={state}
+            side="front"
+          />
+        </div>
+      );
+    }
+  }
+
   if (design.kind === 'customizable' && design.layoutId) {
     const layout = getDesignLayout(design.layoutId);
     if (layout) {

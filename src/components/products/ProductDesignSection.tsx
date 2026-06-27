@@ -5,6 +5,7 @@ import { Link } from '@/i18n/navigation';
 import {
   getProductMockup,
   isImageDesignTemplate,
+  isOverlayDesignTemplate,
   isTextDesignTemplate,
   type Product,
   type ProductDesignTemplate,
@@ -15,6 +16,7 @@ import { Button } from '@/components/ui/Button';
 import { useCart } from '@/components/cart/CartProvider';
 import { useRouter } from '@/i18n/navigation';
 import { DesignTemplatePreview } from '@/components/products/DesignTemplatePreview';
+import { CatalogGridLayout } from '@/components/catalog/CatalogGrid';
 import Image from 'next/image';
 
 type ProductDesignSectionProps = {
@@ -67,7 +69,7 @@ export function ProductDesignSection({
         ) : null}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <CatalogGridLayout>
         {visibleDesigns.map((design) => (
           <DesignCard
             key={design.id}
@@ -77,7 +79,7 @@ export function ProductDesignSection({
             size={size}
           />
         ))}
-      </div>
+      </CatalogGridLayout>
 
       {showSeeAll ? (
         <div className="mt-6 flex justify-center sm:hidden">
@@ -113,7 +115,7 @@ function DesignCard({
 
   return (
     <Card className="overflow-hidden p-0">
-      {isTextDesignTemplate(design) ? (
+      {isTextDesignTemplate(design) || isOverlayDesignTemplate(design) ? (
         <DesignTemplatePreview
           product={product}
           color={color}

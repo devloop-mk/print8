@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1500" fill="none">
+  <defs>
+    <style>:root,svg{--ink-primary:#F4EDE4;--ink-secondary:#8B7355}</style>
+    <path id="topArc" d="M 200 460 A 400 400 0 0 1 1000 460"/>
+    <path id="bottomArc" d="M 240 1040 A 360 360 0 0 0 960 1040"/>
+    <filter id="grit" x="-8%" y="-8%" width="116%" height="116%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" seed="41" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.8" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+  <g filter="url(#grit)">
+    <text fill="var(--ink-primary)" font-family="Impact, Arial Narrow Bold, sans-serif" font-size="72" font-weight="900" letter-spacing="10">
+      <textPath href="#topArc" startOffset="50%" text-anchor="middle">NO PAIN</textPath>
+    </text>
+    <text fill="var(--ink-primary)" font-family="Impact, Arial Narrow Bold, sans-serif" font-size="72" font-weight="900" letter-spacing="10">
+      <textPath href="#bottomArc" startOffset="50%" text-anchor="middle">NO GAIN</textPath>
+    </text>
+    <polygon points="600,560 640,660 600,630 560,660" fill="var(--ink-primary)" fill-opacity="0.9"/>
+    <rect x="585" y="660" width="30" height="90" rx="4" fill="var(--ink-primary)"/>
+    <g transform="translate(600 860) rotate(-24)">
+      <rect x="-230" y="-10" width="460" height="20" rx="5" fill="var(--ink-primary)"/>
+      <circle cx="-230" cy="0" r="54" fill="var(--ink-primary)" fill-opacity="0.92"/>
+      <circle cx="-230" cy="0" r="30" fill="var(--ink-primary)" fill-opacity="0.45"/>
+      <circle cx="-230" cy="0" r="16" fill="var(--ink-primary)"/>
+      <circle cx="230" cy="0" r="54" fill="var(--ink-primary)" fill-opacity="0.92"/>
+      <circle cx="230" cy="0" r="30" fill="var(--ink-primary)" fill-opacity="0.45"/>
+      <circle cx="230" cy="0" r="16" fill="var(--ink-primary)"/>
+    </g>
+    <text x="600" y="1120" text-anchor="middle" fill="var(--ink-primary)" fill-opacity="0.8" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700" letter-spacing="14">EST. GYM LIFE</text>
+  </g>
+</svg>

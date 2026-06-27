@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1500" fill="none">
+  <defs>
+    <style>:root,svg{--ink-primary:#F4EDE4;--ink-secondary:#8B7355}</style>
+    <path id="skipArc" d="M 220 480 A 380 380 0 0 1 980 480"/>
+    <filter id="dist" x="-8%" y="-8%" width="116%" height="116%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.79" numOctaves="3" seed="74" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.4" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+  <g filter="url(#dist)">
+    <text fill="var(--ink-primary)" font-family="Impact, Arial Narrow Bold, sans-serif" font-size="58" font-weight="900" letter-spacing="6">
+      <textPath href="#skipArc" startOffset="50%" text-anchor="middle">NEVER SKIP</textPath>
+    </text>
+    <text x="600" y="700" text-anchor="middle" fill="var(--ink-primary)" font-family="Impact, Arial Narrow Bold, sans-serif" font-size="92" font-weight="900" letter-spacing="6">LEG</text>
+    <text x="600" y="810" text-anchor="middle" fill="var(--ink-secondary)" font-family="Impact, Arial Narrow Bold, sans-serif" font-size="92" font-weight="900" letter-spacing="10">DAY</text>
+    <g transform="translate(600 920)">
+      <ellipse cx="0" cy="0" rx="70" ry="90" fill="var(--ink-primary)" fill-opacity="0.2" stroke="var(--ink-primary)" stroke-width="6"/>
+      <rect x="-120" y="20" width="240" height="14" rx="4" fill="var(--ink-secondary)"/>
+      <circle cx="-120" cy="27" r="28" fill="var(--ink-primary)"/>
+      <circle cx="120" cy="27" r="28" fill="var(--ink-primary)"/>
+    </g>
+    <text x="600" y="1100" text-anchor="middle" fill="var(--ink-primary)" fill-opacity="0.75" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700" letter-spacing="8">SQUAT DEEP</text>
+  </g>
+</svg>

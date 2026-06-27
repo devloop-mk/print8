@@ -1,0 +1,35 @@
+<svg viewBox="0 0 1500 2100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&amp;family=Montserrat:wght@300;400&amp;family=Pinyon+Script&amp;display=swap');
+      .text-gold { fill: #D4AF37; }
+      .text-white { fill: #FFFFFF; }
+      .text-light { fill: #E2E8F0; }
+    </style>
+  </defs>
+  
+  <!-- Background Image -->
+  <image href="/NEW_DESIGNS/backgrounds/wedding-bg-celestial.png" width="1500" height="2100" preserveAspectRatio="xMidYMid slice"/>
+  
+  <!-- Editable Text Overlay -->
+  <g text-anchor="middle">
+    <text x="750" y="550" class="text-light" font-family="'Montserrat', sans-serif" font-weight="300" font-size="22" letter-spacing="8">UNDER THE STARS</text>
+    
+    <!-- Names -->
+    <text x="750" y="780" class="text-gold" font-family="'Pinyon Script', cursive" font-size="180">Isabella</text>
+    <text x="750" y="900" class="text-white" font-family="'Cinzel Decorative', cursive" font-size="50">&amp;</text>
+    <text x="750" y="1080" class="text-gold" font-family="'Pinyon Script', cursive" font-size="180">Jonathan</text>
+    
+    <text x="750" y="1250" class="text-light" font-family="'Montserrat', sans-serif" font-weight="300" font-size="22" letter-spacing="6">INVITE YOU TO SHARE IN THEIR JOY</text>
+    <text x="750" y="1300" class="text-light" font-family="'Montserrat', sans-serif" font-weight="300" font-size="22" letter-spacing="6">AS THEY EXCHANGE VOWS</text>
+    
+    <!-- Date -->
+    <text x="750" y="1450" class="text-white" font-family="'Cinzel Decorative', serif" font-weight="700" font-size="45" letter-spacing="6">NOVEMBER 14, 2026</text>
+    
+    <!-- Details -->
+    <text x="750" y="1530" class="text-gold" font-family="'Montserrat', sans-serif" font-weight="400" font-size="22" letter-spacing="2">AT SEVEN O'CLOCK IN THE EVENING</text>
+    
+    <text x="750" y="1680" class="text-white" font-family="'Cinzel Decorative', serif" font-weight="400" font-size="32" letter-spacing="4">THE OBSERVATORY</text>
+    <text x="750" y="1740" class="text-light" font-family="'Montserrat', sans-serif" font-weight="300" font-size="20" letter-spacing="2">888 GALAXY ROAD, MOUNTAIN VIEW</text>
+  </g>
+</svg>

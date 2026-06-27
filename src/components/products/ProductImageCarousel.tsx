@@ -9,7 +9,7 @@ import {
   type Product,
   type ProductGallerySlide,
 } from '@/lib/data/catalog';
-import { PRODUCT_MOCKUP_INNER_CLASS } from '@/components/products/ProductMockupFrame';
+import { getProductMockupLayout } from '@/lib/products/product-mockup-layout';
 
 export function ProductImageCarousel({
   product,
@@ -35,6 +35,7 @@ export function ProductImageCarousel({
 
   const slide = slides[index];
   const image = slide?.image;
+  const mockupLayout = getProductMockupLayout(product);
 
   function goTo(delta: number) {
     setIndex((i) => (i + delta + slides.length) % slides.length);
@@ -56,16 +57,16 @@ export function ProductImageCarousel({
   };
 
   return (
-    <div className="relative flex aspect-square w-full max-w-sm items-center justify-center rounded-2xl bg-gradient-to-br from-ink-50 to-ink-100 shadow-inner">
+    <div className="relative flex aspect-square w-full max-w-sm items-center justify-center rounded-2xl border border-ink-100 bg-white">
       {image ? (
-        <div className={PRODUCT_MOCKUP_INNER_CLASS}>
+        <div className={mockupLayout.catalogInnerClass}>
           <Image
             key={`${color}-${index}-${image}`}
             src={image}
             alt={imageAlt(slide, index)}
             fill
             sizes="(max-width: 768px) 100vw, 400px"
-            className="object-contain"
+            className={mockupLayout.catalogImageClass}
             priority={index === 0}
           />
         </div>

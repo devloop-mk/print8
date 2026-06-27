@@ -13,6 +13,11 @@ import { parseDesignCategoryFilter } from '@/lib/data/service-routes';
 import { Card } from '@/components/ui/Card';
 import { DesignCardThumbnail } from '@/components/designs/DesignCardThumbnail';
 import { FilterChipBar } from '@/components/catalog/FilterChipBar';
+import {
+  CatalogGrid,
+  CatalogGridProvider,
+  CatalogGridToggle,
+} from '@/components/catalog/CatalogGrid';
 import type { DesignCategory, DesignTemplate } from '@/lib/data/catalog';
 
 function DesignCard({
@@ -100,51 +105,55 @@ export function DesignsGallery() {
         resultsLabel={(count) => t('resultsCount', { count })}
       />
 
-      {fixedDesigns.length > 0 && (
-        <section className="mb-12">
-          <div className="mb-5">
-            <h2 className="text-xl font-bold text-ink-900">
-              {t('fixedSectionTitle')}
-            </h2>
-            <p className="mt-1 max-w-2xl text-sm text-ink-500">
-              {t('fixedSectionDesc')}
-            </p>
-          </div>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {fixedDesigns.map((design) => (
-              <DesignCard
-                key={design.id}
-                design={design}
-                actionLabel={t('orderWithInfo')}
-                badgeLabel={t('fixedBadge')}
-              />
-            ))}
-          </div>
-        </section>
-      )}
+      <CatalogGridProvider>
+        <CatalogGridToggle className="mb-6" />
 
-      {customizableDesigns.length > 0 && (
-        <section>
-          <div className="mb-5">
-            <h2 className="text-xl font-bold text-ink-900">
-              {t('customizableSectionTitle')}
-            </h2>
-            <p className="mt-1 max-w-2xl text-sm text-ink-500">
-              {t('customizableSectionDesc')}
-            </p>
-          </div>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {customizableDesigns.map((design) => (
-              <DesignCard
-                key={design.id}
-                design={design}
-                actionLabel={t('customizeOnline')}
-                badgeLabel={t('customizableBadge')}
-              />
-            ))}
-          </div>
-        </section>
-      )}
+        {fixedDesigns.length > 0 && (
+          <section className="mb-12">
+            <div className="mb-5">
+              <h2 className="text-xl font-bold text-ink-900">
+                {t('fixedSectionTitle')}
+              </h2>
+              <p className="mt-1 max-w-2xl text-sm text-ink-500">
+                {t('fixedSectionDesc')}
+              </p>
+            </div>
+            <CatalogGrid gapClassName="gap-6">
+              {fixedDesigns.map((design) => (
+                <DesignCard
+                  key={design.id}
+                  design={design}
+                  actionLabel={t('orderWithInfo')}
+                  badgeLabel={t('fixedBadge')}
+                />
+              ))}
+            </CatalogGrid>
+          </section>
+        )}
+
+        {customizableDesigns.length > 0 && (
+          <section>
+            <div className="mb-5">
+              <h2 className="text-xl font-bold text-ink-900">
+                {t('customizableSectionTitle')}
+              </h2>
+              <p className="mt-1 max-w-2xl text-sm text-ink-500">
+                {t('customizableSectionDesc')}
+              </p>
+            </div>
+            <CatalogGrid gapClassName="gap-6">
+              {customizableDesigns.map((design) => (
+                <DesignCard
+                  key={design.id}
+                  design={design}
+                  actionLabel={t('customizeOnline')}
+                  badgeLabel={t('customizableBadge')}
+                />
+              ))}
+            </CatalogGrid>
+          </section>
+        )}
+      </CatalogGridProvider>
     </>
   );
 }

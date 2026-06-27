@@ -1,5 +1,6 @@
 import {
   Award,
+  Baby,
   BadgePercent,
   BookMarked,
   BookOpen,
@@ -36,6 +37,7 @@ export const serviceIconMap: Record<string, LucideIcon> = {
   Printer,
   Shield,
   Shirt,
+  Baby,
   Coffee,
   ShoppingBag,
   BookMarked,

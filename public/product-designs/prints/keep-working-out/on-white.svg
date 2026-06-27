@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1500" fill="none">
+  <defs>
+    <path id="kwoArcL" d="M 220 500 A 380 380 0 0 1 980 500"/>
+    <clipPath id="sunDiscL">
+      <circle cx="600" cy="760" r="250"/>
+    </clipPath>
+    <linearGradient id="plateLightL" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F8F8F8"/>
+      <stop offset="40%" stop-color="#C8C8C8"/>
+      <stop offset="100%" stop-color="#7A7A7A"/>
+    </linearGradient>
+    <linearGradient id="plateDarkL" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#5A5A5A"/>
+      <stop offset="100%" stop-color="#2A2A2A"/>
+    </linearGradient>
+    <filter id="grainL" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" seed="31" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.8" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+  <g filter="url(#grainL)">
+    <circle cx="600" cy="760" r="268" fill="#1C1917" fill-opacity="0.08"/>
+    <text fill="#1C1917" font-family="Impact, Arial Narrow Bold, sans-serif" font-size="62" font-weight="900" letter-spacing="5" stroke="#F8F6F2" stroke-width="2" paint-order="stroke">
+      <textPath href="#kwoArcL" startOffset="50%" text-anchor="middle">KEEP WORKING OUT</textPath>
+    </text>
+    <g clip-path="url(#sunDiscL)">
+      <rect x="350" y="510" width="500" height="52" fill="#B83D2A"/>
+      <rect x="350" y="562" width="500" height="48" fill="#D47A2C"/>
+      <rect x="350" y="610" width="500" height="44" fill="#E5B03D"/>
+      <rect x="350" y="654" width="500" height="42" fill="#2E9A94"/>
+      <rect x="350" y="696" width="500" height="128" fill="#B8A88E"/>
+    </g>
+    <circle cx="600" cy="760" r="250" stroke="#1C1917" stroke-opacity="0.15" stroke-width="5" fill="none"/>
+    <g transform="translate(600 790) rotate(-32)">
+      <rect x="-210" y="-10" width="420" height="20" rx="4" fill="url(#plateDarkL)"/>
+      <rect x="-210" y="-7" width="420" height="6" rx="2" fill="url(#plateLightL)" opacity="0.55"/>
+      <circle cx="-210" cy="0" r="52" fill="url(#plateDarkL)"/>
+      <circle cx="-210" cy="0" r="30" fill="url(#plateLightL)"/>
+      <circle cx="-210" cy="0" r="14" fill="#3A3A3A"/>
+      <circle cx="210" cy="0" r="52" fill="url(#plateDarkL)"/>
+      <circle cx="210" cy="0" r="30" fill="url(#plateLightL)"/>
+      <circle cx="210" cy="0" r="14" fill="#3A3A3A"/>
+    </g>
+  </g>
+</svg>

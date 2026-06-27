@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1500" fill="none">
+  <defs>
+    <style>:root,svg{--ink-primary:#F4EDE4;--ink-secondary:#C84B31}</style>
+    <filter id="scratch" x="-8%" y="-8%" width="116%" height="116%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.76" numOctaves="3" seed="52" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+  <g filter="url(#scratch)">
+    <path d="M320 420 L360 320 M420 400 L460 300 M780 420 L740 320 M720 400 L680 300" stroke="var(--ink-secondary)" stroke-width="8" stroke-linecap="round"/>
+    <path d="M280 480 Q340 440 400 500 M920 480 Q860 440 800 500" stroke="var(--ink-secondary)" stroke-width="6" stroke-linecap="round" fill="none"/>
+    <text x="600" y="620" text-anchor="middle" fill="var(--ink-primary)" font-family="Impact, Arial Narrow Bold, sans-serif" font-size="96" font-weight="900" letter-spacing="8">BEAST</text>
+    <text x="600" y="740" text-anchor="middle" fill="var(--ink-secondary)" font-family="Impact, Arial Narrow Bold, sans-serif" font-size="96" font-weight="900" letter-spacing="12">MODE</text>
+    <ellipse cx="600" cy="820" rx="200" ry="18" fill="var(--ink-secondary)" fill-opacity="0.55"/>
+    <g transform="translate(600 920) rotate(-18)">
+      <rect x="-200" y="-9" width="400" height="18" rx="4" fill="var(--ink-primary)"/>
+      <circle cx="-200" cy="0" r="48" fill="var(--ink-secondary)"/>
+      <circle cx="-200" cy="0" r="26" fill="var(--ink-primary)"/>
+      <circle cx="200" cy="0" r="48" fill="var(--ink-secondary)"/>
+      <circle cx="200" cy="0" r="26" fill="var(--ink-primary)"/>
+    </g>
+    <text x="600" y="1080" text-anchor="middle" fill="var(--ink-primary)" fill-opacity="0.75" font-family="Arial, Helvetica, sans-serif" font-size="32" font-weight="700" letter-spacing="11">UNLEASHED</text>
+  </g>
+</svg>

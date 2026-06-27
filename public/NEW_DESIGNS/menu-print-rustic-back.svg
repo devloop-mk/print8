@@ -1,0 +1,26 @@
+<svg viewBox="0 0 1600 2400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Italianno&amp;family=Cormorant+Garamond:wght@400;600;700&amp;family=Lato:wght@300;400&amp;display=swap');
+      .text-dark { fill: #2C3E50; }
+      .text-green { fill: #4F6354; }
+      .text-red { fill: #8B0000; }
+    </style>
+  </defs>
+  <image href="/NEW_DESIGNS/backgrounds/menu-bg-rustic-back.png" width="1600" height="2400" preserveAspectRatio="xMidYMid slice"/>
+  
+  <g text-anchor="middle">
+    <!-- Content -->
+    <text x="800" y="600" class="text-dark" font-family="'Cormorant Garamond', serif" font-weight="600" font-size="70" letter-spacing="8">DOLCI &amp; CAFFÈ</text>
+    <text x="800" y="680" class="text-green" font-family="'Lato', sans-serif" font-weight="300" font-size="24" letter-spacing="4">ASK ABOUT OUR DAILY DESSERT SPECIALS</text>
+    
+    <text x="800" y="1000" class="text-red" font-family="'Italianno', cursive" font-size="120">Grazie</text>
+    <text x="800" y="1100" class="text-dark" font-family="'Cormorant Garamond', serif" font-weight="400" font-size="35" letter-spacing="2">THANK YOU FOR DINING WITH US</text>
+    
+    <!-- Footer Address -->
+    <text x="800" y="1800" class="text-dark" font-family="'Cormorant Garamond', serif" font-weight="700" font-size="35" letter-spacing="6">TRATTORIA BELLA VITA</text>
+    <text x="800" y="1860" class="text-dark" font-family="'Lato', sans-serif" font-weight="300" font-size="22" letter-spacing="4">456 OLIVE GROVE LANE, TUSCANY VALLEY</text>
+    <text x="800" y="1920" class="text-dark" font-family="'Lato', sans-serif" font-weight="300" font-size="22" letter-spacing="4">RESERVATIONS: (555) 867-5309</text>
+    <text x="800" y="1980" class="text-red" font-family="'Lato', sans-serif" font-weight="400" font-size="22" letter-spacing="4">WWW.BELLAVITA.COM</text>
+  </g>
+</svg>

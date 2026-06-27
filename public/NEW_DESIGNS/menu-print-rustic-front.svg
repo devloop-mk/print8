@@ -1,0 +1,29 @@
+<svg viewBox="0 0 1600 2400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Italianno&amp;family=Cormorant+Garamond:wght@400;600;700&amp;family=Lato:wght@300;400&amp;display=swap');
+      .text-dark { fill: #2C3E50; }
+      .text-green { fill: #4F6354; }
+      .text-red { fill: #8B0000; }
+    </style>
+  </defs>
+  <image href="/NEW_DESIGNS/backgrounds/menu-bg-rustic-front.png" width="1600" height="2400" preserveAspectRatio="xMidYMid slice"/>
+  
+  <g text-anchor="middle">
+    <text x="800" y="550" class="text-red" font-family="'Cormorant Garamond', serif" font-weight="700" font-size="40" letter-spacing="10">TRATTORIA</text>
+    
+    <!-- Main Logo -->
+    <text x="800" y="800" class="text-dark" font-family="'Italianno', cursive" font-size="220">Bella Vita</text>
+    
+    <text x="800" y="950" class="text-green" font-family="'Lato', sans-serif" font-weight="400" font-size="22" letter-spacing="6">AUTHENTIC ITALIAN CUISINE</text>
+    
+    <line x1="650" y1="1100" x2="950" y2="1100" stroke="#4F6354" stroke-width="2" />
+    
+    <!-- Center Title -->
+    <text x="800" y="1400" class="text-dark" font-family="'Cormorant Garamond', serif" font-weight="600" font-size="110" letter-spacing="16">MENU</text>
+    
+    <!-- Bottom Info -->
+    <text x="800" y="1950" class="text-red" font-family="'Italianno', cursive" font-size="80">Buon Appetito!</text>
+    <text x="800" y="2050" class="text-dark" font-family="'Lato', sans-serif" font-weight="300" font-size="20" letter-spacing="4">FRESH PASTA MADE DAILY</text>
+  </g>
+</svg>
