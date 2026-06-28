@@ -303,6 +303,52 @@ export function prepareSvgForInlineDom(svg: string): string {
   return svg.replace(/<\?xml[^?]*\?>\s*/i, '').trim();
 }
 
+/** Prefix SVG ids so multiple inline previews on one page do not clash. */
+export function scopeSvgIdsForInlineDom(svg: string, scope: string): string {
+  if (typeof DOMParser === 'undefined') return svg;
+
+  const safeScope = scope.replace(/[^a-zA-Z0-9_-]/g, '');
+  if (!safeScope) return svg;
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(svg, 'image/svg+xml');
+  const root = doc.documentElement;
+  if (root.querySelector('parsererror')) return svg;
+
+  const idMap = new Map<string, string>();
+  root.querySelectorAll('[id]').forEach((element) => {
+    const id = element.getAttribute('id');
+    if (!id) return;
+    const scopedId = `${safeScope}-${id}`;
+    idMap.set(id, scopedId);
+    element.setAttribute('id', scopedId);
+  });
+
+  if (idMap.size === 0) return svg;
+
+  const replaceIdRefs = (value: string) => {
+    let result = value;
+    const entries = [...idMap.entries()].sort((a, b) => b[0].length - a[0].length);
+    for (const [oldId, newId] of entries) {
+      result = result.replaceAll(`url(#${oldId})`, `url(#${newId})`);
+      result = result.replaceAll(`#${oldId}`, `#${newId}`);
+    }
+    return result;
+  };
+
+  root.querySelectorAll('*').forEach((element) => {
+    for (const attribute of [...element.attributes]) {
+      if (!attribute.value.includes('#')) continue;
+      const nextValue = replaceIdRefs(attribute.value);
+      if (nextValue !== attribute.value) {
+        element.setAttribute(attribute.name, nextValue);
+      }
+    }
+  });
+
+  return new XMLSerializer().serializeToString(root);
+}
+
 export async function fetchRenderedSvg(
   path: string,
   template: SvgDesignTemplate,

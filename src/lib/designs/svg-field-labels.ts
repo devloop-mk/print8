@@ -264,6 +264,56 @@ const MENU_FINEDINING_BACK_8: SvgFieldLabelId[] = [
   'website',
 ];
 
+const MENU_SUSHI_FRONT_5: SvgFieldLabelId[] = [
+  'detail',
+  'restaurantName',
+  'tagline',
+  'menuHeading',
+  'tagline',
+];
+
+const MENU_SUSHI_BACK_6: SvgFieldLabelId[] = [
+  'sectionTitle',
+  'tagline',
+  'restaurantName',
+  'address',
+  'tagline',
+  'website',
+];
+
+const MENU_SEAFOOD_FRONT_4: SvgFieldLabelId[] = [
+  'restaurantName',
+  'tagline',
+  'menuHeading',
+  'tagline',
+];
+
+const MENU_SEAFOOD_BACK_6: SvgFieldLabelId[] = [
+  'sectionTitle',
+  'tagline',
+  'restaurantName',
+  'address',
+  'phone',
+  'website',
+];
+
+const MENU_CAFE_FRONT_5: SvgFieldLabelId[] = [
+  'tagline',
+  'restaurantName',
+  'tagline',
+  'menuHeading',
+  'tagline',
+];
+
+const MENU_CAFE_BACK_6: SvgFieldLabelId[] = [
+  'sectionTitle',
+  'tagline',
+  'restaurantName',
+  'address',
+  'tagline',
+  'website',
+];
+
 const BCARD_LUXURY_FRONT_6: SvgFieldLabelId[] = [
   'fullName',
   'jobTitle',
@@ -318,6 +368,12 @@ const TEMPLATE_SIDE_FIELD_LABELS: Record<string, SvgFieldLabelId[]> = {
   [templateSideKey('svg-menu-rustic', 'back')]: MENU_RUSTIC_BACK_8,
   [templateSideKey('svg-menu-finedining', 'front')]: MENU_FINEDINING_FRONT_6,
   [templateSideKey('svg-menu-finedining', 'back')]: MENU_FINEDINING_BACK_8,
+  [templateSideKey('svg-menu-sushi', 'front')]: MENU_SUSHI_FRONT_5,
+  [templateSideKey('svg-menu-sushi', 'back')]: MENU_SUSHI_BACK_6,
+  [templateSideKey('svg-menu-seafood', 'front')]: MENU_SEAFOOD_FRONT_4,
+  [templateSideKey('svg-menu-seafood', 'back')]: MENU_SEAFOOD_BACK_6,
+  [templateSideKey('svg-menu-cafe', 'front')]: MENU_CAFE_FRONT_5,
+  [templateSideKey('svg-menu-cafe', 'back')]: MENU_CAFE_BACK_6,
 };
 
 const SVG_ONLY_FIELD_LABELS = new Set<SvgOnlyFieldLabelId>([

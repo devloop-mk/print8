@@ -7,7 +7,7 @@
       .text-blue { fill: #60A5FA; }
     </style>
   </defs>
-  <image href="/NEW_DESIGNS/backgrounds/bday-bg-space.png" width="1500" height="2100" preserveAspectRatio="xMidYMid slice" />
+  <image href="/NEW_DESIGNS/backgrounds/bday-bg-space.png" width="1500" height="2100" preserveAspectRatio="xMidYMid slice"/>
   
   <g text-anchor="middle">
     <text x="750" y="550" class="text-yellow" font-family="'Righteous', cursive" font-size="140" letter-spacing="8">BLAST OFF!</text>

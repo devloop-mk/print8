@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 2400" width="1600" height="2400">
+<defs>
+  <linearGradient id="sushiDark" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#0f0f14"/>
+    <stop offset="50%" stop-color="#1a1520"/>
+    <stop offset="100%" stop-color="#120a10"/>
+  </linearGradient>
+  <radialGradient id="sushiGlow" cx="50%" cy="35%" r="55%">
+    <stop offset="0%" stop-color="#FBCFE8" stop-opacity="0.18"/>
+    <stop offset="100%" stop-color="#FBCFE8" stop-opacity="0"/>
+  </radialGradient>
+</defs>
+<rect width="1600" height="2400" fill="url(#sushiDark)"/>
+<rect width="1600" height="2400" fill="url(#sushiGlow)"/>
+<rect x="100" y="100" width="1400" height="2200" fill="none" stroke="#EF4444" stroke-width="2" opacity="0.35"/>
+</svg>

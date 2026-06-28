@@ -12,7 +12,7 @@ import { Logo } from '@/components/brand/Logo';
 import { cn } from '@/lib/utils';
 import { isProductsNavActive } from '@/lib/products/product-nav';
 import { isDesignsNavActive } from '@/lib/designs/design-nav';
-import { ChevronDown, ShoppingCart, X } from 'lucide-react';
+import { ChevronDown, Search, ShoppingCart, X } from 'lucide-react';
 
 const navItems = [
   { href: '/', key: 'home' },
@@ -26,10 +26,12 @@ const navItems = [
 type MobileNavProps = {
   open: boolean;
   onClose: () => void;
+  onOpenSearch?: () => void;
 };
 
-export function MobileNav({ open, onClose }: MobileNavProps) {
+export function MobileNav({ open, onClose, onOpenSearch }: MobileNavProps) {
   const t = useTranslations('nav');
+  const ts = useTranslations('search');
   const pathname = usePathname();
   const { itemCount } = useCart();
   const [productsOpen, setProductsOpen] = useState(false);
@@ -108,6 +110,19 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
             <X className="h-5 w-5" />
           </button>
         </div>
+
+        {onOpenSearch ? (
+          <div className="border-b border-ink-100 px-3 py-3">
+            <button
+              type="button"
+              onClick={onOpenSearch}
+              className="flex w-full items-center gap-3 rounded-xl border border-ink-200 bg-ink-50/80 px-4 py-3 text-left text-sm text-ink-500 transition hover:border-ink-300 hover:bg-white"
+            >
+              <Search className="h-4 w-4 shrink-0" aria-hidden />
+              <span>{ts('placeholder')}</span>
+            </button>
+          </div>
+        ) : null}
 
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           <ul className="space-y-1">

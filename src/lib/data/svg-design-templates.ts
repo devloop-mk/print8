@@ -45,6 +45,7 @@ export type SvgTemplateState = {
 
 const ROOT = '/NEW_DESIGNS';
 const BC = `${ROOT}/business card`;
+const MENUS = `${ROOT}/menus`;
 
 function tx(defaults: string[]): SvgTextField[] {
   return defaults.map((defaultValue, index) => ({
@@ -947,6 +948,112 @@ export const svgDesignTemplates: SvgDesignTemplate[] = [
         'text-light': '#9CA3AF',
       },
       { gold: 'accentColor', white: 'textColor', light: 'secondaryColor' },
+    ),
+  },
+  {
+    id: 'svg-menu-sushi',
+    category: 'menus',
+    aspectRatio: 1600 / 2400,
+    sides: {
+      front: {
+        path: `${MENUS}/menu-print-sushi-front.svg`,
+        texts: tx([
+          '桜',
+          'SAKURA',
+          'SUSHI & SAKE',
+          'MENU',
+          'TRADITIONAL OMAKASE EXPERIENCE',
+        ]),
+      },
+      back: {
+        path: `${MENUS}/menu-print-sushi-back.svg`,
+        texts: tx([
+          'SAKE & TEA',
+          'FEATURING PREMIUM IMPORTED SAKE',
+          'SAKURA',
+          '777 CHERRY BLOSSOM WAY, TOKYO',
+          'RESERVATIONS REQUIRED',
+          'WWW.SAKURASUSHI.COM',
+        ]),
+      },
+    },
+    colors: classColors(
+      {
+        'text-white': '#FFFFFF',
+        'text-pink': '#FBCFE8',
+        'text-red': '#EF4444',
+      },
+      { white: 'textColor', pink: 'accentColor', red: 'secondaryColor' },
+    ),
+  },
+  {
+    id: 'svg-menu-seafood',
+    category: 'menus',
+    aspectRatio: 1600 / 2400,
+    sides: {
+      front: {
+        path: `${MENUS}/menu-print-seafood-front.svg`,
+        texts: tx([
+          'OCEANIS',
+          'SEAFOOD & OYSTER BAR',
+          'MENU',
+          'FRESH CATCH DAILY',
+        ]),
+      },
+      back: {
+        path: `${MENUS}/menu-print-seafood-back.svg`,
+        texts: tx([
+          'RAW BAR & COCKTAILS',
+          'JOIN US FOR HAPPY HOUR 4PM - 6PM',
+          'OCEANIS',
+          '99 HARBOR VIEW DRIVE, MIAMI, FL',
+          'RESERVATIONS: (555) 123-4567',
+          'WWW.OCEANISSEAFOOD.COM',
+        ]),
+      },
+    },
+    colors: classColors(
+      {
+        'text-white': '#FFFFFF',
+        'text-gold': '#D4AF37',
+        'text-blue': '#E0F2FE',
+      },
+      { white: 'textColor', gold: 'accentColor', blue: 'secondaryColor' },
+    ),
+  },
+  {
+    id: 'svg-menu-cafe',
+    category: 'menus',
+    aspectRatio: 1600 / 2400,
+    sides: {
+      front: {
+        path: `${MENUS}/menu-print-cafe-front.svg`,
+        texts: tx([
+          'ARTISAN ROASTERS',
+          'The Daily',
+          'Grind',
+          'MENU',
+          'LOCALLY SOURCED & CRAFTED',
+        ]),
+      },
+      back: {
+        path: `${MENUS}/menu-print-cafe-back.svg`,
+        texts: tx([
+          'SEASONAL BREWS',
+          'ASK YOUR BARISTA ABOUT OUR SINGLE ORIGIN POUR-OVERS',
+          'THE DAILY GRIND',
+          '123 COFFEE BEAN ALLEY, SEATTLE',
+          'OPEN DAILY 6AM - 6PM',
+          'WWW.DAILYGRIND.COM',
+        ]),
+      },
+    },
+    colors: classColors(
+      {
+        'text-dark': '#3E2723',
+        'text-accent': '#8D6E63',
+      },
+      { dark: 'textColor', accent: 'accentColor' },
     ),
   },
 ];

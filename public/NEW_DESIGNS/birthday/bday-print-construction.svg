@@ -7,7 +7,7 @@
       .text-orange { fill: #EA580C; }
     </style>
   </defs>
-  <image href="/NEW_DESIGNS/backgrounds/bday-bg-construction.png" width="1500" height="2100" preserveAspectRatio="xMidYMid slice" />
+  <image href="/NEW_DESIGNS/backgrounds/bday-bg-construction.png" width="1500" height="2100" preserveAspectRatio="xMidYMid slice"/>
   
   <g text-anchor="middle">
     <text x="750" y="550" class="text-black" font-family="'Paytone One', sans-serif" font-size="160" letter-spacing="6">CAUTION!</text>

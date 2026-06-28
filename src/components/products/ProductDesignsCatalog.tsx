@@ -30,6 +30,10 @@ import {
   type CatalogFilterGroup,
 } from '@/components/catalog/CatalogFilterLayout';
 import { ProductDesignCatalogCard } from '@/components/products/ProductDesignCatalogCard';
+import {
+  filterProductDesignEntriesBySearchQuery,
+} from '@/lib/catalog/catalog-search';
+import { useCatalogSearchLabels } from '@/hooks/useCatalogSearchLabels';
 import { Reveal } from '@/components/motion/Reveal';
 import { CatalogGridLayout } from '@/components/catalog/CatalogGrid';
 
@@ -45,6 +49,8 @@ export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) 
   const tc = useTranslations('products.catalog');
   const tcat = useTranslations('products.categoryPages');
   const tNav = useTranslations('nav.productsMenu.categories');
+  const ts = useTranslations('search');
+  const searchLabels = useCatalogSearchLabels();
   const searchParams = useSearchParams();
   const categoryFilter = parseProductNavCategoryFilter(
     searchParams.get('category'),
@@ -69,6 +75,7 @@ export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) 
   );
   const [colorFilter, setColorFilter] = useState<string | 'all'>('all');
   const [sideFilter, setSideFilter] = useState<SideFilter>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { allOption, options: typeOptions } = useMemo(() => {
     const built = buildProductTypeFilterOptions((type) =>
@@ -89,7 +96,7 @@ export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) 
     [allEntries],
   );
 
-  const filtered = useMemo(
+  const filteredByAttributes = useMemo(
     () =>
       filterDesignCatalogEntries(allEntries, {
         type: typeFilter,
@@ -97,6 +104,16 @@ export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) 
         side: sideFilter,
       }),
     [allEntries, typeFilter, colorFilter, sideFilter],
+  );
+
+  const filtered = useMemo(
+    () =>
+      filterProductDesignEntriesBySearchQuery(
+        filteredByAttributes,
+        searchQuery,
+        searchLabels,
+      ),
+    [filteredByAttributes, searchQuery, searchLabels],
   );
 
   const pageTitle =
@@ -195,6 +212,11 @@ export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) 
           hideFiltersLabel={t('hideFilters')}
           resultsCount={filtered.length}
           resultsLabel={(count) => tc('resultsDesigns', { count })}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder={t('searchPlaceholder')}
+          searchAriaLabel={t('searchAriaLabel')}
+          searchClearLabel={ts('clear')}
         >
           {filtered.length === 0 ? (
             <p className="rounded-xl border border-dashed border-ink-200 bg-ink-50 px-4 py-12 text-center text-sm text-ink-500">

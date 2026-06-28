@@ -2,6 +2,7 @@
 
 import { useId, useState, type ReactNode } from 'react';
 import { ChevronDown, SlidersHorizontal, type LucideIcon } from 'lucide-react';
+import { CatalogSearchField } from '@/components/catalog/CatalogSearchField';
 import { cn } from '@/lib/utils';
 
 export type FilterOption<T extends string> = {
@@ -52,6 +53,11 @@ type CatalogFilterLayoutProps = {
   hideFiltersLabel: string;
   resultsCount?: number;
   resultsLabel?: (count: number) => string;
+  searchQuery?: string;
+  searchPlaceholder?: string;
+  searchAriaLabel?: string;
+  searchClearLabel?: string;
+  onSearchChange?: (value: string) => void;
   children: ReactNode;
 };
 
@@ -202,6 +208,11 @@ function MobileFilterPanel({
   hideFiltersLabel,
   resultsLabel,
   resultsCount,
+  searchQuery,
+  searchPlaceholder,
+  searchAriaLabel,
+  searchClearLabel,
+  onSearchChange,
 }: Omit<CatalogFilterLayoutProps, 'children'>) {
   const [expanded, setExpanded] = useState(false);
   const panelId = useId();
@@ -223,8 +234,23 @@ function MobileFilterPanel({
       ? resultsLabel(resultsCount)
       : null;
 
+  const showSearch = Boolean(
+    onSearchChange && searchPlaceholder && searchAriaLabel && searchClearLabel,
+  );
+
   return (
     <div className="w-full min-w-0 max-w-full overflow-hidden border border-ink-200 bg-white shadow-lift">
+      {showSearch ? (
+        <div className="border-b border-ink-100 px-4 py-3">
+          <CatalogSearchField
+            value={searchQuery ?? ''}
+            onChange={onSearchChange!}
+            placeholder={searchPlaceholder!}
+            ariaLabel={searchAriaLabel!}
+            clearLabel={searchClearLabel!}
+          />
+        </div>
+      ) : null}
       <div className="flex items-center gap-3 border-b border-ink-100 px-4 py-3">
         <button
           type="button"
@@ -292,6 +318,11 @@ export function CatalogFilterLayout({
   hideFiltersLabel,
   resultsCount,
   resultsLabel,
+  searchQuery,
+  searchPlaceholder,
+  searchAriaLabel,
+  searchClearLabel,
+  onSearchChange,
   children,
 }: CatalogFilterLayoutProps) {
   const resultsText =
@@ -299,7 +330,11 @@ export function CatalogFilterLayout({
       ? resultsLabel(resultsCount)
       : null;
 
-  if (groups.length === 0) {
+  const showSearch = Boolean(
+    onSearchChange && searchPlaceholder && searchAriaLabel && searchClearLabel,
+  );
+
+  if (groups.length === 0 && !showSearch) {
     return <>{children}</>;
   }
 
@@ -311,6 +346,16 @@ export function CatalogFilterLayout({
             <SlidersHorizontal className="h-4 w-4 text-brand-600" aria-hidden />
             {ariaLabel}
           </div>
+
+          {showSearch ? (
+            <CatalogSearchField
+              value={searchQuery ?? ''}
+              onChange={onSearchChange!}
+              placeholder={searchPlaceholder!}
+              ariaLabel={searchAriaLabel!}
+              clearLabel={searchClearLabel!}
+            />
+          ) : null}
 
           {groups.map((group) => (
             <FilterGroupPanel key={group.id} group={group} />
@@ -333,6 +378,11 @@ export function CatalogFilterLayout({
             hideFiltersLabel={hideFiltersLabel}
             resultsCount={resultsCount}
             resultsLabel={resultsLabel}
+            searchQuery={searchQuery}
+            searchPlaceholder={searchPlaceholder}
+            searchAriaLabel={searchAriaLabel}
+            searchClearLabel={searchClearLabel}
+            onSearchChange={onSearchChange}
           />
         </div>
         {children}

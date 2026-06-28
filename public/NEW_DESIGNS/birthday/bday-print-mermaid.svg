@@ -7,7 +7,7 @@
       .text-white { fill: #FFFFFF; }
     </style>
   </defs>
-  <image href="/NEW_DESIGNS/backgrounds/bday-bg-mermaid.png" width="1500" height="2100" preserveAspectRatio="xMidYMid slice" />
+  <image href="/NEW_DESIGNS/backgrounds/bday-bg-mermaid.png" width="1500" height="2100" preserveAspectRatio="xMidYMid slice"/>
   
   <g text-anchor="middle">
     <text x="750" y="550" class="text-purple" font-family="'Dancing Script', cursive" font-weight="700" font-size="140">Let's Shell-ebrate!</text>

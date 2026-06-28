@@ -7,7 +7,7 @@
       .text-pink { fill: #DB2777; }
     </style>
   </defs>
-  <image href="/NEW_DESIGNS/backgrounds/bday-bg-unicorn.png" width="1500" height="2100" preserveAspectRatio="xMidYMid slice" />
+  <image href="/NEW_DESIGNS/backgrounds/bday-bg-unicorn.png" width="1500" height="2100" preserveAspectRatio="xMidYMid slice"/>
   
   <g text-anchor="middle">
     <text x="750" y="550" class="text-pink" font-family="'Dancing Script', cursive" font-weight="700" font-size="130">Sprinkles &amp; Sparkles!</text>

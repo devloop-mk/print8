@@ -113,6 +113,36 @@ export const SVG_DESIGN_BACKGROUND_MAP = [
     backgroundFile: 'menu-bg-finedining-back.png',
     backgroundPath: '/NEW_DESIGNS/backgrounds/menu-bg-finedining-back.png',
   },
+  {
+    designSvg: '/NEW_DESIGNS/menus/menu-print-sushi-front.svg',
+    backgroundFile: 'menu-bg-sushi-front.png',
+    backgroundPath: '/NEW_DESIGNS/backgrounds/menu-bg-sushi-front.png',
+  },
+  {
+    designSvg: '/NEW_DESIGNS/menus/menu-print-sushi-back.svg',
+    backgroundFile: 'menu-bg-sushi-back.png',
+    backgroundPath: '/NEW_DESIGNS/backgrounds/menu-bg-sushi-back.png',
+  },
+  {
+    designSvg: '/NEW_DESIGNS/menus/menu-print-seafood-front.svg',
+    backgroundFile: 'menu-bg-seafood-front.png',
+    backgroundPath: '/NEW_DESIGNS/backgrounds/menu-bg-seafood-front.png',
+  },
+  {
+    designSvg: '/NEW_DESIGNS/menus/menu-print-seafood-back.svg',
+    backgroundFile: 'menu-bg-seafood-back.png',
+    backgroundPath: '/NEW_DESIGNS/backgrounds/menu-bg-seafood-back.png',
+  },
+  {
+    designSvg: '/NEW_DESIGNS/menus/menu-print-cafe-front.svg',
+    backgroundFile: 'menu-bg-cafe-front.png',
+    backgroundPath: '/NEW_DESIGNS/backgrounds/menu-bg-cafe-front.png',
+  },
+  {
+    designSvg: '/NEW_DESIGNS/menus/menu-print-cafe-back.svg',
+    backgroundFile: 'menu-bg-cafe-back.png',
+    backgroundPath: '/NEW_DESIGNS/backgrounds/menu-bg-cafe-back.png',
+  },
 ] as const;
 
 /** Lookup by original embedded filename (e.g. from file:// exports). */

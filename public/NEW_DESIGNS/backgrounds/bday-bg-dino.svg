@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 2100" width="1500" height="2100">
+<defs>
+  <linearGradient id="jungle" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#2D5A27"/>
+    <stop offset="60%" stop-color="#3D7A35"/>
+    <stop offset="100%" stop-color="#1B4332"/>
+  </linearGradient>
+</defs>
+<rect width="1500" height="2100" fill="url(#jungle)"/>
+<g fill="#228B22" opacity="0.4">
+  <ellipse cx="200" cy="1800" rx="150" ry="80"/><ellipse cx="1300" cy="1900" rx="180" ry="90"/>
+</g>
+<g fill="#90EE90" opacity="0.3">
+  <ellipse cx="400" cy="400" rx="60" ry="100" transform="rotate(-20 400 400)"/>
+  <ellipse cx="1100" cy="500" rx="70" ry="110" transform="rotate(25 1100 500)"/>
+</g>
+</svg>

@@ -9,7 +9,9 @@ import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { ProductsNavDropdown } from "@/components/layout/ProductsNavDropdown";
 import { DesignsNavDropdown } from "@/components/layout/DesignsNavDropdown";
+import { HelpNavDropdown } from "@/components/layout/HelpNavDropdown";
 import { OngoingDesignsNav } from "@/components/drafts/OngoingDesignsNav";
+import { GlobalSearch, GlobalSearchButton } from "@/components/search/GlobalSearch";
 import { Logo } from "@/components/brand/Logo";
 import { Menu, ShoppingCart } from "lucide-react";
 import { usePathname } from "@/i18n/navigation";
@@ -20,8 +22,7 @@ const navItems = [
   { href: "/designs", key: "designs" },
   { href: "/products", key: "products" },
   { href: "/about", key: "about" },
-  { href: "/contact", key: "contact" },
-  { href: "/faq", key: "faq" },
+  { href: "/contact", key: "help" },
 ] as const;
 
 export function Header() {
@@ -30,6 +31,7 @@ export function Header() {
   const { itemCount } = useCart();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [menuMounted, setMenuMounted] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   function openMenu() {
     setMenuMounted(true);
@@ -72,13 +74,17 @@ export function Header() {
                 return <DesignsNavDropdown key={item.key} />;
               }
 
+              if (item.key === "help") {
+                return <HelpNavDropdown key={item.key} />;
+              }
+
               const active = pathname === item.href;
               return (
                 <Link
                   key={item.key}
                   href={item.href}
                   className={cn(
-                    "border-x border-transparent px-3 py-2.5 text-sm font-semibold uppercase tracking-wide transition",
+                    "border-x border-transparent px-2.5 py-2.5 text-sm font-semibold uppercase tracking-wide transition lg:px-3",
                     active
                       ? "bg-brand-50 text-brand-700"
                       : "text-ink-600 hover:bg-ink-50 hover:text-ink-900",
@@ -91,6 +97,8 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-1 sm:gap-2">
+            <GlobalSearchButton onClick={() => setSearchOpen(true)} />
+
             <div className="hidden md:block">
               <LanguageSwitcher />
             </div>
@@ -109,15 +117,6 @@ export function Header() {
               )}
             </Link>
 
-            {itemCount > 0 ? (
-              <Link
-                href="/checkout"
-                className="hidden rounded-lg bg-brand-600 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-white transition hover:bg-brand-700 sm:inline-flex"
-              >
-                {t('order')}
-              </Link>
-            ) : null}
-
             <button
               type="button"
               className="border-2 border-transparent p-2 text-ink-600 transition hover:border-ink-200 hover:bg-ink-50 md:hidden"
@@ -132,8 +131,17 @@ export function Header() {
       </header>
 
       {menuMounted ? (
-        <MobileNav open={mobileOpen} onClose={closeMenu} />
+        <MobileNav
+          open={mobileOpen}
+          onClose={closeMenu}
+          onOpenSearch={() => {
+            closeMenu();
+            setSearchOpen(true);
+          }}
+        />
       ) : null}
+
+      <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   );
 }

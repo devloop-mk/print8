@@ -168,36 +168,53 @@ function DesignCard({
           colors={applicableColors}
           value={previewColor}
           onChange={setColor}
+          variant="compact"
         />
 
-        <div className="flex flex-col gap-2">
-          {canQuickOrder ? (
-            <OrderWithDesignButton
-              product={product}
-              design={design}
-              color={previewColor}
-              size={size}
-              previewRef={previewRef}
-              productLabel={productLabel}
-            />
-          ) : null}
-          <Link
-            href={buildCustomizerUrl(product.id, product.type, {
-              design: design.id,
-              color: previewColor,
-              size,
-            })}
-          >
-            <Button
-              size="sm"
-              variant={canQuickOrder ? 'outline' : 'primary'}
-              className="w-full"
-            >
-              {isTextDesignTemplate(design)
-                ? td('customizeWithPhoto')
-                : td('customizeDesign')}
-            </Button>
-          </Link>
+        <div className="border-t border-ink-100 pt-3">
+          <div className="flex flex-col gap-2.5">
+            {canQuickOrder ? (
+              <OrderWithDesignButton
+                product={product}
+                design={design}
+                color={previewColor}
+                size={size}
+                previewRef={previewRef}
+                productLabel={productLabel}
+              />
+            ) : (
+              <Link
+                href={buildCustomizerUrl(product.id, product.type, {
+                  design: design.id,
+                  color: previewColor,
+                  size,
+                })}
+              >
+                <Button
+                  size="sm"
+                  className="w-full normal-case tracking-normal shadow-none hover:translate-y-0 active:translate-y-0 active:shadow-none"
+                >
+                  {isTextDesignTemplate(design)
+                    ? td('customizeWithPhoto')
+                    : td('customizeDesign')}
+                </Button>
+              </Link>
+            )}
+            {canQuickOrder ? (
+              <Link
+                href={buildCustomizerUrl(product.id, product.type, {
+                  design: design.id,
+                  color: previewColor,
+                  size,
+                })}
+                className="block text-center text-sm font-medium text-ink-600 transition-colors hover:text-brand-700"
+              >
+                {isTextDesignTemplate(design)
+                  ? td('customizeWithPhoto')
+                  : td('customizeDesign')}
+              </Link>
+            ) : null}
+          </div>
         </div>
       </div>
     </Card>
@@ -254,7 +271,7 @@ function OrderWithDesignButton({
   return (
     <Button
       size="sm"
-      className="w-full"
+      className="w-full normal-case tracking-normal shadow-none hover:translate-y-0 active:translate-y-0 active:shadow-none"
       onClick={handleOrder}
       loading={ordering}
       disabled={ordering}

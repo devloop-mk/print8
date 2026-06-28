@@ -9,7 +9,7 @@
       .glow-cyan { text-shadow: 0 0 10px #06B6D4, 0 0 20px #06B6D4; }
     </style>
   </defs>
-  <image href="/NEW_DESIGNS/backgrounds/bday-bg-retro.png" width="1500" height="2100" preserveAspectRatio="xMidYMid slice" />
+  <image href="/NEW_DESIGNS/backgrounds/bday-bg-retro.png" width="1500" height="2100" preserveAspectRatio="xMidYMid slice"/>
   
   <g text-anchor="middle">
     <text x="750" y="550" class="text-cyan glow-cyan" font-family="'Righteous', cursive" font-size="140" letter-spacing="10">LEVEL UP!</text>

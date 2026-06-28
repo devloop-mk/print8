@@ -507,6 +507,30 @@ export const designTemplates: DesignTemplate[] = [
     kind: 'customizable',
     svgTemplateId: 'svg-menu-finedining',
   },
+  {
+    id: 'svg-menu-sushi',
+    category: 'menus',
+    image: '/NEW_DESIGNS/menus/menu-print-sushi-front.svg',
+    tags: ['sushi', 'japanese', 'editable'],
+    kind: 'customizable',
+    svgTemplateId: 'svg-menu-sushi',
+  },
+  {
+    id: 'svg-menu-seafood',
+    category: 'menus',
+    image: '/NEW_DESIGNS/menus/menu-print-seafood-front.svg',
+    tags: ['seafood', 'ocean', 'editable'],
+    kind: 'customizable',
+    svgTemplateId: 'svg-menu-seafood',
+  },
+  {
+    id: 'svg-menu-cafe',
+    category: 'menus',
+    image: '/NEW_DESIGNS/menus/menu-print-cafe-front.svg',
+    tags: ['cafe', 'coffee', 'editable'],
+    kind: 'customizable',
+    svgTemplateId: 'svg-menu-cafe',
+  },
 ];
 
 export type ProductType =

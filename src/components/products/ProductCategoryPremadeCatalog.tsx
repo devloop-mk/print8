@@ -25,6 +25,10 @@ import {
   type CatalogFilterGroup,
 } from '@/components/catalog/CatalogFilterLayout';
 import { ProductDesignCatalogCard } from '@/components/products/ProductDesignCatalogCard';
+import {
+  filterProductDesignEntriesBySearchQuery,
+} from '@/lib/catalog/catalog-search';
+import { useCatalogSearchLabels } from '@/hooks/useCatalogSearchLabels';
 import { Reveal } from '@/components/motion/Reveal';
 import { CatalogGridLayout } from '@/components/catalog/CatalogGrid';
 import { Button } from '@/components/ui/Button';
@@ -41,6 +45,8 @@ export function ProductCategoryPremadeCatalog({
   const tc = useTranslations('products.catalog');
   const tcat = useTranslations('products.categoryPages');
   const tNav = useTranslations('nav.productsMenu.categories');
+  const ts = useTranslations('search');
+  const searchLabels = useCatalogSearchLabels();
   const category = getProductNavCategory(categoryId);
 
   const allEntries = useMemo(
@@ -51,6 +57,7 @@ export function ProductCategoryPremadeCatalog({
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
   const [colorFilter, setColorFilter] = useState<string | 'all'>('all');
   const [sideFilter, setSideFilter] = useState<SideFilter>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { allOption, options: typeOptions } = useMemo(() => {
     const built = buildProductTypeFilterOptions((type) =>
@@ -69,7 +76,7 @@ export function ProductCategoryPremadeCatalog({
     [allEntries],
   );
 
-  const filtered = useMemo(
+  const filteredByAttributes = useMemo(
     () =>
       filterDesignCatalogEntries(allEntries, {
         type: typeFilter,
@@ -77,6 +84,16 @@ export function ProductCategoryPremadeCatalog({
         side: sideFilter,
       }),
     [allEntries, typeFilter, colorFilter, sideFilter],
+  );
+
+  const filtered = useMemo(
+    () =>
+      filterProductDesignEntriesBySearchQuery(
+        filteredByAttributes,
+        searchQuery,
+        searchLabels,
+      ),
+    [filteredByAttributes, searchQuery, searchLabels],
   );
 
   const filterGroups = useMemo((): CatalogFilterGroup[] => {
@@ -168,6 +185,11 @@ export function ProductCategoryPremadeCatalog({
           hideFiltersLabel={t('hideFilters')}
           resultsCount={filtered.length}
           resultsLabel={(count) => tc('resultsDesigns', { count })}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder={t('searchPlaceholder')}
+          searchAriaLabel={t('searchAriaLabel')}
+          searchClearLabel={ts('clear')}
         >
           {filtered.length === 0 ? (
             <p className="rounded-xl border border-dashed border-ink-200 bg-ink-50 px-4 py-12 text-center text-sm text-ink-500">

@@ -7,7 +7,7 @@
       .text-brown { fill: #451A03; }
     </style>
   </defs>
-  <image href="/NEW_DESIGNS/backgrounds/bday-bg-safari.png" width="1500" height="2100" preserveAspectRatio="xMidYMid slice" />
+  <image href="/NEW_DESIGNS/backgrounds/bday-bg-safari.png" width="1500" height="2100" preserveAspectRatio="xMidYMid slice"/>
   
   <g text-anchor="middle">
     <text x="750" y="550" class="text-green" font-family="'Fredoka One', cursive" font-size="150" letter-spacing="6">WILD ONE!</text>

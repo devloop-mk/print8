@@ -39,6 +39,9 @@ const designCategorySubfilterDefs: Partial<
   menus: [
     { id: 'rustic', tags: ['rustic', 'italian'] },
     { id: 'fine-dining', tags: ['fine-dining', 'steakhouse'] },
+    { id: 'sushi', tags: ['sushi', 'japanese'] },
+    { id: 'seafood', tags: ['seafood', 'ocean'] },
+    { id: 'cafe', tags: ['cafe', 'coffee'] },
   ],
 };
 

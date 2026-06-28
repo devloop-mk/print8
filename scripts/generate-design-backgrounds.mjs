@@ -266,6 +266,100 @@ const backgrounds = {
 <rect width="1600" height="2400" fill="url(#dark)"/>
 <rect x="150" y="150" width="1300" height="2100" fill="none" stroke="#D4AF37" stroke-width="1" opacity="0.35"/>`,
   ),
+
+  'menu-bg-sushi-front.svg': svg(
+    1600,
+    2400,
+    `<defs>
+  <linearGradient id="sushiDark" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#0f0f14"/>
+    <stop offset="50%" stop-color="#1a1520"/>
+    <stop offset="100%" stop-color="#120a10"/>
+  </linearGradient>
+  <radialGradient id="sushiGlow" cx="50%" cy="35%" r="55%">
+    <stop offset="0%" stop-color="#FBCFE8" stop-opacity="0.18"/>
+    <stop offset="100%" stop-color="#FBCFE8" stop-opacity="0"/>
+  </radialGradient>
+</defs>
+<rect width="1600" height="2400" fill="url(#sushiDark)"/>
+<rect width="1600" height="2400" fill="url(#sushiGlow)"/>
+<rect x="100" y="100" width="1400" height="2200" fill="none" stroke="#EF4444" stroke-width="2" opacity="0.35"/>`,
+  ),
+
+  'menu-bg-sushi-back.svg': svg(
+    1600,
+    2400,
+    `<defs>
+  <linearGradient id="sushiBack" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#141018"/>
+    <stop offset="100%" stop-color="#0a080c"/>
+  </linearGradient>
+</defs>
+<rect width="1600" height="2400" fill="url(#sushiBack)"/>
+<g stroke="#FBCFE8" stroke-width="1" fill="none" opacity="0.15">
+  <circle cx="800" cy="900" r="280"/><circle cx="800" cy="900" r="220"/>
+</g>`,
+  ),
+
+  'menu-bg-seafood-front.svg': svg(
+    1600,
+    2400,
+    `<defs>
+  <linearGradient id="ocean" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#0c2d48"/>
+    <stop offset="45%" stop-color="#134e6f"/>
+    <stop offset="100%" stop-color="#051a2c"/>
+  </linearGradient>
+</defs>
+<rect width="1600" height="2400" fill="url(#ocean)"/>
+<path d="M0 1700 Q400 1600 800 1680 T1600 1650 L1600 2400 L0 2400 Z" fill="#0a3d5c" opacity="0.55"/>
+<rect x="120" y="120" width="1360" height="2160" fill="none" stroke="#D4AF37" stroke-width="2" opacity="0.4"/>`,
+  ),
+
+  'menu-bg-seafood-back.svg': svg(
+    1600,
+    2400,
+    `<defs>
+  <linearGradient id="oceanDeep" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#082338"/>
+    <stop offset="100%" stop-color="#041018"/>
+  </linearGradient>
+</defs>
+<rect width="1600" height="2400" fill="url(#oceanDeep)"/>
+<g fill="#E0F2FE" opacity="0.06">
+  <ellipse cx="300" cy="500" rx="120" ry="40"/><ellipse cx="1200" cy="700" rx="160" ry="50"/>
+</g>`,
+  ),
+
+  'menu-bg-cafe-front.svg': svg(
+    1600,
+    2400,
+    `<defs>
+  <linearGradient id="latte" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#F5EDE4"/>
+    <stop offset="50%" stop-color="#E8DDD3"/>
+    <stop offset="100%" stop-color="#D7C4B5"/>
+  </linearGradient>
+</defs>
+<rect width="1600" height="2400" fill="url(#latte)"/>
+<rect x="90" y="90" width="1420" height="2220" fill="none" stroke="#8D6E63" stroke-width="3" opacity="0.35"/>
+<g fill="#8D6E63" opacity="0.08">
+  <circle cx="250" cy="400" r="90"/><circle cx="1350" cy="500" r="110"/>
+</g>`,
+  ),
+
+  'menu-bg-cafe-back.svg': svg(
+    1600,
+    2400,
+    `<defs>
+  <linearGradient id="latteBack" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#EDE3D8"/>
+    <stop offset="100%" stop-color="#D9C8B8"/>
+  </linearGradient>
+</defs>
+<rect width="1600" height="2400" fill="url(#latteBack)"/>
+<rect x="110" y="110" width="1380" height="2180" fill="none" stroke="#3E2723" stroke-width="2" opacity="0.2"/>`,
+  ),
 };
 
 for (const [name, content] of Object.entries(backgrounds)) {

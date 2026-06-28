@@ -55,7 +55,7 @@ export function ProductsNavDropdown() {
         aria-haspopup="true"
         aria-controls={panelId}
         className={cn(
-          'flex items-center gap-1 border-x border-transparent px-3 py-2.5 text-sm font-semibold uppercase tracking-wide transition',
+          'flex items-center gap-1 border-x border-transparent px-2.5 py-2.5 text-sm font-semibold uppercase tracking-wide transition lg:px-3',
           active || open
             ? 'bg-brand-50 text-brand-700'
             : 'text-ink-600 hover:bg-ink-50 hover:text-ink-900',

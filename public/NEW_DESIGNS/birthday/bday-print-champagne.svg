@@ -7,7 +7,7 @@
       .text-gray { fill: #9CA3AF; }
     </style>
   </defs>
-  <image href="/NEW_DESIGNS/backgrounds/bday-bg-champagne.png" width="1500" height="2100" preserveAspectRatio="xMidYMid slice" />
+  <image href="/NEW_DESIGNS/backgrounds/bday-bg-champagne.png" width="1500" height="2100" preserveAspectRatio="xMidYMid slice"/>
   
   <g text-anchor="middle">
     <text x="750" y="550" class="text-gold" font-family="'Playfair Display', serif" font-style="italic" font-size="120">Pop the Bubbly!</text>

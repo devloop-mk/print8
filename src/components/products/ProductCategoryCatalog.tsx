@@ -18,6 +18,8 @@ import {
   CatalogFilterLayout,
   type CatalogFilterGroup,
 } from '@/components/catalog/CatalogFilterLayout';
+import { filterProductsBySearchQuery } from '@/lib/catalog/catalog-search';
+import { useCatalogSearchLabels } from '@/hooks/useCatalogSearchLabels';
 import { Reveal } from '@/components/motion/Reveal';
 import { cn } from '@/lib/utils';
 
@@ -37,9 +39,12 @@ export function ProductCategoryCatalog({
   const t = useTranslations('products');
   const tc = useTranslations('products.categoryPages');
   const tNav = useTranslations('nav.productsMenu.categories');
+  const ts = useTranslations('search');
+  const searchLabels = useCatalogSearchLabels();
   const category = getProductNavCategory(categoryId);
   const categoryProducts = getProductsForCategory(categoryId);
   const [typeFilter, setTypeFilter] = useState<CategoryTypeFilter>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const allOption = {
     value: 'all' as const,
@@ -57,10 +62,16 @@ export function ProductCategoryCatalog({
     [category.types, t],
   );
 
-  const filtered =
+  const filteredByType =
     typeFilter === 'all'
       ? categoryProducts
       : categoryProducts.filter((product) => product.type === typeFilter);
+
+  const filtered = filterProductsBySearchQuery(
+    filteredByType,
+    searchQuery,
+    searchLabels,
+  );
 
   const filterGroups = useMemo((): CatalogFilterGroup[] => {
     if (category.types.length <= 1) return [];
@@ -113,6 +124,11 @@ export function ProductCategoryCatalog({
         hideFiltersLabel={t('hideFilters')}
         resultsCount={filtered.length}
         resultsLabel={(count) => t('resultsCount', { count })}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder={t('searchPlaceholder')}
+        searchAriaLabel={t('searchAriaLabel')}
+        searchClearLabel={ts('clear')}
       >
         <Reveal delay={80}>
           <div id="products-grid" className="scroll-mt-24">

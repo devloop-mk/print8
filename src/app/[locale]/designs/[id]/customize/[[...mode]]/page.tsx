@@ -91,26 +91,28 @@ export default async function CustomizeDesignPage({
       <div className="mx-auto w-full min-w-0 max-w-[96rem] px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         <Link
           href="/designs"
-          className="mb-8 inline-flex items-center gap-2 text-sm font-medium text-ink-600 transition hover:text-brand-600"
+          className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-ink-600 transition hover:text-brand-600 sm:mb-8"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           {t('backToDesigns')}
         </Link>
 
-        <div className="mb-8 min-w-0 text-center sm:mb-10">
+        <div className="mb-4 min-w-0 sm:mb-8 sm:text-center">
           <p className="text-sm font-medium uppercase tracking-wide text-brand-600">
             {td(`categories.${template.category}`)} · {t('badge')}
           </p>
-          <h1 className="mt-1 break-words text-2xl font-bold text-ink-900 sm:text-3xl">
+          <h1 className="mt-1 break-words text-xl font-bold text-ink-900 sm:text-3xl">
             {td(`templates.${template.id}`)}
           </h1>
-          <p className="mx-auto mt-3 max-w-2xl break-words text-base text-ink-600 sm:text-lg">
+          <p className="mx-auto mt-3 hidden max-w-2xl break-words text-base text-ink-600 sm:block sm:text-lg">
             {t('chooseModeTitle')}
           </p>
-          <p className="mx-auto mt-2 max-w-xl text-sm text-ink-500">{t('chooseModeSubtitle')}</p>
+          <p className="mx-auto mt-2 hidden max-w-xl text-sm text-ink-500 sm:block">
+            {t('chooseModeSubtitle')}
+          </p>
         </div>
 
-        <DesignCustomizeModeChooser designId={template.id} />
+        <DesignCustomizeModeChooser template={template} />
       </div>
     );
   }

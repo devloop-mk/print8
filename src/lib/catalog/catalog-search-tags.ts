@@ -1,0 +1,120 @@
+import type { DesignCategory, ProductType } from '@/lib/data/catalog';
+
+/** Extra searchable keywords per design tag (EN + MK + latin/cyrillic variants). */
+export const DESIGN_TAG_KEYWORDS: Record<string, string[]> = {
+  modern: ['modern', 'contemporary', 'minimal', 'модерен', 'современ', 'минимален'],
+  tech: ['tech', 'technology', 'digital', 'техно', 'технологија', 'дигитален'],
+  luxury: ['luxury', 'premium', 'elegant', 'луксуз', 'премиум', 'елегантен'],
+  gold: ['gold', 'golden', 'злато', 'златен', 'златна'],
+  corporate: ['corporate', 'business', 'professional', 'корпоративен', 'бизнис', 'професионален'],
+  creative: ['creative', 'artistic', 'abstract', 'креативен', 'уметнички', 'апстрактен'],
+  romantic: ['romantic', 'love', 'романтичен', 'љубов', 'романтика'],
+  blush: ['blush', 'pink', 'rose', 'розов', 'румен'],
+  classic: ['classic', 'traditional', 'класичен', 'традиционален'],
+  navy: ['navy', 'blue', 'dark blue', 'темносин', 'морнарска'],
+  botanical: ['botanical', 'floral', 'flowers', 'ботанички', 'цветен', 'цвеќиња'],
+  boho: ['boho', 'bohemian', 'бохо'],
+  beach: ['beach', 'coastal', 'sea', 'ocean', 'плажа', 'море', 'крајбрежје'],
+  autumn: ['autumn', 'fall', 'jesen', 'есен', 'есенски'],
+  rustic: ['rustic', 'country', 'рустик', 'селски', 'деревен'],
+  celestial: ['celestial', 'stars', 'moon', 'невеснички', 'ѕвезди', 'месечина'],
+  terracotta: ['terracotta', 'desert', 'теракота', 'пустина'],
+  watercolor: ['watercolor', 'water colour', 'акварел', 'водени бои'],
+  winter: ['winter', 'snow', 'зима', 'снежно', 'снег'],
+  kids: ['kids', 'children', 'child', 'party kids', 'деца', 'детски', 'детински'],
+  princess: ['princess', 'принцеза', 'fairy'],
+  dinosaur: ['dinosaur', 'dino', 'диносаурус', 'дино'],
+  unicorn: ['unicorn', 'единорог', 'единорог'],
+  safari: ['safari', 'jungle', 'animals', 'сафари', 'џунгла', 'животни'],
+  mermaid: ['mermaid', 'sea', 'сирена', 'морска'],
+  space: ['space', 'astronaut', 'rocket', 'вселена', 'астронавт', 'ракета'],
+  bbq: ['bbq', 'barbecue', 'grill', 'скара', 'грил'],
+  retro: ['retro', 'vintage', 'ретро', 'винтаж'],
+  construction: ['construction', 'builder', 'truck', 'градба', 'камион'],
+  champagne: ['champagne', 'шампањ', 'celebration'],
+  'fine-dining': ['fine dining', 'restaurant', 'ресторан', 'fine dining'],
+  italian: ['italian', 'pizza', 'pasta', 'италијански'],
+  steakhouse: ['steakhouse', 'steak', 'стек', 'стејк'],
+  editable: ['editable', 'customize', 'personalize', 'уредлив', 'персонализирај'],
+  elegant: ['elegant', 'elegance', 'елегантен', 'елегантна', 'елегантни'],
+  minimal: ['minimal', 'minimalist', 'clean', 'минимален', 'минималистички'],
+  professional: ['professional', 'професионален'],
+  stars: ['stars', 'star', 'ѕвезди', 'ѕвезда'],
+  coastal: ['coastal', 'coast', 'крајбрежје', 'приморски'],
+  garden: ['garden', 'flowers', 'градина', 'цветна'],
+  'rose-gold': ['rose gold', 'rose-gold', 'розово злато', 'розен'],
+  casual: ['casual', 'informal', 'неформален', 'опуштен'],
+  sushi: ['sushi', 'japanese', 'sake', 'суши', 'јапонски', 'саке'],
+  japanese: ['japanese', 'japan', 'азиска', 'јапонски'],
+  seafood: ['seafood', 'fish', 'oyster', 'морска храна', 'риба', 'остриги'],
+  ocean: ['ocean', 'sea', 'море', 'океан'],
+  cafe: ['cafe', 'coffee', 'coffee shop', 'кафе', 'кофе', 'кафуле'],
+  coffee: ['coffee', 'espresso', 'latte', 'кафе', 'еспресо'],
+};
+
+export const DESIGN_CATEGORY_KEYWORDS: Record<DesignCategory, string[]> = {
+  'business-cards': [
+    'business card',
+    'business cards',
+    'card',
+    'vizitka',
+    'vizitki',
+    'визитка',
+    'визитки',
+    'картичка',
+    'картички',
+  ],
+  wedding: [
+    'wedding',
+    'marriage',
+    'bride',
+    'groom',
+    'invitation',
+    'свадба',
+    'венчавка',
+    'покана',
+    'покани',
+    'младоженци',
+  ],
+  birthday: [
+    'birthday',
+    'birthday party',
+    'birthday invitation',
+    'birthday invitations',
+    'celebration',
+    'invitation',
+    'invitations',
+    'роденден',
+    'роденденска',
+    'роденденски',
+    'покана',
+    'покани',
+    'забава',
+    'прослава',
+  ],
+  menus: ['menu', 'menus', 'restaurant menu', 'мени', 'менија', 'ресторан'],
+  general: ['general', 'print', 'општо', 'печатење'],
+};
+
+export const PRODUCT_TYPE_KEYWORDS: Record<ProductType, string[]> = {
+  't-shirt': ['t-shirt', 'tshirt', 'tee', 'shirt', 'маица', 'маици', 'облека', 'apparel'],
+  hoodie: ['hoodie', 'hooded', 'sweatshirt', 'дуксер', 'худи'],
+  bodysuit: ['bodysuit', 'baby bodysuit', 'боди', 'бебешко'],
+  cap: ['cap', 'hat', 'baseball cap', 'капа', 'капи', 'шапка'],
+  mug: ['mug', 'cup', 'coffee mug', 'шолја', 'шолји', 'чај', 'кафе'],
+  cup: ['cup', 'reusable cup', 'чаша', 'чаши'],
+  thermos: ['thermos', 'flask', 'термос', 'термоси'],
+  bag: ['bag', 'tote', 'shopper', 'торба', 'торби', 'кеса'],
+  'gift-set': ['gift set', 'gift box', 'подарок', 'подарочен', 'сет'],
+  magnet: ['magnet', 'fridge magnet', 'магнет', 'магнети'],
+};
+
+export function keywordsForDesignTags(tags: string[]): string[] {
+  const keywords = new Set<string>(tags);
+  for (const tag of tags) {
+    for (const keyword of DESIGN_TAG_KEYWORDS[tag] ?? []) {
+      keywords.add(keyword);
+    }
+  }
+  return [...keywords];
+}

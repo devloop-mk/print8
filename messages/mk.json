@@ -27,6 +27,30 @@
     "threeColumns": "3 колони",
     "fourColumns": "4 колони"
   },
+  "search": {
+    "placeholder": "Пребарај дизајни и производи…",
+    "ariaLabel": "Пребарај дизајни и производи",
+    "open": "Пребарај",
+    "close": "Затвори пребарување",
+    "clear": "Исчисти пребарување",
+    "startTyping": "Започнете да пишувате за да пребарувате дизајни и производи.",
+    "noResults": "Нема резултати за „{query}“.",
+    "emptyQuery": "Внесете термин погоре за да најдете дизајни и производи.",
+    "sectionCollections": "Страници за преглед",
+    "collectionsHint": "Отворете цела категорија или филтер",
+    "browseAllDesigns": "Сите {category} дизајни",
+    "browseDesignSubfilter": "{subfilter} — {category}",
+    "badgeReadyDesign": "Готов дизајн",
+    "badgeTextTemplate": "Текст шаблон",
+    "sectionDesigns": "Дизајни",
+    "sectionProducts": "Производи",
+    "sectionProductDesigns": "Готови дизајни и шаблони",
+    "viewAll": "Прикажи ги сите резултати",
+    "pageTitle": "Пребарување",
+    "pageSubtitle": "Најдете дизајни, производи и готови шаблони низ целиот каталог.",
+    "loading": "Се вчитуваат резултатите…",
+    "resultsCount": "{count, plural, one {# резултат} other {# резултати}}"
+  },
   "nav": {
     "home": "Дома",
     "services": "Услуги",
@@ -42,6 +66,13 @@
     "menu": "Мени",
     "openMenu": "Отвори мени",
     "closeMenu": "Затвори мени",
+    "helpMenu": {
+      "label": "Помош",
+      "eyebrow": "Контакт и поддршка",
+      "contactDesc": "Испратете порака или најдете ги нашите податоци",
+      "faqDesc": "Одговори на најчести прашања",
+      "hint": "Обично одговараме во рок од еден работен ден"
+    },
     "ongoingDesigns": {
       "title": "Дизајни во тек",
       "subtitle": "Зачувано на овој уред — сè уште не е нарачано",
@@ -385,6 +416,8 @@
     "allCategories": "Сите категории",
     "allSubcategories": "Сите",
     "filterLabel": "Филтри",
+    "searchPlaceholder": "Пребарај во листата…",
+    "searchAriaLabel": "Пребарај дизајни во листата",
     "filterGroups": {
       "category": "Категорија",
       "subcategory": "Поткатегорија"
@@ -414,7 +447,10 @@
       },
       "menus": {
         "rustic": "Рустикални",
-        "fine-dining": "Fine dining"
+        "fine-dining": "Fine dining",
+        "sushi": "Суши",
+        "seafood": "Морска храна",
+        "cafe": "Кафе"
       }
     },
     "showFilters": "Филтри",
@@ -462,7 +498,10 @@
       "svg-bday-safari": "Сафари — роденденска покана",
       "svg-bday-space": "Вселена — роденденска покана",
       "svg-menu-rustic": "Рустикално италијанско мени",
-      "svg-menu-finedining": "Fine dining мени — корица"
+      "svg-menu-finedining": "Fine dining мени — корица",
+      "svg-menu-sushi": "Суши мени — Sakura",
+      "svg-menu-seafood": "Мени за морска храна — Oceanis",
+      "svg-menu-cafe": "Кафе мени — The Daily Grind"
     },
     "customize": {
       "backToDesigns": "Назад кон дизајни",
@@ -472,6 +511,7 @@
       "pageSubtitleCanvas": "Допрете го текстот на дизајнот за да го уредите. Промените се гледаат веднаш во прегледот.",
       "chooseModeTitle": "Како сакате да го персонализирате дизајнот?",
       "chooseModeSubtitle": "Изберете опција што ви е најлесна. Можете да се вратите и да ја смените подоцна.",
+      "selectedDesignPreview": "Избраниот дизајн",
       "modeFormTitle": "Пополнете едноставна форма",
       "modeFormDesc": "Внесете име, телефон, адреса, датум и други податоци во јасни полиња. Најдобро ако сакате најлесен почеток.",
       "modeFormIllustrationAlt": "Илустрација на едноставна форма со полиња за име, телефон и адреса",
@@ -742,6 +782,8 @@
     "title": "Производи",
     "subtitle": "Изберете производ, персонализирајте го онлајн и нарачајте — подигнување во салон или испорака.",
     "filterLabel": "Филтри",
+    "searchPlaceholder": "Пребарај во листата…",
+    "searchAriaLabel": "Пребарај производи во листата",
     "filterGroups": {
       "category": "Категорија",
       "productType": "Тип на производ",

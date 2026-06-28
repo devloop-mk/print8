@@ -27,6 +27,30 @@
     "threeColumns": "3 columns",
     "fourColumns": "4 columns"
   },
+  "search": {
+    "placeholder": "Search designs and products…",
+    "ariaLabel": "Search designs and products",
+    "open": "Search",
+    "close": "Close search",
+    "clear": "Clear search",
+    "startTyping": "Start typing to search designs and products.",
+    "noResults": "No results for \"{query}\".",
+    "emptyQuery": "Enter a search term above to find designs and products.",
+    "sectionCollections": "Browse pages",
+    "collectionsHint": "Jump to a full category or filter",
+    "browseAllDesigns": "All {category} designs",
+    "browseDesignSubfilter": "{subfilter} — {category}",
+    "badgeReadyDesign": "Ready design",
+    "badgeTextTemplate": "Text template",
+    "sectionDesigns": "Designs",
+    "sectionProducts": "Products",
+    "sectionProductDesigns": "Ready designs & templates",
+    "viewAll": "View all results",
+    "pageTitle": "Search",
+    "pageSubtitle": "Find designs, products, and ready-made templates across the catalog.",
+    "loading": "Loading results…",
+    "resultsCount": "{count, plural, one {# result} other {# results}}"
+  },
   "nav": {
     "home": "Home",
     "services": "Services",
@@ -42,6 +66,13 @@
     "menu": "Menu",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
+    "helpMenu": {
+      "label": "Help",
+      "eyebrow": "Contact & support",
+      "contactDesc": "Message us or find our details",
+      "faqDesc": "Answers to common questions",
+      "hint": "We usually reply within one business day"
+    },
     "ongoingDesigns": {
       "title": "Designs in progress",
       "subtitle": "Saved on this device — not ordered yet",
@@ -385,6 +416,8 @@
     "allCategories": "All categories",
     "allSubcategories": "All",
     "filterLabel": "Filters",
+    "searchPlaceholder": "Search in this list…",
+    "searchAriaLabel": "Search designs in this list",
     "filterGroups": {
       "category": "Category",
       "subcategory": "Subcategory"
@@ -414,7 +447,10 @@
       },
       "menus": {
         "rustic": "Rustic",
-        "fine-dining": "Fine dining"
+        "fine-dining": "Fine dining",
+        "sushi": "Sushi",
+        "seafood": "Seafood",
+        "cafe": "Café"
       }
     },
     "showFilters": "Filters",
@@ -462,7 +498,10 @@
       "svg-bday-safari": "Safari birthday invitation",
       "svg-bday-space": "Space birthday invitation",
       "svg-menu-rustic": "Rustic Italian menu cover",
-      "svg-menu-finedining": "Fine dining menu cover"
+      "svg-menu-finedining": "Fine dining menu cover",
+      "svg-menu-sushi": "Sakura sushi menu cover",
+      "svg-menu-seafood": "Oceanis seafood menu cover",
+      "svg-menu-cafe": "The Daily Grind café menu cover"
     },
     "customize": {
       "backToDesigns": "Back to designs",
@@ -472,6 +511,7 @@
       "pageSubtitleCanvas": "Tap any text on the design to edit it. Changes appear instantly in the preview.",
       "chooseModeTitle": "How do you want to customize this design?",
       "chooseModeSubtitle": "Pick the option that feels easiest for you. You can go back and switch later.",
+      "selectedDesignPreview": "Your selected design",
       "modeFormTitle": "Fill in a simple form",
       "modeFormDesc": "Type your name, phone, address, date, and other details in clear labeled fields. Best if you want the easiest start.",
       "modeFormIllustrationAlt": "Illustration of a simple form with name, phone, and address fields",
@@ -743,6 +783,8 @@
     "title": "Products",
     "subtitle": "Pick a product, personalize it online, and order — pick up in store or delivery.",
     "filterLabel": "Filters",
+    "searchPlaceholder": "Search in this list…",
+    "searchAriaLabel": "Search products in this list",
     "filterGroups": {
       "category": "Category",
       "productType": "Product type",

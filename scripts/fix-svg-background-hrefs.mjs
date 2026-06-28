@@ -26,6 +26,12 @@ const MAP = {
   'menu-bg-rustic-back.png': '/NEW_DESIGNS/backgrounds/menu-bg-rustic-back.png',
   'menu-bg-finedining-front.png': '/NEW_DESIGNS/backgrounds/menu-bg-finedining-front.png',
   'menu-bg-finedining-back.png': '/NEW_DESIGNS/backgrounds/menu-bg-finedining-back.png',
+  'menu-bg-sushi-front.png': '/NEW_DESIGNS/backgrounds/menu-bg-sushi-front.png',
+  'menu-bg-sushi-back.png': '/NEW_DESIGNS/backgrounds/menu-bg-sushi-back.png',
+  'menu-bg-seafood-front.png': '/NEW_DESIGNS/backgrounds/menu-bg-seafood-front.png',
+  'menu-bg-seafood-back.png': '/NEW_DESIGNS/backgrounds/menu-bg-seafood-back.png',
+  'menu-bg-cafe-front.png': '/NEW_DESIGNS/backgrounds/menu-bg-cafe-front.png',
+  'menu-bg-cafe-back.png': '/NEW_DESIGNS/backgrounds/menu-bg-cafe-back.png',
 };
 
 function patchSvg(content) {

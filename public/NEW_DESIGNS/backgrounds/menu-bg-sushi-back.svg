@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 2400" width="1600" height="2400">
+<defs>
+  <linearGradient id="sushiBack" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#141018"/>
+    <stop offset="100%" stop-color="#0a080c"/>
+  </linearGradient>
+</defs>
+<rect width="1600" height="2400" fill="url(#sushiBack)"/>
+<g stroke="#FBCFE8" stroke-width="1" fill="none" opacity="0.15">
+  <circle cx="800" cy="900" r="280"/><circle cx="800" cy="900" r="220"/>
+</g>
+</svg>

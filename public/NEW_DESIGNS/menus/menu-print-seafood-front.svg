@@ -1,0 +1,22 @@
+<svg viewBox="0 0 1600 2400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&amp;family=Montserrat:wght@300;400&amp;display=swap');
+      .text-white { fill: #FFFFFF; }
+      .text-gold { fill: #D4AF37; }
+      .text-blue { fill: #E0F2FE; }
+    </style>
+  </defs>
+  <image href="/NEW_DESIGNS/backgrounds/menu-bg-seafood-front.png" width="1600" height="2400" preserveAspectRatio="xMidYMid slice"/>
+  
+  <g text-anchor="middle">
+    <text x="800" y="700" class="text-white" font-family="'Cinzel', serif" font-weight="600" font-size="140" letter-spacing="16">OCEANIS</text>
+    <text x="800" y="780" class="text-blue" font-family="'Montserrat', sans-serif" font-weight="300" font-size="26" letter-spacing="12">SEAFOOD &amp; OYSTER BAR</text>
+    
+    <line x1="700" y1="1100" x2="900" y2="1100" stroke="#D4AF37" stroke-width="2" />
+    
+    <text x="800" y="1400" class="text-gold" font-family="'Cinzel', serif" font-weight="400" font-size="80" letter-spacing="20">MENU</text>
+    
+    <text x="800" y="1900" class="text-blue" font-family="'Montserrat', sans-serif" font-weight="300" font-size="22" letter-spacing="6">FRESH CATCH DAILY</text>
+  </g>
+</svg>

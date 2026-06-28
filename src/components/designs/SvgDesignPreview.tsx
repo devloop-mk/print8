@@ -1,8 +1,11 @@
 'use client';
 
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useId, useLayoutEffect, useRef, useState } from 'react';
 import type { SvgDesignTemplate, SvgTemplateState } from '@/lib/data/svg-design-templates';
-import { prepareSvgForInlineDom } from '@/lib/designs/svg-template-engine';
+import {
+  prepareSvgForInlineDom,
+  scopeSvgIdsForInlineDom,
+} from '@/lib/designs/svg-template-engine';
 import { fitDesignThumbSize } from '@/lib/designs/design-thumb';
 import { useRenderedSvgTemplate } from '@/hooks/useSvgTemplateUrl';
 
@@ -21,18 +24,22 @@ export function SvgDesignPreview({
   className,
   width = 480,
 }: SvgDesignPreviewProps) {
+  const instanceId = useId().replace(/:/g, '');
   const markup = useRenderedSvgTemplate(template, state, side);
   const height = width / template.aspectRatio;
+  const inlineSvg =
+    markup &&
+    scopeSvgIdsForInlineDom(prepareSvgForInlineDom(markup), instanceId);
 
   return (
     <div
       className={className}
       style={{ width, height, maxWidth: '100%' }}
     >
-      {markup ? (
+      {inlineSvg ? (
         <div
           className="h-full w-full [&>svg]:block [&>svg]:h-full [&>svg]:w-full"
-          dangerouslySetInnerHTML={{ __html: prepareSvgForInlineDom(markup) }}
+          dangerouslySetInnerHTML={{ __html: inlineSvg }}
         />
       ) : (
         <div className="flex h-full w-full items-center justify-center rounded-lg bg-ink-100 text-sm text-ink-500">
