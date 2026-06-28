@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import html2canvas from 'html2canvas';
 import { useLocale, useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
 import { useRouter } from '@/i18n/navigation';
 import { useCart } from '@/components/cart/CartProvider';
 import { Button } from '@/components/ui/Button';
@@ -28,6 +29,11 @@ import {
 } from '@/lib/data/design-layouts';
 import { upsertDesignEditorDraft } from '@/lib/drafts/work-drafts';
 import { findDesignEditorDraft } from '@/lib/drafts/ongoing-designs';
+import {
+  cartItemMatchesDesignTemplate,
+  parseLayoutColorsFromCartMetadata,
+  parseOrderFieldsFromCartMetadata,
+} from '@/lib/cart/design-cart';
 import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight, Palette, FileText, Layers, ShoppingCart, Info } from 'lucide-react';
 
@@ -65,7 +71,9 @@ export function CustomizableDesignForm({
   const to = useTranslations('designs.order');
   const locale = useLocale();
   const router = useRouter();
-  const { addItem } = useCart();
+  const searchParams = useSearchParams();
+  const editCartItemId = searchParams.get('edit');
+  const { addItem, updateItem, items: cartItems } = useCart();
   const visiblePreviewRef = useRef<HTMLDivElement>(null);
   const fieldInputRefs = useRef<Partial<Record<DesignOrderFieldId, HTMLElement | null>>>({});
   const mobileFieldBarRef = useRef<DesignCustomizerMobileFieldBarHandle>(null);
@@ -88,7 +96,32 @@ export function CustomizableDesignForm({
   const [draftHydrated, setDraftHydrated] = useState(false);
   const [activeField, setActiveField] = useState<DesignOrderFieldId | null>(null);
 
+  const editingItem = useMemo(
+    () =>
+      editCartItemId
+        ? cartItems.find((item) => item.id === editCartItemId)
+        : undefined,
+    [editCartItemId, cartItems],
+  );
+
   useEffect(() => {
+    if (cartItemMatchesDesignTemplate(editingItem, template.id)) {
+      const metadata = editingItem.metadata ?? {};
+      setValues({
+        ...getDefaultFieldValues(allFields, layout.id),
+        ...parseOrderFieldsFromCartMetadata(metadata, allFields),
+      });
+      const loadedColors = parseLayoutColorsFromCartMetadata(metadata);
+      if (loadedColors) {
+        setColors(loadedColors);
+      }
+      if (editingItem.quantity > 0) {
+        setQuantity(editingItem.quantity);
+      }
+      setDraftHydrated(true);
+      return;
+    }
+
     const draft = findDesignEditorDraft(template.id);
     if (draft?.kind === 'layout') {
       const payload = draft.payload;
@@ -111,7 +144,7 @@ export function CustomizableDesignForm({
       }
     }
     setDraftHydrated(true);
-  }, [template.id]);
+  }, [allFields, editingItem, layout.id, template.id]);
 
   const serializedDraft = useMemo(
     () => JSON.stringify({ values, colors, step, quantity }),
@@ -184,6 +217,10 @@ export function CustomizableDesignForm({
 
   function updateColor(key: keyof DesignColorTheme, value: string) {
     setColors((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function resetColorsToDefault() {
+    setColors({ ...layout.defaultColors });
   }
 
   function validate() {
@@ -273,15 +310,21 @@ export function CustomizableDesignForm({
         if (value) metadata[field] = value;
       }
 
-      addItem({
-        type: 'design',
+      const cartPayload = {
+        type: 'design' as const,
         name: `${td(`categories.${template.category}`)} — ${td(`templates.${template.id}`)}`,
         price,
         quantity,
         designPreview: frontPreview ?? template.image,
         backDesignPreview: backPreview ?? undefined,
         metadata,
-      });
+      };
+
+      if (editCartItemId) {
+        updateItem(editCartItemId, cartPayload);
+      } else {
+        addItem(cartPayload);
+      }
       unsavedWorkGuard.allowNavigation();
       router.push('/cart');
     } finally {
@@ -547,7 +590,8 @@ export function CustomizableDesignForm({
                   <h2 className="break-words text-xl font-bold text-ink-900">{t('steps.colors.title')}</h2>
                   <p className="mt-1 break-words text-sm text-ink-600">{t('steps.colors.desc')}</p>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap gap-2">
                   {layout.presets.map((preset) => (
                     <button
                       key={preset.id}
@@ -568,6 +612,15 @@ export function CustomizableDesignForm({
                       {t(`presets.${preset.id}`)}
                     </button>
                   ))}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={resetColorsToDefault}
+                  >
+                    {t('resetColorsToDefault')}
+                  </Button>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {(
@@ -654,7 +707,11 @@ export function CustomizableDesignForm({
                   size="lg"
                   className="w-full sm:ml-auto sm:w-auto"
                 >
-                  {capturing ? t('capturing') : to('addToCart')}
+                  {capturing
+                    ? t('capturing')
+                    : editCartItemId
+                      ? to('updateCart')
+                      : to('addToCart')}
                 </Button>
               )}
             </div>

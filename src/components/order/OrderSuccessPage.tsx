@@ -1,18 +1,25 @@
 "use client";
 
+import { useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { useCart } from "@/components/cart/CartProvider";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { CheckoutSteps } from "@/components/checkout/CheckoutSteps";
 import { CheckCircle } from "lucide-react";
-import { Suspense } from "react";
 
 function OrderSuccessContent() {
   const t = useTranslations("orderSuccess");
   const searchParams = useSearchParams();
   const orderNumber = searchParams.get("number");
+  const { clearCart } = useCart();
+
+  useEffect(() => {
+    clearCart();
+    sessionStorage.removeItem("print8-upload-token");
+  }, [clearCart]);
 
   return (
     <>

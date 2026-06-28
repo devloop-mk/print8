@@ -4,9 +4,12 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useOngoingDesigns } from '@/components/drafts/OngoingDesignsProvider';
-import type { OngoingDesignSource } from '@/lib/drafts/ongoing-designs';
+import type {
+  OngoingDesignItem,
+  OngoingDesignSource,
+} from '@/lib/drafts/ongoing-designs';
 import { cn } from '@/lib/utils';
-import { PenLine } from 'lucide-react';
+import { PenLine, Trash2 } from 'lucide-react';
 
 function formatUpdatedAt(value: string, locale: string) {
   const date = new Date(value);
@@ -29,6 +32,66 @@ function sourceLabel(
   return t('sourceTemplate');
 }
 
+type OngoingDesignRowProps = {
+  item: OngoingDesignItem;
+  locale: string;
+  t: ReturnType<typeof useTranslations<'nav.ongoingDesigns'>>;
+  onDelete: (id: string) => void;
+  onNavigate?: () => void;
+  className?: string;
+};
+
+function OngoingDesignRow({
+  item,
+  locale,
+  t,
+  onDelete,
+  onNavigate,
+  className,
+}: OngoingDesignRowProps) {
+  return (
+    <div
+      className={cn(
+        'flex items-start gap-2 transition hover:bg-ink-50',
+        className,
+      )}
+    >
+      <Link
+        href={item.href}
+        onClick={onNavigate}
+        className="flex min-w-0 flex-1 items-start gap-3"
+      >
+        {item.previewDataUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={item.previewDataUrl}
+            alt=""
+            className="h-12 w-12 shrink-0 rounded-md border border-ink-100 object-cover"
+          />
+        ) : (
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md border border-ink-100 bg-ink-50 text-ink-400">
+            <PenLine className="h-5 w-5" aria-hidden="true" />
+          </div>
+        )}
+        <div className="min-w-0 flex-1 py-0.5">
+          <p className="truncate text-sm font-medium text-ink-900">{item.name}</p>
+          <p className="mt-0.5 text-xs text-ink-500">
+            {sourceLabel(item.source, t)} · {formatUpdatedAt(item.updatedAt, locale)}
+          </p>
+        </div>
+      </Link>
+      <button
+        type="button"
+        onClick={() => onDelete(item.id)}
+        className="mt-2 shrink-0 rounded p-1.5 text-ink-400 transition hover:bg-ink-100 hover:text-red-600"
+        aria-label={t('delete', { name: item.name })}
+      >
+        <Trash2 className="h-4 w-4" aria-hidden="true" />
+      </button>
+    </div>
+  );
+}
+
 type OngoingDesignsNavProps = {
   variant?: 'header' | 'mobile';
   onNavigate?: () => void;
@@ -40,10 +103,17 @@ export function OngoingDesignsNav({
 }: OngoingDesignsNavProps) {
   const t = useTranslations('nav.ongoingDesigns');
   const locale = useLocale();
-  const { items, count, hydrated } = useOngoingDesigns();
+  const { items, count, hydrated, remove } = useOngoingDesigns();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const panelId = useId();
+
+  const handleDelete = (id: string) => {
+    remove(id);
+    if (count <= 1) {
+      setOpen(false);
+    }
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -79,33 +149,14 @@ export function OngoingDesignsNav({
         <ul className="space-y-1">
           {items.map((item) => (
             <li key={item.id}>
-              <Link
-                href={item.href}
-                onClick={onNavigate}
-                className="flex items-start gap-3 rounded-xl px-4 py-3 transition hover:bg-ink-50"
-              >
-                {item.previewDataUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={item.previewDataUrl}
-                    alt=""
-                    className="h-12 w-12 shrink-0 rounded-md border border-ink-100 object-cover"
-                  />
-                ) : (
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md border border-ink-100 bg-ink-50 text-ink-400">
-                    <PenLine className="h-5 w-5" aria-hidden="true" />
-                  </div>
-                )}
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-ink-900">
-                    {item.name}
-                  </p>
-                  <p className="mt-0.5 text-xs text-ink-500">
-                    {sourceLabel(item.source, t)} ·{' '}
-                    {formatUpdatedAt(item.updatedAt, locale)}
-                  </p>
-                </div>
-              </Link>
+              <OngoingDesignRow
+                item={item}
+                locale={locale}
+                t={t}
+                onDelete={handleDelete}
+                onNavigate={onNavigate}
+                className="rounded-xl px-4 py-3"
+              />
             </li>
           ))}
         </ul>
@@ -150,33 +201,14 @@ export function OngoingDesignsNav({
             <ul className="max-h-80 overflow-y-auto py-1">
               {items.map((item) => (
                 <li key={item.id}>
-                  <Link
-                    href={item.href}
-                    onClick={() => setOpen(false)}
-                    className="flex items-start gap-3 px-4 py-3 transition hover:bg-ink-50"
-                  >
-                    {item.previewDataUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={item.previewDataUrl}
-                        alt=""
-                        className="h-12 w-12 shrink-0 rounded-md border border-ink-100 object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md border border-ink-100 bg-ink-50 text-ink-400">
-                        <PenLine className="h-5 w-5" aria-hidden="true" />
-                      </div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-ink-900">
-                        {item.name}
-                      </p>
-                      <p className="mt-0.5 text-xs text-ink-500">
-                        {sourceLabel(item.source, t)} ·{' '}
-                        {formatUpdatedAt(item.updatedAt, locale)}
-                      </p>
-                    </div>
-                  </Link>
+                  <OngoingDesignRow
+                    item={item}
+                    locale={locale}
+                    t={t}
+                    onDelete={handleDelete}
+                    onNavigate={() => setOpen(false)}
+                    className="px-4 py-3"
+                  />
                 </li>
               ))}
             </ul>

@@ -27,22 +27,15 @@ import { CheckoutSteps } from "@/components/checkout/CheckoutSteps";
 import { Trash2, Pencil } from "lucide-react";
 
 import {
-
   buildCustomizerEditUrl,
-
   formatProductCartName,
-
   getCartItemColor,
-
   getCartItemPreviewImages,
-
   getCartItemProduct,
-
   getCartItemSize,
-
   isCustomizedCartItem,
-
 } from "@/lib/cart/product-cart";
+import { buildDesignEditUrl } from "@/lib/cart/design-cart";
 
 
 
@@ -56,7 +49,7 @@ export function CartPageContent() {
 
   const locale = useLocale();
 
-  const { items, removeItem, updateQuantity, updateItem, total } = useCart();
+  const { items, removeItem, updateQuantity, updateItem, total, hydrated } = useCart();
 
   const assetLimits = validateOrderAssetLimits({
     items: items.map(
@@ -87,6 +80,14 @@ export function CartPageContent() {
   } | null>(null);
 
 
+
+  if (!hydrated) {
+    return (
+      <div className="py-16 text-center">
+        <p className="text-ink-500">{t("loading")}</p>
+      </div>
+    );
+  }
 
   if (items.length === 0) {
 
@@ -167,9 +168,15 @@ export function CartPageContent() {
 
             const size = getCartItemSize(item);
 
-            const editUrl = buildCustomizerEditUrl(item);
+            const editUrl =
+              item.type === "design"
+                ? buildDesignEditUrl(item)
+                : buildCustomizerEditUrl(item);
 
-            const customized = isCustomizedCartItem(item);
+            const showEdit =
+              item.type === "design"
+                ? Boolean(editUrl)
+                : isCustomizedCartItem(item) && Boolean(editUrl);
             const isMagnet = product?.type === 'magnet';
             const designAspect =
               item.type === 'design' &&
@@ -377,7 +384,7 @@ export function CartPageContent() {
 
                     )}
 
-                    {customized && editUrl && (
+                    {showEdit && editUrl && (
 
                       <Link href={editUrl}>
 

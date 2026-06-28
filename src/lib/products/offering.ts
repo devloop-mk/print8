@@ -3,6 +3,10 @@ import {
   getProductDesignTemplatesByCategory,
   type Product,
 } from '@/lib/data/catalog';
+import {
+  getProductsForCategory,
+  type ProductNavCategoryId,
+} from '@/lib/products/product-nav';
 
 export type ProductOffering = {
   imageDesignCount: number;
@@ -32,4 +36,40 @@ export function getProductOffering(product: Product): ProductOffering {
     hasPhotoDesigns: imageDesignCount > 0,
     hasTextTemplates: textDesignCount > 0,
   };
+}
+
+export type CategoryOffering = {
+  imageDesignCount: number;
+  textDesignCount: number;
+  hasPhotoDesigns: boolean;
+  hasTextTemplates: boolean;
+};
+
+export function getCategoryOffering(
+  categoryId: ProductNavCategoryId,
+): CategoryOffering {
+  let imageDesignCount = 0;
+  let textDesignCount = 0;
+
+  for (const product of getProductsForCategory(categoryId)) {
+    const offering = getProductOffering(product);
+    imageDesignCount += offering.imageDesignCount;
+    textDesignCount += offering.textDesignCount;
+  }
+
+  return {
+    imageDesignCount,
+    textDesignCount,
+    hasPhotoDesigns: imageDesignCount > 0,
+    hasTextTemplates: textDesignCount > 0,
+  };
+}
+
+export function categoryHasPremadeDesigns(offering: CategoryOffering): boolean {
+  return offering.hasPhotoDesigns || offering.hasTextTemplates;
+}
+
+/** @deprecated Use categoryHasPremadeDesigns */
+export function categoryNeedsPathChooser(offering: CategoryOffering): boolean {
+  return categoryHasPremadeDesigns(offering);
 }

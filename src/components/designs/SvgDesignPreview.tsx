@@ -3,6 +3,7 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import type { SvgDesignTemplate, SvgTemplateState } from '@/lib/data/svg-design-templates';
 import { prepareSvgForInlineDom } from '@/lib/designs/svg-template-engine';
+import { fitDesignThumbSize } from '@/lib/designs/design-thumb';
 import { useRenderedSvgTemplate } from '@/hooks/useSvgTemplateUrl';
 
 type SvgDesignPreviewProps = {
@@ -31,7 +32,6 @@ export function SvgDesignPreview({
       {markup ? (
         <div
           className="h-full w-full [&>svg]:block [&>svg]:h-full [&>svg]:w-full"
-          // SVG is generated locally from our template files, not user HTML.
           dangerouslySetInnerHTML={{ __html: prepareSvgForInlineDom(markup) }}
         />
       ) : (
@@ -48,54 +48,47 @@ export function SvgDesignPreviewScaled({
   state,
   side,
   className,
-  renderWidth = 300,
 }: {
   template: SvgDesignTemplate;
   state: SvgTemplateState;
   side: 'front' | 'back';
   className?: string;
-  renderWidth?: number;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(1);
+  const [size, setSize] = useState({ width: 200, height: 120 });
 
   useLayoutEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    const updateScale = () => {
-      const padding = 16;
-      const availableWidth = Math.max(container.clientWidth - padding, 1);
-      const availableHeight = Math.max(container.clientHeight - padding, 1);
-      const renderHeight = renderWidth / template.aspectRatio;
-      const nextScale = Math.min(
-        availableWidth / renderWidth,
-        availableHeight / renderHeight,
-        1,
+    const updateSize = () => {
+      setSize(
+        fitDesignThumbSize(
+          container.clientWidth,
+          container.clientHeight,
+          template.aspectRatio,
+        ),
       );
-      setScale(nextScale);
     };
 
-    updateScale();
-    const observer = new ResizeObserver(updateScale);
+    updateSize();
+    const observer = new ResizeObserver(updateSize);
     observer.observe(container);
     return () => observer.disconnect();
-  }, [template.aspectRatio, renderWidth]);
+  }, [template.aspectRatio]);
 
   return (
-    <div ref={containerRef} className={`relative h-full w-full ${className ?? ''}`}>
-      <div
-        className="absolute left-1/2 top-1/2 origin-center -translate-x-1/2 -translate-y-1/2"
-        style={{ transform: `translate(-50%, -50%) scale(${scale})` }}
-      >
-        <SvgDesignPreview
-          template={template}
-          state={state}
-          side={side}
-          width={renderWidth}
-          className="overflow-hidden rounded-md shadow-sm ring-1 ring-ink-200/80"
-        />
-      </div>
+    <div
+      ref={containerRef}
+      className={`relative flex h-full w-full items-center justify-center ${className ?? ''}`}
+    >
+      <SvgDesignPreview
+        template={template}
+        state={state}
+        side={side}
+        width={size.width}
+        className="overflow-hidden rounded-md shadow-sm ring-1 ring-ink-200/80"
+      />
     </div>
   );
 }

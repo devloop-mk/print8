@@ -13,11 +13,12 @@ import {
 } from '@/lib/data/design-layouts';
 import { getSvgDesignTemplate } from '@/lib/data/svg-design-templates';
 import { buildDefaultSvgTemplateState } from '@/lib/designs/svg-template-engine';
+import { fitDesignThumbSize } from '@/lib/designs/design-thumb';
 import type { DesignTemplate } from '@/lib/data/catalog';
 
-const THUMB_RENDER_WIDTH = 300;
+const THUMB_RENDER_WIDTH = 320;
 
-function ScaledPreview({
+function ScaledLayoutPreview({
   layout,
   values,
 }: {
@@ -32,16 +33,12 @@ function ScaledPreview({
     if (!container) return;
 
     const updateScale = () => {
-      const padding = 16;
-      const availableWidth = Math.max(container.clientWidth - padding, 1);
-      const availableHeight = Math.max(container.clientHeight - padding, 1);
-      const renderHeight = THUMB_RENDER_WIDTH / layout.aspectRatio;
-      const nextScale = Math.min(
-        availableWidth / THUMB_RENDER_WIDTH,
-        availableHeight / renderHeight,
-        1,
+      const fitted = fitDesignThumbSize(
+        container.clientWidth,
+        container.clientHeight,
+        layout.aspectRatio,
       );
-      setScale(nextScale);
+      setScale(fitted.width / THUMB_RENDER_WIDTH);
     };
 
     updateScale();
@@ -51,7 +48,7 @@ function ScaledPreview({
   }, [layout.aspectRatio]);
 
   return (
-    <div ref={containerRef} className="absolute inset-0 flex items-center justify-center">
+    <div ref={containerRef} className="flex h-full w-full items-center justify-center">
       <div
         className="origin-center"
         style={{
@@ -103,7 +100,7 @@ export function DesignCardThumbnail({
 
       return (
         <div className={`relative h-full w-full ${className ?? ''}`}>
-          <ScaledPreview layout={layout} values={values} />
+          <ScaledLayoutPreview layout={layout} values={values} />
         </div>
       );
     }
@@ -117,7 +114,7 @@ export function DesignCardThumbnail({
           alt={alt}
           fill
           sizes="320px"
-          className="object-contain p-4 transition group-hover:scale-[1.02]"
+          className="object-contain p-1 transition group-hover:scale-[1.02]"
         />
       </div>
     );

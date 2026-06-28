@@ -8,6 +8,11 @@ import {
   useMemo,
   useState,
 } from "react";
+import {
+  clearCartStorage,
+  loadCartFromStorage,
+  saveCartToStorage,
+} from "@/lib/storage/cart-storage";
 
 export type CartItemType = "service" | "design" | "product";
 
@@ -34,32 +39,42 @@ interface CartContextValue {
   clearCart: () => void;
   total: number;
   itemCount: number;
+  hydrated: boolean;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
-
-const STORAGE_KEY = "print8-cart";
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setItems(JSON.parse(stored));
-      }
-    } catch {
-      // ignore corrupt storage
-    }
-    setHydrated(true);
+    let cancelled = false;
+
+    loadCartFromStorage()
+      .then((stored) => {
+        if (!cancelled && stored) {
+          setItems(stored);
+        }
+      })
+      .catch(() => {
+        // ignore corrupt storage
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setHydrated(true);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
-    if (hydrated) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-    }
+    if (!hydrated) return;
+
+    void saveCartToStorage(items);
   }, [items, hydrated]);
 
   const addItem = useCallback((item: Omit<CartItem, "id">) => {
@@ -91,6 +106,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const clearCart = useCallback(() => {
     setItems([]);
+    void clearCartStorage();
   }, []);
 
   const total = useMemo(
@@ -114,6 +130,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         clearCart,
         total,
         itemCount,
+        hydrated,
       }}
     >
       {children}

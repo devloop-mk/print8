@@ -14,6 +14,11 @@ import {
 } from "@/lib/products/product-sides";
 import { parsePlacedStickers } from "@/lib/products/sticker-library";
 import { getSvgPrintFilesFromMetadata } from "@/lib/designs/svg-order-assets";
+import {
+  getOrderItemPreviewImages,
+  sanitizeOrderItemFilename,
+  type OrderItem,
+} from "@/lib/orders/order-item-previews";
 
 interface EmailAttachment {
   filename: string;
@@ -45,60 +50,180 @@ function parseDataUrl(dataUrl: string) {
   };
 }
 
-function buildDesignDetailsHtml(data: CheckoutInput) {
-  const blocks: string[] = [];
+function buildProductDesignDetailsInnerHtml(item: OrderItem): string {
+  const meta = item.metadata;
+  if (!meta) return "";
 
-  data.items.forEach((item, itemIndex) => {
-    const meta = item.metadata;
-    if (!meta) return;
+  const sideLines: string[] = [];
 
-    const sideLines: string[] = [];
+  for (const side of PRODUCT_SIDES) {
+    const prefix = getSideMetadataPrefix(side);
+    const parts: string[] = [];
 
-    for (const side of PRODUCT_SIDES) {
-      const prefix = getSideMetadataPrefix(side);
-      const parts: string[] = [];
-
-      const customText = meta[`${prefix}CustomText`];
-      if (typeof customText === "string" && customText.trim()) {
-        parts.push(`Text: “${escapeHtml(customText.trim())}”`);
-      }
-
-      const stickers = parsePlacedStickers(meta[`${prefix}Stickers`]);
-      if (stickers.length > 0) {
-        const ids = stickers.map((s) => s.stickerId).join(", ");
-        parts.push(`Stickers: ${escapeHtml(ids)}`);
-      }
-
-      const uploadedFileId = meta[`${prefix}UploadedFileId`];
-      if (typeof uploadedFileId === "string" && uploadedFileId) {
-        parts.push("Photo: attached (original upload)");
-      }
-
-      const premade = meta[`${prefix}PremadeDesignImage`];
-      if (typeof premade === "string" && premade) {
-        parts.push("Premade design applied");
-      }
-
-      if (parts.length === 0) continue;
-
-      const sideLabel = side.charAt(0).toUpperCase() + side.slice(1);
-      sideLines.push(
-        `<li><strong>${sideLabel}</strong> — ${parts.join(" · ")}</li>`,
-      );
+    const customText = meta[`${prefix}CustomText`];
+    if (typeof customText === "string" && customText.trim()) {
+      parts.push(`Text: “${escapeHtml(customText.trim())}”`);
     }
 
-    if (sideLines.length === 0) return;
+    const stickers = parsePlacedStickers(meta[`${prefix}Stickers`]);
+    if (stickers.length > 0) {
+      const ids = stickers.map((s) => s.stickerId).join(", ");
+      parts.push(`Stickers: ${escapeHtml(ids)}`);
+    }
 
-    blocks.push(
-      `<div style="margin:12px 0;padding:12px;border:1px solid #e5e7eb;border-radius:8px;">
-        <p style="margin:0 0 8px;font-weight:600;">${escapeHtml(item.name)}</p>
-        <ul style="margin:0;padding-left:18px;font-size:14px;color:#374151;">${sideLines.join("")}</ul>
-      </div>`,
+    const uploadedFileId = meta[`${prefix}UploadedFileId`];
+    if (typeof uploadedFileId === "string" && uploadedFileId) {
+      parts.push("Photo: attached (original upload)");
+    }
+
+    const premade = meta[`${prefix}PremadeDesignImage`];
+    if (typeof premade === "string" && premade) {
+      parts.push("Premade design applied");
+    }
+
+    if (parts.length === 0) continue;
+
+    const sideLabel = side.charAt(0).toUpperCase() + side.slice(1);
+    sideLines.push(
+      `<li><strong>${sideLabel}</strong> — ${parts.join(" · ")}</li>`,
     );
-  });
+  }
 
-  if (blocks.length === 0) return "";
-  return `<h3>Design breakdown</h3>${blocks.join("")}`;
+  if (sideLines.length === 0) return "";
+  return `<ul style="margin:0;padding-left:18px;">${sideLines.join("")}</ul>`;
+}
+
+function buildCustomDesignDetailsInnerHtml(item: OrderItem): string {
+  const meta = item.metadata;
+  if (!meta) return "";
+
+  if (meta.orderType === "svg-template") {
+    const summary: string[] = [];
+    if (typeof meta.svgTemplateId === "string") {
+      summary.push(`Template: ${escapeHtml(meta.svgTemplateId)}`);
+    }
+    if (typeof meta.svgFrontContent === "string") {
+      summary.push("Front: print-ready SVG attached");
+    }
+    if (typeof meta.svgBackContent === "string") {
+      summary.push("Back: print-ready SVG attached");
+    }
+
+    const textEntries = Object.entries(meta)
+      .filter(([key]) => key.startsWith("text_"))
+      .map(([key, value]) => {
+        const label = key.replace(/^text_/, "").replace(":", " · ");
+        return `<li><strong>${escapeHtml(label)}</strong>: ${escapeHtml(String(value))}</li>`;
+      });
+
+    return [
+      summary.length > 0
+        ? `<p style="margin:0 0 8px;">${summary.join("<br/>")}</p>`
+        : "",
+      textEntries.length > 0
+        ? `<ul style="margin:0;padding-left:18px;">${textEntries.join("")}</ul>`
+        : "",
+    ].join("");
+  }
+
+  if (meta.orderType === "customizable-template") {
+    const fields = Object.entries(meta).filter(
+      ([key]) =>
+        ![
+          "designTemplateId",
+          "category",
+          "orderType",
+          "layoutId",
+          "accentColor",
+          "backgroundColor",
+          "textColor",
+          "secondaryColor",
+        ].includes(key),
+    );
+
+    if (fields.length === 0) return "";
+
+    return `<ul style="margin:0;padding-left:18px;">
+      ${fields
+        .map(
+          ([key, value]) =>
+            `<li><strong>${escapeHtml(key)}</strong>: ${escapeHtml(String(value))}</li>`,
+        )
+        .join("")}
+    </ul>`;
+  }
+
+  return "";
+}
+
+function buildOrderItemPreviewImagesHtml(item: OrderItem): string {
+  const previews = getOrderItemPreviewImages(item);
+  if (previews.length === 0) return "";
+
+  return previews
+    .filter((preview) => preview.src.startsWith("data:"))
+    .map(
+      (preview) =>
+        `<div style="display:inline-block;vertical-align:top;margin:8px 12px 8px 0;">
+          <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">${escapeHtml(preview.label)}</p>
+          <img src="${preview.src}" alt="${escapeHtml(item.name)} ${escapeHtml(preview.label)}" style="max-width:280px;border-radius:8px;border:1px solid #e5e7eb;display:block;background:#fff;" />
+        </div>`,
+    )
+    .join("");
+}
+
+function buildOrderItemEmailBlock(
+  item: OrderItem,
+  index: number,
+  totalItems: number,
+  locale: CheckoutInput["locale"],
+  labels: { itemOf: string; designDetails: string },
+): string {
+  const previewHtml = buildOrderItemPreviewImagesHtml(item);
+  const productDetails = buildProductDesignDetailsInnerHtml(item);
+  const customDetails = buildCustomDesignDetailsInnerHtml(item);
+  const detailsHtml = [productDetails, customDetails].filter(Boolean).join("");
+
+  const itemPosition =
+    totalItems > 1
+      ? `<p style="margin:0 0 8px;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">${labels.itemOf.replace("{current}", String(index + 1)).replace("{total}", String(totalItems))}</p>`
+      : "";
+
+  return `<div style="margin:24px 0;padding:20px;border:2px solid #d1d5db;border-radius:12px;background:#f9fafb;">
+    ${itemPosition}
+    <p style="margin:0 0 4px;font-size:18px;font-weight:700;color:#111827;">${escapeHtml(item.name)}</p>
+    <p style="margin:0;font-size:14px;color:#374151;">× ${item.quantity} — ${formatPrice(item.price * item.quantity, locale)}</p>
+    ${
+      previewHtml
+        ? `<div style="margin-top:16px;padding-top:16px;border-top:1px solid #e5e7eb;">
+            <p style="margin:0 0 10px;font-size:13px;font-weight:600;color:#374151;">${labels.designDetails}</p>
+            ${previewHtml}
+          </div>`
+        : ""
+    }
+    ${
+      detailsHtml
+        ? `<div style="margin-top:12px;padding-top:12px;border-top:1px solid #e5e7eb;font-size:14px;color:#374151;">${detailsHtml}</div>`
+        : ""
+    }
+  </div>`;
+}
+
+function buildOrderItemsEmailHtml(
+  data: CheckoutInput,
+  labels: { itemOf: string; designDetails: string; itemsHeading: string },
+): string {
+  const blocks = data.items.map((item, index) =>
+    buildOrderItemEmailBlock(
+      item,
+      index,
+      data.items.length,
+      data.locale,
+      labels,
+    ),
+  );
+
+  return `<h3 style="margin:24px 0 12px;">${labels.itemsHeading}</h3>${blocks.join("")}`;
 }
 
 async function downloadStoredFile(storedName: string): Promise<Buffer | null> {
@@ -115,20 +240,15 @@ async function buildDesignPreviewAttachments(
   const attachments: EmailAttachment[] = [];
 
   data.items.forEach((item, itemIndex) => {
-    const previews: { url?: string; label: string }[] = [
-      { url: item.designPreview, label: "front" },
-      { url: item.backDesignPreview, label: "back" },
-      { url: item.leftDesignPreview, label: "left" },
-      { url: item.rightDesignPreview, label: "right" },
-    ];
+    const previews = getOrderItemPreviewImages(item);
+    const safeName = sanitizeOrderItemFilename(item.name, `item-${itemIndex + 1}`);
 
-    previews.forEach(({ url, label }) => {
-      if (!url?.startsWith("data:")) return;
-      const parsed = parseDataUrl(url);
+    previews.forEach(({ src, label }) => {
+      if (!src.startsWith("data:")) return;
+      const parsed = parseDataUrl(src);
       if (!parsed) return;
-      const safeName = item.name.replace(/[^\w\s-]/g, "").trim().slice(0, 40);
       attachments.push({
-        filename: `item-${itemIndex + 1}-${safeName || "design"}-${label}.${parsed.ext}`,
+        filename: `item-${itemIndex + 1}-${safeName}-${label.toLowerCase().replace(/\s+/g, "-")}.${parsed.ext}`,
         content: parsed.buffer,
         contentType: parsed.mimeType,
       });
@@ -155,79 +275,6 @@ function buildSvgPrintAttachments(data: CheckoutInput): EmailAttachment[] {
   return attachments;
 }
 
-function buildCustomDesignDetailsHtml(data: CheckoutInput) {
-  const blocks: string[] = [];
-
-  data.items.forEach((item) => {
-    const meta = item.metadata;
-    if (!meta) return;
-
-    if (meta.orderType === "svg-template") {
-      const summary: string[] = [];
-      if (typeof meta.svgTemplateId === "string") {
-        summary.push(`Template: ${escapeHtml(meta.svgTemplateId)}`);
-      }
-      if (typeof meta.svgFrontContent === "string") {
-        summary.push("Front: print-ready SVG attached");
-      }
-      if (typeof meta.svgBackContent === "string") {
-        summary.push("Back: print-ready SVG attached");
-      }
-
-      const textEntries = Object.entries(meta)
-        .filter(([key]) => key.startsWith("text_"))
-        .map(([key, value]) => {
-          const label = key.replace(/^text_/, "").replace(":", " · ");
-          return `<li><strong>${escapeHtml(label)}</strong>: ${escapeHtml(String(value))}</li>`;
-        });
-
-      blocks.push(
-        `<div style="margin:12px 0;padding:12px;border:1px solid #e5e7eb;border-radius:8px;">
-          <p style="margin:0 0 8px;font-weight:600;">${escapeHtml(item.name)}</p>
-          ${summary.length > 0 ? `<p style="margin:0 0 8px;font-size:14px;color:#374151;">${summary.join("<br/>")}</p>` : ""}
-          ${textEntries.length > 0 ? `<ul style="margin:0;padding-left:18px;font-size:14px;color:#374151;">${textEntries.join("")}</ul>` : ""}
-        </div>`,
-      );
-      return;
-    }
-
-    if (meta.orderType === "customizable-template") {
-      const fields = Object.entries(meta).filter(
-        ([key]) =>
-          ![
-            "designTemplateId",
-            "category",
-            "orderType",
-            "layoutId",
-            "accentColor",
-            "backgroundColor",
-            "textColor",
-            "secondaryColor",
-          ].includes(key),
-      );
-
-      if (fields.length === 0) return;
-
-      blocks.push(
-        `<div style="margin:12px 0;padding:12px;border:1px solid #e5e7eb;border-radius:8px;">
-          <p style="margin:0 0 8px;font-weight:600;">${escapeHtml(item.name)}</p>
-          <ul style="margin:0;padding-left:18px;font-size:14px;color:#374151;">
-            ${fields
-              .map(
-                ([key, value]) =>
-                  `<li><strong>${escapeHtml(key)}</strong>: ${escapeHtml(String(value))}</li>`,
-              )
-              .join("")}
-          </ul>
-        </div>`,
-      );
-    }
-  });
-
-  if (blocks.length === 0) return "";
-  return `<h3>Custom design details</h3>${blocks.join("")}`;
-}
-
 async function buildOriginalUploadAttachments(
   fileIds: string[],
 ): Promise<EmailAttachment[]> {
@@ -249,45 +296,6 @@ async function buildOriginalUploadAttachments(
   }
 
   return attachments;
-}
-
-function buildItemsHtml(data: CheckoutInput, locale: CheckoutInput["locale"]) {
-  return data.items
-    .map(
-      (item) =>
-        `<li><strong>${escapeHtml(item.name)}</strong> × ${item.quantity} — ${formatPrice(item.price * item.quantity, locale)}</li>`,
-    )
-    .join("");
-}
-
-function buildDesignImagesHtml(data: CheckoutInput) {
-  const blocks: string[] = [];
-  const previewFields = [
-    { key: "designPreview" as const, label: "Front" },
-    { key: "backDesignPreview" as const, label: "Back" },
-    { key: "leftDesignPreview" as const, label: "Left" },
-    { key: "rightDesignPreview" as const, label: "Right" },
-  ];
-
-  data.items.forEach((item) => {
-    const images: string[] = [];
-    for (const { key, label } of previewFields) {
-      const url = item[key];
-      if (!url?.startsWith("data:")) continue;
-      images.push(
-        `<div style="display:inline-block;vertical-align:top;margin:8px 12px 8px 0;">
-          <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">${label}</p>
-          <img src="${url}" alt="${escapeHtml(item.name)} ${label.toLowerCase()}" style="max-width:280px;border-radius:8px;border:1px solid #e5e7eb;display:block;" />
-        </div>`,
-      );
-    }
-    if (images.length === 0) return;
-    blocks.push(
-      `<div style="margin:16px 0;"><p style="margin:0 0 8px;font-weight:600;">${escapeHtml(item.name)}</p>${images.join("")}</div>`,
-    );
-  });
-
-  return blocks.join("");
 }
 
 function escapeHtml(value: string) {
@@ -328,11 +336,21 @@ export async function sendOrderEmails(
   const stickerAttachments = await buildStickerAttachments(stickerRefs);
   const originalAttachments = await buildOriginalUploadAttachments(fileIds);
   const total = formatPrice(totalAmount, data.locale);
-  const itemsHtml = buildItemsHtml(data, data.locale);
-  const designHtml = buildDesignImagesHtml(data);
-  const designDetailsHtml = buildDesignDetailsHtml(data);
-  const customDesignDetailsHtml = buildCustomDesignDetailsHtml(data);
   const isMk = data.locale === "mk";
+  const itemsHtml = buildOrderItemsEmailHtml(
+    data,
+    isMk
+      ? {
+          itemsHeading: "Ваши производи",
+          itemOf: "Артикл {current} од {total}",
+          designDetails: "Преглед на дизајнот",
+        }
+      : {
+          itemsHeading: "Your items",
+          itemOf: "Item {current} of {total}",
+          designDetails: "Design preview",
+        },
+  );
 
   const customerHtml = isMk
     ? `
@@ -340,18 +358,14 @@ export async function sendOrderEmails(
       <p>Број на нарачка: <strong>${orderNumber}</strong></p>
       <p>Вкупно: <strong>${total}</strong></p>
       <p>Плаќање при достава. Ќе ве контактираме наскоро за потврда.</p>
-      <h3>Ваши производи</h3>
-      <ul>${itemsHtml}</ul>
-      ${designHtml ? `<h3>Преглед на дизајнот</h3>${designHtml}` : ""}
+      ${itemsHtml}
     `
     : `
       <h2>Thank you for your order!</h2>
       <p>Order number: <strong>${orderNumber}</strong></p>
       <p>Total: <strong>${total}</strong></p>
       <p>Payment on delivery. We will contact you soon to confirm.</p>
-      <h3>Your items</h3>
-      <ul>${itemsHtml}</ul>
-      ${designHtml ? `<h3>Design preview</h3>${designHtml}` : ""}
+      ${itemsHtml}
     `;
 
   const results: { customer?: boolean; admin?: boolean } = {};
@@ -404,12 +418,12 @@ export async function sendOrderEmails(
         ${data.email ? escapeHtml(data.email) : ""}<br/>
         ${escapeHtml(data.city)}, ${escapeHtml(data.address)}</p>
         ${data.notes ? `<p><strong>Notes:</strong> ${escapeHtml(data.notes)}</p>` : ""}
-        <h3>Items</h3>
-        <ul>${itemsHtml}</ul>
+        ${buildOrderItemsEmailHtml(data, {
+          itemsHeading: "Items",
+          itemOf: "Item {current} of {total}",
+          designDetails: "Design preview",
+        })}
         <p><strong>Total:</strong> ${total}</p>
-        ${designHtml ? `<h3>Design previews</h3>${designHtml}` : ""}
-        ${customDesignDetailsHtml}
-        ${designDetailsHtml}
         <p>${adminAttachments.length} file(s) attached (${designAttachments.length} preview(s), ${svgPrintAttachments.length} print SVG(s), ${stickerAttachments.length} sticker(s), ${originalAttachments.length} original upload(s)).</p>
       `,
       attachments: adminAttachments.map((a) => ({

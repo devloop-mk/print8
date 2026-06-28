@@ -42,3 +42,7 @@ export function writeSavedDesigns(designs: SavedDesign[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(designs));
   dispatchDraftsChanged();
 }
+
+export function deleteSavedDesign(id: string) {
+  writeSavedDesigns(readSavedDesigns().filter((design) => design.id !== id));
+}

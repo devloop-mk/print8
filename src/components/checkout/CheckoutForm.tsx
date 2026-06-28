@@ -20,7 +20,7 @@ export function CheckoutForm() {
   const t = useTranslations("checkout");
   const locale = useLocale();
   const router = useRouter();
-  const { items, total, clearCart } = useCart();
+  const { items, total, hydrated } = useCart();
   const { token, loading: uploadLoading, error: uploadSessionError, refreshSession } = useUploadSession();
 
   const [form, setForm] = useState({
@@ -35,6 +35,7 @@ export function CheckoutForm() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [processing, setProcessing] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
 
   const hasServiceItems = items.some((item) => item.type === "service");
   const hasCustomProductItems = items.some((item) => item.type === "product");
@@ -146,25 +147,35 @@ export function CheckoutForm() {
           setErrors({
             form: t("orderStickerLimit", { max: MAX_STICKERS_PER_ORDER }),
           });
+          setProcessing(false);
           return;
         }
         if (data.code === "too_many_photos") {
           setErrors({
             form: t("orderPhotoLimit", { max: MAX_PHOTOS_PER_ORDER }),
           });
+          setProcessing(false);
           return;
         }
         throw new Error(data.error);
       }
 
-      clearCart();
+      setRedirecting(true);
       sessionStorage.removeItem("print8-upload-token");
       router.push(`/order/success?number=${data.orderNumber}`);
     } catch {
       setErrors({ form: "error" });
-    } finally {
       setProcessing(false);
     }
+  }
+
+  if (!hydrated || redirecting) {
+    return (
+      <div className="py-16 text-center">
+        <CheckoutSteps current="checkout" />
+        <p className="text-ink-500">{t("processing")}</p>
+      </div>
+    );
   }
 
   if (items.length === 0) {

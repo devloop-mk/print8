@@ -1,9 +1,13 @@
 import type { DesignCategory } from '@/lib/data/catalog';
+import type { SvgColorLabelKey } from '@/lib/designs/svg-color-labels';
+import type { SvgTextTransform } from '@/lib/designs/svg-text-transform';
 
 export type SvgTextField = {
   id: string;
   index: number;
   default: string;
+  /** Optional key under designs.customize.svgFields or designs.order.fields */
+  labelKey?: string;
 };
 
 export type SvgColorSlot = {
@@ -35,6 +39,8 @@ export type SvgDesignTemplate = {
 export type SvgTemplateState = {
   texts: Record<string, string>;
   colors: Record<string, string>;
+  logos: Record<string, string | null>;
+  transforms?: Record<string, SvgTextTransform>;
 };
 
 const ROOT = '/NEW_DESIGNS';
@@ -50,15 +56,25 @@ function tx(defaults: string[]): SvgTextField[] {
 
 function classColors(
   entries: Record<string, string>,
-  labelKeys?: Record<string, string>,
+  labelKeys?: Record<string, SvgColorLabelKey>,
 ): SvgColorSlot[] {
-  return Object.entries(entries).map(([cssClass, defaultColor]) => {
+  const semanticRoles: SvgColorLabelKey[] = [
+    'textColor',
+    'secondaryColor',
+    'accentColor',
+    'backgroundColor',
+  ];
+
+  return Object.entries(entries).map(([cssClass, defaultColor], index) => {
     const id = cssClass.replace(/^text-/, '');
     return {
       id,
       cssClass,
       default: defaultColor,
-      labelKey: labelKeys?.[id] ?? `svgColors.${id}`,
+      labelKey:
+        labelKeys?.[id] ??
+        semanticRoles[Math.min(index, semanticRoles.length - 1)] ??
+        'textColor',
     };
   });
 }
@@ -70,7 +86,16 @@ function inlineColors(
     id,
     inlineReplace: defaultColor,
     default: defaultColor,
-    labelKey: `svgColors.${id}`,
+    labelKey:
+      id === 'background'
+        ? 'backgroundColor'
+        : id === 'text'
+          ? 'textColor'
+          : id === 'accent'
+            ? 'accentColor'
+            : id === 'secondary'
+              ? 'secondaryColor'
+              : 'textColor',
   }));
 }
 
@@ -115,8 +140,10 @@ export const svgDesignTemplates: SvgDesignTemplate[] = [
         texts: tx([
           'ALEXANDER WRIGHT',
           'MANAGING PARTNER',
-          'P: +1 (555) 777-8888   |   E: alexander@wright.com',
-          'W: WWW.WRIGHT.COM   |   A: 789 PRESTIGE BLVD',
+          '+1 (555) 777-8888',
+          'alexander@wright.com',
+          'WWW.WRIGHT.COM',
+          '789 PRESTIGE BLVD',
         ]),
       },
       back: {
@@ -171,13 +198,9 @@ export const svgDesignTemplates: SvgDesignTemplate[] = [
           'STUDIO',
           'Sarah Jenkins',
           'ART DIRECTOR',
-          'T',
           '+1 (555) 444-3333',
-          'E',
           'sarah@studio.com',
-          'W',
           'www.studio.com',
-          'A',
           '321 Creative Alley, SF',
         ]),
       },
@@ -366,11 +389,18 @@ export const svgDesignTemplates: SvgDesignTemplate[] = [
         ]),
       },
     },
-    colors: classColors({
-      'text-burgundy': '#5C1A1B',
-      'text-charcoal': '#2D2D2D',
-      'text-warm-grey': '#71717A',
-    }),
+    colors: classColors(
+      {
+        'text-burgundy': '#5C1A1B',
+        'text-charcoal': '#2D2D2D',
+        'text-warm-grey': '#71717A',
+      },
+      {
+        burgundy: 'accentColor',
+        charcoal: 'textColor',
+        'warm-grey': 'secondaryColor',
+      },
+    ),
   },
   {
     id: 'svg-wedding-print-celestial',
@@ -393,11 +423,14 @@ export const svgDesignTemplates: SvgDesignTemplate[] = [
         ]),
       },
     },
-    colors: classColors({
-      'text-gold': '#D4AF37',
-      'text-white': '#FFFFFF',
-      'text-light': '#E2E8F0',
-    }),
+    colors: classColors(
+      {
+        'text-gold': '#D4AF37',
+        'text-white': '#FFFFFF',
+        'text-light': '#E2E8F0',
+      },
+      { gold: 'accentColor', white: 'textColor', light: 'secondaryColor' },
+    ),
   },
   {
     id: 'svg-wedding-print-terracotta',
@@ -421,11 +454,14 @@ export const svgDesignTemplates: SvgDesignTemplate[] = [
         ]),
       },
     },
-    colors: classColors({
-      'text-terra': '#B3543E',
-      'text-brown': '#4A3B32',
-      'text-tan': '#8C7A6B',
-    }),
+    colors: classColors(
+      {
+        'text-terra': '#B3543E',
+        'text-brown': '#4A3B32',
+        'text-tan': '#8C7A6B',
+      },
+      { terra: 'accentColor', brown: 'textColor', tan: 'secondaryColor' },
+    ),
   },
   {
     id: 'svg-wedding-print-watercolor',
@@ -502,11 +538,14 @@ export const svgDesignTemplates: SvgDesignTemplate[] = [
         ]),
       },
     },
-    colors: classColors({
-      'text-gold': '#D4AF37',
-      'text-white': '#FFFFFF',
-      'text-light': '#D1D5DB',
-    }),
+    colors: classColors(
+      {
+        'text-gold': '#D4AF37',
+        'text-white': '#FFFFFF',
+        'text-light': '#D1D5DB',
+      },
+      { gold: 'accentColor', white: 'textColor', light: 'secondaryColor' },
+    ),
   },
   {
     id: 'svg-bday-rosegold',
@@ -528,11 +567,14 @@ export const svgDesignTemplates: SvgDesignTemplate[] = [
         ]),
       },
     },
-    colors: classColors({
-      'text-rose': '#B76E79',
-      'text-dark': '#2D3748',
-      'text-gray': '#4A5568',
-    }),
+    colors: classColors(
+      {
+        'text-rose': '#B76E79',
+        'text-dark': '#2D3748',
+        'text-gray': '#4A5568',
+      },
+      { rose: 'accentColor', dark: 'textColor', gray: 'secondaryColor' },
+    ),
   },
   {
     id: 'svg-bday-princess',
@@ -555,11 +597,14 @@ export const svgDesignTemplates: SvgDesignTemplate[] = [
         ]),
       },
     },
-    colors: classColors({
-      'text-pink': '#DB2777',
-      'text-purple': '#7E22CE',
-      'text-gold': '#B45309',
-    }),
+    colors: classColors(
+      {
+        'text-pink': '#DB2777',
+        'text-purple': '#7E22CE',
+        'text-gold': '#B45309',
+      },
+      { pink: 'accentColor', purple: 'textColor', gold: 'secondaryColor' },
+    ),
   },
   {
     id: 'svg-bday-dino',
@@ -581,11 +626,250 @@ export const svgDesignTemplates: SvgDesignTemplate[] = [
         ]),
       },
     },
-    colors: classColors({
-      'text-orange': '#F97316',
-      'text-green': '#15803D',
-      'text-dark': '#1F2937',
-    }),
+    colors: classColors(
+      {
+        'text-orange': '#F97316',
+        'text-green': '#15803D',
+        'text-dark': '#1F2937',
+      },
+      { orange: 'accentColor', green: 'secondaryColor', dark: 'textColor' },
+    ),
+  },
+  {
+    id: 'svg-bday-champagne',
+    category: 'birthday',
+    aspectRatio: 1500 / 2100,
+    sides: {
+      front: {
+        path: `${ROOT}/birthday/bday-print-champagne.svg`,
+        texts: tx([
+          'Pop the Bubbly!',
+          'JOIN US FOR DINNER AND DRINKS',
+          'TO CELEBRATE',
+          "EMMA'S 25TH",
+          'FRIDAY, DECEMBER 5TH',
+          "EIGHT O'CLOCK IN THE EVENING",
+          'THE VELVET LOUNGE',
+          '321 CHAMPAGNE TERRACE, NY',
+          'Kindly RSVP by November 25th',
+        ]),
+      },
+    },
+    colors: classColors(
+      {
+        'text-gold': '#D4AF37',
+        'text-white': '#FFFFFF',
+        'text-gray': '#9CA3AF',
+      },
+      { gold: 'accentColor', white: 'textColor', gray: 'secondaryColor' },
+    ),
+  },
+  {
+    id: 'svg-bday-unicorn',
+    category: 'birthday',
+    aspectRatio: 1500 / 2100,
+    sides: {
+      front: {
+        path: `${ROOT}/birthday/bday-print-unicorn.svg`,
+        texts: tx([
+          'Sprinkles & Sparkles!',
+          'PLEASE JOIN US FOR A MAGICAL CELEBRATION',
+          'LILY IS TURNING 5',
+          '★ ★ ★',
+          'SUNDAY, APRIL 12TH',
+          'FROM 2:00 PM TO 5:00 PM',
+          'THE RAINBOW GARDEN',
+          '789 CLOUD NINE WAY, FAIRYLAND',
+          "RSVP TO LILY'S MOM",
+          '555-MAGIC-22',
+        ]),
+      },
+    },
+    colors: classColors(
+      {
+        'text-gold': '#D97706',
+        'text-purple': '#7E22CE',
+        'text-pink': '#DB2777',
+      },
+      { gold: 'secondaryColor', purple: 'textColor', pink: 'accentColor' },
+    ),
+  },
+  {
+    id: 'svg-bday-bbq',
+    category: 'birthday',
+    aspectRatio: 1500 / 2100,
+    sides: {
+      front: {
+        path: `${ROOT}/birthday/bday-print-bbq.svg`,
+        texts: tx([
+          'JOIN US FOR',
+          'BEERS & BBQ',
+          'TO CELEBRATE',
+          "DAVID'S 30TH",
+          'SATURDAY, AUGUST 22ND',
+          'STARTING AT 4:00 PM',
+          "DAVID'S BACKYARD",
+          '456 GRILL MASTER WAY',
+          'RSVP FOR A BURGER',
+          '555-BBQ-TIME',
+        ]),
+      },
+    },
+    colors: classColors(
+      {
+        'text-white': '#F8FAFC',
+        'text-yellow': '#FBBF24',
+        'text-orange': '#F97316',
+      },
+      { white: 'textColor', yellow: 'accentColor', orange: 'secondaryColor' },
+    ),
+  },
+  {
+    id: 'svg-bday-retro',
+    category: 'birthday',
+    aspectRatio: 1500 / 2100,
+    sides: {
+      front: {
+        path: `${ROOT}/birthday/bday-print-retro.svg`,
+        texts: tx([
+          'LEVEL UP!',
+          'YOU ARE INVITED TO CELEBRATE',
+          "MATT'S 13TH",
+          'BIRTHDAY',
+          'SATURDAY, NOV 14TH',
+          '6:00 PM TO 10:00 PM',
+          'ARCADE MANIA',
+          '123 RETRO BLVD, NEON CITY',
+          'INSERT COIN TO RSVP',
+          '555-ARCADE-1',
+        ]),
+      },
+    },
+    colors: classColors(
+      {
+        'text-cyan': '#06B6D4',
+        'text-pink': '#EC4899',
+        'text-white': '#FFFFFF',
+      },
+      { cyan: 'accentColor', pink: 'secondaryColor', white: 'textColor' },
+    ),
+  },
+  {
+    id: 'svg-bday-construction',
+    category: 'birthday',
+    aspectRatio: 1500 / 2100,
+    sides: {
+      front: {
+        path: `${ROOT}/birthday/bday-print-construction.svg`,
+        texts: tx([
+          'CAUTION!',
+          'PARTY ZONE AHEAD',
+          'MASON IS TURNING 3',
+          'SUNDAY, SEPTEMBER 20TH',
+          '10:00 AM TO 1:00 PM',
+          'THE CONSTRUCTION SITE',
+          '321 BUILDER BLVD, AUSTIN',
+          'REPORT TO FOREMAN (RSVP)',
+          '555-777-8888',
+        ]),
+      },
+    },
+    colors: classColors(
+      {
+        'text-yellow': '#EAB308',
+        'text-black': '#1C1917',
+        'text-orange': '#EA580C',
+      },
+      { yellow: 'accentColor', black: 'textColor', orange: 'secondaryColor' },
+    ),
+  },
+  {
+    id: 'svg-bday-mermaid',
+    category: 'birthday',
+    aspectRatio: 1500 / 2100,
+    sides: {
+      front: {
+        path: `${ROOT}/birthday/bday-print-mermaid.svg`,
+        texts: tx([
+          "Let's Shell-ebrate!",
+          'JOIN US UNDER THE SEA FOR',
+          "CHLOE'S",
+          '4th Birthday',
+          'SATURDAY, AUGUST 8TH',
+          '2:00 PM TO 5:00 PM',
+          'MERMAID COVE POOL',
+          '789 OCEAN BREEZE WAY, MIAMI',
+          'PLEASE RSVP TO THE MER-MOM',
+          '555-444-3333',
+        ]),
+      },
+    },
+    colors: classColors(
+      {
+        'text-teal': '#0D9488',
+        'text-purple': '#7E22CE',
+        'text-white': '#FFFFFF',
+      },
+      { teal: 'accentColor', purple: 'secondaryColor', white: 'textColor' },
+    ),
+  },
+  {
+    id: 'svg-bday-safari',
+    category: 'birthday',
+    aspectRatio: 1500 / 2100,
+    sides: {
+      front: {
+        path: `${ROOT}/birthday/bday-print-safari.svg`,
+        texts: tx([
+          'WILD ONE!',
+          'SWING ON BY FOR A SAFARI ADVENTURE',
+          'NOAH IS TURNING 1',
+          'SUNDAY, JUNE 15TH',
+          '11:00 AM TO 2:00 PM',
+          'THE JUNGLE RESERVE',
+          '456 SAFARI TRAIL, SAN DIEGO',
+          'RSVP TO THE TOUR GUIDE',
+          '555-123-4567',
+        ]),
+      },
+    },
+    colors: classColors(
+      {
+        'text-green': '#15803D',
+        'text-orange': '#EA580C',
+        'text-brown': '#451A03',
+      },
+      { green: 'accentColor', orange: 'secondaryColor', brown: 'textColor' },
+    ),
+  },
+  {
+    id: 'svg-bday-space',
+    category: 'birthday',
+    aspectRatio: 1500 / 2100,
+    sides: {
+      front: {
+        path: `${ROOT}/birthday/bday-print-space.svg`,
+        texts: tx([
+          'BLAST OFF!',
+          'JOIN US FOR AN OUT OF THIS WORLD PARTY',
+          'ALEX IS TURNING 7',
+          'SATURDAY, MAY 10TH',
+          '1:00 PM TO 4:00 PM',
+          'SPACE STATION 9',
+          '123 GALAXY WAY, HOUSTON',
+          'MISSION CONTROL RSVP',
+          '555-987-6543',
+        ]),
+      },
+    },
+    colors: classColors(
+      {
+        'text-yellow': '#FBBF24',
+        'text-white': '#FFFFFF',
+        'text-blue': '#60A5FA',
+      },
+      { yellow: 'accentColor', white: 'textColor', blue: 'secondaryColor' },
+    ),
   },
   {
     id: 'svg-menu-rustic',
@@ -617,11 +901,14 @@ export const svgDesignTemplates: SvgDesignTemplate[] = [
         ]),
       },
     },
-    colors: classColors({
-      'text-dark': '#2C3E50',
-      'text-green': '#4F6354',
-      'text-red': '#8B0000',
-    }),
+    colors: classColors(
+      {
+        'text-dark': '#2C3E50',
+        'text-green': '#4F6354',
+        'text-red': '#8B0000',
+      },
+      { dark: 'textColor', green: 'accentColor', red: 'secondaryColor' },
+    ),
   },
   {
     id: 'svg-menu-finedining',
@@ -653,11 +940,14 @@ export const svgDesignTemplates: SvgDesignTemplate[] = [
         ]),
       },
     },
-    colors: classColors({
-      'text-gold': '#D4AF37',
-      'text-white': '#FFFFFF',
-      'text-light': '#9CA3AF',
-    }),
+    colors: classColors(
+      {
+        'text-gold': '#D4AF37',
+        'text-white': '#FFFFFF',
+        'text-light': '#9CA3AF',
+      },
+      { gold: 'accentColor', white: 'textColor', light: 'secondaryColor' },
+    ),
   },
 ];
 

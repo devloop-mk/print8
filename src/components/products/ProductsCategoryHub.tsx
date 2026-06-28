@@ -187,7 +187,7 @@ export function ProductsCategoryHub() {
 
   return (
     <Reveal>
-      <div className="grid w-full min-w-0 max-w-full grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
+      <div className="grid w-full min-w-0 max-w-full grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
         {productNavCategories.map((category) => (
           <ProductCategoryCard
             key={category.id}

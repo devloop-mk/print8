@@ -11,19 +11,26 @@ import { Reveal } from '@/components/motion/Reveal';
 import { cn } from '@/lib/utils';
 import type { Product } from '@/lib/data/catalog';
 import { CatalogGridLayout } from '@/components/catalog/CatalogGrid';
+import { buildCustomizerUrl } from '@/lib/products/paths';
+
+export type ProductCardLinkTarget = 'detail' | 'customizer';
 
 export function ProductCardGrid({
   items,
   gridClassName,
-  desktopColumns = 4,
+  desktopColumns = 3,
+  desktopColumnToggle = true,
   mobileColumnToggle = true,
   toggleClassName,
+  linkTarget = 'detail',
 }: {
   items: Product[];
   gridClassName?: string;
   desktopColumns?: 3 | 4;
+  desktopColumnToggle?: boolean;
   mobileColumnToggle?: boolean;
   toggleClassName?: string;
+  linkTarget?: ProductCardLinkTarget;
 }) {
   const t = useTranslations('products');
   const tp = useTranslations('products.types');
@@ -38,7 +45,8 @@ export function ProductCardGrid({
 
   return (
     <CatalogGridLayout
-      desktopColumns={desktopColumns}
+      defaultDesktopColumns={desktopColumns}
+      desktopColumnToggle={desktopColumnToggle}
       mobileColumnToggle={mobileColumnToggle}
       toggleClassName={toggleClassName}
       gridClassName={gridClassName}
@@ -50,11 +58,21 @@ export function ProductCardGrid({
         const productLabel = product.nameKey
           ? ti(product.nameKey)
           : tp(product.type);
+        const productHref =
+          linkTarget === 'customizer'
+            ? buildCustomizerUrl(product.id, product.type, {
+                color: cardColor !== defaultColor ? cardColor : undefined,
+              })
+            : `/products/${product.id}`;
+        const actionLabel =
+          linkTarget === 'customizer'
+            ? t('card.startDesigning')
+            : t('card.exploreOptions');
 
         return (
           <Reveal key={product.id} delay={Math.min(index * 40, 120)}>
             <Link
-              href={`/products/${product.id}`}
+              href={productHref}
               className="group block transition hover:-translate-y-1"
             >
               <Card className="h-full overflow-hidden p-0 transition group-hover:shadow-lift-brand">
@@ -118,7 +136,7 @@ export function ProductCardGrid({
                     </div>
                   )}
                   <p className="mt-3 text-sm font-medium text-brand-600">
-                    {t('card.exploreOptions')} →
+                    {actionLabel} →
                   </p>
                 </div>
               </Card>

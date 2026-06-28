@@ -54,6 +54,46 @@ export const SVG_DESIGN_BACKGROUND_MAP = [
     backgroundPath: '/NEW_DESIGNS/backgrounds/bday-bg-dino.png',
   },
   {
+    designSvg: '/NEW_DESIGNS/birthday/bday-print-champagne.svg',
+    backgroundFile: 'bday-bg-champagne.png',
+    backgroundPath: '/NEW_DESIGNS/backgrounds/bday-bg-champagne.png',
+  },
+  {
+    designSvg: '/NEW_DESIGNS/birthday/bday-print-unicorn.svg',
+    backgroundFile: 'bday-bg-unicorn.png',
+    backgroundPath: '/NEW_DESIGNS/backgrounds/bday-bg-unicorn.png',
+  },
+  {
+    designSvg: '/NEW_DESIGNS/birthday/bday-print-bbq.svg',
+    backgroundFile: 'bday-bg-bbq.png',
+    backgroundPath: '/NEW_DESIGNS/backgrounds/bday-bg-bbq.png',
+  },
+  {
+    designSvg: '/NEW_DESIGNS/birthday/bday-print-retro.svg',
+    backgroundFile: 'bday-bg-retro.png',
+    backgroundPath: '/NEW_DESIGNS/backgrounds/bday-bg-retro.png',
+  },
+  {
+    designSvg: '/NEW_DESIGNS/birthday/bday-print-construction.svg',
+    backgroundFile: 'bday-bg-construction.png',
+    backgroundPath: '/NEW_DESIGNS/backgrounds/bday-bg-construction.png',
+  },
+  {
+    designSvg: '/NEW_DESIGNS/birthday/bday-print-mermaid.svg',
+    backgroundFile: 'bday-bg-mermaid.png',
+    backgroundPath: '/NEW_DESIGNS/backgrounds/bday-bg-mermaid.png',
+  },
+  {
+    designSvg: '/NEW_DESIGNS/birthday/bday-print-safari.svg',
+    backgroundFile: 'bday-bg-safari.png',
+    backgroundPath: '/NEW_DESIGNS/backgrounds/bday-bg-safari.png',
+  },
+  {
+    designSvg: '/NEW_DESIGNS/birthday/bday-print-space.svg',
+    backgroundFile: 'bday-bg-space.png',
+    backgroundPath: '/NEW_DESIGNS/backgrounds/bday-bg-space.png',
+  },
+  {
     designSvg: '/NEW_DESIGNS/menu-print-rustic-front.svg',
     backgroundFile: 'menu-bg-rustic-front.png',
     backgroundPath: '/NEW_DESIGNS/backgrounds/menu-bg-rustic-front.png',
@@ -73,14 +113,6 @@ export const SVG_DESIGN_BACKGROUND_MAP = [
     backgroundFile: 'menu-bg-finedining-back.png',
     backgroundPath: '/NEW_DESIGNS/backgrounds/menu-bg-finedining-back.png',
   },
-] as const;
-
-/** Extra background PNGs present in /backgrounds for future birthday designs. */
-export const SVG_BACKGROUND_SPARE_ASSETS = [
-  'bday-bg-construction.png',
-  'bday-bg-mermaid.png',
-  'bday-bg-safari.png',
-  'bday-bg-space.png',
 ] as const;
 
 /** Lookup by original embedded filename (e.g. from file:// exports). */

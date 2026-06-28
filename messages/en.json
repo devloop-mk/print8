@@ -23,7 +23,9 @@
   "catalogGrid": {
     "view": "Grid view",
     "oneColumn": "1 column",
-    "twoColumns": "2 columns"
+    "twoColumns": "2 columns",
+    "threeColumns": "3 columns",
+    "fourColumns": "4 columns"
   },
   "nav": {
     "home": "Home",
@@ -46,7 +48,8 @@
       "open": "Open saved designs ({count})",
       "sourceStudio": "Studio",
       "sourceProduct": "Product",
-      "sourceTemplate": "Template"
+      "sourceTemplate": "Template",
+      "delete": "Delete {name}"
     },
     "languages": {
       "mk": "Macedonian",
@@ -380,7 +383,40 @@
     "customizeOnline": "Customize online",
     "useTemplate": "Order this design",
     "allCategories": "All categories",
-    "filterLabel": "Filter by category",
+    "allSubcategories": "All",
+    "filterLabel": "Filters",
+    "filterGroups": {
+      "category": "Category",
+      "subcategory": "Subcategory"
+    },
+    "noResults": "No designs match the selected filters.",
+    "subfilters": {
+      "birthday": {
+        "kids": "Kids",
+        "adults": "Adults",
+        "elegant": "Elegant"
+      },
+      "wedding": {
+        "modern": "Modern",
+        "romantic": "Romantic",
+        "classic": "Classic",
+        "botanical": "Botanical",
+        "rustic": "Rustic",
+        "beach": "Beach",
+        "celestial": "Celestial",
+        "winter": "Winter"
+      },
+      "business-cards": {
+        "modern": "Modern",
+        "luxury": "Luxury",
+        "corporate": "Corporate",
+        "creative": "Creative"
+      },
+      "menus": {
+        "rustic": "Rustic",
+        "fine-dining": "Fine dining"
+      }
+    },
     "showFilters": "Filters",
     "hideFilters": "Hide filters",
     "resultsCount": "{count, plural, one {# design} other {# designs}}",
@@ -417,13 +453,36 @@
       "svg-bday-rosegold": "Rose gold birthday invitation",
       "svg-bday-princess": "Princess birthday invitation",
       "svg-bday-dino": "Dinosaur birthday invitation",
+      "svg-bday-champagne": "Champagne birthday invitation",
+      "svg-bday-unicorn": "Unicorn birthday invitation",
+      "svg-bday-bbq": "BBQ birthday invitation",
+      "svg-bday-retro": "Retro arcade birthday invitation",
+      "svg-bday-construction": "Construction zone birthday invitation",
+      "svg-bday-mermaid": "Mermaid birthday invitation",
+      "svg-bday-safari": "Safari birthday invitation",
+      "svg-bday-space": "Space birthday invitation",
       "svg-menu-rustic": "Rustic Italian menu cover",
       "svg-menu-finedining": "Fine dining menu cover"
     },
     "customize": {
       "backToDesigns": "Back to designs",
       "badge": "Customizable template",
-      "pageSubtitle": "Use the step-by-step editor to personalize front and back, then order exactly what you see.",
+      "pageSubtitle": "Choose how you would like to personalize this design.",
+      "pageSubtitleForm": "Fill in your details below — the preview updates as you type. No design experience needed.",
+      "pageSubtitleCanvas": "Tap any text on the design to edit it. Changes appear instantly in the preview.",
+      "chooseModeTitle": "How do you want to customize this design?",
+      "chooseModeSubtitle": "Pick the option that feels easiest for you. You can go back and switch later.",
+      "modeFormTitle": "Fill in a simple form",
+      "modeFormDesc": "Type your name, phone, address, date, and other details in clear labeled fields. Best if you want the easiest start.",
+      "modeFormIllustrationAlt": "Illustration of a simple form with name, phone, and address fields",
+      "modeCanvasTitle": "Edit on the design",
+      "modeCanvasDesc": "Tap directly on the text in the preview, like Canva. Best if you prefer a visual editing experience.",
+      "modeCanvasIllustrationAlt": "Illustration of a design preview with text selected for editing",
+      "modeContinue": "Continue",
+      "backToModeChoice": "Back to editing options",
+      "changeMode": "Change how you edit",
+      "canvasModeSidebarTitle": "Tap to edit",
+      "canvasModeSidebarHint": "Select text on the preview to edit it. Use Ctrl+Z to undo and Ctrl+Shift+Z to redo.",
       "editorNav": "Design editor steps",
       "livePreview": "Live preview",
       "frontSide": "Front",
@@ -432,10 +491,17 @@
       "nextStep": "Next",
       "formTitle": "Personalize your design",
       "formSubtitle": "Change text and colors to match your event or brand.",
+      "formSectionTitle": "Your information",
+      "formSectionHint": "Type your name, contact details, date, and other text. Changes appear instantly in the preview. Ctrl+Z undoes, Ctrl+Shift+Z redoes.",
       "previewNote": "Live preview — your order includes front and back as shown.",
       "svgLine": "Text line {n}",
-      "tapToEdit": "Tap any text on the design to edit it. Changes appear instantly.",
+      "tapToEdit": "Tap text or logo to edit. Drag to move; use the corner handle to resize. Ctrl+Z undoes, Ctrl+Shift+Z redoes.",
       "editField": "Edit line {n}",
+      "editContactBlock": "Edit contact details block",
+      "editLogo": "Move or resize logo",
+      "resizeLogo": "Resize logo",
+      "resizeField": "Resize text",
+      "closeFieldEditor": "Close editor",
       "mobileDone": "Done",
       "editingLine": "Editing line {n}",
       "prevField": "Previous line",
@@ -445,7 +511,8 @@
       "accentColor": "Accent",
       "backgroundColor": "Background",
       "textColor": "Text",
-      "secondaryColor": "Secondary",
+      "secondaryColor": "Secondary text",
+      "resetColorsToDefault": "Reset to default",
       "svgColors": {
         "background": "Background",
         "text": "Text",
@@ -471,6 +538,62 @@
         "purple": "Purple",
         "orange": "Orange"
       },
+      "svgFields": {
+        "logo": "Logo / initials",
+        "name1": "Name 1",
+        "name2": "Name 2",
+        "tagline": "Tagline / slogan",
+        "detail": "Additional text",
+        "invitationLine": "Invitation line",
+        "connector": "And / &",
+        "eventTime": "Time",
+        "cityRegion": "City / region",
+        "receptionNote": "Reception note",
+        "scheduleLine": "Schedule details",
+        "contactLine": "Phone & email",
+        "webAddressLine": "Website & address",
+        "foundedNote": "Founded / established",
+        "milestone": "Age / milestone",
+        "rsvpNote": "RSVP note",
+        "menuHeading": "Menu title",
+        "sectionTitle": "Section heading",
+        "chefTitle": "Chef title",
+        "yearEstablished": "Year established",
+        "contactPrefix": "Contact label",
+        "foundedNote": "Founded / established"
+      },
+      "svgFieldPlaceholders": {
+        "logo": "e.g. AB",
+        "name1": "e.g. Ana",
+        "name2": "e.g. Marko",
+        "tagline": "e.g. Together forever",
+        "detail": "e.g. Dress code: formal",
+        "invitationLine": "e.g. Please join us to celebrate",
+        "connector": "e.g. &",
+        "eventTime": "e.g. 6:30 in the evening",
+        "cityRegion": "e.g. Skopje, North Macedonia",
+        "receptionNote": "e.g. Reception to follow",
+        "scheduleLine": "e.g. Cocktails at 6:00 PM",
+        "contactLine": "e.g. 070 123 456 | name@email.com",
+        "webAddressLine": "e.g. www.example.com | Street 1, City",
+        "foundedNote": "e.g. Est. 2010",
+        "milestone": "e.g. Turning 30 / 40 years",
+        "rsvpNote": "e.g. RSVP by 1 September",
+        "menuHeading": "e.g. Menu",
+        "sectionTitle": "e.g. Wine & spirits",
+        "chefTitle": "e.g. Executive chef",
+        "yearEstablished": "e.g. Est. 2026",
+        "contactPrefix": "e.g. T / E / W",
+        "foundedNote": "e.g. Est. 1985"
+      },
+      "logoSectionTitle": "Logo",
+      "logoSectionHint": "Upload your company logo, or use a letter or initials instead.",
+      "logoLetterLabel": "Letter / initials",
+      "logoUpload": "Upload logo",
+      "logoReplace": "Replace logo",
+      "logoRemove": "Use letter instead",
+      "logoUploadHint": "PNG, JPG, or WebP. Max 2 MB.",
+      "logoUploadError": "Could not use that image. Try a PNG or JPG under 2 MB.",
       "capturing": "Saving preview...",
       "menuInsideTitle": "What this price includes",
       "menuInsideNote": "The price shown is for the front and back cover only. It does not include the interior menu pages, food photos, extra sections, or other add-ons. After you place your order, our team will contact you to collect your dishes, prices, and any photos, then prepare a quote for the inside pages.",
@@ -479,7 +602,7 @@
         "front": {
           "title": "Front side",
           "hint": "Main details",
-          "desc": "These fields appear on the front of your design."
+          "desc": "Enter your personal details — name, phone, address, and anything else shown on the front."
         },
         "back": {
           "title": "Back side",
@@ -537,6 +660,7 @@
       "invalidEmail": "Enter a valid email address",
       "invalidPhone": "Enter a valid phone number",
       "addToCart": "Add to cart",
+      "updateCart": "Update cart",
       "studioTitle": "Prefer to design it yourself?",
       "studioHint": "Open the full design studio to add text, images, and fine-tune the layout.",
       "openStudio": "Open design studio",
@@ -566,7 +690,7 @@
         "website": "e.g. www.example.com",
         "address": "Street, city",
         "coupleNames": "e.g. Ana & Marko",
-        "eventDate": "",
+        "eventDate": "e.g. 15.08.2026",
         "venue": "e.g. Hotel Continental",
         "celebrantName": "e.g. Stefan",
         "restaurantName": "e.g. Restaurant Skopje",
@@ -618,7 +742,13 @@
   "products": {
     "title": "Products",
     "subtitle": "Pick a product, personalize it online, and order — pick up in store or delivery.",
-    "filterLabel": "Filter by type",
+    "filterLabel": "Filters",
+    "filterGroups": {
+      "category": "Category",
+      "productType": "Product type",
+      "personalize": "Personalize"
+    },
+    "allCategories": "All categories",
     "allTypes": "All types",
     "showFilters": "Filters",
     "hideFilters": "Hide filters",
@@ -675,6 +805,8 @@
     "categoryPages": {
       "backToAll": "Back to all products",
       "backToCategory": "Back to category",
+      "makeYourOwn": "Make your own design",
+      "makeYourOwnDesc": "Pick a product and upload photos, text, and stickers.",
       "browseTitle": "Choose a product",
       "browseSubtitle": "Browse all {category} you can personalize from scratch.",
       "allInCategory": "All in category",
@@ -682,6 +814,9 @@
         "eyebrow": "How would you like to start?",
         "title": "Pick your path",
         "subtitle": "Start with a blank product, a ready-made design, or a text template for {category}.",
+        "subtitleCustomOnly": "Browse {category} and personalize from scratch with your photos and text.",
+        "subtitleReadyOnly": "Start with a blank product or pick a ready-made design for {category}.",
+        "subtitleTemplateOnly": "Start with a blank product or pick a text template for {category}.",
         "customTitle": "Personalize yourself",
         "customDesc": "Pick a product and upload your photo, add text, and position everything yourself.",
         "customBadge": "Full control",
@@ -769,7 +904,8 @@
     "card": {
       "customOption": "Custom design",
       "readyDesigns": "{count, plural, one {# ready design} other {# ready designs}}",
-      "exploreOptions": "See options"
+      "exploreOptions": "See options",
+      "startDesigning": "Start designing"
     },
     "customize": "Customize",
     "viewProduct": "View product",
@@ -1135,6 +1271,7 @@
   "cart": {
     "title": "Cart",
     "empty": "Your cart is empty.",
+    "loading": "Loading cart...",
     "continueShopping": "Continue shopping",
     "quantity": "Qty",
     "remove": "Remove",

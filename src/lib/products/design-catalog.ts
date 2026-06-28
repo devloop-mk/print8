@@ -8,6 +8,10 @@ import {
   type ProductType,
 } from '@/lib/data/catalog';
 import { getDesignApplicableColors } from '@/lib/products/design-applicable-colors';
+import {
+  productBelongsToCategory,
+  type ProductNavCategoryId,
+} from '@/lib/products/product-nav';
 
 export type ProductDesignCatalogEntry = {
   design: ProductDesignTemplate;
@@ -45,6 +49,26 @@ export type DesignCatalogFilters = {
   color: string | 'all';
   side: ProductSide | 'all';
 };
+
+export function getCombinedProductDesignCatalogEntries(
+  categoryId?: ProductNavCategoryId,
+): ProductDesignCatalogEntry[] {
+  const merged = [
+    ...getProductDesignCatalogEntries('image-designs'),
+    ...getProductDesignCatalogEntries('text-designs'),
+  ];
+
+  if (!categoryId) return merged;
+
+  return merged
+    .map((entry) => ({
+      design: entry.design,
+      products: entry.products.filter((product) =>
+        productBelongsToCategory(product, categoryId),
+      ),
+    }))
+    .filter((entry) => entry.products.length > 0);
+}
 
 export function filterDesignCatalogEntries(
   entries: ProductDesignCatalogEntry[],

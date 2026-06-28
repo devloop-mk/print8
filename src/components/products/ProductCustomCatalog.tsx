@@ -12,16 +12,31 @@ import {
   parseProductNavCategoryFilter,
   productBelongsToCategory,
   productCategoryHref,
+  productNavCategories,
   productTypeHref,
   type ProductNavCategoryId,
 } from '@/lib/products/product-nav';
 import { buildProductTypeFilterOptions } from '@/lib/products/product-type-icons';
 import { PRODUCT_OFFERING_PATHS } from '@/lib/products/paths';
 import { ProductCardGrid } from '@/components/products/ProductCardGrid';
-import { FilterChipBar } from '@/components/catalog/FilterChipBar';
+import {
+  CatalogFilterLayout,
+  type CatalogFilterGroup,
+} from '@/components/catalog/CatalogFilterLayout';
 import { Reveal } from '@/components/motion/Reveal';
 
 type ProductFilter = ProductType | 'all';
+
+function buildCustomProductsHref(
+  category: ProductNavCategoryId | 'all',
+  type: ProductFilter,
+): string {
+  const params = new URLSearchParams();
+  if (category !== 'all') params.set('category', category);
+  if (type !== 'all') params.set('type', type);
+  const query = params.toString();
+  return query ? `/products/custom?${query}` : '/products/custom';
+}
 
 export function ProductCustomCatalog() {
   const t = useTranslations('products');
@@ -30,8 +45,8 @@ export function ProductCustomCatalog() {
   const tNav = useTranslations('nav.productsMenu.categories');
   const searchParams = useSearchParams();
   const router = useRouter();
-  const categoryFilter = parseProductNavCategoryFilter(
-    searchParams.get('category'),
+  const [categoryFilter, setCategoryFilter] = useState<ProductNavCategoryId | 'all'>(() =>
+    parseProductNavCategoryFilter(searchParams.get('category')),
   );
   const [typeFilter, setTypeFilter] = useState<ProductFilter>(() =>
     parseProductTypeFilter(searchParams.get('type')),
@@ -39,13 +54,15 @@ export function ProductCustomCatalog() {
 
   useEffect(() => {
     const typeParam = searchParams.get('type');
-    if (
-      typeParam &&
-      (productTypes as readonly string[]).includes(typeParam)
-    ) {
+    if (typeParam && (productTypes as readonly string[]).includes(typeParam)) {
       router.replace(productTypeHref(typeParam as ProductType));
       return;
     }
+
+    const nextCategory = parseProductNavCategoryFilter(
+      searchParams.get('category'),
+    );
+    setCategoryFilter(nextCategory);
     setTypeFilter(parseProductTypeFilter(typeParam));
   }, [searchParams, router]);
 
@@ -75,6 +92,59 @@ export function ProductCustomCatalog() {
       ? scopedProducts
       : scopedProducts.filter((product) => product.type === typeFilter);
 
+  const categoryOptions = useMemo(
+    () =>
+      productNavCategories.map((category) => ({
+        value: category.id,
+        label: tNav(category.id),
+      })),
+    [tNav],
+  );
+
+  function updateCategory(next: ProductNavCategoryId | 'all') {
+    setCategoryFilter(next);
+    setTypeFilter('all');
+    router.replace(buildCustomProductsHref(next, 'all'), { scroll: false });
+  }
+
+  function updateType(next: ProductFilter) {
+    setTypeFilter(next);
+    router.replace(buildCustomProductsHref(categoryFilter, next), { scroll: false });
+  }
+
+  const filterGroups = useMemo((): CatalogFilterGroup[] => {
+    const groups: CatalogFilterGroup[] = [
+      {
+        kind: 'options',
+        id: 'category',
+        title: t('filterGroups.category'),
+        allOption: { value: 'all', label: t('allCategories') },
+        options: categoryOptions,
+        value: categoryFilter,
+        onChange: (value) =>
+          updateCategory(value as ProductNavCategoryId | 'all'),
+      },
+      {
+        kind: 'options',
+        id: 'productType',
+        title: t('filterGroups.productType'),
+        allOption,
+        options: filterOptions,
+        value: typeFilter,
+        onChange: (value) => updateType(value as ProductFilter),
+      },
+    ];
+
+    return groups;
+  }, [
+    allOption,
+    categoryFilter,
+    categoryOptions,
+    filterOptions,
+    t,
+    typeFilter,
+  ]);
+
   const backHref =
     categoryFilter === 'all'
       ? PRODUCT_OFFERING_PATHS.all
@@ -103,22 +173,18 @@ export function ProductCustomCatalog() {
       </div>
 
       <Reveal delay={40}>
-        <FilterChipBar
+        <CatalogFilterLayout
+          groups={filterGroups}
           ariaLabel={t('filterLabel')}
           showFiltersLabel={t('showFilters')}
           hideFiltersLabel={t('hideFilters')}
-          allOption={allOption}
-          options={filterOptions}
-          value={typeFilter}
-          onChange={setTypeFilter}
           resultsCount={filtered.length}
           resultsLabel={(count) => t('resultsCount', { count })}
-          mobileLayout="collapse"
-        />
-      </Reveal>
-
-      <Reveal delay={80}>
-        <ProductCardGrid items={filtered} />
+        >
+          <Reveal delay={80}>
+            <ProductCardGrid items={filtered} linkTarget="customizer" />
+          </Reveal>
+        </CatalogFilterLayout>
       </Reveal>
     </div>
   );

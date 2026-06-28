@@ -1,0 +1,32 @@
+<svg viewBox="0 0 1500 2100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Rye&amp;family=Lato:wght@400;700;900&amp;display=swap');
+      .text-white { fill: #F8FAFC; }
+      .text-yellow { fill: #FBBF24; }
+      .text-orange { fill: #F97316; }
+    </style>
+  </defs>
+  <image href="/NEW_DESIGNS/backgrounds/bday-bg-bbq.png" width="1500" height="2100" preserveAspectRatio="xMidYMid slice" />
+  
+  <g text-anchor="middle">
+    <text x="750" y="550" class="text-white" font-family="'Lato', sans-serif" font-weight="700" font-size="35" letter-spacing="8">JOIN US FOR</text>
+    
+    <text x="750" y="750" class="text-yellow" font-family="'Rye', cursive" font-size="160" letter-spacing="6">BEERS &amp; BBQ</text>
+    
+    <text x="750" y="900" class="text-white" font-family="'Lato', sans-serif" font-weight="400" font-size="30" letter-spacing="4">TO CELEBRATE</text>
+    
+    <text x="750" y="1050" class="text-orange" font-family="'Rye', cursive" font-size="110" letter-spacing="4">DAVID'S 30TH</text>
+    
+    <path d="M 600 1150 L 900 1150" stroke="#FBBF24" stroke-width="3" stroke-dasharray="10,10" />
+    
+    <text x="750" y="1300" class="text-white" font-family="'Lato', sans-serif" font-weight="900" font-size="45" letter-spacing="4">SATURDAY, AUGUST 22ND</text>
+    <text x="750" y="1370" class="text-yellow" font-family="'Lato', sans-serif" font-weight="700" font-size="35" letter-spacing="2">STARTING AT 4:00 PM</text>
+    
+    <text x="750" y="1550" class="text-white" font-family="'Lato', sans-serif" font-weight="900" font-size="40" letter-spacing="4">DAVID'S BACKYARD</text>
+    <text x="750" y="1610" class="text-white" font-family="'Lato', sans-serif" font-weight="400" font-size="30" letter-spacing="2">456 GRILL MASTER WAY</text>
+    
+    <text x="750" y="1800" class="text-orange" font-family="'Lato', sans-serif" font-weight="900" font-size="30" letter-spacing="2">RSVP FOR A BURGER</text>
+    <text x="750" y="1860" class="text-white" font-family="'Lato', sans-serif" font-weight="700" font-size="30">555-BBQ-TIME</text>
+  </g>
+</svg>

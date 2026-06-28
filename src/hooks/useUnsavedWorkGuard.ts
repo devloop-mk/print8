@@ -10,6 +10,26 @@ type PendingNavigation = {
   action: 'href' | 'back' | 'reload';
 };
 
+/** Tracks pages that already have a single history guard entry (avoids stacking). */
+const historyGuardPaths = new Set<string>();
+
+function currentHistoryPath() {
+  if (typeof window === 'undefined') return '';
+  return `${window.location.pathname}${window.location.search}${window.location.hash}`;
+}
+
+function clearHistoryGuard(path = currentHistoryPath()) {
+  historyGuardPaths.delete(path);
+}
+
+function ensureHistoryGuard(path = currentHistoryPath()) {
+  if (historyGuardPaths.has(path)) return false;
+
+  window.history.pushState({ unsavedWorkGuard: true }, '', window.location.href);
+  historyGuardPaths.add(path);
+  return true;
+}
+
 export function useUnsavedWorkGuard({
   isDirty,
   onSave,
@@ -39,16 +59,20 @@ export function useUnsavedWorkGuard({
       if (!navigation) return;
 
       if (navigation.action === 'href' && navigation.href) {
+        clearHistoryGuard();
         router.push(toInternalHref(navigation.href));
         return;
       }
 
       if (navigation.action === 'back') {
-        window.history.go(-2);
+        clearHistoryGuard();
+        const hasGuardEntry = window.history.state?.unsavedWorkGuard === true;
+        window.history.go(hasGuardEntry ? -2 : -1);
         return;
       }
 
       if (navigation.action === 'reload') {
+        clearHistoryGuard();
         window.location.reload();
       }
     },
@@ -66,6 +90,7 @@ export function useUnsavedWorkGuard({
       if (!isDirtyRef.current || bypassRef.current) {
         if (href) {
           bypassRef.current = true;
+          clearHistoryGuard();
           router.push(toInternalHref(href));
         }
         return;
@@ -81,6 +106,7 @@ export function useUnsavedWorkGuard({
 
   const allowNavigation = useCallback(() => {
     bypassRef.current = true;
+    clearHistoryGuard();
     setDialogOpen(false);
     setPendingNavigation(null);
     setSaveNotice(null);
@@ -144,7 +170,7 @@ export function useUnsavedWorkGuard({
       if (url.origin !== window.location.origin) return;
 
       const nextPath = `${url.pathname}${url.search}${url.hash}`;
-      const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      const currentPath = currentHistoryPath();
       if (nextPath === currentPath) return;
 
       event.preventDefault();
@@ -157,23 +183,30 @@ export function useUnsavedWorkGuard({
   }, [isDirty, openDialog]);
 
   useEffect(() => {
-    if (!isDirty) return;
-
-    window.history.pushState({ unsavedWorkGuard: true }, '', window.location.href);
-
     const onPopState = () => {
       if (bypassRef.current) {
         bypassRef.current = false;
+        clearHistoryGuard();
         return;
       }
 
-      window.history.pushState({ unsavedWorkGuard: true }, '', window.location.href);
+      if (!isDirtyRef.current) {
+        clearHistoryGuard();
+        return;
+      }
+
+      window.history.go(1);
       openDialog({ action: 'back' });
     };
 
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
-  }, [isDirty, openDialog]);
+  }, [openDialog]);
+
+  useEffect(() => {
+    if (!isDirty) return;
+    ensureHistoryGuard();
+  }, [isDirty]);
 
   return {
     dialogOpen,

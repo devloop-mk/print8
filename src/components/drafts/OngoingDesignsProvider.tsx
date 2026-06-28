@@ -10,6 +10,7 @@ import {
 } from 'react';
 import {
   collectOngoingDesigns,
+  deleteOngoingDesign,
   DRAFTS_CHANGED_EVENT,
   type OngoingDesignItem,
 } from '@/lib/drafts/ongoing-designs';
@@ -19,6 +20,7 @@ type OngoingDesignsContextValue = {
   count: number;
   hydrated: boolean;
   refresh: () => void;
+  remove: (id: string) => void;
 };
 
 const OngoingDesignsContext = createContext<OngoingDesignsContextValue | null>(
@@ -36,6 +38,14 @@ export function OngoingDesignsProvider({
   const refresh = useCallback(() => {
     setItems(collectOngoingDesigns());
   }, []);
+
+  const remove = useCallback(
+    (id: string) => {
+      deleteOngoingDesign(id);
+      refresh();
+    },
+    [refresh],
+  );
 
   useEffect(() => {
     refresh();
@@ -64,8 +74,9 @@ export function OngoingDesignsProvider({
       count: items.length,
       hydrated,
       refresh,
+      remove,
     }),
-    [hydrated, items, refresh],
+    [hydrated, items, refresh, remove],
   );
 
   return (

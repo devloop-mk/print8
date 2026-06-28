@@ -99,3 +99,15 @@ export function readProductCustomizerDrafts() {
 export function readDesignEditorDrafts() {
   return readJson<DesignEditorDraft>(DESIGN_EDITOR_DRAFTS_KEY);
 }
+
+export function deleteProductCustomizerDraft(id: string) {
+  const next = readProductCustomizerDrafts().filter((draft) => draft.id !== id);
+  writeJson(PRODUCT_DRAFTS_KEY, next);
+  dispatchDraftsChanged();
+}
+
+export function deleteDesignEditorDraft(id: string) {
+  const next = readDesignEditorDrafts().filter((draft) => draft.id !== id);
+  writeJson(DESIGN_EDITOR_DRAFTS_KEY, next);
+  dispatchDraftsChanged();
+}

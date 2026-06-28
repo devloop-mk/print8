@@ -15,13 +15,15 @@
 
   <rect width="1050" height="600" fill="#111827" />
   <rect width="1050" height="600" fill="url(#line-pattern)" />
-  
+
   <rect x="30" y="30" width="990" height="540" fill="none" stroke="url(#gold-gradient)" stroke-width="2" />
   <rect x="40" y="40" width="970" height="520" fill="none" stroke="url(#gold-gradient)" stroke-width="1" opacity="0.5" />
-  
-  <path d="M525,180 L600,310 L450,310 Z" fill="none" stroke="url(#gold-gradient)" stroke-width="5" />
-  <path d="M525,210 L570,295 L480,295 Z" fill="url(#gold-gradient)" />
-  
+
+  <g id="print8-logo-back">
+    <path d="M525,180 L600,310 L450,310 Z" fill="none" stroke="url(#gold-gradient)" stroke-width="5" data-print8-logo-hide-with-image="true" />
+    <path d="M525,210 L570,295 L480,295 Z" fill="url(#gold-gradient)" data-print8-logo-hide-with-image="true" />
+  </g>
+
   <text x="525" y="400" fill="url(#gold-gradient)" font-size="48" font-weight="bold" text-anchor="middle" letter-spacing="8">WRIGHT &amp; CO.</text>
   <text x="525" y="440" fill="#9CA3AF" font-size="16" text-anchor="middle" letter-spacing="4">EST. 1985</text>
 </svg>

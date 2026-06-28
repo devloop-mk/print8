@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import {
@@ -17,9 +17,9 @@ import {
   resolveDesignPreviewColor,
 } from '@/lib/products/design-applicable-colors';
 import {
-  buildPremadeDesignOrderMetadata,
-  getPremadeDesignOrderPreview,
+  buildPremadeDesignCartPayload,
 } from '@/lib/products/premade-design-order';
+import { capturePreviewElement } from '@/lib/products/capture-preview';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { useCart } from '@/components/cart/CartProvider';
@@ -110,6 +110,7 @@ function DesignCard({
   design: ProductDesignTemplate;
   size?: string;
 }) {
+  const previewRef = useRef<HTMLDivElement>(null);
   const applicableColors = useMemo(
     () => getDesignApplicableColors(design, product),
     [design, product],
@@ -132,24 +133,26 @@ function DesignCard({
 
   return (
     <Card className="overflow-hidden p-0">
-      {isTextDesignTemplate(design) || isOverlayDesignTemplate(design) ? (
-        <DesignTemplatePreview
-          product={product}
-          color={previewColor}
-          design={design}
-          typeLabel={productLabel}
-        />
-      ) : isImageDesignTemplate(design) ? (
-        <div className="relative aspect-square overflow-hidden bg-white">
-          <Image
-            src={design.image!}
-            alt={t(`designs.${design.nameKey}`)}
-            fill
-            sizes="(max-width: 768px) 50vw, 300px"
-            className="object-contain p-4"
+      <div ref={previewRef}>
+        {isTextDesignTemplate(design) || isOverlayDesignTemplate(design) ? (
+          <DesignTemplatePreview
+            product={product}
+            color={previewColor}
+            design={design}
+            typeLabel={productLabel}
           />
-        </div>
-      ) : null}
+        ) : isImageDesignTemplate(design) ? (
+          <div className="relative aspect-square overflow-hidden bg-white">
+            <Image
+              src={design.image!}
+              alt={t(`designs.${design.nameKey}`)}
+              fill
+              sizes="(max-width: 768px) 50vw, 300px"
+              className="object-contain p-4"
+            />
+          </div>
+        ) : null}
+      </div>
 
       <div className="space-y-3 p-4">
         <p className="font-medium text-ink-900">
@@ -174,6 +177,8 @@ function DesignCard({
               design={design}
               color={previewColor}
               size={size}
+              previewRef={previewRef}
+              productLabel={productLabel}
             />
           ) : null}
           <Link
@@ -204,44 +209,57 @@ function OrderWithDesignButton({
   design,
   color,
   size,
+  previewRef,
+  productLabel,
 }: {
   product: Product;
   design: ProductDesignTemplate;
   color: string;
   size?: string;
+  previewRef: React.RefObject<HTMLDivElement | null>;
+  productLabel: string;
 }) {
   const td = useTranslations('products.detail');
-  const tp = useTranslations('products.types');
-  const ti = useTranslations('products.items');
   const t = useTranslations('products');
+  const tCustomizer = useTranslations('products.customizer');
   const { addItem } = useCart();
   const router = useRouter();
-  const productLabel = product.nameKey
-    ? ti(product.nameKey)
-    : tp(product.type);
+  const [ordering, setOrdering] = useState(false);
 
-  function handleOrder() {
-    const metadata = buildPremadeDesignOrderMetadata({
-      product,
-      design,
-      color,
-      size,
-    });
+  async function handleOrder() {
+    setOrdering(true);
+    try {
+      let capturedPreview: string | undefined;
+      if (previewRef.current) {
+        capturedPreview = await capturePreviewElement(previewRef.current);
+      }
 
-    addItem({
-      type: 'product',
-      name: `${productLabel} — ${t(`designs.${design.nameKey}`)}`,
-      price: product.basePrice,
-      quantity: 1,
-      designPreview: getPremadeDesignOrderPreview(product, design, color),
-      metadata,
-    });
-    router.push('/cart');
+      addItem(
+        buildPremadeDesignCartPayload({
+          product,
+          design,
+          color,
+          size,
+          name: `${productLabel} — ${t(`designs.${design.nameKey}`)}`,
+          price: product.basePrice,
+          capturedPreview,
+        }),
+      );
+      router.push('/cart');
+    } finally {
+      setOrdering(false);
+    }
   }
 
   return (
-    <Button size="sm" className="w-full" onClick={handleOrder}>
-      {td('orderWithDesign')}
+    <Button
+      size="sm"
+      className="w-full"
+      onClick={handleOrder}
+      loading={ordering}
+      disabled={ordering}
+    >
+      {ordering ? tCustomizer('capturing') : td('orderWithDesign')}
     </Button>
   );
 }

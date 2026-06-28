@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { useTranslations, useLocale } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
 import { useRouter } from '@/i18n/navigation';
 import { useCart } from '@/components/cart/CartProvider';
 import { Button } from '@/components/ui/Button';
@@ -15,6 +16,10 @@ import {
   requiredOrderFields,
   type DesignOrderFieldId,
 } from '@/lib/data/design-order-fields';
+import {
+  cartItemMatchesDesignTemplate,
+  parseOrderFieldsFromCartMetadata,
+} from '@/lib/cart/design-cart';
 
 const fieldInputType: Partial<
   Record<DesignOrderFieldId, 'text' | 'email' | 'tel' | 'url' | 'date' | 'textarea'>
@@ -32,7 +37,9 @@ export function DesignOrderForm({ template }: { template: DesignTemplate }) {
   const td = useTranslations('designs');
   const locale = useLocale();
   const router = useRouter();
-  const { addItem } = useCart();
+  const searchParams = useSearchParams();
+  const editCartItemId = searchParams.get('edit');
+  const { addItem, updateItem, items: cartItems } = useCart();
 
   const fields = categoryOrderFields[template.category];
   const required = requiredOrderFields[template.category];
@@ -45,6 +52,22 @@ export function DesignOrderForm({ template }: { template: DesignTemplate }) {
   const [errors, setErrors] = useState<Partial<Record<DesignOrderFieldId, string>>>(
     {},
   );
+
+  const editingItem = useMemo(
+    () =>
+      editCartItemId
+        ? cartItems.find((item) => item.id === editCartItemId)
+        : undefined,
+    [editCartItemId, cartItems],
+  );
+
+  useEffect(() => {
+    if (!cartItemMatchesDesignTemplate(editingItem, template.id)) return;
+    setValues(parseOrderFieldsFromCartMetadata(editingItem.metadata ?? {}, fields));
+    if (editingItem.quantity > 0) {
+      setQuantity(editingItem.quantity);
+    }
+  }, [editingItem, fields, template.id]);
 
   function updateField(id: DesignOrderFieldId, value: string) {
     setValues((prev) => ({ ...prev, [id]: value }));
@@ -83,14 +106,20 @@ export function DesignOrderForm({ template }: { template: DesignTemplate }) {
       if (value) metadata[field] = value;
     }
 
-    addItem({
-      type: 'design',
+    const cartPayload = {
+      type: 'design' as const,
       name: `${td(`categories.${template.category}`)} — ${td(`templates.${template.id}`)}`,
       price,
       quantity,
       designPreview: template.image,
       metadata,
-    });
+    };
+
+    if (editCartItemId) {
+      updateItem(editCartItemId, cartPayload);
+    } else {
+      addItem(cartPayload);
+    }
     router.push('/cart');
   }
 
@@ -234,7 +263,7 @@ export function DesignOrderForm({ template }: { template: DesignTemplate }) {
           <p className="text-xs text-ink-500">{t('requiredNote')}</p>
 
           <Button type="submit" size="lg" className="w-full sm:w-auto">
-            {t('addToCart')}
+            {editCartItemId ? t('updateCart') : t('addToCart')}
           </Button>
         </form>
       </div>

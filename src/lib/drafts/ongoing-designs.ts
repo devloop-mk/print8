@@ -1,8 +1,14 @@
-import { readSavedDesigns, type SavedDesign } from '@/lib/designs/saved-designs';
+import { readSavedDesigns, deleteSavedDesign, type SavedDesign } from '@/lib/designs/saved-designs';
 import { buildCustomizerUrl } from '@/lib/products/paths';
+import {
+  getDesignCustomizeHref,
+  isDesignCustomizeMode,
+} from '@/lib/designs/customize-modes';
 import {
   readDesignEditorDrafts,
   readProductCustomizerDrafts,
+  deleteDesignEditorDraft,
+  deleteProductCustomizerDraft,
   type DesignEditorDraft,
   type ProductCustomizerDraft,
 } from '@/lib/drafts/work-drafts';
@@ -46,11 +52,17 @@ function productItem(draft: ProductCustomizerDraft): OngoingDesignItem {
 }
 
 function templateItem(draft: DesignEditorDraft): OngoingDesignItem {
+  const mode = draft.payload.customizeMode;
+  const href =
+    typeof mode === 'string' && isDesignCustomizeMode(mode)
+      ? getDesignCustomizeHref(draft.templateId, mode)
+      : `/designs/${draft.templateId}/customize`;
+
   return {
     id: `template:${draft.id}`,
     source: 'template',
     name: draft.name,
-    href: `/designs/${draft.templateId}/customize`,
+    href,
     updatedAt: draft.updatedAt,
   };
 }
@@ -83,6 +95,27 @@ export function findDesignEditorDraft(templateId: string) {
 
 export function findStudioDraft(draftId: string) {
   return readSavedDesigns().find((design) => design.id === draftId);
+}
+
+export function deleteOngoingDesign(compositeId: string) {
+  const separatorIndex = compositeId.indexOf(':');
+  if (separatorIndex === -1) return;
+
+  const source = compositeId.slice(0, separatorIndex);
+  const id = compositeId.slice(separatorIndex + 1);
+  if (!id) return;
+
+  if (source === 'studio') {
+    deleteSavedDesign(id);
+    return;
+  }
+  if (source === 'product') {
+    deleteProductCustomizerDraft(id);
+    return;
+  }
+  if (source === 'template') {
+    deleteDesignEditorDraft(id);
+  }
 }
 
 export { DRAFTS_CHANGED_EVENT };

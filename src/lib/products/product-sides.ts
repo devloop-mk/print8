@@ -51,8 +51,18 @@ export function getSidePreviewFromCartItem(
     backDesignPreview?: string;
     leftDesignPreview?: string;
     rightDesignPreview?: string;
+    metadata?: Record<string, string | number | boolean>;
   },
   side: ProductSide,
 ): string | undefined {
-  return item[SIDE_PREVIEW_CART_KEYS[side]];
+  const fromItem = item[SIDE_PREVIEW_CART_KEYS[side]];
+  if (fromItem) return fromItem;
+
+  const prefix = getSideMetadataPrefix(side);
+  const premade = item.metadata?.[`${prefix}PremadeDesignImage`];
+  if (typeof premade === 'string' && premade.length > 0) {
+    return premade;
+  }
+
+  return undefined;
 }

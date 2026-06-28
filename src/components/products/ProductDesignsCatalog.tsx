@@ -25,11 +25,13 @@ import {
   getProductDesignCatalogEntries,
 } from '@/lib/products/design-catalog';
 import { PRODUCT_OFFERING_PATHS } from '@/lib/products/paths';
-import { FilterChipBar } from '@/components/catalog/FilterChipBar';
+import {
+  CatalogFilterLayout,
+  type CatalogFilterGroup,
+} from '@/components/catalog/CatalogFilterLayout';
 import { ProductDesignCatalogCard } from '@/components/products/ProductDesignCatalogCard';
 import { Reveal } from '@/components/motion/Reveal';
 import { CatalogGridLayout } from '@/components/catalog/CatalogGrid';
-import { cn } from '@/lib/utils';
 
 type ProductDesignsCatalogProps = {
   category: ProductDesignCategory;
@@ -113,6 +115,58 @@ export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) 
   const backLabel =
     categoryFilter === 'all' ? tc('backToProducts') : tcat('backToCategory');
 
+  const filterGroups = useMemo((): CatalogFilterGroup[] => {
+    const groups: CatalogFilterGroup[] = [
+      {
+        kind: 'options',
+        id: 'productType',
+        title: t('filterGroups.productType'),
+        allOption,
+        options: typeOptions,
+        value: typeFilter,
+        onChange: (value) => setTypeFilter(value as TypeFilter),
+      },
+    ];
+
+    if (availableColors.length > 0) {
+      groups.push({
+        kind: 'colors',
+        id: 'color',
+        title: tc('filterColor'),
+        colors: availableColors,
+        value: colorFilter,
+        onChange: setColorFilter,
+        allLabel: tc('allColors'),
+      });
+    }
+
+    groups.push({
+      kind: 'pills',
+      id: 'side',
+      title: tc('filterSide'),
+      options: [
+        { value: 'all' as const, label: tc('allSides') },
+        { value: 'front' as const, label: tc('sideFront') },
+        { value: 'back' as const, label: tc('sideBack') },
+        { value: 'left' as const, label: tc('sideLeft') },
+        { value: 'right' as const, label: tc('sideRight') },
+      ],
+      value: sideFilter,
+      onChange: (value) => setSideFilter(value as SideFilter),
+    });
+
+    return groups;
+  }, [
+    allOption,
+    availableColors,
+    colorFilter,
+    sideFilter,
+    t,
+    tc,
+    typeFilter,
+    typeOptions,
+  ]);
+
   return (
     <div className="w-full min-w-0 max-w-full space-y-8">
       <Link
@@ -134,108 +188,33 @@ export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) 
       </div>
 
       <Reveal delay={40}>
-        <FilterChipBar
+        <CatalogFilterLayout
+          groups={filterGroups}
           ariaLabel={t('filterLabel')}
           showFiltersLabel={t('showFilters')}
           hideFiltersLabel={t('hideFilters')}
-          allOption={allOption}
-          options={typeOptions}
-          value={typeFilter}
-          onChange={setTypeFilter}
           resultsCount={filtered.length}
           resultsLabel={(count) => tc('resultsDesigns', { count })}
-          mobileLayout="collapse"
-        />
-      </Reveal>
-
-      <Reveal delay={60}>
-        <div className="mb-8 space-y-4 rounded-2xl border border-ink-200 bg-white p-4 shadow-sm">
-          <div>
-            <p className="mb-2 text-sm font-semibold text-ink-900">
-              {tc('filterColor')}
+        >
+          {filtered.length === 0 ? (
+            <p className="rounded-xl border border-dashed border-ink-200 bg-ink-50 px-4 py-12 text-center text-sm text-ink-500">
+              {tc('noDesigns')}
             </p>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => setColorFilter('all')}
-                className={cn(
-                  'rounded-full px-4 py-2 text-sm font-medium transition',
-                  colorFilter === 'all'
-                    ? 'bg-brand-600 text-white'
-                    : 'bg-ink-100 text-ink-600 hover:bg-ink-200',
-                )}
-              >
-                {tc('allColors')}
-              </button>
-              {availableColors.map((color) => (
-                <button
-                  key={color}
-                  type="button"
-                  onClick={() => setColorFilter(color)}
-                  className={cn(
-                    'h-9 w-9 rounded-full border-2 transition',
-                    colorFilter === color
-                      ? 'border-brand-600 ring-2 ring-brand-200'
-                      : 'border-ink-200 hover:border-ink-300',
-                  )}
-                  style={{ backgroundColor: color }}
-                  aria-label={color}
-                  title={color}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <p className="mb-2 text-sm font-semibold text-ink-900">
-              {tc('filterSide')}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {(
-                [
-                  { value: 'all' as const, label: tc('allSides') },
-                  { value: 'front' as const, label: tc('sideFront') },
-                  { value: 'back' as const, label: tc('sideBack') },
-                  { value: 'left' as const, label: tc('sideLeft') },
-                  { value: 'right' as const, label: tc('sideRight') },
-                ] as const
-              ).map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => setSideFilter(option.value)}
-                  className={cn(
-                    'rounded-full px-4 py-2 text-sm font-medium transition',
-                    sideFilter === option.value
-                      ? 'bg-brand-600 text-white'
-                      : 'bg-ink-100 text-ink-600 hover:bg-ink-200',
-                  )}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+          ) : (
+            <Reveal delay={80}>
+              <CatalogGridLayout>
+                {filtered.map((entry) => (
+                  <ProductDesignCatalogCard
+                    key={entry.design.id}
+                    entry={entry}
+                    colorFilter={colorFilter}
+                  />
+                ))}
+              </CatalogGridLayout>
+            </Reveal>
+          )}
+        </CatalogFilterLayout>
       </Reveal>
-
-      {filtered.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-ink-200 bg-ink-50 px-4 py-12 text-center text-sm text-ink-500">
-          {tc('noDesigns')}
-        </p>
-      ) : (
-        <Reveal delay={80}>
-          <CatalogGridLayout>
-            {filtered.map((entry) => (
-              <ProductDesignCatalogCard
-                key={entry.design.id}
-                entry={entry}
-                colorFilter={colorFilter}
-              />
-            ))}
-          </CatalogGridLayout>
-        </Reveal>
-      )}
     </div>
   );
 }

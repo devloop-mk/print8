@@ -2,8 +2,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { OrderStatusBadge } from '@/components/admin/OrderStatusBadge';
 import { OrderStatusUpdater } from '@/components/admin/OrderStatusUpdater';
+import { OrderItemDesignAssets } from '@/components/admin/OrderItemDesignAssets';
 import { OrderItemMetadata } from '@/components/admin/OrderItemMetadata';
-import { OrderSvgPrintFiles } from '@/components/admin/OrderSvgPrintFiles';
 import { Card } from '@/components/ui/Card';
 import {
   collectOrderFileIds,
@@ -76,43 +76,14 @@ export default async function AdminOrderDetailPage({
                     </p>
                   </div>
 
+                  <OrderItemDesignAssets
+                    item={item}
+                    itemIndex={index}
+                    itemCount={order.items.length}
+                  />
+
                   {item.metadata && Object.keys(item.metadata).length > 0 ? (
                     <OrderItemMetadata metadata={item.metadata} />
-                  ) : null}
-
-                  {item.metadata ? (
-                    <OrderSvgPrintFiles
-                      itemName={item.name}
-                      metadata={item.metadata}
-                    />
-                  ) : null}
-
-                  {(item.designPreview ||
-                    item.backDesignPreview ||
-                    item.leftDesignPreview ||
-                    item.rightDesignPreview) ? (
-                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                      {(
-                        [
-                          { src: item.designPreview, label: t.frontPreview },
-                          { src: item.backDesignPreview, label: t.backPreview },
-                          { src: item.leftDesignPreview, label: t.leftPreview },
-                          { src: item.rightDesignPreview, label: t.rightPreview },
-                        ] as const
-                      )
-                        .filter((preview) => Boolean(preview.src))
-                        .map((preview) => (
-                          <div key={preview.label}>
-                            <p className="mb-1 text-xs text-ink-500">{preview.label}</p>
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={preview.src}
-                              alt={preview.label}
-                              className="max-h-48 w-full rounded border border-ink-200 bg-white object-contain"
-                            />
-                          </div>
-                        ))}
-                    </div>
                   ) : null}
                 </div>
               ))}

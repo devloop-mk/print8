@@ -7,6 +7,7 @@ import {
   type ProductDesignTemplate,
   type ProductSide,
 } from '@/lib/data/catalog';
+import type { CartItem } from '@/components/cart/CartProvider';
 import {
   sideDesignFromImageTemplate,
   sideDesignFromOverlayTemplate,
@@ -108,7 +109,7 @@ export function buildPremadeDesignOrderMetadata({
     designKind: design.kind,
     designSide: side,
     activeSide: side,
-    isCustomized: Boolean(sideDesign?.isTextTemplate),
+    isCustomized: Boolean(sideDesign),
   };
 
   if (size) metadata.size = size;
@@ -132,4 +133,61 @@ export function getPremadeDesignOrderPreview(
   return (
     getProductMockup(product, color, design.defaultSide) ?? product.image
   );
+}
+
+function sidePreviewFieldForSide(
+  side: ProductSide,
+): keyof Pick<
+  CartItem,
+  'designPreview' | 'backDesignPreview' | 'leftDesignPreview' | 'rightDesignPreview'
+> {
+  switch (side) {
+    case 'back':
+      return 'backDesignPreview';
+    case 'left':
+      return 'leftDesignPreview';
+    case 'right':
+      return 'rightDesignPreview';
+    default:
+      return 'designPreview';
+  }
+}
+
+export function buildPremadeDesignCartPayload({
+  product,
+  design,
+  color,
+  size,
+  name,
+  price,
+  quantity = 1,
+  capturedPreview,
+}: {
+  product: Product;
+  design: ProductDesignTemplate;
+  color: string;
+  size?: string;
+  name: string;
+  price: number;
+  quantity?: number;
+  capturedPreview?: string;
+}): Omit<CartItem, 'id'> {
+  const metadata = buildPremadeDesignOrderMetadata({
+    product,
+    design,
+    color,
+    size,
+  });
+  const preview =
+    capturedPreview ?? getPremadeDesignOrderPreview(product, design, color);
+  const previewField = sidePreviewFieldForSide(design.defaultSide);
+
+  return {
+    type: 'product',
+    name,
+    price,
+    quantity,
+    metadata,
+    [previewField]: preview,
+  };
 }

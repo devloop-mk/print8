@@ -7,6 +7,25 @@ import {
   SVG_BACKGROUND_ASSETS,
   resolveSvgEmbeddedImages,
 } from '@/lib/designs/svg-background-assets';
+import {
+  applySvgGroupTransform,
+  applySvgTextNodeTransform,
+  clampLogoScale,
+  getSvgLogoTransform,
+  getSvgTextTransform,
+  resolveSvgTextDisplayValue,
+} from '@/lib/designs/svg-text-transform';
+import {
+  getSvgContactGroup,
+  getSvgContactGroupTransformKey,
+  isSvgContactField,
+} from '@/lib/designs/svg-contact-groups';
+import {
+  getSvgLogoSlots,
+  logoStateKey,
+} from '@/lib/designs/svg-logo-slots';
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
 
 function escapeXml(value: string): string {
   return value
@@ -65,6 +84,98 @@ function applyInlineColors(svg: string, slots: SvgColorSlot[], colors: SvgTempla
   return result;
 }
 
+function applyLogoSlots(
+  doc: Document,
+  textNodes: Element[],
+  template: SvgDesignTemplate,
+  state: SvgTemplateState,
+  side: 'front' | 'back',
+) {
+  const slots = getSvgLogoSlots(template.id, side);
+  if (!slots.length) return;
+
+  for (const slot of slots) {
+    const key = logoStateKey(side, slot.id);
+    const dataUrl = state.logos?.[key];
+    const group =
+      doc.getElementById(slot.elementId) ??
+      doc.querySelector(`[data-print8-logo="${slot.id}"]`);
+    if (!group) continue;
+
+    let imageEl = group.querySelector('image[data-print8-logo-image]');
+    const fallbackText =
+      slot.fallbackTextIndex !== undefined
+        ? textNodes[slot.fallbackTextIndex]
+        : null;
+
+    if (dataUrl) {
+      if (!imageEl) {
+        imageEl = doc.createElementNS(SVG_NS, 'image');
+        imageEl.setAttribute('data-print8-logo-image', 'true');
+        imageEl.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+        group.appendChild(imageEl);
+      }
+
+      imageEl.setAttribute('href', dataUrl);
+      imageEl.setAttributeNS('http://www.w3.org/1999/xlink', 'href', dataUrl);
+      imageEl.setAttribute('x', String(slot.imageX));
+      imageEl.setAttribute('y', String(slot.imageY));
+      imageEl.setAttribute('width', String(slot.imageWidth));
+      imageEl.setAttribute('height', String(slot.imageHeight));
+
+      const clipId = `print8-logo-clip-${side}-${slot.id}`;
+      let clipPath =
+        group.querySelector(`#${CSS.escape(clipId)}`) ??
+        doc.getElementById(clipId);
+      if (!clipPath && slot.clip !== 'none') {
+        clipPath = doc.createElementNS(SVG_NS, 'clipPath');
+        clipPath.setAttribute('id', clipId);
+        const shape =
+          slot.clip === 'circle'
+            ? (() => {
+                const circle = doc.createElementNS(SVG_NS, 'circle');
+                const radius = Math.min(slot.imageWidth, slot.imageHeight) / 2;
+                circle.setAttribute('cx', String(slot.imageX + slot.imageWidth / 2));
+                circle.setAttribute('cy', String(slot.imageY + slot.imageHeight / 2));
+                circle.setAttribute('r', String(radius));
+                return circle;
+              })()
+            : (() => {
+                const rect = doc.createElementNS(SVG_NS, 'rect');
+                rect.setAttribute('x', String(slot.imageX));
+                rect.setAttribute('y', String(slot.imageY));
+                rect.setAttribute('width', String(slot.imageWidth));
+                rect.setAttribute('height', String(slot.imageHeight));
+                if (slot.clipRx) rect.setAttribute('rx', String(slot.clipRx));
+                return rect;
+              })();
+        clipPath.appendChild(shape);
+        group.insertBefore(clipPath, group.firstChild);
+      }
+      if (clipPath && slot.clip !== 'none') {
+        imageEl.setAttribute('clip-path', `url(#${clipId})`);
+      }
+
+      if (fallbackText) fallbackText.setAttribute('visibility', 'hidden');
+      group.querySelectorAll('[data-print8-logo-hide-with-image]').forEach((node) => {
+        node.setAttribute('visibility', 'hidden');
+      });
+    } else {
+      imageEl?.remove();
+      if (fallbackText) fallbackText.removeAttribute('visibility');
+      group.querySelectorAll('[data-print8-logo-hide-with-image]').forEach((node) => {
+        node.removeAttribute('visibility');
+      });
+    }
+
+    applySvgGroupTransform(
+      group,
+      getSvgLogoTransform(state.transforms, key),
+      clampLogoScale,
+    );
+  }
+}
+
 function applyDomEdits(
   svg: string,
   sidePath: string,
@@ -105,11 +216,31 @@ function applyDomEdits(
   }
 
   const textNodes = [...doc.querySelectorAll('text')];
+  const contactGroup = getSvgContactGroup(template.id, side);
+  const contactTransformKey = getSvgContactGroupTransformKey(side);
+
   for (const field of sideConfig.texts) {
-    const value = state.texts[`${side}:${field.id}`] ?? field.default;
+    const fieldKey = `${side}:${field.id}`;
+    const stored = state.texts[fieldKey];
+    const value = resolveSvgTextDisplayValue(stored, field.default);
     const node = textNodes[field.index];
     if (node) node.textContent = value;
+    if (node && !isSvgContactField(template.id, side, field.id)) {
+      applySvgTextNodeTransform(node, getSvgTextTransform(state.transforms, fieldKey));
+    }
   }
+
+  if (contactGroup) {
+    const groupNode = doc.getElementById(contactGroup.groupElementId);
+    if (groupNode) {
+      applySvgGroupTransform(
+        groupNode,
+        getSvgTextTransform(state.transforms, contactTransformKey),
+      );
+    }
+  }
+
+  applyLogoSlots(doc, textNodes, template, state, side);
 
   const serialized = new XMLSerializer().serializeToString(doc.documentElement);
   return serialized.startsWith('<?xml')
@@ -158,7 +289,14 @@ export function buildDefaultSvgTemplateState(
     colors[slot.id] = slot.default;
   }
 
-  return { texts, colors };
+  const logos: SvgTemplateState['logos'] = {};
+  for (const side of ['front', 'back'] as const) {
+    for (const slot of getSvgLogoSlots(template.id, side)) {
+      logos[logoStateKey(side, slot.id)] = null;
+    }
+  }
+
+  return { texts, colors, logos, transforms: {} };
 }
 
 export function prepareSvgForInlineDom(svg: string): string {

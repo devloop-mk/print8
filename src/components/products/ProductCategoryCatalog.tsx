@@ -14,15 +14,25 @@ import {
 } from '@/lib/products/product-nav';
 import { getProductTypeIcon } from '@/lib/products/product-type-icons';
 import { ProductCardGrid } from '@/components/products/ProductCardGrid';
-import { FilterChipBar } from '@/components/catalog/FilterChipBar';
+import {
+  CatalogFilterLayout,
+  type CatalogFilterGroup,
+} from '@/components/catalog/CatalogFilterLayout';
 import { Reveal } from '@/components/motion/Reveal';
+import { cn } from '@/lib/utils';
 
 type CategoryTypeFilter = ProductType | 'all';
 
+import { PRODUCT_OFFERING_PATHS } from '@/lib/products/paths';
+
+type ProductCategoryCatalogVariant = 'browse' | 'landing';
+
 export function ProductCategoryCatalog({
   categoryId,
+  variant = 'browse',
 }: {
   categoryId: ProductNavCategoryId;
+  variant?: ProductCategoryCatalogVariant;
 }) {
   const t = useTranslations('products');
   const tc = useTranslations('products.categoryPages');
@@ -52,50 +62,64 @@ export function ProductCategoryCatalog({
       ? categoryProducts
       : categoryProducts.filter((product) => product.type === typeFilter);
 
+  const filterGroups = useMemo((): CatalogFilterGroup[] => {
+    if (category.types.length <= 1) return [];
+
+    return [
+      {
+        kind: 'options',
+        id: 'productType',
+        title: t('filterGroups.productType'),
+        allOption,
+        options: filterOptions,
+        value: typeFilter,
+        onChange: (value) => setTypeFilter(value as CategoryTypeFilter),
+      },
+    ];
+  }, [allOption, category.types.length, filterOptions, t, typeFilter]);
+
+  const isLanding = variant === 'landing';
+
   return (
     <div className="w-full min-w-0 max-w-full space-y-8">
       <Link
-        href={productCategoryHref(categoryId)}
+        href={isLanding ? PRODUCT_OFFERING_PATHS.all : productCategoryHref(categoryId)}
         className="inline-flex items-center gap-2 text-sm font-medium text-ink-600 transition hover:text-brand-600"
       >
         <ArrowLeft className="h-4 w-4" />
-        {tc('backToCategory')}
+        {isLanding ? tc('backToAll') : tc('backToCategory')}
       </Link>
 
       <div className="max-w-3xl">
-        <p className="text-xs font-semibold uppercase tracking-wider text-brand-600">
-          {tNav(categoryId)}
-        </p>
-        <h1 className="mt-2 text-3xl font-bold text-ink-900 sm:text-4xl">
-          {tc('browseTitle')}
+        {!isLanding ? (
+          <p className="text-xs font-semibold uppercase tracking-wider text-brand-600">
+            {tNav(categoryId)}
+          </p>
+        ) : null}
+        <h1 className={cn('text-3xl font-bold text-ink-900 sm:text-4xl', !isLanding && 'mt-2')}>
+          {isLanding ? tNav(categoryId) : tc('browseTitle')}
         </h1>
         <p className="mt-3 text-lg leading-relaxed text-ink-600">
-          {tc('browseSubtitle', { category: tNav(categoryId) })}
+          {isLanding
+            ? tc(`${categoryId}.subtitle`)
+            : tc('browseSubtitle', { category: tNav(categoryId) })}
         </p>
       </div>
 
-      {category.types.length > 1 ? (
-        <Reveal>
-          <FilterChipBar
-            ariaLabel={t('filterLabel')}
-            showFiltersLabel={t('showFilters')}
-            hideFiltersLabel={t('hideFilters')}
-            allOption={allOption}
-            options={filterOptions}
-            value={typeFilter}
-            onChange={setTypeFilter}
-            resultsCount={filtered.length}
-            resultsLabel={(count) => t('resultsCount', { count })}
-            mobileLayout="collapse"
-          />
+      <CatalogFilterLayout
+        groups={filterGroups}
+        ariaLabel={t('filterLabel')}
+        showFiltersLabel={t('showFilters')}
+        hideFiltersLabel={t('hideFilters')}
+        resultsCount={filtered.length}
+        resultsLabel={(count) => t('resultsCount', { count })}
+      >
+        <Reveal delay={80}>
+          <div id="products-grid" className="scroll-mt-24">
+            <ProductCardGrid items={filtered} linkTarget="customizer" />
+          </div>
         </Reveal>
-      ) : null}
-
-      <Reveal delay={80}>
-        <div id="products-grid" className="scroll-mt-24">
-          <ProductCardGrid items={filtered} />
-        </div>
-      </Reveal>
+      </CatalogFilterLayout>
 
       <div className="flex flex-wrap gap-3 border-t border-ink-100 pt-8">
         {productNavCategories

@@ -13,6 +13,7 @@ import {
   type DesignCategory,
   type DesignTemplate,
 } from '@/lib/data/catalog';
+import { getDesignThumbAspect } from '@/lib/designs/design-thumb';
 
 const MAX_VISIBLE = 3;
 
@@ -66,7 +67,7 @@ export function FeaturedDesignCards({ designs }: { designs: DesignTemplate[] }) 
         </p>
       ) : (
         <>
-          <CatalogGridLayout gapClassName="gap-6">
+          <CatalogGridLayout gapClassName="gap-6" defaultMobileColumns={1}>
             {visible.map((design) => {
               const isFixed = design.kind === 'fixed';
               return (
@@ -76,7 +77,10 @@ export function FeaturedDesignCards({ designs }: { designs: DesignTemplate[] }) 
                   className="group block"
                 >
                   <Card className="overflow-hidden p-0 transition group-hover:shadow-md">
-                    <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-gradient-to-br from-ink-50 to-ink-100">
+                    <div
+                      className="relative flex items-center justify-center overflow-hidden bg-white p-1"
+                      style={{ aspectRatio: getDesignThumbAspect(design) }}
+                    >
                       <DesignCardThumbnail
                         design={design}
                         alt={t(`templates.${design.id}`)}

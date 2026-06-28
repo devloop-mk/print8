@@ -151,8 +151,12 @@ export function productCategoryHref(categoryId: ProductNavCategoryId): string {
   return `/products/category/${categoryId}`;
 }
 
+export function productCategoryCustomHref(categoryId: ProductNavCategoryId): string {
+  return `/products/custom?category=${categoryId}`;
+}
+
 export function productCategoryBrowseHref(categoryId: ProductNavCategoryId): string {
-  return `/products/category/${categoryId}/browse`;
+  return productCategoryCustomHref(categoryId);
 }
 
 export function productCategoryReadyDesignsHref(categoryId: ProductNavCategoryId): string {
