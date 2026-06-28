@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import {
@@ -11,11 +12,20 @@ import {
   type ProductDesignTemplate,
 } from '@/lib/data/catalog';
 import { buildCustomizerUrl } from '@/lib/products/paths';
+import {
+  getDesignApplicableColors,
+  resolveDesignPreviewColor,
+} from '@/lib/products/design-applicable-colors';
+import {
+  buildPremadeDesignOrderMetadata,
+  getPremadeDesignOrderPreview,
+} from '@/lib/products/premade-design-order';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { useCart } from '@/components/cart/CartProvider';
 import { useRouter } from '@/i18n/navigation';
 import { DesignTemplatePreview } from '@/components/products/DesignTemplatePreview';
+import { DesignColorPicker } from '@/components/products/DesignColorPicker';
 import { CatalogGridLayout } from '@/components/catalog/CatalogGrid';
 import Image from 'next/image';
 
@@ -25,7 +35,6 @@ type ProductDesignSectionProps = {
   title: string;
   hint: string;
   product: Product;
-  color: string;
   size?: string;
   designs: ProductDesignTemplate[];
   limit?: number;
@@ -39,7 +48,6 @@ export function ProductDesignSection({
   title,
   hint,
   product,
-  color,
   size,
   designs,
   limit,
@@ -75,7 +83,6 @@ export function ProductDesignSection({
             key={design.id}
             product={product}
             design={design}
-            color={color}
             size={size}
           />
         ))}
@@ -97,14 +104,21 @@ export function ProductDesignSection({
 function DesignCard({
   product,
   design,
-  color,
   size,
 }: {
   product: Product;
   design: ProductDesignTemplate;
-  color: string;
   size?: string;
 }) {
+  const applicableColors = useMemo(
+    () => getDesignApplicableColors(design, product),
+    [design, product],
+  );
+  const [color, setColor] = useState(() =>
+    resolveDesignPreviewColor(design, product),
+  );
+  const previewColor = resolveDesignPreviewColor(design, product, color);
+
   const t = useTranslations('products');
   const td = useTranslations('products.detail');
   const tp = useTranslations('products.types');
@@ -113,17 +127,20 @@ function DesignCard({
     ? ti(product.nameKey)
     : tp(product.type);
 
+  const canQuickOrder =
+    isImageDesignTemplate(design) || isOverlayDesignTemplate(design);
+
   return (
     <Card className="overflow-hidden p-0">
       {isTextDesignTemplate(design) || isOverlayDesignTemplate(design) ? (
         <DesignTemplatePreview
           product={product}
-          color={color}
+          color={previewColor}
           design={design}
           typeLabel={productLabel}
         />
       ) : isImageDesignTemplate(design) ? (
-        <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-brand-50 to-brand-100">
+        <div className="relative aspect-square overflow-hidden bg-white">
           <Image
             src={design.image!}
             alt={t(`designs.${design.nameKey}`)}
@@ -143,27 +160,39 @@ function DesignCard({
             {design.textStyle.text}
           </p>
         )}
+
+        <DesignColorPicker
+          colors={applicableColors}
+          value={previewColor}
+          onChange={setColor}
+        />
+
         <div className="flex flex-col gap-2">
+          {canQuickOrder ? (
+            <OrderWithDesignButton
+              product={product}
+              design={design}
+              color={previewColor}
+              size={size}
+            />
+          ) : null}
           <Link
             href={buildCustomizerUrl(product.id, product.type, {
               design: design.id,
-              color,
+              color: previewColor,
               size,
             })}
           >
-            <Button size="sm" className="w-full">
+            <Button
+              size="sm"
+              variant={canQuickOrder ? 'outline' : 'primary'}
+              className="w-full"
+            >
               {isTextDesignTemplate(design)
                 ? td('customizeWithPhoto')
                 : td('customizeDesign')}
             </Button>
           </Link>
-          {isImageDesignTemplate(design) && (
-            <OrderWithDesignButton
-              product={product}
-              design={design}
-              color={color}
-            />
-          )}
         </div>
       </div>
     </Card>
@@ -174,10 +203,12 @@ function OrderWithDesignButton({
   product,
   design,
   color,
+  size,
 }: {
   product: Product;
   design: ProductDesignTemplate;
   color: string;
+  size?: string;
 }) {
   const td = useTranslations('products.detail');
   const tp = useTranslations('products.types');
@@ -190,28 +221,26 @@ function OrderWithDesignButton({
     : tp(product.type);
 
   function handleOrder() {
-    const metadata: Record<string, string | number | boolean> = {
-      productId: product.id,
+    const metadata = buildPremadeDesignOrderMetadata({
+      product,
+      design,
       color,
-      designTemplateId: design.id,
-      designSide: design.defaultSide,
-      designKind: design.kind,
-    };
+      size,
+    });
 
     addItem({
       type: 'product',
       name: `${productLabel} — ${t(`designs.${design.nameKey}`)}`,
       price: product.basePrice,
       quantity: 1,
-      designPreview:
-        design.image ?? getProductMockup(product, color, design.defaultSide),
+      designPreview: getPremadeDesignOrderPreview(product, design, color),
       metadata,
     });
     router.push('/cart');
   }
 
   return (
-    <Button size="sm" variant="outline" className="w-full" onClick={handleOrder}>
+    <Button size="sm" className="w-full" onClick={handleOrder}>
       {td('orderWithDesign')}
     </Button>
   );

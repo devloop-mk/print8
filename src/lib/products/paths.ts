@@ -6,6 +6,7 @@ export const PRODUCT_OFFERING_PATHS = {
   readyDesigns: '/products/ready-designs',
   textTemplates: '/products/text-templates',
   category: (categoryId: string) => `/products/category/${categoryId}`,
+  categoryBrowse: (categoryId: string) => `/products/category/${categoryId}/browse`,
   type: (type: string) => `/products/type/${type}`,
 } as const;
 

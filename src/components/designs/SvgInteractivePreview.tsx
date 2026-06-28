@@ -7,6 +7,10 @@ import type { SvgDesignTemplate, SvgTemplateState } from '@/lib/data/svg-design-
 import { prepareSvgForInlineDom } from '@/lib/designs/svg-template-engine';
 import { useRenderedSvgTemplate } from '@/hooks/useSvgTemplateUrl';
 
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const TAP_SLOP_PX = 14;
+const MIN_TOUCH_TARGET_PX = 44;
+
 type SvgInteractivePreviewProps = {
   template: SvgDesignTemplate;
   state: SvgTemplateState;
@@ -22,30 +26,42 @@ function computePreviewDimensions(
   containerWidth: number,
   viewportHeight: number,
 ) {
-  const isDesktop = typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches;
+  const isDesktop =
+    typeof window !== 'undefined' &&
+    window.matchMedia('(min-width: 1024px)').matches;
 
-  if (!isDesktop) {
-    const height = Math.min(viewportHeight * 0.45, 420);
-    return { width: height * aspectRatio, height };
-  }
+  const maxHeight = isDesktop
+    ? Math.min(viewportHeight * 0.78, 760)
+    : Math.min(viewportHeight * 0.36, 340);
+  const maxWidth = Math.max(containerWidth, isDesktop ? 280 : 1);
 
-  const maxHeight = Math.min(viewportHeight * 0.78, 760);
-  const maxWidth = Math.max(containerWidth, 280);
-
-  let height = maxHeight;
-  let width = height * aspectRatio;
-
-  if (width > maxWidth) {
-    width = maxWidth;
-    height = width / aspectRatio;
-  }
+  let width = maxWidth;
+  let height = width / aspectRatio;
 
   if (height > maxHeight) {
     height = maxHeight;
     width = height * aspectRatio;
   }
 
+  if (width > maxWidth) {
+    width = maxWidth;
+    height = width / aspectRatio;
+  }
+
   return { width, height };
+}
+
+function expandBBox(
+  bbox: DOMRect,
+  minWidth: number,
+  minHeight: number,
+  padding: number,
+) {
+  const width = Math.max(bbox.width + padding * 2, minWidth);
+  const height = Math.max(bbox.height + padding * 2, minHeight);
+  const x = bbox.x + bbox.width / 2 - width / 2;
+  const y = bbox.y + bbox.height / 2 - height / 2;
+  return { x, y, width, height };
 }
 
 export function SvgInteractivePreview({
@@ -109,11 +125,23 @@ export function SvgInteractivePreview({
     const svg = container.querySelector('svg');
     if (!svg) return;
 
-    const textNodes = [...svg.querySelectorAll('text')];
     const sideConfig = side === 'front' ? template.sides.front : template.sides.back;
     if (!sideConfig) return;
 
+    svg.querySelectorAll('[data-hit-field]').forEach((node) => node.remove());
+
+    const textNodes = [...svg.querySelectorAll('text')];
     const cleanups: (() => void)[] = [];
+    const hitLayer =
+      svg.querySelector('[data-hit-layer]') ??
+      (() => {
+        const group = document.createElementNS(SVG_NS, 'g');
+        group.setAttribute('data-hit-layer', 'true');
+        svg.appendChild(group);
+        return group;
+      })();
+
+    hitLayer.textContent = '';
 
     for (const field of sideConfig.texts) {
       const node = textNodes[field.index];
@@ -122,11 +150,9 @@ export function SvgInteractivePreview({
       const fieldKey = `${side}:${field.id}`;
       const isActive = activeFieldKey === fieldKey;
 
-      node.style.cursor = interactive && onFieldSelect ? 'pointer' : '';
-      node.style.pointerEvents = interactive && onFieldSelect ? 'auto' : '';
       if (isActive) {
         node.setAttribute('stroke', '#2563eb');
-        node.setAttribute('stroke-width', '2');
+        node.setAttribute('stroke-width', '1.5');
         node.setAttribute('paint-order', 'stroke fill');
       } else {
         node.removeAttribute('stroke');
@@ -136,24 +162,91 @@ export function SvgInteractivePreview({
 
       if (!interactive || !onFieldSelect) continue;
 
-      const handler = (event: Event) => {
+      let bbox: DOMRect;
+      try {
+        bbox = node.getBBox();
+      } catch {
+        continue;
+      }
+
+      const pad = Math.max(6, bbox.height * 0.35);
+      const expanded = expandBBox(bbox, MIN_TOUCH_TARGET_PX, MIN_TOUCH_TARGET_PX, pad);
+
+      const hitRect = document.createElementNS(SVG_NS, 'rect');
+      hitRect.setAttribute('data-hit-field', fieldKey);
+      hitRect.setAttribute('x', String(expanded.x));
+      hitRect.setAttribute('y', String(expanded.y));
+      hitRect.setAttribute('width', String(expanded.width));
+      hitRect.setAttribute('height', String(expanded.height));
+      hitRect.setAttribute('rx', '6');
+      hitRect.setAttribute('fill', isActive ? 'rgba(37, 99, 235, 0.1)' : 'rgba(37, 99, 235, 0.04)');
+      hitRect.setAttribute('stroke', isActive ? '#2563eb' : 'rgba(37, 99, 235, 0.35)');
+      hitRect.setAttribute('stroke-width', isActive ? '2' : '1.5');
+      hitRect.setAttribute('stroke-dasharray', isActive ? '' : '5 4');
+      hitRect.style.cursor = 'pointer';
+      hitRect.style.touchAction = 'manipulation';
+
+      let trackingPointerId: number | null = null;
+      let startX = 0;
+      let startY = 0;
+
+      const handlePointerDown = (event: PointerEvent) => {
+        if (event.pointerType === 'mouse' && event.button !== 0) return;
+        trackingPointerId = event.pointerId;
+        startX = event.clientX;
+        startY = event.clientY;
+        hitRect.setPointerCapture(event.pointerId);
+      };
+
+      const handlePointerUp = (event: PointerEvent) => {
+        if (trackingPointerId !== event.pointerId) return;
+        trackingPointerId = null;
+
+        const dx = event.clientX - startX;
+        const dy = event.clientY - startY;
+        if (dx * dx + dy * dy > TAP_SLOP_PX * TAP_SLOP_PX) return;
+
         event.preventDefault();
         event.stopPropagation();
         onFieldSelect(fieldKey);
       };
 
-      node.addEventListener('click', handler);
-      node.setAttribute('role', 'button');
+      const handlePointerCancel = (event: PointerEvent) => {
+        if (trackingPointerId === event.pointerId) {
+          trackingPointerId = null;
+        }
+      };
+
+      hitRect.addEventListener('pointerdown', handlePointerDown);
+      hitRect.addEventListener('pointerup', handlePointerUp);
+      hitRect.addEventListener('pointercancel', handlePointerCancel);
+      hitRect.setAttribute('role', 'button');
+      hitRect.setAttribute('aria-label', t('editField', { n: field.index + 1 }));
+
+      hitLayer.appendChild(hitRect);
+
       cleanups.push(() => {
-        node.removeEventListener('click', handler);
-        node.removeAttribute('role');
+        hitRect.removeEventListener('pointerdown', handlePointerDown);
+        hitRect.removeEventListener('pointerup', handlePointerUp);
+        hitRect.removeEventListener('pointercancel', handlePointerCancel);
+        hitRect.remove();
       });
     }
 
     return () => {
       for (const cleanup of cleanups) cleanup();
+      hitLayer.textContent = '';
     };
-  }, [activeFieldKey, interactive, markup, onFieldSelect, side, template]);
+  }, [
+    activeFieldKey,
+    interactive,
+    markup,
+    onFieldSelect,
+    side,
+    state.texts,
+    t,
+    template,
+  ]);
 
   return (
     <div className={cn('w-full min-w-0 max-w-full', className)}>
@@ -169,15 +262,19 @@ export function SvgInteractivePreview({
       >
         <div
           ref={fitRef}
-          className="mx-auto shrink-0"
+          className="mx-auto w-full max-w-full shrink-0 select-none"
           style={{
             width: `${dimensions.width}px`,
             height: `${dimensions.height}px`,
+            maxWidth: '100%',
           }}
         >
           {markup ? (
             <div
-              className="h-full w-full overflow-hidden rounded-sm [&>svg]:block [&>svg]:h-full [&>svg]:w-full"
+              className={cn(
+                'h-full w-full overflow-hidden rounded-sm [&>svg]:block [&>svg]:h-full [&>svg]:w-full',
+                interactive && '[&_text]:pointer-events-none',
+              )}
               dangerouslySetInnerHTML={{ __html: prepareSvgForInlineDom(markup) }}
             />
           ) : (

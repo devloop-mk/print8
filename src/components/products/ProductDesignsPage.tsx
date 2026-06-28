@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import {
@@ -32,8 +32,6 @@ export function ProductDesignsPage({
     () => products.find((p) => p.id === productId),
     [productId],
   );
-
-  const [color, setColor] = useState(product?.colors?.[0] || '#ffffff');
 
   const designs = useMemo(
     () =>
@@ -73,32 +71,6 @@ export function ProductDesignsPage({
         </div>
       </Reveal>
 
-      {product.colors && product.colors.length > 0 ? (
-        <Reveal delay={60}>
-          <div className="rounded-xl border border-ink-200 bg-white p-4">
-            <label className="mb-3 block text-sm font-medium text-ink-700">
-              {t('customizer.selectColor')}
-            </label>
-            <div className="flex flex-wrap gap-3">
-              {product.colors.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setColor(c)}
-                  className={`h-11 w-11 rounded-full border-2 transition ${
-                    color === c
-                      ? 'border-brand-600 ring-2 ring-brand-200'
-                      : 'border-ink-200'
-                  }`}
-                  style={{ backgroundColor: c }}
-                  aria-label={c}
-                />
-              ))}
-            </div>
-          </div>
-        </Reveal>
-      ) : null}
-
       <Reveal delay={100}>
         <ProductDesignSection
           id={isPhoto ? 'photo-designs' : 'text-designs'}
@@ -112,7 +84,6 @@ export function ProductDesignsPage({
           title={isPhoto ? td('imageDesigns') : td('textDesigns')}
           hint={isPhoto ? td('imageDesignsPageHint') : td('textDesignsPageHint')}
           product={product}
-          color={color}
           designs={designs}
         />
       </Reveal>

@@ -171,35 +171,19 @@ export function ProductDetail({ productId }: { productId: string }) {
                 <Upload className="h-5 w-5" />
                 {td('magnetUploadCta')}
               </Link>
-            ) : offering.hasPremade ? (
-              <div className="flex flex-wrap gap-2">
-                <span className="rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">
-                  {t('card.customOption')}
-                </span>
-                {offering.hasPhotoDesigns ? (
-                  <span className="rounded-full bg-ink-100 px-3 py-1 text-xs font-semibold text-ink-700">
-                    {t('paths.countPhoto', { count: offering.imageDesignCount })}
-                  </span>
-                ) : null}
-                {offering.hasTextTemplates ? (
-                  <span className="rounded-full bg-ink-100 px-3 py-1 text-xs font-semibold text-ink-700">
-                    {t('paths.countTemplate', {
-                      count: offering.textDesignCount,
-                    })}
-                  </span>
-                ) : null}
-              </div>
             ) : null}
 
             {!isMagnet ? (
-              <ProductPathChooser
-                productId={product.id}
-                productType={product.type}
-                offering={offering}
-                color={color}
-                size={size}
-                variant="sidebar"
-              />
+              <div className="lg:border-t lg:border-ink-200 lg:pt-6">
+                <ProductPathChooser
+                  productId={product.id}
+                  productType={product.type}
+                  offering={offering}
+                  color={color}
+                  size={size}
+                  variant="sidebar"
+                />
+              </div>
             ) : null}
           </div>
         </Reveal>
@@ -215,7 +199,6 @@ export function ProductDetail({ productId }: { productId: string }) {
                 title={td('imageDesigns')}
                 hint={td('imageDesignsHint')}
                 product={product}
-                color={color}
                 size={size}
                 designs={imageDesigns}
                 limit={PRODUCT_DESIGN_PREVIEW_LIMIT}
@@ -237,7 +220,6 @@ export function ProductDetail({ productId }: { productId: string }) {
                 title={td('textDesigns')}
                 hint={td('textDesignsHint')}
                 product={product}
-                color={color}
                 size={size}
                 designs={textDesigns}
                 limit={PRODUCT_DESIGN_PREVIEW_LIMIT}

@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { ProductCategoryPathChooser } from '@/components/products/ProductCategoryPathChooser';
+import { ProductCategoryCatalog } from '@/components/products/ProductCategoryCatalog';
 import { SectionLoading } from '@/components/ui/SectionLoading';
 import {
   isProductNavCategoryId,
@@ -24,7 +24,7 @@ export async function generateMetadata({
   return buildProductCategoryMetadata(locale as Locale, category);
 }
 
-export default async function ProductCategoryPage({
+export default async function ProductCategoryBrowsePage({
   params,
 }: {
   params: Promise<{ locale: string; category: string }>;
@@ -36,9 +36,9 @@ export default async function ProductCategoryPage({
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <div className="mx-auto w-full min-w-0 max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <Suspense fallback={<SectionLoading />}>
-        <ProductCategoryPathChooser categoryId={category} />
+        <ProductCategoryCatalog categoryId={category} />
       </Suspense>
     </div>
   );

@@ -52,8 +52,12 @@ export function contrastRatio(foreground: string, background: string): number {
 const LIGHT_INK = '#F4EDE4';
 const DARK_INK = '#1C1917';
 
+export function isDarkShirtColor(shirtColor: string): boolean {
+  return relativeLuminance(shirtColor) < 0.35;
+}
+
 export function suggestInkForShirt(shirtColor: string): string {
-  return relativeLuminance(shirtColor) < 0.35 ? LIGHT_INK : DARK_INK;
+  return isDarkShirtColor(shirtColor) ? LIGHT_INK : DARK_INK;
 }
 
 export function ensureInkContrast(ink: string, shirtColor: string): string {

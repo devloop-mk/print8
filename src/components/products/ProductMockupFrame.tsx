@@ -15,20 +15,28 @@ export function ProductMockupFrame({
   className = "",
   layout,
   productType,
+  variant = "customizer",
 }: {
   children: ReactNode;
   className?: string;
   layout?: ProductMockupLayout;
   productType?: ProductType;
+  /** `catalog` fills the card preview; `customizer` uses the smaller in-canvas frame */
+  variant?: "customizer" | "catalog";
 }) {
   const resolvedLayout =
     layout ?? (productType ? getProductMockupLayout(productType) : getProductMockupLayout("t-shirt"));
+
+  const innerClass =
+    variant === "catalog"
+      ? resolvedLayout.catalogInnerClass
+      : resolvedLayout.innerClass;
 
   return (
     <div
       className={`relative flex aspect-square w-full items-center justify-center rounded-2xl border border-ink-100 bg-white ${className}`}
     >
-      <div className={resolvedLayout.innerClass}>{children}</div>
+      <div className={innerClass}>{children}</div>
     </div>
   );
 }

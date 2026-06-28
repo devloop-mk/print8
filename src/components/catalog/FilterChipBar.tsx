@@ -125,8 +125,8 @@ export function FilterChipBar<T extends string>({
 
   if (useScrollMobile) {
     return (
-      <div className="mb-8 overflow-hidden border border-ink-200 bg-white shadow-lift">
-        <div className="flex items-center justify-between gap-3 border-b border-ink-100 px-4 py-3 md:px-4 md:py-4">
+      <div className="mb-8 w-full min-w-0 max-w-full overflow-hidden border border-ink-200 bg-white shadow-lift">
+        <div className="flex min-w-0 items-center justify-between gap-3 border-b border-ink-100 px-4 py-3 md:px-4 md:py-4">
           <div className="flex min-w-0 items-center gap-2 text-sm font-semibold text-ink-900">
             <SlidersHorizontal className="h-4 w-4 shrink-0 text-brand-600" aria-hidden />
             <span className="truncate">{ariaLabel}</span>
@@ -138,7 +138,7 @@ export function FilterChipBar<T extends string>({
 
         <div
           className={cn(
-            'flex gap-2 overflow-x-auto px-4 py-3 md:hidden',
+            'flex w-full min-w-0 max-w-full gap-2 overflow-x-auto px-4 py-3 [contain:inline-size] md:hidden',
             'snap-x snap-mandatory scroll-smooth',
             '[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
           )}
@@ -176,7 +176,7 @@ export function FilterChipBar<T extends string>({
   }
 
   return (
-    <div className="mb-8 overflow-hidden border border-ink-200 bg-white shadow-lift">
+    <div className="mb-8 w-full min-w-0 max-w-full overflow-hidden border border-ink-200 bg-white shadow-lift">
       <div className="flex items-center gap-3 border-b border-ink-100 px-4 py-3 md:border-b-0 md:pb-0 md:pt-4">
         <div className="hidden items-center gap-2 text-sm font-semibold text-ink-900 md:flex">
           <SlidersHorizontal className="h-4 w-4 text-brand-600" aria-hidden />

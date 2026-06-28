@@ -48,9 +48,9 @@ export function DesignsNavDropdown() {
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
-      <button
-        type="button"
-        onClick={() => setOpen((value) => !value)}
+      <Link
+        href="/designs"
+        onClick={() => setOpen(false)}
         aria-expanded={open}
         aria-haspopup="true"
         aria-controls={panelId}
@@ -66,7 +66,7 @@ export function DesignsNavDropdown() {
           className={cn('h-4 w-4 transition', open && 'rotate-180')}
           aria-hidden
         />
-      </button>
+      </Link>
 
       {open ? (
         <div

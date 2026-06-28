@@ -3,7 +3,10 @@
 import Image from 'next/image';
 import { Shirt } from 'lucide-react';
 import { getProductGallerySlides, type Product } from '@/lib/data/catalog';
-import { getProductMockupLayout } from '@/lib/products/product-mockup-layout';
+import {
+  getCatalogMockupImageStyle,
+  getProductMockupLayout,
+} from '@/lib/products/product-mockup-layout';
 
 export function ProductCatalogImage({
   product,
@@ -34,6 +37,7 @@ export function ProductCatalogImage({
               fill
               sizes="(max-width: 768px) 50vw, 320px"
               className={mockupLayout.catalogImageClass}
+              style={getCatalogMockupImageStyle(mockupLayout)}
             />
           </div>
           {secondary ? (
@@ -44,6 +48,7 @@ export function ProductCatalogImage({
                 fill
                 sizes="(max-width: 768px) 50vw, 320px"
                 className={mockupLayout.catalogImageClass}
+                style={getCatalogMockupImageStyle(mockupLayout)}
               />
             </div>
           ) : null}

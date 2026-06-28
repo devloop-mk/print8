@@ -151,6 +151,32 @@ export function productCategoryHref(categoryId: ProductNavCategoryId): string {
   return `/products/category/${categoryId}`;
 }
 
+export function productCategoryBrowseHref(categoryId: ProductNavCategoryId): string {
+  return `/products/category/${categoryId}/browse`;
+}
+
+export function productCategoryReadyDesignsHref(categoryId: ProductNavCategoryId): string {
+  return `/products/ready-designs?category=${categoryId}`;
+}
+
+export function productCategoryTextTemplatesHref(categoryId: ProductNavCategoryId): string {
+  return `/products/text-templates?category=${categoryId}`;
+}
+
+export function productBelongsToCategory(
+  product: { type: ProductType },
+  categoryId: ProductNavCategoryId,
+): boolean {
+  return getProductNavCategory(categoryId).types.includes(product.type);
+}
+
+export function parseProductNavCategoryFilter(
+  value: string | null,
+): ProductNavCategoryId | 'all' {
+  if (value && isProductNavCategoryId(value)) return value;
+  return 'all';
+}
+
 export function productTypeHref(type: ProductType): string {
   return `/products/type/${encodeURIComponent(type)}`;
 }

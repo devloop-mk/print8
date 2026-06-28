@@ -284,92 +284,6 @@ export interface DesignTemplate {
 
 export const designTemplates: DesignTemplate[] = [
   {
-    id: 'bc-modern',
-    category: 'business-cards',
-    image: '/business-cards/business-card-1.jpg',
-    tags: ['modern', 'minimal'],
-    kind: 'fixed',
-  },
-  {
-    id: 'bc-classic',
-    category: 'business-cards',
-    image: '/business-cards/business-card-2.jpg',
-    tags: ['classic', 'elegant'],
-    kind: 'fixed',
-  },
-  {
-    id: 'bc-editable-minimal',
-    category: 'business-cards',
-    image: '/designs/bc-editable-minimal.svg',
-    tags: ['modern', 'editable'],
-    kind: 'customizable',
-    layoutId: 'bc-minimal',
-  },
-  {
-    id: 'bc-editable-classic',
-    category: 'business-cards',
-    image: '/designs/bc-editable-classic.svg',
-    tags: ['classic', 'editable'],
-    kind: 'customizable',
-    layoutId: 'bc-classic',
-  },
-  {
-    id: 'bc-executive',
-    category: 'business-cards',
-    image: '/designs/bc-executive.svg',
-    tags: ['professional', 'premium'],
-    kind: 'customizable',
-    layoutId: 'bc-executive',
-  },
-  {
-    id: 'wedding-floral',
-    category: 'wedding',
-    image: '/designs/wedding-floral.svg',
-    tags: ['floral', 'romantic'],
-    kind: 'customizable',
-    layoutId: 'wedding-floral',
-  },
-  {
-    id: 'wedding-minimal',
-    category: 'wedding',
-    image: '/designs/wedding-minimal.svg',
-    tags: ['minimal', 'modern'],
-    kind: 'customizable',
-    layoutId: 'wedding-minimal',
-  },
-  {
-    id: 'birthday-fun',
-    category: 'birthday',
-    image: '/designs/birthday-fun.svg',
-    tags: ['colorful', 'kids'],
-    kind: 'customizable',
-    layoutId: 'birthday-fun',
-  },
-  {
-    id: 'birthday-modern',
-    category: 'birthday',
-    image: '/designs/birthday-modern.svg',
-    tags: ['modern', 'elegant'],
-    kind: 'customizable',
-    layoutId: 'birthday-modern',
-  },
-  {
-    id: 'menu-elegant',
-    category: 'menus',
-    image: '/designs/menu-elegant.svg',
-    tags: ['restaurant', 'elegant'],
-    kind: 'customizable',
-    layoutId: 'menu-elegant',
-  },
-  {
-    id: 'menu-modern',
-    category: 'menus',
-    image: '/designs/menu-modern.svg',
-    tags: ['restaurant', 'modern'],
-    kind: 'customizable',
-    layoutId: 'menu-modern',
-  },
-  {
     id: 'svg-bcard-tech-wave',
     category: 'business-cards',
     image: '/NEW_DESIGNS/business card/bcard-tech-wave-front.svg',
@@ -671,6 +585,8 @@ export interface ProductDesignTemplate {
   overlayPosition?: { x: number; y: number };
   /** Recommended shirt color hex for this ink (e.g. cream on black) */
   recommendedColor?: string;
+  /** Shirt colors this design supports — omit to infer from variants / contrast */
+  applicableColors?: string[];
   /** Styled Macedonian text layout — used for `text` kind */
   textStyle?: ProductDesignTextStyle;
 }

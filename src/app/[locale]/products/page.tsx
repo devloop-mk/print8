@@ -1,7 +1,8 @@
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { ProductsCatalog } from "@/components/products/ProductsCatalog";
+import { ProductsCategoryHub } from "@/components/products/ProductsCategoryHub";
+import { ProductsHubRedirects } from "@/components/products/ProductsHubRedirects";
 import { SectionLoading } from "@/components/ui/SectionLoading";
 import { PageIntro } from "@/components/brand/PageIntro";
 import { buildSectionMetadata } from "@/lib/seo/page-metadata";
@@ -24,7 +25,8 @@ export default async function ProductsPage() {
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <PageIntro title={t("title")} subtitle={t("subtitle")} />
       <Suspense fallback={<SectionLoading />}>
-        <ProductsCatalog />
+        <ProductsHubRedirects />
+        <ProductsCategoryHub />
       </Suspense>
     </div>
   );

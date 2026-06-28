@@ -9,7 +9,11 @@ import {
   type ProductDesignTextStyle,
 } from '@/lib/data/catalog';
 import { ProductMockupFrame } from '@/components/products/ProductMockupFrame';
-import { getProductMockupLayout } from '@/lib/products/product-mockup-layout';
+import {
+  getCatalogMockupImageStyle,
+  getProductMockupLayout,
+} from '@/lib/products/product-mockup-layout';
+import { resolveDesignPreviewColor } from '@/lib/products/design-applicable-colors';
 import { useOverlayAssetUrl } from '@/hooks/useOverlayAssetUrl';
 import { Shirt } from 'lucide-react';
 
@@ -103,30 +107,22 @@ export function DesignTemplatePreview({
   typeLabel: string;
   showPhotoGuide?: boolean;
 }) {
-  const mockup = getProductMockup(product, color, design.defaultSide);
   const textStyle = design.textStyle;
   const photoGuide = textStyle?.photoPosition;
-  const previewColor =
-    design.recommendedColor &&
-    product.colors?.some(
-      (value) => value.toLowerCase() === design.recommendedColor!.toLowerCase(),
-    )
-      ? design.recommendedColor
-      : color;
+  const previewColor = resolveDesignPreviewColor(design, product, color);
+  const mockup = getProductMockup(product, previewColor, design.defaultSide);
   const mockupLayout = getProductMockupLayout(product);
 
   return (
-    <ProductMockupFrame
-      className="bg-gradient-to-br from-brand-50 to-brand-100 shadow-none"
-      layout={mockupLayout}
-    >
+    <ProductMockupFrame variant="catalog" layout={mockupLayout}>
       {mockup ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={mockup}
           alt={typeLabel}
           draggable={false}
-          className={mockupLayout.imageClass}
+          className={mockupLayout.catalogImageClass}
+          style={getCatalogMockupImageStyle(mockupLayout)}
         />
       ) : (
         <div className="flex h-full items-center justify-center">

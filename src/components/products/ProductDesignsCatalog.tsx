@@ -13,6 +13,13 @@ import {
 import { buildProductTypeFilterOptions } from '@/lib/products/product-type-icons';
 import { parseProductTypeFilter } from '@/lib/data/service-routes';
 import {
+  getProductNavCategory,
+  parseProductNavCategoryFilter,
+  productBelongsToCategory,
+  productCategoryHref,
+  type ProductNavCategoryId,
+} from '@/lib/products/product-nav';
+import {
   filterDesignCatalogEntries,
   getCatalogColors,
   getProductDesignCatalogEntries,
@@ -34,12 +41,26 @@ type SideFilter = ProductSide | 'all';
 export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) {
   const t = useTranslations('products');
   const tc = useTranslations('products.catalog');
+  const tcat = useTranslations('products.categoryPages');
+  const tNav = useTranslations('nav.productsMenu.categories');
   const searchParams = useSearchParams();
-
-  const allEntries = useMemo(
-    () => getProductDesignCatalogEntries(category),
-    [category],
+  const categoryFilter = parseProductNavCategoryFilter(
+    searchParams.get('category'),
   );
+
+  const allEntries = useMemo(() => {
+    const entries = getProductDesignCatalogEntries(category);
+    if (categoryFilter === 'all') return entries;
+
+    return entries
+      .map((entry) => ({
+        design: entry.design,
+        products: entry.products.filter((product) =>
+          productBelongsToCategory(product, categoryFilter),
+        ),
+      }))
+      .filter((entry) => entry.products.length > 0);
+  }, [category, categoryFilter]);
 
   const [typeFilter, setTypeFilter] = useState<TypeFilter>(() =>
     parseProductTypeFilter(searchParams.get('type')),
@@ -47,13 +68,19 @@ export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) 
   const [colorFilter, setColorFilter] = useState<string | 'all'>('all');
   const [sideFilter, setSideFilter] = useState<SideFilter>('all');
 
-  const { allOption, options: typeOptions } = useMemo(
-    () =>
-      buildProductTypeFilterOptions((type) =>
-        type === 'all' ? t('allTypes') : t(`typesPlural.${type}`),
-      ),
-    [t],
-  );
+  const { allOption, options: typeOptions } = useMemo(() => {
+    const built = buildProductTypeFilterOptions((type) =>
+      type === 'all' ? t('allTypes') : t(`typesPlural.${type}`),
+    );
+
+    if (categoryFilter === 'all') return built;
+
+    const allowed = new Set(getProductNavCategory(categoryFilter).types);
+    return {
+      allOption: built.allOption,
+      options: built.options.filter((option) => allowed.has(option.value)),
+    };
+  }, [categoryFilter, t]);
 
   const availableColors = useMemo(
     () => getCatalogColors(allEntries),
@@ -79,18 +106,30 @@ export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) 
       ? tc('readyDesignsSubtitle')
       : tc('textTemplatesSubtitle');
 
+  const backHref =
+    categoryFilter === 'all'
+      ? PRODUCT_OFFERING_PATHS.all
+      : productCategoryHref(categoryFilter);
+  const backLabel =
+    categoryFilter === 'all' ? tc('backToProducts') : tcat('backToCategory');
+
   return (
-    <div className="space-y-8">
+    <div className="w-full min-w-0 max-w-full space-y-8">
       <Link
-        href={PRODUCT_OFFERING_PATHS.all}
+        href={backHref}
         className="inline-flex items-center gap-2 text-sm font-medium text-ink-600 transition hover:text-brand-600"
       >
         <ArrowLeft className="h-4 w-4" />
-        {tc('backToProducts')}
+        {backLabel}
       </Link>
 
       <div className="max-w-3xl">
-        <h1 className="text-3xl font-bold text-ink-900">{pageTitle}</h1>
+        {categoryFilter !== 'all' ? (
+          <p className="text-xs font-semibold uppercase tracking-wider text-brand-600">
+            {tNav(categoryFilter as ProductNavCategoryId)}
+          </p>
+        ) : null}
+        <h1 className="mt-1 text-3xl font-bold text-ink-900">{pageTitle}</h1>
         <p className="mt-2 text-ink-600">{pageSubtitle}</p>
       </div>
 
@@ -105,7 +144,7 @@ export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) 
           onChange={setTypeFilter}
           resultsCount={filtered.length}
           resultsLabel={(count) => tc('resultsDesigns', { count })}
-          mobileLayout="scroll"
+          mobileLayout="collapse"
         />
       </Reveal>
 

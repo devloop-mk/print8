@@ -7,7 +7,7 @@ import { useCart } from '@/components/cart/CartProvider';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { DesignCustomizerStepNav } from '@/components/designs/DesignCustomizerStepNav';
-import { DesignCustomizerMobileFieldBar } from '@/components/designs/DesignCustomizerMobileFieldBar';
+import { DesignCustomizerMobileFieldBar, type DesignCustomizerMobileFieldBarHandle } from '@/components/designs/DesignCustomizerMobileFieldBar';
 import { SvgInteractivePreview } from '@/components/designs/SvgInteractivePreview';
 import { UnsavedWorkDialog } from '@/components/shared/UnsavedWorkDialog';
 import { useDirtySnapshot } from '@/hooks/useDirtySnapshot';
@@ -49,6 +49,7 @@ export function SvgCustomizableDesignForm({
   const router = useRouter();
   const { addItem } = useCart();
   const fieldInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const mobileFieldBarRef = useRef<DesignCustomizerMobileFieldBarHandle>(null);
 
   const hasBack = Boolean(svgTemplate.sides.back);
   const steps = useMemo<EditorStep[]>(
@@ -128,15 +129,18 @@ export function SvgCustomizableDesignForm({
 
   const focusField = useCallback((fieldKey: string) => {
     setActiveFieldKey(fieldKey);
-    if (window.matchMedia('(min-width: 768px)').matches) {
-      window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      if (window.matchMedia('(min-width: 768px)').matches) {
         fieldInputRefs.current[fieldKey]?.focus();
         fieldInputRefs.current[fieldKey]?.scrollIntoView({
           behavior: 'smooth',
           block: 'nearest',
         });
-      });
-    }
+        return;
+      }
+
+      window.setTimeout(() => mobileFieldBarRef.current?.focus(), 80);
+    });
   }, []);
 
   useEffect(() => {
@@ -362,9 +366,31 @@ export function SvgCustomizableDesignForm({
             </div>
 
             {isTextStep ? (
-              <p className="mt-3 text-center text-xs text-ink-500 md:text-sm">
-                {t('tapToEdit')}
-              </p>
+              <>
+                <p className="mt-3 text-center text-xs text-ink-500 md:text-sm">
+                  {t('tapToEdit')}
+                </p>
+                <div className="mt-3 flex gap-2 overflow-x-auto pb-1 md:hidden">
+                  {textFields.map((field, index) => {
+                    const key = `${textSide}:${field.id}`;
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => focusField(key)}
+                        className={cn(
+                          'shrink-0 rounded-full border px-3 py-2 text-xs font-semibold transition touch-manipulation',
+                          activeFieldKey === key
+                            ? 'border-brand-500 bg-brand-50 text-brand-700 shadow-sm'
+                            : 'border-ink-200 bg-white text-ink-600',
+                        )}
+                      >
+                        {t('svgLine', { n: index + 1 })}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
             ) : null}
 
             {step === 'review' ? (
@@ -485,8 +511,14 @@ export function SvgCustomizableDesignForm({
       </div>
 
       <DesignCustomizerMobileFieldBar
+        ref={mobileFieldBarRef}
         open={isTextStep && Boolean(activeFieldKey)}
-        inputId={activeFieldKey ?? 'mobile-field'}
+        inputId={
+          activeFieldKey
+            ? `mobile-field-${activeFieldKey.replace(/[^a-zA-Z0-9_-]/g, '-')}`
+            : 'mobile-field'
+        }
+        doneLabel={t('mobileDone')}
         label={
           activeFieldIndex >= 0
             ? t('editingLine', { n: activeFieldIndex + 1 })

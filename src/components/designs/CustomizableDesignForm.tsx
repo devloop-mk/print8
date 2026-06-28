@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { CustomizableDesignPreview } from '@/components/designs/CustomizableDesignPreview';
 import { DesignCustomizerStepNav } from '@/components/designs/DesignCustomizerStepNav';
-import { DesignCustomizerMobileFieldBar } from '@/components/designs/DesignCustomizerMobileFieldBar';
+import { DesignCustomizerMobileFieldBar, type DesignCustomizerMobileFieldBarHandle } from '@/components/designs/DesignCustomizerMobileFieldBar';
 import { UnsavedWorkDialog } from '@/components/shared/UnsavedWorkDialog';
 import { useDirtySnapshot } from '@/hooks/useDirtySnapshot';
 import { useUnsavedWorkGuard } from '@/hooks/useUnsavedWorkGuard';
@@ -68,6 +68,7 @@ export function CustomizableDesignForm({
   const { addItem } = useCart();
   const visiblePreviewRef = useRef<HTMLDivElement>(null);
   const fieldInputRefs = useRef<Partial<Record<DesignOrderFieldId, HTMLElement | null>>>({});
+  const mobileFieldBarRef = useRef<DesignCustomizerMobileFieldBarHandle>(null);
 
   const required = requiredOrderFields[template.category];
   const price = designCategoryPrices[template.category];
@@ -146,15 +147,18 @@ export function CustomizableDesignForm({
 
   const focusField = useCallback((field: DesignOrderFieldId) => {
     setActiveField(field);
-    if (window.matchMedia('(min-width: 768px)').matches) {
-      window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      if (window.matchMedia('(min-width: 768px)').matches) {
         fieldInputRefs.current[field]?.focus();
         fieldInputRefs.current[field]?.scrollIntoView({
           behavior: 'smooth',
           block: 'nearest',
         });
-      });
-    }
+        return;
+      }
+
+      window.setTimeout(() => mobileFieldBarRef.current?.focus(), 80);
+    });
   }, []);
 
   useEffect(() => {
@@ -446,7 +450,7 @@ export function CustomizableDesignForm({
                     type="button"
                     onClick={() => focusField(field)}
                     className={cn(
-                      'shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition',
+                      'shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition touch-manipulation',
                       activeField === field
                         ? 'border-brand-500 bg-brand-50 text-brand-700'
                         : 'border-ink-200 bg-white text-ink-600',
@@ -660,8 +664,10 @@ export function CustomizableDesignForm({
       </div>
 
       <DesignCustomizerMobileFieldBar
+        ref={mobileFieldBarRef}
         open={isTextStep && Boolean(activeField)}
-        inputId={activeField ?? 'mobile-field'}
+        inputId={activeField ? `mobile-field-${activeField}` : 'mobile-field'}
+        doneLabel={t('mobileDone')}
         label={activeField ? to(`fields.${activeField}`) : ''}
         value={activeField ? (values[activeField] ?? '') : ''}
         onChange={(value) => {

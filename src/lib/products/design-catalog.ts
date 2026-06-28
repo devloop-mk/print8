@@ -7,6 +7,7 @@ import {
   type ProductSide,
   type ProductType,
 } from '@/lib/data/catalog';
+import { getDesignApplicableColors } from '@/lib/products/design-applicable-colors';
 
 export type ProductDesignCatalogEntry = {
   design: ProductDesignTemplate;
@@ -55,7 +56,16 @@ export function filterDesignCatalogEntries(
         return false;
       }
 
-      return matchedProducts.some((product) => matchesProductFilters(product, filters));
+      if (filters.color !== 'all') {
+        const supportsColor = matchedProducts.some((product) =>
+          getDesignApplicableColors(design, product).includes(filters.color),
+        );
+        if (!supportsColor) return false;
+      }
+
+      return matchedProducts.some((product) =>
+        matchesProductFilters(product, filters),
+      );
     })
     .map(({ design, products: matchedProducts }) => ({
       design,

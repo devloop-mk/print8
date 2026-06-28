@@ -9,7 +9,10 @@ import {
   type Product,
   type ProductGallerySlide,
 } from '@/lib/data/catalog';
-import { getProductMockupLayout } from '@/lib/products/product-mockup-layout';
+import {
+  getCatalogMockupImageStyle,
+  getProductMockupLayout,
+} from '@/lib/products/product-mockup-layout';
 
 export function ProductImageCarousel({
   product,
@@ -67,6 +70,7 @@ export function ProductImageCarousel({
             fill
             sizes="(max-width: 768px) 100vw, 400px"
             className={mockupLayout.catalogImageClass}
+            style={getCatalogMockupImageStyle(mockupLayout)}
             priority={index === 0}
           />
         </div>

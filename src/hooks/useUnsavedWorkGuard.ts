@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from '@/i18n/navigation';
+import { toInternalHref } from '@/i18n/internal-path';
 import { useTranslations } from 'next-intl';
 
 type PendingNavigation = {
@@ -38,7 +39,7 @@ export function useUnsavedWorkGuard({
       if (!navigation) return;
 
       if (navigation.action === 'href' && navigation.href) {
-        router.push(navigation.href);
+        router.push(toInternalHref(navigation.href));
         return;
       }
 
@@ -65,12 +66,15 @@ export function useUnsavedWorkGuard({
       if (!isDirtyRef.current || bypassRef.current) {
         if (href) {
           bypassRef.current = true;
-          router.push(href);
+          router.push(toInternalHref(href));
         }
         return;
       }
 
-      openDialog({ action: 'href', href });
+      openDialog({
+        action: 'href',
+        href: href ? toInternalHref(href) : undefined,
+      });
     },
     [openDialog, router],
   );
@@ -145,7 +149,7 @@ export function useUnsavedWorkGuard({
 
       event.preventDefault();
       event.stopPropagation();
-      openDialog({ action: 'href', href: `${url.pathname}${url.search}` });
+      openDialog({ action: 'href', href: toInternalHref(`${url.pathname}${url.search}`) });
     };
 
     document.addEventListener('click', onDocumentClick, true);

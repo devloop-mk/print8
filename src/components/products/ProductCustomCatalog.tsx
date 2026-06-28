@@ -7,7 +7,14 @@ import { useRouter, Link } from '@/i18n/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { products, productTypes, type ProductType } from '@/lib/data/catalog';
 import { parseProductTypeFilter } from '@/lib/data/service-routes';
-import { productTypeHref } from '@/lib/products/product-nav';
+import {
+  getProductNavCategory,
+  parseProductNavCategoryFilter,
+  productBelongsToCategory,
+  productCategoryHref,
+  productTypeHref,
+  type ProductNavCategoryId,
+} from '@/lib/products/product-nav';
 import { buildProductTypeFilterOptions } from '@/lib/products/product-type-icons';
 import { PRODUCT_OFFERING_PATHS } from '@/lib/products/paths';
 import { ProductCardGrid } from '@/components/products/ProductCardGrid';
@@ -19,8 +26,13 @@ type ProductFilter = ProductType | 'all';
 export function ProductCustomCatalog() {
   const t = useTranslations('products');
   const tc = useTranslations('products.catalog');
+  const tcat = useTranslations('products.categoryPages');
+  const tNav = useTranslations('nav.productsMenu.categories');
   const searchParams = useSearchParams();
   const router = useRouter();
+  const categoryFilter = parseProductNavCategoryFilter(
+    searchParams.get('category'),
+  );
   const [typeFilter, setTypeFilter] = useState<ProductFilter>(() =>
     parseProductTypeFilter(searchParams.get('type')),
   );
@@ -37,31 +49,56 @@ export function ProductCustomCatalog() {
     setTypeFilter(parseProductTypeFilter(typeParam));
   }, [searchParams, router]);
 
-  const { allOption, options: filterOptions } = useMemo(
-    () =>
-      buildProductTypeFilterOptions((type) =>
-        type === 'all' ? t('allTypes') : t(`typesPlural.${type}`),
-      ),
-    [t],
-  );
+  const scopedProducts = useMemo(() => {
+    if (categoryFilter === 'all') return products;
+    return products.filter((product) =>
+      productBelongsToCategory(product, categoryFilter),
+    );
+  }, [categoryFilter]);
+
+  const { allOption, options: filterOptions } = useMemo(() => {
+    const built = buildProductTypeFilterOptions((type) =>
+      type === 'all' ? t('allTypes') : t(`typesPlural.${type}`),
+    );
+
+    if (categoryFilter === 'all') return built;
+
+    const allowed = new Set(getProductNavCategory(categoryFilter).types);
+    return {
+      allOption: built.allOption,
+      options: built.options.filter((option) => allowed.has(option.value)),
+    };
+  }, [categoryFilter, t]);
 
   const filtered =
     typeFilter === 'all'
-      ? products
-      : products.filter((product) => product.type === typeFilter);
+      ? scopedProducts
+      : scopedProducts.filter((product) => product.type === typeFilter);
+
+  const backHref =
+    categoryFilter === 'all'
+      ? PRODUCT_OFFERING_PATHS.all
+      : productCategoryHref(categoryFilter);
+  const backLabel =
+    categoryFilter === 'all' ? tc('backToProducts') : tcat('backToCategory');
 
   return (
-    <div className="space-y-8">
+    <div className="w-full min-w-0 max-w-full space-y-8">
       <Link
-        href={PRODUCT_OFFERING_PATHS.all}
+        href={backHref}
         className="inline-flex items-center gap-2 text-sm font-medium text-ink-600 transition hover:text-brand-600"
       >
         <ArrowLeft className="h-4 w-4" />
-        {tc('backToProducts')}
+        {backLabel}
       </Link>
 
       <div className="max-w-3xl">
-        <h1 className="text-3xl font-bold text-ink-900">{tc('customTitle')}</h1>
+        {categoryFilter !== 'all' ? (
+          <p className="text-xs font-semibold uppercase tracking-wider text-brand-600">
+            {tNav(categoryFilter as ProductNavCategoryId)}
+          </p>
+        ) : null}
+        <h1 className="mt-1 text-3xl font-bold text-ink-900">{tc('customTitle')}</h1>
         <p className="mt-2 text-ink-600">{tc('customSubtitle')}</p>
       </div>
 
@@ -76,7 +113,7 @@ export function ProductCustomCatalog() {
           onChange={setTypeFilter}
           resultsCount={filtered.length}
           resultsLabel={(count) => t('resultsCount', { count })}
-          mobileLayout="scroll"
+          mobileLayout="collapse"
         />
       </Reveal>
 
