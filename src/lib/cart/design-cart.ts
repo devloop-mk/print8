@@ -113,8 +113,8 @@ export function cartItemMatchesDesignTemplate(
   item: CartItem | undefined,
   templateId: string,
 ): item is CartItem {
+  if (!item) return false;
   return (
-    Boolean(item) &&
     item.type === 'design' &&
     item.metadata?.designTemplateId === templateId
   );
