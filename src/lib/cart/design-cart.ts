@@ -38,18 +38,19 @@ function inferSvgCustomizeMode(
 export function buildDesignEditUrl(item: CartItem): string | null {
   if (!isEditableDesignCartItem(item)) return null;
 
-  const designId = item.metadata?.designTemplateId;
+  const metadata = item.metadata ?? {};
+  const designId = metadata.designTemplateId;
   if (typeof designId !== 'string') return null;
 
   const params = new URLSearchParams({ edit: item.id });
-  const orderType = item.metadata?.orderType;
+  const orderType = metadata.orderType;
 
   if (orderType === 'svg-template') {
     const mode =
-      typeof item.metadata?.customizeMode === 'string' &&
-      isDesignCustomizeMode(item.metadata.customizeMode)
-        ? item.metadata.customizeMode
-        : inferSvgCustomizeMode(item.metadata);
+      typeof metadata.customizeMode === 'string' &&
+      isDesignCustomizeMode(metadata.customizeMode)
+        ? metadata.customizeMode
+        : inferSvgCustomizeMode(metadata);
     return `${getDesignCustomizeHref(designId, mode)}?${params.toString()}`;
   }
 
