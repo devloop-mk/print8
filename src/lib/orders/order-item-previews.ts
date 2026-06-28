@@ -1,9 +1,9 @@
 import type { CheckoutInput } from '@/lib/validations/order';
+import type { ProductSide } from '@/lib/data/catalog';
 import {
   PRODUCT_SIDES,
   getSideMetadataPrefix,
   SIDE_PREVIEW_CART_KEYS,
-  type ProductSide,
 } from '@/lib/products/product-sides';
 
 export type OrderItem = CheckoutInput['items'][number];
