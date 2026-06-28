@@ -74,13 +74,14 @@ function writeSideDesignMetadata(
 
 function sideDesignForTemplate(
   design: ProductDesignTemplate,
+  product: Product,
   color: string,
 ): SideDesign | null {
   if (isImageDesignTemplate(design)) {
     return sideDesignFromImageTemplate(design);
   }
   if (isOverlayDesignTemplate(design)) {
-    return sideDesignFromOverlayTemplate(design, color);
+    return sideDesignFromOverlayTemplate(design, product, color);
   }
   if (isTextDesignTemplate(design)) {
     return sideDesignFromTextTemplate(design);
@@ -100,7 +101,7 @@ export function buildPremadeDesignOrderMetadata({
   size?: string;
 }): Record<string, string | number | boolean> {
   const side = design.defaultSide;
-  const sideDesign = sideDesignForTemplate(design, color);
+  const sideDesign = sideDesignForTemplate(design, product, color);
 
   const metadata: Record<string, string | number | boolean> = {
     productId: product.id,

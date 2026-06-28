@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useDeferredValue, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { Search, X } from 'lucide-react';
 import { searchGlobalCatalog } from '@/lib/catalog/catalog-search';
 import { useCatalogSearchLabels } from '@/hooks/useCatalogSearchLabels';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import {
   SearchCollectionsSection,
   SearchDesignsSection,
@@ -25,7 +26,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
   const labels = useCatalogSearchLabels();
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState('');
-  const deferredQuery = useDeferredValue(query);
+  const debouncedQuery = useDebouncedValue(query, 350);
 
   useEffect(() => {
     if (!open) {
@@ -46,8 +47,8 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
   }, [open, onClose]);
 
   const results = useMemo(
-    () => searchGlobalCatalog(deferredQuery, labels).slice(0, 12),
-    [deferredQuery, labels],
+    () => searchGlobalCatalog(debouncedQuery, labels).slice(0, 12),
+    [debouncedQuery, labels],
   );
 
   const grouped = useMemo(() => {
@@ -59,7 +60,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
     };
   }, [results]);
 
-  const isSearching = query.trim() !== deferredQuery.trim();
+  const isSettled = query.trim() === debouncedQuery.trim();
 
   if (!open) return null;
 
@@ -109,11 +110,11 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
         <div className="max-h-[min(50vh,420px)] overflow-y-auto p-2">
           {!query.trim() ? (
             <p className="px-3 py-8 text-center text-sm text-ink-500">{t('startTyping')}</p>
-          ) : isSearching ? (
-            <p className="px-3 py-8 text-center text-sm text-ink-500">{t('loading')}</p>
-          ) : results.length === 0 ? (
+          ) : !isSettled && results.length === 0 ? (
+            <div className="py-8" aria-hidden />
+          ) : isSettled && results.length === 0 ? (
             <p className="px-3 py-8 text-center text-sm text-ink-500">
-              {t('noResults', { query: query.trim() })}
+              {t('noResults', { query: debouncedQuery.trim() })}
             </p>
           ) : (
             <div className="space-y-4 p-2">

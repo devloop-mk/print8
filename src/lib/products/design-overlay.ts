@@ -1,9 +1,45 @@
-import type { ProductDesignTemplate } from '@/lib/data/catalog';
+import type {
+  Product,
+  ProductDesignTemplate,
+  ProductType,
+} from '@/lib/data/catalog';
 
 export type OverlaySvgColors = {
   primary: string;
   secondary?: string;
 };
+
+export type OverlayPlacement = {
+  position: { x: number; y: number };
+  scale: number;
+};
+
+const DEFAULT_OVERLAY_POSITION = { x: 50, y: 45 };
+const DEFAULT_OVERLAY_SCALE = 50;
+
+export function resolveOverlayPlacement(
+  template: Pick<
+    ProductDesignTemplate,
+    'overlayPosition' | 'overlayScale' | 'overlayByProductType'
+  >,
+  productOrType: Product | ProductType,
+): OverlayPlacement {
+  const productType =
+    typeof productOrType === 'string' ? productOrType : productOrType.type;
+
+  const base: OverlayPlacement = {
+    position: template.overlayPosition ?? DEFAULT_OVERLAY_POSITION,
+    scale: template.overlayScale ?? DEFAULT_OVERLAY_SCALE,
+  };
+
+  const typeOverride = template.overlayByProductType?.[productType];
+  if (!typeOverride) return base;
+
+  return {
+    position: typeOverride.position ?? base.position,
+    scale: typeOverride.scale ?? base.scale,
+  };
+}
 
 export function normalizeHex(hex: string): string {
   const value = hex.trim().toLowerCase();
@@ -138,4 +174,33 @@ export function hasOverlayColorVariants(
     template.overlayColorVariants &&
       Object.keys(template.overlayColorVariants).length > 0,
   );
+}
+
+/** Static artwork URL for catalog cards, search thumbs, etc. */
+export function getProductDesignThumbnail(
+  template: ProductDesignTemplate,
+  shirtColor?: string,
+): string | undefined {
+  if (template.image) return template.image;
+
+  if (shirtColor) {
+    const variant = resolveOverlayColorVariant(template, shirtColor);
+    if (variant) return variant;
+  }
+
+  if (template.overlayImage) return template.overlayImage;
+
+  if (template.overlayColorVariants) {
+    const recommended = template.recommendedColor
+      ? template.overlayColorVariants[template.recommendedColor]
+      : undefined;
+    if (recommended) return recommended;
+
+    const values = Object.values(template.overlayColorVariants);
+    if (values.length > 0) return values[0];
+  }
+
+  if (template.overlaySvg) return template.overlaySvg;
+
+  return undefined;
 }

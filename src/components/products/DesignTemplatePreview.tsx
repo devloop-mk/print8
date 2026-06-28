@@ -14,6 +14,7 @@ import {
   getProductMockupLayout,
 } from '@/lib/products/product-mockup-layout';
 import { resolveDesignPreviewColor } from '@/lib/products/design-applicable-colors';
+import { resolveOverlayPlacement, type OverlayPlacement } from '@/lib/products/design-overlay';
 import { useOverlayAssetUrl } from '@/hooks/useOverlayAssetUrl';
 import { Shirt } from 'lucide-react';
 
@@ -51,9 +52,11 @@ export function StyledDesignText({
 function CatalogOverlayPreview({
   design,
   shirtColor,
+  placement,
 }: {
   design: ProductDesignTemplate;
   shirtColor: string;
+  placement: OverlayPlacement;
 }) {
   const overlayDesign = {
     overlaySvg: design.overlaySvg ?? null,
@@ -66,8 +69,8 @@ function CatalogOverlayPreview({
     overlayColorVariants: design.overlayColorVariants ?? null,
     overlayRaster: design.overlayImage ?? null,
     premadeDesignId: design.id,
-    uploadedImageScale: design.overlayScale ?? 50,
-    uploadedImagePosition: design.overlayPosition ?? { x: 50, y: 45 },
+    uploadedImageScale: placement.scale,
+    uploadedImagePosition: placement.position,
   };
   const src = useOverlayAssetUrl({
     design: overlayDesign,
@@ -110,6 +113,7 @@ export function DesignTemplatePreview({
   const textStyle = design.textStyle;
   const photoGuide = textStyle?.photoPosition;
   const previewColor = resolveDesignPreviewColor(design, product, color);
+  const placement = resolveOverlayPlacement(design, product);
   const mockup = getProductMockup(product, previewColor, design.defaultSide);
   const mockupLayout = getProductMockupLayout(product);
 
@@ -132,7 +136,11 @@ export function DesignTemplatePreview({
 
       {isOverlayDesignTemplate(design) &&
       (isRecolorableOverlayTemplate(design) || design.overlayColorVariants) ? (
-        <CatalogOverlayPreview design={design} shirtColor={previewColor} />
+        <CatalogOverlayPreview
+          design={design}
+          shirtColor={previewColor}
+          placement={placement}
+        />
       ) : design.overlayImage ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -141,9 +149,9 @@ export function DesignTemplatePreview({
           draggable={false}
           className="pointer-events-none absolute max-h-[70%] max-w-[70%] object-contain"
           style={{
-            left: `${design.overlayPosition?.x ?? 50}%`,
-            top: `${design.overlayPosition?.y ?? 45}%`,
-            width: `${design.overlayScale ?? 50}%`,
+            left: `${placement.position.x}%`,
+            top: `${placement.position.y}%`,
+            width: `${placement.scale}%`,
             transform: 'translate(-50%, -50%)',
           }}
         />

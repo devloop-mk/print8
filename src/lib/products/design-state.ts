@@ -1,4 +1,5 @@
 import type {
+  Product,
   ProductDesignTemplate,
   ProductDesignTextStyle,
 } from "@/lib/data/catalog";
@@ -6,6 +7,7 @@ import { getProductDesignTemplate } from "@/lib/data/catalog";
 import type { PlacedSticker } from "@/lib/products/sticker-library";
 import {
   ensureInkContrast,
+  resolveOverlayPlacement,
   type OverlaySvgColors,
 } from "@/lib/products/design-overlay";
 
@@ -114,15 +116,17 @@ export function sideDesignFromImageTemplate(
 
 export function sideDesignFromOverlayTemplate(
   template: ProductDesignTemplate,
+  product: Product,
   shirtColor?: string,
 ): SideDesign | null {
   if (template.kind !== "overlay") return null;
 
+  const placement = resolveOverlayPlacement(template, product);
+
   const base = {
     ...createDefaultSideDesign(),
-    uploadedImageScale: template.overlayScale ?? 50,
-    uploadedImagePosition:
-      template.overlayPosition ?? createDefaultSideDesign().uploadedImagePosition,
+    uploadedImageScale: placement.scale,
+    uploadedImagePosition: placement.position,
     premadeDesignId: template.id,
     isTextTemplate: false,
     showPhotoGuide: false,

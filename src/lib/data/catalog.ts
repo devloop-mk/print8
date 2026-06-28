@@ -671,6 +671,10 @@ export interface ProductDesignTemplate {
   overlayColorVariants?: Record<string, string>;
   overlayScale?: number;
   overlayPosition?: { x: number; y: number };
+  /** Per product-type placement when default overlay position is tuned for another type */
+  overlayByProductType?: Partial<
+    Record<ProductType, { position?: { x: number; y: number }; scale?: number }>
+  >;
   /** Recommended shirt color hex for this ink (e.g. cream on black) */
   recommendedColor?: string;
   /** Shirt colors this design supports — omit to infer from variants / contrast */
@@ -769,6 +773,9 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
     overlayImage: '/NEW_DESIGNS/t-shirts/gym-zver-gorilla-v2.png',
     overlayScale: 52,
     overlayPosition: { x: 50, y: 49 },
+    overlayByProductType: {
+      hoodie: { position: { x: 50, y: 59 }, scale: 41 },
+    },
     recommendedColor: '#000000',
     defaultSide: 'front',
   },

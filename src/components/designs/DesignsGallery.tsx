@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useRouter, Link } from '@/i18n/navigation';
@@ -109,7 +109,6 @@ export function DesignsGallery() {
     ),
   );
   const [searchQuery, setSearchQuery] = useState(() => searchParams.get('q') ?? '');
-  const deferredSearchQuery = useDeferredValue(searchQuery);
 
   useEffect(() => {
     const nextCategory = parseDesignCategoryFilter(searchParams.get('category'));
@@ -211,7 +210,7 @@ export function DesignsGallery() {
 
   const filtered = filterDesignsBySearchQuery(
     filteredBySubfilter,
-    deferredSearchQuery,
+    searchQuery,
     searchLabels,
   );
 

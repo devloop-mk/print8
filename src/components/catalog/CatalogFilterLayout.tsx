@@ -1,8 +1,9 @@
 'use client';
 
-import { useId, useState, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { ChevronDown, SlidersHorizontal, type LucideIcon } from 'lucide-react';
 import { CatalogSearchField } from '@/components/catalog/CatalogSearchField';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { cn } from '@/lib/utils';
 
 export type FilterOption<T extends string> = {
@@ -60,6 +61,44 @@ type CatalogFilterLayoutProps = {
   onSearchChange?: (value: string) => void;
   children: ReactNode;
 };
+
+function DebouncedCatalogSearch({
+  searchQuery = '',
+  onSearchChange,
+  placeholder,
+  ariaLabel,
+  clearLabel,
+}: {
+  searchQuery?: string;
+  onSearchChange: (value: string) => void;
+  placeholder: string;
+  ariaLabel: string;
+  clearLabel: string;
+}) {
+  const [draft, setDraft] = useState(searchQuery);
+  const debouncedDraft = useDebouncedValue(draft, 300);
+  const onSearchChangeRef = useRef(onSearchChange);
+  onSearchChangeRef.current = onSearchChange;
+
+  useEffect(() => {
+    setDraft(searchQuery);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    if (debouncedDraft === searchQuery) return;
+    onSearchChangeRef.current(debouncedDraft);
+  }, [debouncedDraft, searchQuery]);
+
+  return (
+    <CatalogSearchField
+      value={draft}
+      onChange={setDraft}
+      placeholder={placeholder}
+      ariaLabel={ariaLabel}
+      clearLabel={clearLabel}
+    />
+  );
+}
 
 function SidebarOptionButton({
   label,
@@ -242,9 +281,9 @@ function MobileFilterPanel({
     <div className="w-full min-w-0 max-w-full overflow-hidden border border-ink-200 bg-white shadow-lift">
       {showSearch ? (
         <div className="border-b border-ink-100 px-4 py-3">
-          <CatalogSearchField
-            value={searchQuery ?? ''}
-            onChange={onSearchChange!}
+          <DebouncedCatalogSearch
+            searchQuery={searchQuery}
+            onSearchChange={onSearchChange!}
             placeholder={searchPlaceholder!}
             ariaLabel={searchAriaLabel!}
             clearLabel={searchClearLabel!}
@@ -348,9 +387,9 @@ export function CatalogFilterLayout({
           </div>
 
           {showSearch ? (
-            <CatalogSearchField
-              value={searchQuery ?? ''}
-              onChange={onSearchChange!}
+            <DebouncedCatalogSearch
+              searchQuery={searchQuery}
+              onSearchChange={onSearchChange!}
               placeholder={searchPlaceholder!}
               ariaLabel={searchAriaLabel!}
               clearLabel={searchClearLabel!}

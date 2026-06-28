@@ -11,13 +11,19 @@ import {
   ImageIcon,
   LayoutTemplate,
   Sparkles,
-  Type,
   UtensilsCrossed,
   type LucideIcon,
 } from 'lucide-react';
 import type { DesignCategory } from '@/lib/data/catalog';
 import type { GlobalSearchResult } from '@/lib/catalog/catalog-search';
-import { designCategories } from '@/lib/data/catalog';
+import {
+  designCategories,
+  getProductDesignTemplate,
+  isImageDesignTemplate,
+  products,
+} from '@/lib/data/catalog';
+import { DesignTemplatePreview } from '@/components/products/DesignTemplatePreview';
+import { resolveDesignPreviewColor } from '@/lib/products/design-applicable-colors';
 import { getProductTypeIcon } from '@/lib/products/product-type-icons';
 import { cn } from '@/lib/utils';
 
@@ -163,6 +169,81 @@ function ResultThumb({
           <Icon className={cn('h-5 w-5', iconClassName)} aria-hidden />
         </div>
       ) : null}
+    </div>
+  );
+}
+
+const SEARCH_PREVIEW_RENDER_SIZE = 256;
+
+function SearchProductDesignThumb({
+  item,
+  compact = false,
+}: {
+  item: GlobalSearchResult;
+  compact?: boolean;
+}) {
+  const tp = useTranslations('products.types');
+  const outer = compact ? 40 : 64;
+  const scale = outer / SEARCH_PREVIEW_RENDER_SIZE;
+
+  if (!item.productId || !item.premadeDesignId) {
+    return (
+      <ResultThumb
+        image={item.image}
+        alt={item.title}
+        icon={ImageIcon}
+        iconClassName="text-violet-700"
+        wrapClassName="bg-violet-50"
+        compact={compact}
+      />
+    );
+  }
+
+  const product = products.find((entry) => entry.id === item.productId);
+  const design = getProductDesignTemplate(item.premadeDesignId);
+
+  if (!product || !design) {
+    return (
+      <ResultThumb
+        image={item.image}
+        alt={item.title}
+        icon={ImageIcon}
+        iconClassName="text-violet-700"
+        wrapClassName="bg-violet-50"
+        compact={compact}
+      />
+    );
+  }
+
+  if (isImageDesignTemplate(design) && design.image) {
+    return (
+      <ResultThumb image={design.image} alt={item.title} compact={compact} />
+    );
+  }
+
+  const previewColor = resolveDesignPreviewColor(design, product);
+
+  return (
+    <div
+      className={cn(
+        'relative shrink-0 overflow-hidden rounded-lg border border-ink-100 bg-white',
+        compact ? 'h-10 w-10' : 'h-16 w-16',
+      )}
+    >
+      <div
+        className="origin-top-left"
+        style={{
+          width: SEARCH_PREVIEW_RENDER_SIZE,
+          transform: `scale(${scale})`,
+        }}
+      >
+        <DesignTemplatePreview
+          product={product}
+          color={previewColor}
+          design={design}
+          typeLabel={tp(product.type)}
+        />
+      </div>
     </div>
   );
 }
@@ -434,7 +515,6 @@ export function SearchProductDesignsSection({
       <ul className={compact ? 'space-y-1' : 'grid gap-2 sm:grid-cols-2'}>
         {items.map((item) => {
           const ready = isReady(item);
-          const KindIcon = ready ? ImageIcon : Type;
 
           return (
             <li key={item.id}>
@@ -452,14 +532,7 @@ export function SearchProductDesignsSection({
                   compact && !ready && 'hover:bg-indigo-50',
                 )}
               >
-                <ResultThumb
-                  image={item.image}
-                  alt={item.title}
-                  icon={KindIcon}
-                  iconClassName={ready ? 'text-violet-700' : 'text-indigo-700'}
-                  wrapClassName={ready ? 'bg-violet-50' : 'bg-indigo-50'}
-                  compact={compact}
-                />
+                <SearchProductDesignThumb item={item} compact={compact} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-ink-900 group-hover:text-brand-700">
                     {item.title}
@@ -475,9 +548,24 @@ export function SearchProductDesignsSection({
                     >
                       {ready ? t('badgeReadyDesign') : t('badgeTextTemplate')}
                     </span>
-                    <span className="truncate text-xs text-ink-500">
-                      {item.subtitle}
-                    </span>
+                    {item.productType ? (
+                      <span className="inline-flex items-center gap-1 truncate text-xs font-medium text-ink-600">
+                        {(() => {
+                          const ProductIcon = getProductTypeIcon(item.productType);
+                          return (
+                            <ProductIcon
+                              className="h-3 w-3 shrink-0 text-ink-400"
+                              aria-hidden
+                            />
+                          );
+                        })()}
+                        {item.subtitle}
+                      </span>
+                    ) : (
+                      <span className="truncate text-xs text-ink-500">
+                        {item.subtitle}
+                      </span>
+                    )}
                   </div>
                 </div>
               </Link>

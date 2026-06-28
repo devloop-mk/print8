@@ -730,7 +730,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     const side = template.defaultSide;
     const textDesign = sideDesignFromTextTemplate(template);
     const imageDesign = sideDesignFromImageTemplate(template);
-    const overlayDesign = sideDesignFromOverlayTemplate(template, color);
+    const overlayDesign = sideDesignFromOverlayTemplate(template, product, color);
 
     if (textDesign) {
       setSideDesigns((prev) => ({
