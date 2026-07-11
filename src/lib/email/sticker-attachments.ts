@@ -1,7 +1,7 @@
-import { readFile } from 'fs/promises';
-import path from 'path';
 import sharp from 'sharp';
+import { absoluteUrl } from '@/lib/seo/site';
 import { getStickerById } from '@/lib/products/sticker-library';
+import { resolveAssetUrl } from '@/lib/storage/asset-url';
 import type { OrderStickerRef } from '@/lib/orders/order-assets';
 
 export interface EmailAttachment {
@@ -10,18 +10,20 @@ export interface EmailAttachment {
   contentType: string;
 }
 
+function stickerAssetUrl(src: string) {
+  const resolved = resolveAssetUrl(src);
+  return resolved.startsWith('http') ? resolved : absoluteUrl(resolved);
+}
+
 async function loadStickerPng(stickerId: string): Promise<Buffer | null> {
   const definition = getStickerById(stickerId);
   if (!definition) return null;
 
-  const filePath = path.join(
-    process.cwd(),
-    'public',
-    definition.src.replace(/^\//, ''),
-  );
-
   try {
-    const svg = await readFile(filePath);
+    const response = await fetch(stickerAssetUrl(definition.src));
+    if (!response.ok) return null;
+
+    const svg = Buffer.from(await response.arrayBuffer());
     return await sharp(svg).png().toBuffer();
   } catch {
     return null;

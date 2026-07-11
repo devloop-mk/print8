@@ -26,6 +26,10 @@ function getAssetRemotePatterns() {
 
 const nextConfig: NextConfig = {
   outputFileTracingRoot: projectRoot,
+  // Keep catalog images out of serverless API bundles (served via CDN / static).
+  outputFileTracingExcludes: {
+    '/api/**': ['public/**'],
+  },
   turbopack: {
     root: projectRoot,
   },
