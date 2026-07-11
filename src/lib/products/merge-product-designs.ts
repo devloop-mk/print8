@@ -1,7 +1,7 @@
 import type { ProductDesignTemplate } from '@/lib/data/catalog';
 import type { ManagedProductDesignRecord } from '@/lib/db/managed-product-designs';
 
-function pickDefined<T extends Record<string, unknown>>(value: T): Partial<T> {
+function pickDefined<T extends object>(value: T): Partial<T> {
   return Object.fromEntries(
     Object.entries(value).filter(([, item]) => item !== undefined),
   ) as Partial<T>;
@@ -14,7 +14,7 @@ export function mergeProductDesignTemplate(
 ): ProductDesignTemplate {
   return {
     ...base,
-    ...pickDefined(override as Record<string, unknown>),
+    ...pickDefined(override),
     overlayRecolor: override.overlayRecolor
       ? { ...base.overlayRecolor, ...override.overlayRecolor }
       : base.overlayRecolor,
