@@ -10,6 +10,7 @@ import { useUploadSession } from '@/hooks/useUploadSession';
 import { useSavedDesigns } from '@/hooks/useSavedDesigns';
 import { useUnsavedWorkGuard } from '@/hooks/useUnsavedWorkGuard';
 import { SecureUpload } from '@/components/upload/SecureUpload';
+import { resolveAssetUrl } from '@/lib/storage/asset-url';
 import { SavedDesignsPanel } from '@/components/studio/SavedDesignsPanel';
 import { UnsavedWorkDialog } from '@/components/shared/UnsavedWorkDialog';
 import { Button } from '@/components/ui/Button';
@@ -237,7 +238,7 @@ export function DesignStudio() {
         try {
           const template = designTemplates.find((d) => d.id === templateId);
           if (template?.image) {
-            const img = await FabricImage.fromURL(template.image);
+            const img = await FabricImage.fromURL(resolveAssetUrl(template.image));
             if (cancelled) return;
             img.scaleToWidth(Math.min(width - 40, img.width || width));
             img.set({

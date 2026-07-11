@@ -8,6 +8,8 @@ import { PageIntro } from "@/components/brand/PageIntro";
 import { buildSectionMetadata } from "@/lib/seo/page-metadata";
 import type { Locale } from "@/i18n/routing";
 
+export const revalidate = 3600;
+
 export async function generateMetadata({
   params,
 }: {

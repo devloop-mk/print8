@@ -1,3 +1,5 @@
+import { streetwearPackTemplates } from '@/lib/data/streetwear-pack';
+
 export type ServiceId =
   | 'business-cards'
   | 'restaurant-menus'
@@ -280,6 +282,8 @@ export interface DesignTemplate {
   layoutId?: string;
   /** Raw SVG template from `public/NEW_DESIGNS` with editable text & colors */
   svgTemplateId?: string;
+  /** Catalog / order preview aspect ratio (width / height) */
+  thumbAspect?: number;
 }
 
 export const designTemplates: DesignTemplate[] = [
@@ -681,45 +685,16 @@ export interface ProductDesignTemplate {
   applicableColors?: string[];
   /** Styled Macedonian text layout — used for `text` kind */
   textStyle?: ProductDesignTextStyle;
+  /** Display title (bulk-imported designs) */
+  titleEn?: string;
+  titleMk?: string;
+  /** Private full-resolution print asset path or R2 key */
+  printMasterImage?: string;
+  /** Browse grouping, e.g. basketball, anime */
+  collection?: string;
 }
 
 export const productDesignTemplates: ProductDesignTemplate[] = [
-  {
-    id: 'tee-design-1',
-    kind: 'image',
-    category: 'image-designs',
-    productTypes: ['t-shirt'],
-    nameKey: 'design1',
-    image: '/product-designs/tee-design-1.jpg',
-    defaultSide: 'front',
-  },
-  {
-    id: 'tee-design-2',
-    kind: 'image',
-    category: 'image-designs',
-    productTypes: ['t-shirt'],
-    nameKey: 'design2',
-    image: '/product-designs/tee-design-2.jpg',
-    defaultSide: 'front',
-  },
-  {
-    id: 'tee-design-3',
-    kind: 'image',
-    category: 'image-designs',
-    productTypes: ['t-shirt'],
-    nameKey: 'design3',
-    image: '/product-designs/tee-design-3.jpg',
-    defaultSide: 'front',
-  },
-  {
-    id: 'tee-back-design-1',
-    kind: 'image',
-    category: 'image-designs',
-    productTypes: ['t-shirt'],
-    nameKey: 'backDesign1',
-    image: '/product-designs/tee-back-design-1.jpg',
-    defaultSide: 'back',
-  },
   {
     id: 'tee-print-keep-working-out',
     kind: 'overlay',
@@ -1082,6 +1057,7 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
     image: '/mugs/mug-inside-thanksgiving.jpg',
     defaultSide: 'front',
   },
+  ...streetwearPackTemplates,
 ];
 
 export function getProductDesignTemplatesByCategory(

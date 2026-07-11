@@ -2,10 +2,12 @@ import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
 import { Link, redirect } from '@/i18n/navigation';
+import { isCustomizableDesign } from '@/lib/data/catalog';
 import {
-  getDesignTemplate,
-  isCustomizableDesign,
-} from '@/lib/data/catalog';
+  getDesignDisplayName,
+  isDesignOrderable,
+  resolveDesignTemplate,
+} from '@/lib/catalog/design-catalog';
 import { DesignOrderForm } from '@/components/designs/DesignOrderForm';
 import { buildDesignMetadata } from '@/lib/seo/page-metadata';
 import type { Locale } from '@/i18n/routing';
@@ -28,7 +30,7 @@ export default async function DesignOrderPage({
   params: Promise<{ locale: string; id: string }>;
 }) {
   const { id, locale } = await params;
-  const template = getDesignTemplate(id);
+  const template = await resolveDesignTemplate(id);
   if (!template) notFound();
   if (isCustomizableDesign(template)) {
     redirect({ href: `/designs/${id}/customize`, locale });
@@ -36,6 +38,11 @@ export default async function DesignOrderPage({
 
   const t = await getTranslations('designs.order');
   const td = await getTranslations('designs');
+  const displayName =
+    getDesignDisplayName(template, locale as 'mk' | 'en') !== template.id
+      ? getDesignDisplayName(template, locale as 'mk' | 'en')
+      : td(`templates.${template.id}`);
+  const orderable = isDesignOrderable(template);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -52,13 +59,28 @@ export default async function DesignOrderPage({
           {td(`categories.${template.category}`)}
         </p>
         <h1 className="mt-1 text-3xl font-bold text-ink-900">
-          {td(`templates.${template.id}`)}
+          {displayName}
         </h1>
         <p className="mt-2 max-w-2xl text-lg text-ink-600">{t('pageSubtitle')}</p>
         <p className="mt-2 text-sm font-medium text-ink-500">{t('fixedBadge')}</p>
+        {template.exclusive ? (
+          <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            {t('exclusiveNote')}
+          </p>
+        ) : null}
+        {!orderable ? (
+          <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            {t('unavailableDesign')}
+          </p>
+        ) : null}
       </div>
 
-      <DesignOrderForm template={template} />
+      <DesignOrderForm
+        template={template}
+        displayName={displayName}
+        orderable={orderable}
+        exclusive={Boolean(template.exclusive)}
+      />
     </div>
   );
 }

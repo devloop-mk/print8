@@ -1,13 +1,20 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { Sparkles, Palette, Truck, Printer, Shirt, Layers } from 'lucide-react';
-import { getFeaturedServices, designTemplates } from '@/lib/data/catalog';
+import { getPublishedDesignTemplates } from '@/lib/catalog/design-catalog';
+import {
+  getContactCmsValues,
+  getResolvedFeaturedServices,
+  resolveCmsTexts,
+  type CmsLocale,
+} from '@/lib/cms/public-content';
 import { HomeShowcaseCarousel } from '@/components/home/HomeShowcaseCarousel';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { SectionHeader } from '@/components/ui/SectionHeader';
-import { HeroIllustration } from '@/components/home/HeroIllustration';
-import { HeroBackdrop } from '@/components/home/HeroBackdrop';
+import { HeroCarousel } from '@/components/home/HeroCarousel';
+import { HeroSectionBackground } from '@/components/home/HeroSectionBackground';
+import { HeroFeatureBar } from '@/components/home/HeroFeatureBar';
 import { HomeHighlights } from '@/components/home/HomeHighlights';
 import { FeaturedDesignCards } from '@/components/home/FeaturedDesignCards';
 import { HomeContactCta } from '@/components/home/HomeContactCta';
@@ -15,41 +22,56 @@ import { FeaturedProductCategories } from '@/components/home/FeaturedProductCate
 import { ServiceCard } from '@/components/services/ServiceCard';
 import { Reveal } from '@/components/motion/Reveal';
 
+export const revalidate = 3600;
+
 export default async function HomePage({
   params,
 }: {
   params: Promise<{ locale: string }>;
 }) {
-  await params;
+  const { locale } = await params;
+  const cmsLocale = locale as CmsLocale;
   const t = await getTranslations('home');
+  const ts = await getTranslations('services.items');
+  const tc = await getTranslations('contact');
 
-  const featuredServices = getFeaturedServices().slice(0, 8);
-  const featuredDesigns = designTemplates;
+  const [cmsTexts, contactCms, featuredServices, featuredDesigns] = await Promise.all([
+    resolveCmsTexts(
+      [
+        { key: 'home.heroBadge', fallback: t('heroBadge') },
+        { key: 'home.heroTitle', fallback: t('heroTitle') },
+        { key: 'home.heroSubtitle', fallback: t('heroSubtitle') },
+        { key: 'home.contactCtaBadge', fallback: t('contactCtaBadge') },
+        { key: 'home.contactCtaTitle', fallback: t('contactCtaTitle') },
+        { key: 'home.contactCtaDesc', fallback: t('contactCtaDesc') },
+      ],
+      cmsLocale,
+    ),
+    getContactCmsValues(cmsLocale, {
+      phoneValue: tc('phoneValue'),
+      emailValue: tc('emailValue'),
+      addressValue: tc('addressValue'),
+      hoursValue: tc('hoursValue'),
+    }),
+    getResolvedFeaturedServices(cmsLocale, (id) => ({
+      title: ts(`${id}.title`),
+      description: ts(`${id}.description`),
+    })),
+    getPublishedDesignTemplates(),
+  ]);
 
   return (
     <>
       <section className="relative overflow-hidden border-b border-white/10 bg-ink-950 text-white">
-        <HeroBackdrop />
-        <div
-          className="absolute inset-0 bg-gradient-to-br from-brand-800 via-ink-900 to-ink-950 bg-[length:200%_200%] animate-gradient-shift"
-          aria-hidden
-        />
-        <div
-          className="absolute inset-0 bg-mesh-dark opacity-70"
-          aria-hidden
-        />
-        <div
-          className="absolute inset-0 bg-grid-light bg-grid opacity-[0.15]"
-          aria-hidden
-        />
-        <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:flex lg:items-center lg:gap-16 lg:px-8 lg:py-24">
-          <div className="lg:flex-1">
-            <p className="eyebrow-on-dark mb-5">{t('heroBadge')}</p>
+        <HeroSectionBackground />
+        <div className="relative mx-auto flex max-w-7xl flex-col px-4 py-8 sm:px-6 lg:flex-row lg:items-center lg:gap-16 lg:px-8 lg:py-24">
+          <div className="order-2 lg:order-1 lg:flex-1">
+            <p className="eyebrow-on-dark mb-5">{cmsTexts['home.heroBadge']}</p>
             <h1 className="max-w-2xl font-display text-3xl font-bold leading-[1.1] tracking-tight sm:text-4xl lg:text-5xl xl:text-6xl">
-              {t('heroTitle')}
+              {cmsTexts['home.heroTitle']}
             </h1>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-brand-100 sm:mt-6 sm:text-lg">
-              {t('heroSubtitle')}
+              {cmsTexts['home.heroSubtitle']}
             </p>
             <div className="mt-6 flex flex-wrap gap-3 sm:mt-9">
               <Link href="/products">
@@ -71,33 +93,19 @@ export default async function HomePage({
               </Link>
             </div>
           </div>
-          <div className="-mt-1 flex justify-center sm:mt-4 lg:mt-0 lg:flex-1 lg:justify-end">
-            <HeroIllustration className="h-auto w-full max-w-[min(100%,17rem)] animate-float drop-shadow-2xl sm:max-w-xs md:max-w-md" />
+          <div className="order-1 mb-8 flex w-full justify-center lg:order-2 lg:mb-0 lg:flex-1 lg:justify-end">
+            <HeroCarousel className="h-auto w-full max-w-none lg:max-w-md xl:max-w-lg" />
           </div>
         </div>
 
-        <div className="relative border-t border-white/10 bg-ink-950/50 backdrop-blur-sm">
-          <div className="mx-auto grid max-w-7xl grid-cols-2 gap-px bg-white/10 md:grid-cols-4">
-            {[
-              { icon: Shirt, label: t('heroStatProducts') },
-              { icon: Layers, label: t('heroStatDesigns') },
-              { icon: Printer, label: t('heroStatServices') },
-              { icon: Truck, label: t('heroStatDelivery') },
-            ].map(({ icon: Icon, label }) => (
-              <div
-                key={label}
-                className="flex min-w-0 flex-col gap-2.5 bg-ink-950/80 px-3 py-4 sm:flex-row sm:items-center sm:gap-3 sm:px-6"
-              >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-brand-400/40 bg-brand-600/20 text-brand-200">
-                  <Icon className="h-5 w-5" aria-hidden />
-                </div>
-                <p className="min-w-0 text-[11px] font-semibold uppercase leading-snug tracking-wide text-brand-100 [overflow-wrap:anywhere] sm:text-sm">
-                  {label}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
+        <HeroFeatureBar
+          items={[
+            { icon: Shirt, label: t('heroStatProducts') },
+            { icon: Layers, label: t('heroStatDesigns') },
+            { icon: Printer, label: t('heroStatServices') },
+            { icon: Truck, label: t('heroStatDelivery') },
+          ]}
+        />
       </section>
 
       <HomeHighlights />
@@ -117,7 +125,7 @@ export default async function HomePage({
               </Link>
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {featuredServices.map((service) => (
+              {featuredServices.slice(0, 8).map((service) => (
                 <ServiceCard key={service.id} service={service} variant="home" />
               ))}
             </div>
@@ -198,7 +206,15 @@ export default async function HomePage({
       </Reveal>
 
       <Reveal delay={120}>
-        <HomeContactCta />
+        <HomeContactCta
+          badge={cmsTexts['home.contactCtaBadge']}
+          title={cmsTexts['home.contactCtaTitle']}
+          description={cmsTexts['home.contactCtaDesc']}
+          phoneValue={contactCms['contact.phoneValue']}
+          emailValue={contactCms['contact.emailValue']}
+          addressValue={contactCms['contact.addressValue']}
+          hoursValue={contactCms['contact.hoursValue']}
+        />
       </Reveal>
     </>
   );

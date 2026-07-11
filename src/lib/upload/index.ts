@@ -1,6 +1,7 @@
 import { nanoid } from 'nanoid';
 import { db } from '../db';
-import { getSupabaseAdmin, formatSupabaseError } from '@/lib/supabase/client';
+import { formatSupabaseError } from '@/lib/supabase/client';
+import { putUploadObject } from '@/lib/storage/object-storage';
 import sharp from 'sharp';
 
 export const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -38,14 +39,6 @@ function extensionForMime(mimeType: string) {
 }
 
 const SESSION_DURATION_MS = 24 * 60 * 60 * 1000;
-
-function getStorageBucket() {
-  const bucket = process.env.SUPABASE_STORAGE_BUCKET;
-  if (!bucket) {
-    throw new Error('Storage is not configured (SUPABASE_STORAGE_BUCKET)');
-  }
-  return bucket;
-}
 
 export async function createUploadSession(): Promise<{
   sessionId: string;
@@ -109,16 +102,7 @@ export async function processUpload(
     storedName = `${fileId}.webp`;
     storedMimeType = 'image/webp';
 
-    const { error: originalError } = await getSupabaseAdmin().storage
-      .from(getStorageBucket())
-      .upload(originalStoredName, sourceBuffer, {
-        contentType: mimeType,
-        cacheControl: '3600',
-        upsert: false,
-      });
-    if (originalError) {
-      throw new Error(originalError.message);
-    }
+    await putUploadObject(originalStoredName, sourceBuffer, mimeType);
 
     const previewBuffer = (await sharp(sourceBuffer)
       .rotate()
@@ -126,28 +110,10 @@ export async function processUpload(
       .webp({ quality: 85 })
       .toBuffer()) as Buffer;
 
-    const { error: previewError } = await getSupabaseAdmin().storage
-      .from(getStorageBucket())
-      .upload(storedName, previewBuffer, {
-        contentType: 'image/webp',
-        cacheControl: '3600',
-        upsert: false,
-      });
-    if (previewError) {
-      throw new Error(previewError.message);
-    }
+    await putUploadObject(storedName, previewBuffer, 'image/webp');
   } else {
     storedName = `${fileId}.pdf`;
-    const { error: uploadError } = await getSupabaseAdmin().storage
-      .from(getStorageBucket())
-      .upload(storedName, sourceBuffer, {
-        contentType: mimeType,
-        cacheControl: '3600',
-        upsert: false,
-      });
-    if (uploadError) {
-      throw new Error(uploadError.message);
-    }
+    await putUploadObject(storedName, sourceBuffer, mimeType);
   }
 
   const now = new Date().toISOString();

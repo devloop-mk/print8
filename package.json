@@ -11,9 +11,20 @@
     "compress:images": "node scripts/compress-images.mjs",
     "build:flag-stickers": "node scripts/build-flag-stickers.mjs",
     "export:print-designs": "node scripts/export-print-designs.mjs",
-    "export:print-variants": "node scripts/export-print-variants.mjs"
+    "export:print-variants": "node scripts/export-print-variants.mjs",
+    "seed:catalog-designs": "node scripts/seed-catalog-designs.mjs",
+    "seed:cms-content": "node scripts/seed-cms-content.mjs",
+    "seed:cms-services": "node scripts/seed-cms-services.mjs",
+    "seed:cms": "node scripts/seed-cms-content.mjs && node scripts/seed-cms-services.mjs",
+    "upload:catalog-r2": "node scripts/upload-catalog-to-r2.mjs",
+    "import:streetwear": "node scripts/import-streetwear-designs.mjs",
+    "upload:streetwear-r2": "node scripts/upload-streetwear-to-r2.mjs",
+    "db:migrate:product-designs": "node scripts/apply-managed-product-designs-migration.mjs"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1085.0",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.6.1",
     "@supabase/supabase-js": "^2.108.1",
     "clsx": "^2.1.1",
     "country-flag-icons": "^1.6.17",
@@ -29,6 +40,7 @@
     "resend": "^6.12.4",
     "sharp": "^0.33.5",
     "tailwind-merge": "^3.0.1",
+    "three": "^0.185.1",
     "zod": "^3.24.1"
   },
   "devDependencies": {

@@ -6,7 +6,17 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Phone, Mail, MapPin, Clock } from "lucide-react";
 
-export function ContactPageContent() {
+export function ContactPageContent({
+  phoneValue,
+  emailValue,
+  addressValue,
+  hoursValue,
+}: {
+  phoneValue: string;
+  emailValue: string;
+  addressValue: string;
+  hoursValue: string;
+}) {
   const t = useTranslations("contact");
   const [sent, setSent] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", message: "" });
@@ -23,28 +33,28 @@ export function ContactPageContent() {
           <Phone className="mt-1 h-5 w-5 shrink-0 text-brand-600" />
           <div>
             <p className="font-medium text-ink-900">{t("phone")}</p>
-            <p className="text-ink-500">{t("phoneValue")}</p>
+            <p className="text-ink-500">{phoneValue}</p>
           </div>
         </Card>
         <Card className="flex items-start gap-4">
           <Mail className="mt-1 h-5 w-5 shrink-0 text-brand-600" />
           <div>
             <p className="font-medium text-ink-900">{t("email")}</p>
-            <p className="text-ink-500">{t("emailValue")}</p>
+            <p className="text-ink-500">{emailValue}</p>
           </div>
         </Card>
         <Card className="flex items-start gap-4">
           <MapPin className="mt-1 h-5 w-5 shrink-0 text-brand-600" />
           <div>
             <p className="font-medium text-ink-900">{t("address")}</p>
-            <p className="text-ink-500">{t("addressValue")}</p>
+            <p className="text-ink-500">{addressValue}</p>
           </div>
         </Card>
         <Card className="flex items-start gap-4">
           <Clock className="mt-1 h-5 w-5 shrink-0 text-brand-600" />
           <div>
             <p className="font-medium text-ink-900">{t("hours")}</p>
-            <p className="text-ink-500">{t("hoursValue")}</p>
+            <p className="text-ink-500">{hoursValue}</p>
           </div>
         </Card>
       </div>

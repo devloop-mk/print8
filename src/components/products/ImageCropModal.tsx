@@ -15,15 +15,19 @@ import { cn } from '@/lib/utils';
 type ImageCropModalProps = {
   imageSrc: string;
   aspect?: number;
+  outputMimeType?: 'image/jpeg' | 'image/png' | 'image/webp';
   onCancel: () => void;
   onComplete: (blob: Blob) => Promise<void>;
+  onUseOriginal?: () => Promise<void>;
 };
 
 export function ImageCropModal({
   imageSrc,
   aspect: initialAspect = PRODUCT_PHOTO_CROP_ASPECT,
+  outputMimeType = 'image/jpeg',
   onCancel,
   onComplete,
+  onUseOriginal,
 }: ImageCropModalProps) {
   const t = useTranslations('products.customizer');
   const [aspect, setAspect] = useState(initialAspect);
@@ -50,9 +54,23 @@ export function ImageCropModal({
     setSaving(true);
     setSavingPhase('crop');
     try {
-      const blob = await cropImageToBlob(imageSrc, croppedAreaPixels);
+      const blob = await cropImageToBlob(imageSrc, croppedAreaPixels, outputMimeType);
       setSavingPhase('upload');
       await onComplete(blob);
+    } catch {
+      // Upload failed — keep the modal open so the user can retry.
+    } finally {
+      setSaving(false);
+      setSavingPhase('crop');
+    }
+  }
+
+  async function handleUseOriginal() {
+    if (saving || !onUseOriginal) return;
+    setSaving(true);
+    setSavingPhase('upload');
+    try {
+      await onUseOriginal();
     } catch {
       // Upload failed — keep the modal open so the user can retry.
     } finally {
@@ -139,23 +157,35 @@ export function ImageCropModal({
                 onChange={(e) => setZoom(Number(e.target.value))}
                 className="w-full accent-brand-600"
               />
-              <div className="flex gap-2 pt-1">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="flex-1"
-                  onClick={onCancel}
-                >
-                  {t('cropCancel')}
-                </Button>
-                <Button
-                  type="button"
-                  className="flex-1"
-                  onClick={() => void handleApply()}
-                  disabled={!croppedAreaPixels}
-                >
-                  {t('cropApply')}
-                </Button>
+              <div className="flex flex-col gap-2 pt-1">
+                {onUseOriginal ? (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="w-full"
+                    onClick={() => void handleUseOriginal()}
+                  >
+                    {t('cropUseOriginal')}
+                  </Button>
+                ) : null}
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={onCancel}
+                  >
+                    {t('cropCancel')}
+                  </Button>
+                  <Button
+                    type="button"
+                    className="flex-1"
+                    onClick={() => void handleApply()}
+                    disabled={!croppedAreaPixels}
+                  >
+                    {t('cropApply')}
+                  </Button>
+                </div>
               </div>
             </div>
           </>

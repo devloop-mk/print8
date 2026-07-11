@@ -7,6 +7,9 @@ import {
   Package,
   LogOut,
   ExternalLink,
+  Palette,
+  FileText,
+  Shirt,
 } from 'lucide-react';
 import { adminStrings } from '@/lib/admin/strings';
 import { cn } from '@/lib/utils';
@@ -24,6 +27,24 @@ const NAV_ITEMS = [
     href: '/admin/orders',
     label: adminStrings.orders,
     icon: Package,
+    exact: false,
+  },
+  {
+    href: '/admin/designs',
+    label: adminStrings.designs,
+    icon: Palette,
+    exact: false,
+  },
+  {
+    href: '/admin/product-designs',
+    label: adminStrings.productDesigns,
+    icon: Shirt,
+    exact: false,
+  },
+  {
+    href: '/admin/content',
+    label: adminStrings.content,
+    icon: FileText,
     exact: false,
   },
 ];

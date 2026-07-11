@@ -15,13 +15,31 @@ export async function generateMetadata({
   return buildSectionMetadata(locale as Locale, "/contact", "contact", tm("badges.contact"));
 }
 
-export default async function ContactPage() {
+import { getContactCmsValues, type CmsLocale } from "@/lib/cms/public-content";
+
+export default async function ContactPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
   const t = await getTranslations("contact");
+  const contactCms = await getContactCmsValues(locale as CmsLocale, {
+    phoneValue: t("phoneValue"),
+    emailValue: t("emailValue"),
+    addressValue: t("addressValue"),
+    hoursValue: t("hoursValue"),
+  });
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <PageIntro title={t("title")} subtitle={t("subtitle")} centered />
-      <ContactPageContent />
+      <ContactPageContent
+        phoneValue={contactCms["contact.phoneValue"]}
+        emailValue={contactCms["contact.emailValue"]}
+        addressValue={contactCms["contact.addressValue"]}
+        hoursValue={contactCms["contact.hoursValue"]}
+      />
     </div>
   );
 }

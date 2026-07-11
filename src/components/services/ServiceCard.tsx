@@ -10,13 +10,14 @@ import {
   serviceHasDetailOptions,
   type Service,
 } from '@/lib/data/catalog';
+import type { ResolvedService } from '@/lib/cms/public-content';
 import { getServiceDestination } from '@/lib/data/service-routes';
 
 export function ServiceCard({
   service,
   variant = 'home',
 }: {
-  service: Service;
+  service: Service | ResolvedService;
   variant?: 'home' | 'homeCompact' | 'list';
 }) {
   const t = useTranslations('services');
@@ -27,6 +28,14 @@ export function ServiceCard({
   const optionsHref = getServiceDestination(service);
   const isCompact = variant === 'home' || variant === 'homeCompact';
   const showContactOnly = service.contactOnly;
+  const title =
+    'title' in service && service.title
+      ? service.title
+      : ts(`${service.id}.title`);
+  const description =
+    'description' in service && service.description
+      ? service.description
+      : ts(`${service.id}.description`);
   const priceLabel =
     service.startingPrice > 0
       ? `${t('startingFrom')} ${formatPrice(service.startingPrice, locale)}`
@@ -40,7 +49,7 @@ export function ServiceCard({
         </div>
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-sm font-semibold text-ink-900">
-            {ts(`${service.id}.title`)}
+            {title}
           </h3>
           <p className="text-xs font-medium text-brand-600">
             {priceLabel}
@@ -71,7 +80,7 @@ export function ServiceCard({
           <div className="mt-3">
             <ServiceOrderButton
               serviceId={service.id}
-              name={ts(`${service.id}.title`)}
+              name={title}
               price={service.startingPrice}
               className="w-full"
             />
@@ -91,10 +100,10 @@ export function ServiceCard({
         <Icon className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
       </div>
       <h3 className="text-base font-semibold text-ink-900 sm:text-lg">
-        {ts(`${service.id}.title`)}
+        {title}
       </h3>
       <p className="mt-1.5 line-clamp-3 text-sm text-ink-500 sm:mt-2 sm:line-clamp-2 sm:text-base">
-        {ts(`${service.id}.description`)}
+        {description}
       </p>
       <p className="mt-3 text-sm font-medium text-brand-600 sm:mt-4">
         {priceLabel}
@@ -123,7 +132,7 @@ export function ServiceCard({
         ) : (
           <ServiceOrderButton
             serviceId={service.id}
-            name={ts(`${service.id}.title`)}
+            name={title}
             price={service.startingPrice}
           />
         )}

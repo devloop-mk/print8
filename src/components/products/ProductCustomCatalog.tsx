@@ -183,6 +183,24 @@ export function ProductCustomCatalog() {
         <p className="mt-2 text-ink-600">{tc('customSubtitle')}</p>
       </div>
 
+      <Link
+        href={PRODUCT_OFFERING_PATHS.brandingPack}
+        className="block rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-white p-5 shadow-lift transition hover:-translate-y-0.5 hover:border-brand-400 hover:shadow-lift-brand sm:p-6"
+      >
+        <p className="text-xs font-semibold uppercase tracking-wider text-brand-600">
+          {tc('brandingPackBadge')}
+        </p>
+        <h2 className="mt-1 text-lg font-bold text-ink-900 sm:text-xl">
+          {tc('brandingPackTitle')}
+        </h2>
+        <p className="mt-2 max-w-2xl text-sm text-ink-600 sm:text-base">
+          {tc('brandingPackDesc')}
+        </p>
+        <p className="mt-3 text-sm font-semibold text-brand-700">
+          {tc('brandingPackCta')} →
+        </p>
+      </Link>
+
       <Reveal delay={40}>
         <CatalogFilterLayout
           groups={filterGroups}

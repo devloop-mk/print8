@@ -22,6 +22,7 @@ import {
 import { productBelongsToCategory, productNavCategories } from '@/lib/products/product-nav';
 import { resolveDesignPreviewColor } from '@/lib/products/design-applicable-colors';
 import { getProductDesignThumbnail } from '@/lib/products/design-overlay';
+import { resolveAssetUrl } from '@/lib/storage/asset-url';
 import { buildCustomizerUrl } from '@/lib/products/paths';
 import type { ProductDesignCatalogEntry } from '@/lib/products/design-catalog';
 
@@ -38,9 +39,14 @@ export type CatalogSearchLabels = {
   productDesignName: (design: ProductDesignTemplate) => string;
 };
 
+export type SearchableDesign = DesignTemplate & {
+  displayName?: string;
+};
+
 export function buildDesignSearchText(
   design: DesignTemplate,
   labels: CatalogSearchLabels,
+  displayName?: string,
 ): string {
   const subfilters = getAvailableDesignSubfilters(design.category).filter((item) =>
     (item.tags ?? []).some((tag) => design.tags.includes(tag)),
@@ -53,6 +59,7 @@ export function buildDesignSearchText(
     design.svgTemplateId,
     design.layoutId,
     labels.designName(design.id),
+    displayName,
     labels.designCategory(design.category),
     ...design.tags,
     ...keywordsForDesignTags(design.tags),
@@ -97,6 +104,9 @@ export function buildProductDesignSearchText(
     entry.design.kind,
     entry.design.category,
     labels.productDesignName(entry.design),
+    entry.design.collection,
+    entry.design.titleEn,
+    entry.design.titleMk,
     ...entry.design.productTypes,
     ...productTexts,
   ]
@@ -162,10 +172,17 @@ type CatalogSearchIndex = {
   items: GlobalSearchResult[];
 };
 
-let cachedSearchIndex: {
+type CachedSearchIndex = {
   labels: CatalogSearchLabels;
+  extraDesigns: SearchableDesign[];
   index: CatalogSearchIndex;
-} | null = null;
+} | null;
+
+let cachedSearchIndex: CachedSearchIndex = null;
+
+function designsCacheKey(extraDesigns: SearchableDesign[]) {
+  return extraDesigns.map((design) => design.id).join('|');
+}
 
 function buildDesignCategoryCollectionSearchText(
   category: DesignCategory,
@@ -248,8 +265,12 @@ function buildCatalogCollectionResults(labels: CatalogSearchLabels): GlobalSearc
   return results;
 }
 
-function buildCatalogItemResults(labels: CatalogSearchLabels): GlobalSearchResult[] {
+function buildCatalogItemResults(
+  labels: CatalogSearchLabels,
+  extraDesigns: SearchableDesign[] = [],
+): GlobalSearchResult[] {
   const results: GlobalSearchResult[] = [];
+  const staticIds = new Set(designTemplates.map((design) => design.id));
 
   for (const design of designTemplates) {
     results.push({
@@ -260,7 +281,22 @@ function buildCatalogItemResults(labels: CatalogSearchLabels): GlobalSearchResul
       subtitle: labels.designCategory(design.category),
       searchText: buildDesignSearchText(design, labels),
       designCategory: design.category,
-      image: design.image,
+      image: resolveAssetUrl(design.image),
+    });
+  }
+
+  for (const design of extraDesigns) {
+    if (staticIds.has(design.id)) continue;
+    const title = design.displayName ?? labels.designName(design.id);
+    results.push({
+      id: design.id,
+      kind: 'design',
+      href: getDesignHref(design),
+      title,
+      subtitle: labels.designCategory(design.category),
+      searchText: buildDesignSearchText(design, labels, design.displayName),
+      designCategory: design.category,
+      image: resolveAssetUrl(design.image),
     });
   }
 
@@ -313,31 +349,46 @@ function buildCatalogItemResults(labels: CatalogSearchLabels): GlobalSearchResul
   return results;
 }
 
-function buildCatalogSearchIndex(labels: CatalogSearchLabels): CatalogSearchIndex {
+function buildCatalogSearchIndex(
+  labels: CatalogSearchLabels,
+  extraDesigns: SearchableDesign[] = [],
+): CatalogSearchIndex {
   return {
     collections: buildCatalogCollectionResults(labels),
-    items: buildCatalogItemResults(labels),
+    items: buildCatalogItemResults(labels, extraDesigns),
   };
 }
 
-function getCatalogSearchIndex(labels: CatalogSearchLabels): CatalogSearchIndex {
-  if (cachedSearchIndex?.labels === labels) {
+function getCatalogSearchIndex(
+  labels: CatalogSearchLabels,
+  extraDesigns: SearchableDesign[] = [],
+): CatalogSearchIndex {
+  const extraKey = designsCacheKey(extraDesigns);
+  const cachedExtraKey = cachedSearchIndex
+    ? designsCacheKey(cachedSearchIndex.extraDesigns)
+    : '';
+
+  if (
+    cachedSearchIndex?.labels === labels &&
+    cachedExtraKey === extraKey
+  ) {
     return cachedSearchIndex.index;
   }
 
-  const index = buildCatalogSearchIndex(labels);
-  cachedSearchIndex = { labels, index };
+  const index = buildCatalogSearchIndex(labels, extraDesigns);
+  cachedSearchIndex = { labels, extraDesigns, index };
   return index;
 }
 
 export function searchGlobalCatalog(
   query: string,
   labels: CatalogSearchLabels,
+  extraDesigns: SearchableDesign[] = [],
 ): GlobalSearchResult[] {
   const trimmed = query.trim();
   if (!trimmed) return [];
 
-  const { collections, items } = getCatalogSearchIndex(labels);
+  const { collections, items } = getCatalogSearchIndex(labels, extraDesigns);
   const matchedCollections = collections.filter((item) =>
     matchesCatalogSearch(item.searchText, trimmed),
   );
@@ -374,6 +425,7 @@ export function createCatalogSearchLabels(hooks: {
     productType: (type) => hooks.tProducts(`types.${type}`),
     productTypePlural: (type) => hooks.tProducts(`typesPlural.${type}`),
     productNavCategory: (id) => hooks.tNavCategories(id),
-    productDesignName: (design) => hooks.tProducts(`designs.${design.nameKey}`),
+    productDesignName: (design) =>
+      design.titleEn ?? design.titleMk ?? hooks.tProducts(`designs.${design.nameKey}`),
   };
 }

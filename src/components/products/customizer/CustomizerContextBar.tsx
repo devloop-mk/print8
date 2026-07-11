@@ -5,6 +5,8 @@ import { useTranslations } from 'next-intl';
 import type { SelectedElement } from '@/components/products/customizer/types';
 import type { SideDesign } from '@/lib/products/design-state';
 import type { ProductDesignTemplate } from '@/lib/data/catalog';
+import { CUSTOMIZER_FONTS, type CustomizerFontId } from '@/lib/products/customizer-fonts';
+import type { PlacedTextLayer } from '@/lib/products/text-layers';
 import {
   inksHaveLowContrast,
   suggestInkForShirt,
@@ -57,6 +59,8 @@ export function CustomizerContextBar({
   designTemplate,
   shirtColor,
   onUpdate,
+  onUpdateTextLayer,
+  printTextSizeMax = 72,
   onRemove,
   overlayMaxScale = PRODUCT_PRINT_AREA_MAX_SCALE,
 }: {
@@ -65,6 +69,11 @@ export function CustomizerContextBar({
   designTemplate: ProductDesignTemplate | null | undefined;
   shirtColor: string;
   onUpdate: (updates: Partial<SideDesign>) => void;
+  onUpdateTextLayer: (
+    instanceId: string,
+    updates: Partial<PlacedTextLayer>,
+  ) => void;
+  printTextSizeMax?: number;
   onRemove: (target: SelectedElement) => void;
   overlayMaxScale?: number;
 }) {
@@ -76,26 +85,51 @@ export function CustomizerContextBar({
   const primaryInk = currentDesign.overlaySvgColors?.primary ?? '#F4EDE4';
   const secondaryInk =
     currentDesign.overlaySvgColors?.secondary ?? primaryInk;
+  const selectedTextLayer = selected.startsWith('text:')
+    ? currentDesign.textLayers.find(
+        (layer) => layer.instanceId === selected.replace('text:', ''),
+      )
+    : null;
 
   return (
-    <div className="pointer-events-auto mx-auto flex min-h-[2.75rem] max-w-3xl flex-nowrap items-center justify-center gap-2 rounded-xl border border-ink-200/80 bg-white px-3 py-2 shadow-lg">
-      {selected === 'text' ? (
+    <div className="pointer-events-auto mx-auto flex min-h-[2.75rem] max-w-3xl flex-wrap items-center justify-center gap-2 rounded-xl border border-ink-200/80 bg-white px-3 py-2 shadow-lg">
+      {selectedTextLayer ? (
         <>
           <span className="text-xs font-medium text-ink-500">{t('text')}</span>
+          <select
+            value={selectedTextLayer.fontFamily}
+            onChange={(e) =>
+              onUpdateTextLayer(selectedTextLayer.instanceId, {
+                fontFamily: e.target.value as CustomizerFontId,
+              })
+            }
+            className="h-8 max-w-[8.5rem] rounded-md border border-ink-200 bg-white px-2 text-xs text-ink-800"
+            aria-label={t('textFont')}
+          >
+            {CUSTOMIZER_FONTS.map((font) => (
+              <option key={font.id} value={font.id}>
+                {font.label}
+              </option>
+            ))}
+          </select>
           <input
             type="color"
-            value={currentDesign.customTextColor}
+            value={selectedTextLayer.color}
             onChange={(e) =>
-              onUpdate({ customTextColor: e.target.value })
+              onUpdateTextLayer(selectedTextLayer.instanceId, {
+                color: e.target.value,
+              })
             }
             className="h-8 w-12 cursor-pointer rounded-md border border-ink-200"
             aria-label={t('textColor')}
           />
           <MiniStepper
-            value={currentDesign.customTextSize}
-            onChange={(v) => onUpdate({ customTextSize: v })}
+            value={selectedTextLayer.size}
+            onChange={(v) =>
+              onUpdateTextLayer(selectedTextLayer.instanceId, { size: v })
+            }
             min={12}
-            max={60}
+            max={printTextSizeMax}
             step={2}
           />
         </>
@@ -164,7 +198,7 @@ export function CustomizerContextBar({
           <MiniStepper
             value={currentDesign.uploadedImageScale}
             onChange={(v) =>
-              onUpdate({ uploadedImageScale: clampPhotoScale(v) })
+              onUpdate({ uploadedImageScale: clampPhotoScale(v, overlayMaxScale) })
             }
             min={PRODUCT_PHOTO_MIN_SCALE}
             max={overlayMaxScale}

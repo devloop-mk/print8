@@ -50,7 +50,11 @@ export function isCustomizedCartItem(item: CartItem): boolean {
       m.frontStickers ||
       m.backStickers ||
       m.leftStickers ||
-      m.rightStickers,
+      m.rightStickers ||
+      m.frontTextLayers ||
+      m.backTextLayers ||
+      m.leftTextLayers ||
+      m.rightTextLayers,
   );
 }
 
@@ -136,6 +140,7 @@ import {
   type RestoredSideDesign,
 } from "@/lib/products/design-state";
 import { parsePlacedStickers } from "@/lib/products/sticker-library";
+import { parseTextLayersFromMetadata } from "@/lib/products/text-layers";
 
 function num(value: unknown, fallback: number): number {
   return typeof value === "number" ? value : fallback;
@@ -151,23 +156,7 @@ export function restoreSideDesignFromMetadata(
 ): RestoredSideDesign | null {
   const prefix = getSideMetadataPrefix(side);
   const stickers = parsePlacedStickers(metadata[`${prefix}Stickers`]);
-  const hasContent =
-    metadata[`${prefix}CustomText`] ||
-    metadata[`${prefix}PremadeDesignImage`] ||
-    metadata[`${prefix}UploadedPreviewUrl`] ||
-    metadata[`${prefix}UploadedFileId`] ||
-    metadata[`${prefix}OverlaySvg`] ||
-    metadata[`${prefix}HasOverlayVariants`] ||
-    metadata[`${prefix}OverlayRaster`] ||
-    stickers.length > 0;
-
-  if (!hasContent) return null;
-
-  const isTextTemplate = metadata[`${prefix}IsTextTemplate`] === true;
-  const isRecolorableOverlay =
-    metadata[`${prefix}IsRecolorableOverlay`] === true;
-
-  return {
+  const flatText = {
     customText: str(metadata[`${prefix}CustomText`]),
     customTextColor: str(metadata[`${prefix}CustomTextColor`], "#1e3a5f"),
     customTextSize: num(metadata[`${prefix}CustomTextSize`], 18),
@@ -185,6 +174,35 @@ export function restoreSideDesignFromMetadata(
       metadata[`${prefix}CustomTextShadow`],
       DEFAULT_TEXT_SHADOW,
     ),
+  };
+  const textLayers = parseTextLayersFromMetadata(metadata, prefix, flatText);
+  const hasContent =
+    textLayers.length > 0 ||
+    metadata[`${prefix}CustomText`] ||
+    metadata[`${prefix}PremadeDesignImage`] ||
+    metadata[`${prefix}UploadedPreviewUrl`] ||
+    metadata[`${prefix}UploadedFileId`] ||
+    metadata[`${prefix}OverlaySvg`] ||
+    metadata[`${prefix}HasOverlayVariants`] ||
+    metadata[`${prefix}OverlayRaster`] ||
+    stickers.length > 0;
+
+  if (!hasContent) return null;
+
+  const isTextTemplate = metadata[`${prefix}IsTextTemplate`] === true;
+  const isRecolorableOverlay =
+    metadata[`${prefix}IsRecolorableOverlay`] === true;
+
+  return {
+    customText: flatText.customText,
+    customTextColor: flatText.customTextColor,
+    customTextSize: flatText.customTextSize,
+    customTextPosition: flatText.customTextPosition,
+    customTextFontWeight: flatText.customTextFontWeight,
+    customTextLetterSpacing: flatText.customTextLetterSpacing,
+    customTextLineHeight: flatText.customTextLineHeight,
+    customTextShadow: flatText.customTextShadow,
+    textLayers,
     isTextTemplate,
     uploadedImageScale: num(metadata[`${prefix}UploadedImageScale`], 40),
     uploadedImagePosition: {

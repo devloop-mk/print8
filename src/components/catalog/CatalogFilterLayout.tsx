@@ -378,9 +378,9 @@ export function CatalogFilterLayout({
   }
 
   return (
-    <div className="lg:grid lg:grid-cols-[minmax(0,15rem)_1fr] lg:items-start lg:gap-8 xl:grid-cols-[minmax(0,16rem)_1fr]">
-      <aside className="hidden lg:block">
-        <div className="sticky top-24 space-y-6 rounded-2xl border border-ink-200 bg-white p-4 shadow-sm">
+    <div className="lg:grid lg:grid-cols-[minmax(0,15rem)_1fr] lg:gap-8 xl:grid-cols-[minmax(0,16rem)_1fr]">
+      <aside className="hidden lg:sticky lg:top-20 lg:z-20 lg:block lg:self-start">
+        <div className="max-h-[calc(100vh-5.5rem)] space-y-6 overflow-y-auto overscroll-contain border border-ink-200 bg-white p-4 shadow-sm">
           <div className="flex items-center gap-2 border-b border-ink-100 pb-3 text-sm font-semibold text-ink-900">
             <SlidersHorizontal className="h-4 w-4 text-brand-600" aria-hidden />
             {ariaLabel}

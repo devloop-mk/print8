@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -20,11 +21,12 @@ import {
   products,
   getProductMockup,
   getProductSides,
-  getProductDesignTemplate,
   productSupportsSides,
+  type ProductDesignTemplate,
   type ProductSide,
   type ProductType,
 } from '@/lib/data/catalog';
+import { useMergedProductDesignTemplate } from '@/lib/products/use-merged-product-design-template';
 import {
   evaluateCartAssetLimits,
   MAX_PHOTOS_PER_ORDER,
@@ -39,7 +41,11 @@ import {
   formatProductCartName,
   restoreSideDesignFromMetadata,
 } from '@/lib/cart/product-cart';
-import { getProductMockupLayout } from '@/lib/products/product-mockup-layout';
+import {
+  getOverlayPrintBounds,
+  getProductMockupLayout,
+  isCylindricalDrinkwareType,
+} from '@/lib/products/product-mockup-layout';
 import {
   createSideDesignsForSides,
   getSideMetadataPrefix,
@@ -69,6 +75,18 @@ import {
   type PlacedSticker,
 } from '@/lib/products/sticker-library';
 import {
+  createPlacedTextLayer,
+  MAX_TEXT_LAYERS_PER_SIDE,
+  normalizeSideDesignText,
+  sideHasTextContent,
+  syncFlatTextFields,
+  writeTextMetadata,
+  getCustomizerFontFamily,
+  type PlacedTextLayer,
+} from '@/lib/products/text-layers';
+import { TextLayerFontPicker } from '@/components/products/customizer/TextLayerFontPicker';
+import type { CustomizerFontId } from '@/lib/products/customizer-fonts';
+import {
   Shirt,
   Type,
   ImageIcon,
@@ -94,6 +112,14 @@ import type {
 } from '@/components/products/customizer/types';
 import { CustomizerShell } from '@/components/products/customizer/CustomizerShell';
 import { CustomizerContextBar } from '@/components/products/customizer/CustomizerContextBar';
+import { PrintAreaGuideSwitch } from '@/components/products/customizer/PrintAreaGuideSwitch';
+import { DrinkwareWrapHint } from '@/components/products/customizer/DrinkwarePrintAreaGuide';
+import {
+  Drinkware3DPreviewLazy,
+  DrinkwarePreviewModeToggle,
+  type DrinkwarePreviewMode,
+} from '@/components/products/customizer/Drinkware3DPreviewLazy';
+import type { DrinkwareImageLayer } from '@/lib/products/build-drinkware-wrap-texture';
 import { UnsavedWorkDialog } from '@/components/shared/UnsavedWorkDialog';
 import { useDirtySnapshot } from '@/hooks/useDirtySnapshot';
 import { useUnsavedWorkGuard } from '@/hooks/useUnsavedWorkGuard';
@@ -102,10 +128,20 @@ import {
   upsertProductCustomizerDraft,
 } from '@/lib/drafts/work-drafts';
 import { findProductCustomizerDraft } from '@/lib/drafts/ongoing-designs';
+import {
+  clampElementCenterToPrintArea,
+  getMaxTextSizeForPrintArea,
+  getPrintAreaPositionPresets,
+  getPrintAreaWidthPercent,
+  type PrintAreaInsets,
+} from '@/lib/products/print-area';
+import { usePrintAreaMaxScale } from '@/lib/products/use-print-area-max-scale';
 
 function useDraggablePosition(
   position: { x: number; y: number },
   onChange: (pos: { x: number; y: number }) => void,
+  printBounds?: PrintAreaInsets,
+  measureRef?: RefObject<HTMLElement | null>,
 ) {
   const elementRef = useRef<HTMLDivElement | null>(null);
   const positionRef = useRef(position);
@@ -136,10 +172,21 @@ function useDraggablePosition(
     const currentY = (positionRef.current.y / 100) * parentRect.height;
     const nextX = Math.min(Math.max(currentX + deltaX, 0), parentRect.width);
     const nextY = Math.min(Math.max(currentY + deltaY, 0), parentRect.height);
-    onChange({
-      x: (nextX / parentRect.width) * 100,
-      y: (nextY / parentRect.height) * 100,
-    });
+    const nextPosition = printBounds
+      ? clampElementCenterToPrintArea(
+          measureRef?.current ?? elementRef.current,
+          parent,
+          printBounds,
+          {
+            x: (nextX / parentRect.width) * 100,
+            y: (nextY / parentRect.height) * 100,
+          },
+        )
+      : {
+          x: (nextX / parentRect.width) * 100,
+          y: (nextY / parentRect.height) * 100,
+        };
+    onChange(nextPosition);
   };
 
   const endDrag = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -169,6 +216,8 @@ function useScaleResize(
 ) {
   const draggingRef = useRef(false);
   const startRef = useRef({ pointerX: 0, pointerY: 0, scale: 0 });
+  const maxRef = useRef(max);
+  maxRef.current = max;
 
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -189,7 +238,7 @@ function useScaleResize(
       event.clientX - startRef.current.pointerX +
       (event.clientY - startRef.current.pointerY);
     const next = Math.min(
-      max,
+      maxRef.current,
       Math.max(min, Math.round(startRef.current.scale + delta * 0.15)),
     );
     onScaleChange(next);
@@ -257,11 +306,12 @@ function ResizableDesignOverlay({
   removeLabel,
   hideControls,
   maxScale,
+  printBounds,
   selected,
   onSelect,
 }: {
   design: SideDesign;
-  template: ReturnType<typeof getProductDesignTemplate> | null | undefined;
+  template: ProductDesignTemplate | null | undefined;
   shirtColor: string;
   scale: number;
   position: { x: number; y: number };
@@ -271,6 +321,7 @@ function ResizableDesignOverlay({
   removeLabel?: string;
   hideControls?: boolean;
   maxScale?: number;
+  printBounds?: PrintAreaInsets;
   selected?: boolean;
   onSelect?: () => void;
 }) {
@@ -289,6 +340,7 @@ function ResizableDesignOverlay({
       removeLabel={removeLabel}
       hideControls={hideControls}
       maxScale={maxScale}
+      printBounds={printBounds}
       selected={selected}
       onSelect={onSelect}
     />
@@ -306,6 +358,7 @@ function ResizableImageOverlay({
   removeLabel,
   hideControls,
   maxScale,
+  printBounds,
   selected,
   onSelect,
 }: {
@@ -319,20 +372,44 @@ function ResizableImageOverlay({
   removeLabel?: string;
   hideControls?: boolean;
   maxScale?: number;
+  printBounds?: PrintAreaInsets;
   selected?: boolean;
   onSelect?: () => void;
 }) {
-  const drag = useDraggablePosition(position, onPositionChange);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const drag = useDraggablePosition(position, onPositionChange, printBounds);
   const resize = useScaleResize(
     scale,
-    (next) => onScaleChange(clampPhotoScale(next)),
+    (next) => {
+      const clamped = clampPhotoScale(next, maxScale);
+      onScaleChange(clamped);
+      if (!printBounds) return;
+      const parent = containerRef.current?.parentElement;
+      if (!parent) return;
+      const reclamped = clampElementCenterToPrintArea(
+        containerRef.current,
+        parent,
+        printBounds,
+        position,
+        { width: clamped, height: clamped },
+      );
+      if (
+        reclamped.x !== position.x ||
+        reclamped.y !== position.y
+      ) {
+        onPositionChange(reclamped);
+      }
+    },
     PRODUCT_PHOTO_MIN_SCALE,
     maxScale ?? PRODUCT_PRINT_AREA_MAX_SCALE,
   );
 
   return (
     <div
-      ref={drag.ref}
+      ref={(node) => {
+        containerRef.current = node;
+        drag.ref.current = node;
+      }}
       className="absolute cursor-grab active:cursor-grabbing pointer-events-auto"
       style={{
         left: `${position.x}%`,
@@ -404,6 +481,7 @@ function ResizableStickerOverlay({
   onRemove,
   removeLabel,
   hideControls,
+  printBounds,
   selected,
   onSelect,
 }: {
@@ -413,18 +491,46 @@ function ResizableStickerOverlay({
   onRemove?: () => void;
   removeLabel?: string;
   hideControls?: boolean;
+  printBounds?: PrintAreaInsets;
   selected?: boolean;
   onSelect?: () => void;
 }) {
   const definition = getStickerById(sticker.stickerId);
-  const drag = useDraggablePosition(sticker.position, onPositionChange);
-  const resize = useScaleResize(sticker.scale, onScaleChange, 12, 52);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const drag = useDraggablePosition(
+    sticker.position,
+    onPositionChange,
+    printBounds,
+  );
+  const resize = useScaleResize(sticker.scale, (next) => {
+    const clamped = Math.min(52, Math.max(12, Math.round(next)));
+    onScaleChange(clamped);
+    if (!printBounds) return;
+    const parent = containerRef.current?.parentElement;
+    if (!parent) return;
+    const reclamped = clampElementCenterToPrintArea(
+      containerRef.current,
+      parent,
+      printBounds,
+      sticker.position,
+      { width: clamped, height: clamped },
+    );
+    if (
+      reclamped.x !== sticker.position.x ||
+      reclamped.y !== sticker.position.y
+    ) {
+      onPositionChange(reclamped);
+    }
+  }, 12, 52);
 
   if (!definition) return null;
 
   return (
     <div
-      ref={drag.ref}
+      ref={(node) => {
+        containerRef.current = node;
+        drag.ref.current = node;
+      }}
       className="absolute cursor-grab active:cursor-grabbing pointer-events-auto"
       style={{
         left: `${sticker.position.x}%`,
@@ -605,8 +711,52 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     onSave: saveDraft,
   });
 
-  const currentDesign =
-    sideDesigns[activeSide] ?? createDefaultSideDesign();
+  const currentDesign = useMemo(
+    () =>
+      normalizeSideDesignText(
+        sideDesigns[activeSide] ?? createDefaultSideDesign(),
+      ),
+    [sideDesigns, activeSide],
+  );
+
+  const activeDesignTemplateId = designId ?? currentDesign.premadeDesignId ?? null;
+  const activeDesignTemplate = useMergedProductDesignTemplate(activeDesignTemplateId);
+
+  const overlayAssetUrl = useOverlayAssetUrl({
+    design: currentDesign,
+    template: activeDesignTemplate,
+    shirtColor: color,
+  });
+
+  const mockupLayout = product ? getProductMockupLayout(product) : null;
+  const overlayPrintBounds = mockupLayout
+    ? getOverlayPrintBounds(mockupLayout)
+    : undefined;
+
+  const hasScalableOverlay = Boolean(
+    currentDesign.overlaySvg || currentDesign.overlayColorVariants,
+  );
+
+  const scalableImageUrl =
+    currentDesign.uploadedFile?.isImage && currentDesign.uploadedFile.previewUrl
+      ? currentDesign.uploadedFile.previewUrl
+      : hasScalableOverlay && overlayAssetUrl
+        ? overlayAssetUrl
+        : undefined;
+
+  const imageMaxScale = usePrintAreaMaxScale(
+    previewRef,
+    overlayPrintBounds,
+    scalableImageUrl,
+    mockupLayout?.overlayMaxScale ?? PRODUCT_PRINT_AREA_MAX_SCALE,
+  );
+
+  const activeTextLayerId = useMemo(() => {
+    if (selectedElement?.startsWith('text:')) {
+      return selectedElement.replace('text:', '');
+    }
+    return currentDesign.textLayers[0]?.instanceId ?? null;
+  }, [selectedElement, currentDesign.textLayers]);
 
   const updateCurrentSide = useCallback(
     (updates: Partial<SideDesign>) => {
@@ -620,6 +770,16 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     },
     [activeSide],
   );
+
+  useEffect(() => {
+    if (currentDesign.uploadedImageScale <= imageMaxScale) return;
+    updateCurrentSide({
+      uploadedImageScale: clampPhotoScale(
+        currentDesign.uploadedImageScale,
+        imageMaxScale,
+      ),
+    });
+  }, [imageMaxScale, currentDesign.uploadedImageScale, updateCurrentSide]);
 
   const addSticker = useCallback(
     (stickerId: string) => {
@@ -677,6 +837,114 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     [activeSide],
   );
 
+  const addTextLayer = useCallback(() => {
+    let newLayerId: string | null = null;
+    const printPresets = product
+      ? getPrintAreaPositionPresets(getProductMockupLayout(product).printArea)
+      : null;
+
+    setSideDesigns((prev) => {
+      const current = normalizeSideDesignText(
+        prev[activeSide] ?? createDefaultSideDesign(),
+      );
+      if (current.textLayers.length >= MAX_TEXT_LAYERS_PER_SIDE) return prev;
+
+      const spread = current.textLayers.length;
+      const defaultPosition = printPresets
+        ? spread % 3 === 0
+          ? printPresets.top
+          : spread % 3 === 1
+            ? printPresets.center
+            : printPresets.bottom
+        : undefined;
+
+      const placed = createPlacedTextLayer(spread, {
+        position: defaultPosition,
+      });
+      newLayerId = placed.instanceId;
+
+      return {
+        ...prev,
+        [activeSide]: syncFlatTextFields({
+          ...current,
+          textLayers: [...current.textLayers, placed],
+        }),
+      };
+    });
+
+    if (newLayerId) {
+      setSelectedElement(`text:${newLayerId}`);
+      setActivePanel('text');
+    }
+  }, [activeSide, product]);
+
+  const printTextSizeMax = useMemo(() => {
+    if (!product) return 72;
+    const inner = previewRef.current?.querySelector<HTMLElement>(
+      '[data-mockup-inner]',
+    );
+    const height =
+      inner?.getBoundingClientRect().height ??
+      (previewRef.current?.getBoundingClientRect().height ?? 400) * 0.85;
+    return getMaxTextSizeForPrintArea(
+      height,
+      getProductMockupLayout(product).printArea,
+    );
+  }, [product, activeSide, canvasZoom, sideDesigns]);
+
+  const updateTextLayer = useCallback(
+    (instanceId: string, updates: Partial<PlacedTextLayer>) => {
+      const cappedUpdates = { ...updates };
+      if (typeof cappedUpdates.size === 'number') {
+        cappedUpdates.size = Math.min(
+          printTextSizeMax,
+          Math.max(12, Math.round(cappedUpdates.size)),
+        );
+      }
+
+      setSideDesigns((prev) => {
+        const current = normalizeSideDesignText(
+          prev[activeSide] ?? createDefaultSideDesign(),
+        );
+
+        return {
+          ...prev,
+          [activeSide]: syncFlatTextFields({
+            ...current,
+            textLayers: current.textLayers.map((layer) =>
+              layer.instanceId === instanceId
+                ? { ...layer, ...cappedUpdates }
+                : layer,
+            ),
+          }),
+        };
+      });
+    },
+    [activeSide, printTextSizeMax],
+  );
+
+  const removeTextLayer = useCallback(
+    (instanceId: string) => {
+      setSideDesigns((prev) => {
+        const current = normalizeSideDesignText(
+          prev[activeSide] ?? createDefaultSideDesign(),
+        );
+
+        return {
+          ...prev,
+          [activeSide]: syncFlatTextFields({
+            ...current,
+            textLayers: current.textLayers.filter(
+              (layer) => layer.instanceId !== instanceId,
+            ),
+          }),
+        };
+      });
+      setSelectedElement(null);
+    },
+    [activeSide],
+  );
+
   useEffect(() => {
     if (editCartItemId) return;
     setSideDesigns((prev) => {
@@ -721,16 +989,27 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   }, [product, colorParam, sizeParam, editCartItemId]);
 
   useEffect(() => {
-    if (!designId || editCartItemId || !product) return;
+    if (!designId || editCartItemId || !product || !activeDesignTemplate) return;
+    if (activeDesignTemplate.id !== designId) return;
     if (findProductCustomizerDraft(product.id, designId)) return;
 
-    const template = getProductDesignTemplate(designId);
-    if (!template) return;
+    const template = activeDesignTemplate;
 
     const side = template.defaultSide;
+    const shirtColor =
+      colorParam &&
+      product.colors?.some(
+        (value) => value.toLowerCase() === colorParam.toLowerCase(),
+      )
+        ? colorParam
+        : color;
     const textDesign = sideDesignFromTextTemplate(template);
     const imageDesign = sideDesignFromImageTemplate(template);
-    const overlayDesign = sideDesignFromOverlayTemplate(template, product, color);
+    const overlayDesign = sideDesignFromOverlayTemplate(
+      template,
+      product,
+      shirtColor,
+    );
 
     if (textDesign) {
       setSideDesigns((prev) => ({
@@ -758,7 +1037,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     }
 
     setActiveSide(side);
-  }, [designId, editCartItemId, product]);
+  }, [activeDesignTemplate, color, colorParam, designId, editCartItemId, product]);
 
   useEffect(() => {
     if (!product || editCartItemId) return;
@@ -894,15 +1173,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     for (const side of sides) {
       const d = sideDesigns[side] ?? createDefaultSideDesign();
       const prefix = getSideMetadataPrefix(side);
-      metadata[`${prefix}CustomText`] = d.customText;
-      metadata[`${prefix}CustomTextColor`] = d.customTextColor;
-      metadata[`${prefix}CustomTextSize`] = d.customTextSize;
-      metadata[`${prefix}CustomTextPositionX`] = d.customTextPosition.x;
-      metadata[`${prefix}CustomTextPositionY`] = d.customTextPosition.y;
-      metadata[`${prefix}CustomTextFontWeight`] = d.customTextFontWeight;
-      metadata[`${prefix}CustomTextLetterSpacing`] = d.customTextLetterSpacing;
-      metadata[`${prefix}CustomTextLineHeight`] = d.customTextLineHeight;
-      metadata[`${prefix}CustomTextShadow`] = d.customTextShadow;
+      writeTextMetadata(metadata, prefix, d);
       metadata[`${prefix}IsTextTemplate`] = d.isTextTemplate;
       metadata[`${prefix}UploadedImageScale`] = d.uploadedImageScale;
       metadata[`${prefix}UploadedImagePositionX`] = d.uploadedImagePosition.x;
@@ -940,10 +1211,9 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       }
     }
 
-    if (designId) {
+    if (designId && activeDesignTemplate) {
       metadata.designTemplateId = designId;
-      const template = getProductDesignTemplate(designId);
-      if (template) metadata.designKind = template.kind;
+      metadata.designKind = activeDesignTemplate.kind;
     }
 
     const fileIds = sides
@@ -973,13 +1243,21 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   }
 
   function setPositionPreset(preset: 'center' | 'top' | 'bottom') {
-    const positions = {
-      center: { x: 50, y: 45 },
-      top: { x: 50, y: 25 },
-      bottom: { x: 50, y: 65 },
-    };
+    const positions = product
+      ? getPrintAreaPositionPresets(getProductMockupLayout(product).printArea)
+      : {
+          center: { x: 50, y: 45 },
+          top: { x: 50, y: 25 },
+          bottom: { x: 50, y: 65 },
+        };
     if (activePanel === 'text') {
-      updateCurrentSide({ customTextPosition: positions[preset] });
+      const layerId =
+        selectedElement?.startsWith('text:')
+          ? selectedElement.replace('text:', '')
+          : currentDesign.textLayers[0]?.instanceId;
+      if (layerId) {
+        updateTextLayer(layerId, { position: positions[preset] });
+      }
     } else if (activePanel === 'photo' || activePanel === 'design') {
       updateCurrentSide({ uploadedImagePosition: positions[preset] });
     }
@@ -993,7 +1271,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     const d = sideDesigns[side];
     if (!d) return false;
     return Boolean(
-      d.customText ||
+      sideHasTextContent(d) ||
         d.uploadedFile ||
         d.premadeDesignImage ||
         d.overlaySvg ||
@@ -1002,16 +1280,14 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     );
   };
 
-  const activeDesignTemplate = useMemo(() => {
-    const id = designId ?? currentDesign.premadeDesignId;
-    return id ? getProductDesignTemplate(id) : null;
-  }, [designId, currentDesign.premadeDesignId]);
-
   const hasRecolorableOverlay = Boolean(currentDesign.isRecolorableOverlay);
 
   function handleRemoveElement(target: SelectedElement) {
     if (!target) return;
-    if (target === 'text') updateCurrentSide({ customText: '' });
+    if (target.startsWith('text:')) {
+      removeTextLayer(target.replace('text:', ''));
+      return;
+    }
     if (target === 'photo') updateCurrentSide({ uploadedFile: null });
     if (target.startsWith('sticker:')) {
       removeSticker(target.replace('sticker:', ''));
@@ -1032,19 +1308,23 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       photoGuideLabel={t('photoGuide')}
       selectedElement={selectedElement}
       onSelectElement={setSelectedElement}
-      onTextPositionChange={(pos) =>
-        updateCurrentSide({ customTextPosition: pos })
+      imageMaxScale={imageMaxScale}
+      textLayers={currentDesign.textLayers}
+      onTextLayerPositionChange={(instanceId, pos) =>
+        updateTextLayer(instanceId, { position: pos })
       }
-      onTextSizeChange={(size) => updateCurrentSide({ customTextSize: size })}
+      onTextLayerSizeChange={(instanceId, size) =>
+        updateTextLayer(instanceId, { size })
+      }
+      onRemoveTextLayer={removeTextLayer}
       onImagePositionChange={(pos) =>
         updateCurrentSide({ uploadedImagePosition: pos })
       }
       onImageScaleChange={(scale) =>
         updateCurrentSide({
-          uploadedImageScale: clampPhotoScale(scale),
+          uploadedImageScale: clampPhotoScale(scale, imageMaxScale),
         })
       }
-      onRemoveText={() => updateCurrentSide({ customText: '' })}
       onRemoveImage={() => updateCurrentSide({ uploadedFile: null })}
       removeTextLabel={t('removeText')}
       removeImageLabel={t('removePhoto')}
@@ -1076,6 +1356,16 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       updateCurrentSide={updateCurrentSide}
       setPositionPreset={setPositionPreset}
       onAddSticker={addSticker}
+      onAddTextLayer={addTextLayer}
+      onUpdateTextLayer={updateTextLayer}
+      onSelectTextLayer={(instanceId) =>
+        setSelectedElement(`text:${instanceId}`)
+      }
+      activeTextLayerId={activeTextLayerId}
+      printTextSizeMax={printTextSizeMax}
+      textLayersAtLimit={
+        currentDesign.textLayers.length >= MAX_TEXT_LAYERS_PER_SIDE
+      }
       stickersAtLimit={
         currentDesign.stickers.length >= MAX_STICKERS_PER_SIDE
       }
@@ -1083,6 +1373,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       uploadLoading={uploadLoading}
       uploadError={uploadError}
       refreshSession={refreshSession}
+      imageMaxScale={imageMaxScale}
     />
   );
 
@@ -1127,8 +1418,10 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
           designTemplate={activeDesignTemplate}
           shirtColor={color}
           onUpdate={updateCurrentSide}
+          onUpdateTextLayer={updateTextLayer}
+          printTextSizeMax={printTextSizeMax}
           onRemove={handleRemoveElement}
-          overlayMaxScale={getProductMockupLayout(product).overlayMaxScale}
+          overlayMaxScale={imageMaxScale}
         />
       }
       canvas={previewNode}
@@ -1243,6 +1536,7 @@ function ResizableTextOverlay({
   color,
   size,
   position,
+  fontFamily,
   fontWeight,
   letterSpacing,
   lineHeight,
@@ -1252,6 +1546,7 @@ function ResizableTextOverlay({
   onRemove,
   removeLabel,
   hideControls,
+  printBounds,
   selected,
   onSelect,
 }: {
@@ -1259,6 +1554,7 @@ function ResizableTextOverlay({
   color: string;
   size: number;
   position: { x: number; y: number };
+  fontFamily: string;
   fontWeight: number;
   letterSpacing: string;
   lineHeight: number;
@@ -1268,29 +1564,128 @@ function ResizableTextOverlay({
   onRemove?: () => void;
   removeLabel?: string;
   hideControls?: boolean;
+  printBounds?: PrintAreaInsets;
   selected?: boolean;
   onSelect?: () => void;
 }) {
-  const drag = useDraggablePosition(position, onPositionChange);
-  const resize = useScaleResize(size, onSizeChange, 12, 72);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const textContentRef = useRef<HTMLSpanElement | null>(null);
+  const positionRef = useRef(position);
+  const onPositionChangeRef = useRef(onPositionChange);
+  const onSizeChangeRef = useRef(onSizeChange);
+  const [maxTextSize, setMaxTextSize] = useState(72);
+
+  positionRef.current = position;
+  onPositionChangeRef.current = onPositionChange;
+  onSizeChangeRef.current = onSizeChange;
+
+  const maxWidthPercent = printBounds
+    ? getPrintAreaWidthPercent(printBounds)
+    : 78;
+
+  useLayoutEffect(() => {
+    const parent = containerRef.current?.parentElement;
+    if (!parent) return;
+    if (printBounds) {
+      setMaxTextSize(
+        getMaxTextSizeForPrintArea(
+          parent.getBoundingClientRect().height,
+          printBounds,
+        ),
+      );
+    }
+  }, [printBounds, size, text]);
+
+  const enforceInPrintArea = useCallback(
+    (nextPosition: { x: number; y: number }) => {
+      if (!printBounds) return nextPosition;
+      const parent = containerRef.current?.parentElement ?? null;
+      return clampElementCenterToPrintArea(
+        textContentRef.current ?? containerRef.current,
+        parent,
+        printBounds,
+        nextPosition,
+      );
+    },
+    [printBounds],
+  );
+
+  const drag = useDraggablePosition(
+    position,
+    onPositionChange,
+    printBounds,
+    textContentRef,
+  );
+
+  useLayoutEffect(() => {
+    if (!printBounds || !text.trim()) return;
+    const clamped = enforceInPrintArea(positionRef.current);
+    if (
+      Math.abs(clamped.x - positionRef.current.x) > 0.05 ||
+      Math.abs(clamped.y - positionRef.current.y) > 0.05
+    ) {
+      onPositionChangeRef.current(clamped);
+    }
+  }, [
+    text,
+    size,
+    fontFamily,
+    fontWeight,
+    letterSpacing,
+    lineHeight,
+    maxWidthPercent,
+    printBounds,
+    enforceInPrintArea,
+  ]);
+
+  useLayoutEffect(() => {
+    if (size > maxTextSize) {
+      onSizeChangeRef.current(maxTextSize);
+    }
+  }, [maxTextSize, size]);
+
+  const handleSizeChange = useCallback(
+    (next: number) => {
+      const clamped = Math.min(maxTextSize, Math.max(12, Math.round(next)));
+      onSizeChangeRef.current(clamped);
+      requestAnimationFrame(() => {
+        const adjusted = enforceInPrintArea(positionRef.current);
+        if (
+          Math.abs(adjusted.x - positionRef.current.x) > 0.05 ||
+          Math.abs(adjusted.y - positionRef.current.y) > 0.05
+        ) {
+          onPositionChangeRef.current(adjusted);
+        }
+      });
+    },
+    [enforceInPrintArea, maxTextSize],
+  );
+
+  const resize = useScaleResize(size, handleSizeChange, 12, maxTextSize);
 
   return (
     <div
-      ref={drag.ref}
-      className="absolute cursor-grab select-none text-center font-bold leading-tight active:cursor-grabbing pointer-events-auto"
+      ref={(node) => {
+        containerRef.current = node;
+        drag.ref.current = node;
+      }}
+      className="absolute cursor-grab select-none text-center leading-tight active:cursor-grabbing pointer-events-auto"
       style={{
         color,
         left: `${position.x}%`,
         top: `${position.y}%`,
         transform: 'translate(-50%, -50%)',
         fontSize: `${size}px`,
+        fontFamily,
         fontWeight,
         letterSpacing,
         lineHeight,
         textShadow,
         touchAction: 'none',
-        maxWidth: '78%',
+        maxWidth: `${maxWidthPercent}%`,
         whiteSpace: 'pre-line',
+        overflowWrap: 'break-word',
+        wordBreak: 'break-word',
       }}
       onPointerDown={(event) => {
         event.stopPropagation();
@@ -1302,8 +1697,9 @@ function ResizableTextOverlay({
       onPointerCancel={drag.onPointerCancel}
     >
       <span
+        ref={textContentRef}
         className={cn(
-          'relative inline-block max-w-full rounded px-1',
+          'relative inline-block w-full max-w-full rounded px-1',
           selected && !hideControls && 'ring-2 ring-brand-500 ring-offset-2',
         )}
       >
@@ -1342,11 +1738,12 @@ function InteractivePreview({
   containerRef,
   isCapturing,
   photoGuideLabel,
-  onTextPositionChange,
-  onTextSizeChange,
+  textLayers,
+  onTextLayerPositionChange,
+  onTextLayerSizeChange,
+  onRemoveTextLayer,
   onImagePositionChange,
   onImageScaleChange,
-  onRemoveText,
   onRemoveImage,
   removeTextLabel,
   removeImageLabel,
@@ -1357,21 +1754,26 @@ function InteractivePreview({
   removeStickerLabel,
   selectedElement,
   onSelectElement,
+  imageMaxScale,
 }: {
   mockupImage: string;
   sideDesign: SideDesign;
-  designTemplate: ReturnType<typeof getProductDesignTemplate> | null;
+  designTemplate: ProductDesignTemplate | null;
   shirtColor: string;
   typeLabel: string;
   productType: ProductType;
   containerRef: RefObject<HTMLDivElement | null>;
   isCapturing?: boolean;
   photoGuideLabel: string;
-  onTextPositionChange: (pos: { x: number; y: number }) => void;
-  onTextSizeChange: (size: number) => void;
+  textLayers: PlacedTextLayer[];
+  onTextLayerPositionChange: (
+    instanceId: string,
+    pos: { x: number; y: number },
+  ) => void;
+  onTextLayerSizeChange: (instanceId: string, size: number) => void;
+  onRemoveTextLayer: (instanceId: string) => void;
   onImagePositionChange: (pos: { x: number; y: number }) => void;
   onImageScaleChange: (scale: number) => void;
-  onRemoveText?: () => void;
   onRemoveImage?: () => void;
   removeTextLabel?: string;
   removeImageLabel?: string;
@@ -1385,6 +1787,7 @@ function InteractivePreview({
   removeStickerLabel?: string;
   selectedElement: SelectedElement;
   onSelectElement: (element: SelectedElement) => void;
+  imageMaxScale: number;
 }) {
   const t = useTranslations('products.customizer');
   const baseImage = sideDesign.premadeDesignImage ?? mockupImage;
@@ -1409,13 +1812,70 @@ function InteractivePreview({
   }, [baseImage]);
 
   const mockupLayout = getProductMockupLayout(productType);
+  const overlayPrintBounds = getOverlayPrintBounds(mockupLayout);
+  const isDrinkware = isCylindricalDrinkwareType(productType);
+  const [previewMode, setPreviewMode] = useState<DrinkwarePreviewMode>('flat');
+  const overlayAssetUrl = useOverlayAssetUrl({
+    design: sideDesign,
+    template: designTemplate,
+    shirtColor,
+  });
+
+  const drinkwareImageLayers = useMemo((): DrinkwareImageLayer[] => {
+    const layers: DrinkwareImageLayer[] = [];
+    if (hasTemplateOverlay && overlayAssetUrl) {
+      layers.push({
+        src: overlayAssetUrl,
+        scale: sideDesign.uploadedImageScale,
+        position: sideDesign.uploadedImagePosition,
+      });
+    } else if (
+      sideDesign.uploadedFile?.isImage &&
+      sideDesign.uploadedFile.previewUrl
+    ) {
+      layers.push({
+        src: sideDesign.uploadedFile.previewUrl,
+        scale: sideDesign.uploadedImageScale,
+        position: sideDesign.uploadedImagePosition,
+      });
+    }
+    return layers;
+  }, [
+    hasTemplateOverlay,
+    overlayAssetUrl,
+    sideDesign.uploadedFile,
+    sideDesign.uploadedImageScale,
+    sideDesign.uploadedImagePosition,
+  ]);
+
+  const show3dPreview =
+    isDrinkware && previewMode === '3d' && !isCapturing;
 
   return (
+    <div className="flex flex-col items-center gap-2">
+    {isDrinkware && !isCapturing ? (
+      <DrinkwarePreviewModeToggle
+        mode={previewMode}
+        onChange={setPreviewMode}
+      />
+    ) : null}
+
+    {show3dPreview ? (
+      <Drinkware3DPreviewLazy
+        productType={productType}
+        productColor={shirtColor}
+        printBounds={overlayPrintBounds}
+        images={drinkwareImageLayers}
+        textLayers={textLayers}
+      />
+    ) : null}
+
     <div
       ref={containerRef}
       className={cn(
         'relative flex aspect-[3/4] w-[min(18rem,78vw)] items-center justify-center rounded-sm bg-white shadow-[0_8px_40px_rgba(15,23,42,0.12)] touch-pan-y md:w-[min(28rem,46vh)] lg:w-[min(32rem,52vh)] xl:w-[min(36rem,58vh)]',
         isCapturing && 'opacity-90',
+        show3dPreview && 'hidden',
       )}
       onPointerDown={() => onSelectElement(null)}
     >
@@ -1425,7 +1885,10 @@ function InteractivePreview({
         </div>
       ) : null}
 
-      <div className={`${mockupLayout.innerClass} pointer-events-none`}>
+      <div
+        data-mockup-inner
+        className={`${mockupLayout.innerClass} pointer-events-none`}
+      >
         {baseImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -1445,9 +1908,14 @@ function InteractivePreview({
           </div>
         )}
 
-        {!isPremade && (
-          <div className={mockupLayout.printAreaClass} />
-        )}
+        {!isCapturing ? (
+          <PrintAreaGuideSwitch
+            layout={mockupLayout}
+            label={t('printAreaGuide')}
+            wrapLabel={t('drinkwareWrapArea')}
+            frontLabel={t('drinkwareFrontPreview')}
+          />
+        ) : null}
 
         {hasTemplateOverlay ? (
           <ResizableDesignOverlay
@@ -1459,7 +1927,8 @@ function InteractivePreview({
             onScaleChange={onImageScaleChange}
             onPositionChange={onImagePositionChange}
             hideControls={isCapturing}
-            maxScale={mockupLayout.overlayMaxScale}
+            maxScale={imageMaxScale}
+            printBounds={overlayPrintBounds}
             selected={selectedElement === 'overlay'}
             onSelect={() => onSelectElement('overlay')}
           />
@@ -1478,30 +1947,40 @@ function InteractivePreview({
               onRemove={onRemoveImage}
               removeLabel={removeImageLabel}
               hideControls={isCapturing}
-              maxScale={mockupLayout.overlayMaxScale}
+              maxScale={imageMaxScale}
+              printBounds={overlayPrintBounds}
               selected={selectedElement === 'photo'}
               onSelect={() => onSelectElement('photo')}
             />
           ) : null}
 
-        {sideDesign.customText && (
-          <ResizableTextOverlay
-            text={sideDesign.customText}
-            color={sideDesign.customTextColor}
-            size={sideDesign.customTextSize}
-            position={sideDesign.customTextPosition}
-            fontWeight={sideDesign.customTextFontWeight}
-            letterSpacing={sideDesign.customTextLetterSpacing}
-            lineHeight={sideDesign.customTextLineHeight}
-            textShadow={sideDesign.customTextShadow}
-            onSizeChange={onTextSizeChange}
-            onPositionChange={onTextPositionChange}
-            onRemove={onRemoveText}
-            removeLabel={removeTextLabel}
-            hideControls={isCapturing}
-            selected={selectedElement === 'text'}
-            onSelect={() => onSelectElement('text')}
-          />
+        {textLayers.map((layer) =>
+          layer.text ? (
+            <ResizableTextOverlay
+              key={layer.instanceId}
+              text={layer.text}
+              color={layer.color}
+              size={layer.size}
+              position={layer.position}
+              fontFamily={getCustomizerFontFamily(layer.fontFamily)}
+              fontWeight={layer.fontWeight}
+              letterSpacing={layer.letterSpacing}
+              lineHeight={layer.lineHeight}
+              textShadow={layer.textShadow}
+              onSizeChange={(size) =>
+                onTextLayerSizeChange(layer.instanceId, size)
+              }
+              onPositionChange={(pos) =>
+                onTextLayerPositionChange(layer.instanceId, pos)
+              }
+              onRemove={() => onRemoveTextLayer(layer.instanceId)}
+              removeLabel={removeTextLabel}
+              hideControls={isCapturing}
+              printBounds={overlayPrintBounds}
+              selected={selectedElement === `text:${layer.instanceId}`}
+              onSelect={() => onSelectElement(`text:${layer.instanceId}`)}
+            />
+          ) : null,
         )}
 
         {stickers.map((sticker) => (
@@ -1517,6 +1996,7 @@ function InteractivePreview({
             onRemove={() => onRemoveSticker(sticker.instanceId)}
             removeLabel={removeStickerLabel}
             hideControls={isCapturing}
+            printBounds={overlayPrintBounds}
             selected={selectedElement === `sticker:${sticker.instanceId}`}
             onSelect={() =>
               onSelectElement(`sticker:${sticker.instanceId}`)
@@ -1543,6 +2023,10 @@ function InteractivePreview({
             </div>
           )}
       </div>
+    </div>
+    {!isCapturing && mockupLayout.wrapPrintArea && previewMode === 'flat' ? (
+      <DrinkwareWrapHint>{t('drinkwareWrapHint')}</DrinkwareWrapHint>
+    ) : null}
     </div>
   );
 }
@@ -1632,15 +2116,22 @@ function EditorPanelContent({
   updateCurrentSide,
   setPositionPreset,
   onAddSticker,
+  onAddTextLayer,
+  onUpdateTextLayer,
+  onSelectTextLayer,
+  activeTextLayerId,
+  printTextSizeMax,
+  textLayersAtLimit,
   stickersAtLimit,
   token,
   uploadLoading,
   uploadError,
   refreshSession,
+  imageMaxScale,
 }: {
   panel: EditorPanel;
   currentDesign: SideDesign;
-  designTemplate: ReturnType<typeof getProductDesignTemplate> | null;
+  designTemplate: ProductDesignTemplate | null;
   shirtColor: string;
   product: (typeof products)[number];
   color: string;
@@ -1652,14 +2143,23 @@ function EditorPanelContent({
   updateCurrentSide: (u: Partial<SideDesign>) => void;
   setPositionPreset: (p: 'center' | 'top' | 'bottom') => void;
   onAddSticker: (stickerId: string) => void;
+  onAddTextLayer: () => void;
+  onUpdateTextLayer: (
+    instanceId: string,
+    updates: Partial<PlacedTextLayer>,
+  ) => void;
+  onSelectTextLayer: (instanceId: string) => void;
+  activeTextLayerId: string | null;
+  printTextSizeMax: number;
+  textLayersAtLimit: boolean;
   stickersAtLimit: boolean;
   token: string | null;
   uploadLoading: boolean;
   uploadError: string | null;
   refreshSession: () => Promise<string | null>;
+  imageMaxScale: number;
 }) {
   const t = useTranslations('products.customizer');
-  const overlayMaxScale = getProductMockupLayout(product).overlayMaxScale;
   const hasSecondaryInk = designTemplate?.overlayRecolor?.slots === 2;
   const primaryInk = currentDesign.overlaySvgColors?.primary ?? '#F4EDE4';
   const secondaryInk =
@@ -1703,37 +2203,104 @@ function EditorPanelContent({
   }
 
   if (panel === 'text') {
+    const activeLayer =
+      currentDesign.textLayers.find(
+        (layer) => layer.instanceId === activeTextLayerId,
+      ) ?? currentDesign.textLayers[0] ??
+      null;
+
     return (
       <div className="space-y-4">
-        <textarea
-          value={currentDesign.customText}
-          onChange={(e) => updateCurrentSide({ customText: e.target.value })}
-          className="w-full rounded-xl border border-ink-200 px-4 py-3 text-base text-ink-900"
-          placeholder={t('addText')}
-          rows={2}
-        />
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-ink-600">{t('textSize')}</span>
-          <StepperInput
-            value={currentDesign.customTextSize}
-            onChange={(v) => updateCurrentSide({ customTextSize: v })}
-            min={12}
-            max={60}
-            step={2}
-          />
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm font-medium text-ink-700">{t('textLayers')}</p>
+          <button
+            type="button"
+            onClick={onAddTextLayer}
+            disabled={textLayersAtLimit}
+            className="inline-flex items-center gap-1 rounded-lg border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700 transition hover:bg-brand-100 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            {t('addTextLayer')}
+          </button>
         </div>
-        <PositionPresets onPreset={setPositionPreset} />
-        <label className="flex items-center justify-between gap-4">
-          <span className="text-sm text-ink-600">{t('textColor')}</span>
-          <input
-            type="color"
-            value={currentDesign.customTextColor}
-            onChange={(e) =>
-              updateCurrentSide({ customTextColor: e.target.value })
-            }
-            className="h-11 w-20 cursor-pointer rounded-lg border border-ink-200"
-          />
-        </label>
+
+        {textLayersAtLimit ? (
+          <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            {t('textLayerLimit')}
+          </p>
+        ) : null}
+
+        {currentDesign.textLayers.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {currentDesign.textLayers.map((layer, index) => (
+              <button
+                key={layer.instanceId}
+                type="button"
+                onClick={() => onSelectTextLayer(layer.instanceId)}
+                className={cn(
+                  'rounded-lg border px-3 py-1.5 text-xs font-medium transition',
+                  activeLayer?.instanceId === layer.instanceId
+                    ? 'border-brand-300 bg-brand-50 text-brand-800'
+                    : 'border-ink-200 bg-white text-ink-700 hover:border-brand-200',
+                )}
+              >
+                {t('textLayerLabel', { number: index + 1 })}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <p className="rounded-xl border border-dashed border-ink-200 bg-ink-50 px-4 py-6 text-center text-sm text-ink-500">
+            {t('textLayerEmpty')}
+          </p>
+        )}
+
+        {activeLayer ? (
+          <>
+            <textarea
+              value={activeLayer.text}
+              onChange={(e) =>
+                onUpdateTextLayer(activeLayer.instanceId, {
+                  text: e.target.value,
+                })
+              }
+              className="w-full rounded-xl border border-ink-200 px-4 py-3 text-base text-ink-900"
+              placeholder={t('addText')}
+              rows={2}
+            />
+            <TextLayerFontPicker
+              value={activeLayer.fontFamily}
+              onChange={(fontFamily: CustomizerFontId) =>
+                onUpdateTextLayer(activeLayer.instanceId, { fontFamily })
+              }
+            />
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-ink-600">{t('textSize')}</span>
+              <StepperInput
+                value={activeLayer.size}
+                onChange={(v) =>
+                  onUpdateTextLayer(activeLayer.instanceId, { size: v })
+                }
+                min={12}
+                max={printTextSizeMax}
+                step={2}
+              />
+            </div>
+            <PositionPresets onPreset={setPositionPreset} />
+            <label className="flex items-center justify-between gap-4">
+              <span className="text-sm text-ink-600">{t('textColor')}</span>
+              <input
+                type="color"
+                value={activeLayer.color}
+                onChange={(e) =>
+                  onUpdateTextLayer(activeLayer.instanceId, {
+                    color: e.target.value,
+                  })
+                }
+                className="h-11 w-20 cursor-pointer rounded-lg border border-ink-200"
+              />
+            </label>
+          </>
+        ) : null}
       </div>
     );
   }
@@ -1807,10 +2374,12 @@ function EditorPanelContent({
           <StepperInput
             value={currentDesign.uploadedImageScale}
             onChange={(v) =>
-              updateCurrentSide({ uploadedImageScale: clampPhotoScale(v) })
+              updateCurrentSide({
+                uploadedImageScale: clampPhotoScale(v, imageMaxScale),
+              })
             }
             min={PRODUCT_PHOTO_MIN_SCALE}
-            max={overlayMaxScale}
+            max={imageMaxScale}
             step={2}
           />
         </div>
@@ -1845,6 +2414,7 @@ function EditorPanelContent({
                   showPhotoGuide: false,
                   uploadedImageScale: clampPhotoScale(
                     currentDesign.uploadedImageScale,
+                    imageMaxScale,
                   ),
                 });
               }}
@@ -1854,10 +2424,12 @@ function EditorPanelContent({
               <StepperInput
                 value={currentDesign.uploadedImageScale}
                 onChange={(v) =>
-                  updateCurrentSide({ uploadedImageScale: clampPhotoScale(v) })
+                  updateCurrentSide({
+                    uploadedImageScale: clampPhotoScale(v, imageMaxScale),
+                  })
                 }
                 min={PRODUCT_PHOTO_MIN_SCALE}
-                max={overlayMaxScale}
+                max={imageMaxScale}
                 step={2}
               />
             </div>
@@ -1888,6 +2460,7 @@ function EditorPanelContent({
                 showPhotoGuide: false,
                 uploadedImageScale: clampPhotoScale(
                   currentDesign.uploadedImageScale,
+                  imageMaxScale,
                 ),
               });
             }}

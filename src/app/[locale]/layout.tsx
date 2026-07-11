@@ -17,7 +17,7 @@ import "@/app/globals.css";
 
 const inter = Inter({
   variable: "--font-geist-sans",
-  subsets: ["latin", "latin-ext"],
+  subsets: ["latin", "latin-ext", "cyrillic", "cyrillic-ext"],
 });
 
 const spaceGrotesk = Space_Grotesk({

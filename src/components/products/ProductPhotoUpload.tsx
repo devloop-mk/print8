@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Crop, Upload } from 'lucide-react';
 import { ImageCropModal } from '@/components/products/ImageCropModal';
+import { imageSrcToBlob } from '@/lib/products/crop-image';
 import { Button } from '@/components/ui/Button';
 import { LoadingIndicator } from '@/components/ui/LoadingIndicator';
 
@@ -15,6 +16,8 @@ type ProductPhotoUploadProps = {
   hasPhoto: boolean;
   previewUrl?: string;
   cropAspect?: number;
+  /** Upload the file as-is (keeps PNG transparency). Skips the crop step. */
+  skipCrop?: boolean;
   onUploadComplete: (fileId: string, name: string, previewUrl: string) => void;
 };
 
@@ -58,19 +61,22 @@ export function ProductPhotoUpload({
   hasPhoto,
   previewUrl,
   cropAspect,
+  skipCrop = false,
   onUploadComplete,
 }: ProductPhotoUploadProps) {
   const t = useTranslations('products.customizer');
   const tc = useTranslations('common');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [cropSource, setCropSource] = useState<string | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [pendingName, setPendingName] = useState('photo.jpg');
   const [message, setMessage] = useState<{
     type: 'error' | 'success';
     text: string;
   } | null>(null);
+  const [uploading, setUploading] = useState(false);
 
-  const isDisabled = uploadLoading || Boolean(cropSource) || !token;
+  const isDisabled = uploadLoading || uploading || Boolean(cropSource) || !token;
 
   function openFilePicker() {
     if (!isDisabled) fileInputRef.current?.click();
@@ -81,7 +87,14 @@ export function ProductPhotoUpload({
     e.target.value = '';
     if (!file || !file.type.startsWith('image/')) return;
 
-    setPendingName(file.name.replace(/\.[^.]+$/, '') + '.jpg');
+    if (skipCrop && token) {
+      void uploadFileDirect(file);
+      return;
+    }
+
+    setPendingFile(file);
+    const ext = file.name.match(/\.[^.]+$/)?.[0] ?? '.jpg';
+    setPendingName(file.name.replace(/\.[^.]+$/, '') + ext);
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === 'string') {
@@ -91,10 +104,73 @@ export function ProductPhotoUpload({
     reader.readAsDataURL(file);
   }
 
+  async function uploadFileDirect(file: File) {
+    if (!token) {
+      setMessage({ type: 'error', text: tc('uploadSessionError') });
+      return;
+    }
+
+    setMessage(null);
+    setUploading(true);
+    try {
+      const result = await uploadBlob(token, file, file.name, refreshSession);
+      onUploadComplete(
+        result.fileId,
+        result.originalName,
+        `/api/files/${result.fileId}`,
+      );
+      setMessage({ type: 'success', text: tc('uploadSuccess') });
+    } catch {
+      setMessage({ type: 'error', text: tc('uploadError') });
+    } finally {
+      setUploading(false);
+    }
+  }
+
   function openRecrop() {
     if (previewUrl) {
+      setPendingFile(null);
       setPendingName('photo-cropped.jpg');
       setCropSource(previewUrl);
+    }
+  }
+
+  function resolveOutputMimeType():
+    | 'image/jpeg'
+    | 'image/png'
+    | 'image/webp' {
+    if (pendingFile?.type === 'image/png') return 'image/png';
+    if (pendingFile?.type === 'image/webp') return 'image/webp';
+    if (cropSource?.startsWith('data:image/png')) return 'image/png';
+    if (cropSource?.startsWith('data:image/webp')) return 'image/webp';
+    return 'image/jpeg';
+  }
+
+  async function handleUseOriginal() {
+    if (!token || !cropSource) {
+      setMessage({ type: 'error', text: tc('uploadSessionError') });
+      throw new Error('No upload session');
+    }
+
+    setMessage(null);
+    setUploading(true);
+    try {
+      const blob = pendingFile ?? (await imageSrcToBlob(cropSource));
+      const fileName = pendingFile?.name ?? pendingName;
+      const result = await uploadBlob(token, blob, fileName, refreshSession);
+      onUploadComplete(
+        result.fileId,
+        result.originalName,
+        `/api/files/${result.fileId}`,
+      );
+      setMessage({ type: 'success', text: tc('uploadSuccess') });
+      setCropSource(null);
+      setPendingFile(null);
+    } catch {
+      setMessage({ type: 'error', text: tc('uploadError') });
+      throw new Error('Upload failed');
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -106,6 +182,7 @@ export function ProductPhotoUpload({
     }
 
     setMessage(null);
+    setUploading(true);
     try {
       const result = await uploadBlob(
         token,
@@ -120,19 +197,25 @@ export function ProductPhotoUpload({
       );
       setMessage({ type: 'success', text: tc('uploadSuccess') });
       setCropSource(null);
+      setPendingFile(null);
     } catch {
       setMessage({ type: 'error', text: tc('uploadError') });
       throw new Error('Upload failed');
+    } finally {
+      setUploading(false);
     }
   }
 
   return (
     <div className="space-y-3">
-      {uploadLoading ? (
-        <LoadingIndicator label={tc('uploadPreparing')} size="sm" />
+      {uploadLoading || uploading ? (
+        <LoadingIndicator
+          label={uploading ? t('cropUploading') : tc('uploadPreparing')}
+          size="sm"
+        />
       ) : null}
 
-      {!uploadLoading && uploadError ? (
+      {!uploadLoading && !uploading && uploadError ? (
         <div className="space-y-2">
           <p className="text-sm text-red-600">{uploadError}</p>
           <p className="text-xs text-ink-500">{tc('uploadSessionHint')}</p>
@@ -202,8 +285,13 @@ export function ProductPhotoUpload({
         <ImageCropModal
           imageSrc={cropSource}
           aspect={cropAspect}
-          onCancel={() => setCropSource(null)}
+          outputMimeType={resolveOutputMimeType()}
+          onCancel={() => {
+            setCropSource(null);
+            setPendingFile(null);
+          }}
           onComplete={handleCropComplete}
+          onUseOriginal={handleUseOriginal}
         />
       ) : null}
     </div>

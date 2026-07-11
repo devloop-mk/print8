@@ -26,6 +26,7 @@ import { DesignTemplatePreview } from '@/components/products/DesignTemplatePrevi
 import { resolveDesignPreviewColor } from '@/lib/products/design-applicable-colors';
 import { getProductTypeIcon } from '@/lib/products/product-type-icons';
 import { cn } from '@/lib/utils';
+import { resolveAssetUrl } from '@/lib/storage/asset-url';
 
 type CollectionGroup = {
   category: DesignCategory;
@@ -158,7 +159,7 @@ function ResultThumb({
     >
       {image ? (
         <Image
-          src={image}
+          src={resolveAssetUrl(image)}
           alt={alt}
           fill
           sizes={compact ? '40px' : '64px'}

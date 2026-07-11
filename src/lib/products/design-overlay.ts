@@ -3,6 +3,7 @@ import type {
   ProductDesignTemplate,
   ProductType,
 } from '@/lib/data/catalog';
+import { resolveAssetUrl } from '@/lib/storage/asset-url';
 
 export type OverlaySvgColors = {
   primary: string;
@@ -181,7 +182,7 @@ export function getProductDesignThumbnail(
   template: ProductDesignTemplate,
   shirtColor?: string,
 ): string | undefined {
-  if (template.image) return template.image;
+  if (template.image) return resolveAssetUrl(template.image);
 
   if (shirtColor) {
     const variant = resolveOverlayColorVariant(template, shirtColor);

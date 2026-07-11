@@ -1,8 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { ArrowLeft } from 'lucide-react';
 import {
@@ -36,6 +36,8 @@ import {
 import { useCatalogSearchLabels } from '@/hooks/useCatalogSearchLabels';
 import { Reveal } from '@/components/motion/Reveal';
 import { CatalogGridLayout } from '@/components/catalog/CatalogGrid';
+import { CatalogPagination } from '@/components/catalog/CatalogPagination';
+import { useCatalogPagination } from '@/hooks/useCatalogPagination';
 
 type ProductDesignsCatalogProps = {
   category: ProductDesignCategory;
@@ -44,8 +46,16 @@ type ProductDesignsCatalogProps = {
 type TypeFilter = ProductType | 'all';
 type SideFilter = ProductSide | 'all';
 
+const STREETWEAR_COLLECTION_LABELS: Record<string, { en: string; mk: string }> = {
+  basketball: { en: 'Basketball', mk: 'Кошарка' },
+  anime: { en: 'Japanese Anime', mk: 'Јапонско аниме' },
+  typography: { en: 'Streetwear Typography', mk: 'Стритвер типографија' },
+  streetwear: { en: 'Streetwear', mk: 'Стритвер' },
+};
+
 export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) {
   const t = useTranslations('products');
+  const locale = useLocale() as 'mk' | 'en';
   const tc = useTranslations('products.catalog');
   const tcat = useTranslations('products.categoryPages');
   const tNav = useTranslations('nav.productsMenu.categories');
@@ -75,7 +85,24 @@ export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) 
   );
   const [colorFilter, setColorFilter] = useState<string | 'all'>('all');
   const [sideFilter, setSideFilter] = useState<SideFilter>('all');
+  const [collectionFilter, setCollectionFilter] = useState<string | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const collectionOptions = useMemo(() => {
+    const collections = new Set<string>();
+    for (const entry of allEntries) {
+      if (entry.design.collection) collections.add(entry.design.collection);
+    }
+    return [...collections]
+      .map((value) => ({
+        value,
+        label:
+          locale === 'mk'
+            ? (STREETWEAR_COLLECTION_LABELS[value]?.mk ?? value)
+            : (STREETWEAR_COLLECTION_LABELS[value]?.en ?? value),
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [allEntries, locale]);
 
   const { allOption, options: typeOptions } = useMemo(() => {
     const built = buildProductTypeFilterOptions((type) =>
@@ -102,8 +129,12 @@ export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) 
         type: typeFilter,
         color: colorFilter,
         side: sideFilter,
-      }),
-    [allEntries, typeFilter, colorFilter, sideFilter],
+      }).filter((entry) =>
+        collectionFilter === 'all'
+          ? true
+          : entry.design.collection === collectionFilter,
+      ),
+    [allEntries, typeFilter, colorFilter, sideFilter, collectionFilter],
   );
 
   const filtered = useMemo(
@@ -114,6 +145,42 @@ export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) 
         searchLabels,
       ),
     [filteredByAttributes, searchQuery, searchLabels],
+  );
+
+  const filterSignature = useMemo(
+    () =>
+      [
+        categoryFilter,
+        typeFilter,
+        colorFilter,
+        sideFilter,
+        collectionFilter,
+        searchQuery.trim(),
+      ].join('|'),
+    [
+      categoryFilter,
+      collectionFilter,
+      colorFilter,
+      searchQuery,
+      sideFilter,
+      typeFilter,
+    ],
+  );
+
+  const { page, setPage, resetPage, paginate } = useCatalogPagination({
+    totalItems: filtered.length,
+  });
+
+  const prevFilterSignature = useRef(filterSignature);
+  useEffect(() => {
+    if (prevFilterSignature.current === filterSignature) return;
+    prevFilterSignature.current = filterSignature;
+    resetPage();
+  }, [filterSignature, resetPage]);
+
+  const visibleEntries = useMemo(
+    () => paginate(filtered),
+    [filtered, paginate],
   );
 
   const pageTitle =
@@ -172,11 +239,30 @@ export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) 
       onChange: (value) => setSideFilter(value as SideFilter),
     });
 
+    if (collectionOptions.length > 0) {
+      groups.unshift({
+        kind: 'pills',
+        id: 'collection',
+        title: tc('filterCollection'),
+        options: [
+          { value: 'all' as const, label: tc('allCollections') },
+          ...collectionOptions.map((option) => ({
+            value: option.value,
+            label: option.label,
+          })),
+        ],
+        value: collectionFilter,
+        onChange: (value) => setCollectionFilter(value),
+      });
+    }
+
     return groups;
   }, [
     allOption,
     availableColors,
     colorFilter,
+    collectionFilter,
+    collectionOptions,
     sideFilter,
     t,
     tc,
@@ -225,7 +311,7 @@ export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) 
           ) : (
             <Reveal delay={80}>
               <CatalogGridLayout>
-                {filtered.map((entry) => (
+                {visibleEntries.map((entry) => (
                   <ProductDesignCatalogCard
                     key={entry.design.id}
                     entry={entry}
@@ -233,6 +319,16 @@ export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) 
                   />
                 ))}
               </CatalogGridLayout>
+              <CatalogPagination
+                page={page}
+                totalItems={filtered.length}
+                onPageChange={setPage}
+                previousLabel={tc('paginationPrevious')}
+                nextLabel={tc('paginationNext')}
+                pageLabel={(current, total) =>
+                  tc('paginationPage', { current, total })
+                }
+              />
             </Reveal>
           )}
         </CatalogFilterLayout>

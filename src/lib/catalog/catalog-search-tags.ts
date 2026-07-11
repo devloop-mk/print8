@@ -50,6 +50,16 @@ export const DESIGN_TAG_KEYWORDS: Record<string, string[]> = {
   ocean: ['ocean', 'sea', 'море', 'океан'],
   cafe: ['cafe', 'coffee', 'coffee shop', 'кафе', 'кофе', 'кафуле'],
   coffee: ['coffee', 'espresso', 'latte', 'кафе', 'еспресо'],
+  photography: ['photography', 'photographer', 'photo', 'фотографија', 'фотограф'],
+  'real-estate': ['real estate', 'realtor', 'property', 'недвижности', 'недвижност', 'агент'],
+  spa: ['spa', 'salon', 'beauty', 'спа', 'салон', 'убавина'],
+  law: ['law', 'lawyer', 'legal', 'attorney', 'право', 'адвокат', 'правен'],
+  vintage: ['vintage', 'retro classic', 'винтаж', 'ретро'],
+  'black-white': ['black and white', 'monochrome', 'b&w', 'црно бела', 'монохром'],
+  automotive: ['automotive', 'car', 'auto', 'rent a car', 'автомобил', 'рент а кар'],
+  social: ['social media', 'social', 'instagram', 'социјални мрежи', 'инстаграм'],
+  salon: ['salon', 'hair salon', 'салон', 'фризер'],
+  monochrome: ['monochrome', 'black white', 'монохром'],
 };
 
 export const DESIGN_CATEGORY_KEYWORDS: Record<DesignCategory, string[]> = {

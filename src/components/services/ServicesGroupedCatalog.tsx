@@ -1,11 +1,22 @@
 import { getTranslations } from 'next-intl/server';
-import { getServicesByCategory } from '@/lib/data/catalog';
+import {
+  getResolvedServicesByCategory,
+  type CmsLocale,
+} from '@/lib/cms/public-content';
 import { ServiceCard } from '@/components/services/ServiceCard';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 
-export async function ServicesGroupedCatalog() {
+export async function ServicesGroupedCatalog({
+  locale,
+}: {
+  locale: CmsLocale;
+}) {
   const t = await getTranslations('services');
-  const grouped = getServicesByCategory();
+  const ts = await getTranslations('services.items');
+  const grouped = await getResolvedServicesByCategory(locale, (id) => ({
+    title: ts(`${id}.title`),
+    description: ts(`${id}.description`),
+  }));
 
   return (
     <div className="space-y-14">

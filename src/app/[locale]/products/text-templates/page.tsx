@@ -6,6 +6,8 @@ import { SectionLoading } from '@/components/ui/SectionLoading';
 import { buildPageMetadata, buildOgImageUrl } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
+export const revalidate = 3600;
+
 export async function generateMetadata({
   params,
 }: {

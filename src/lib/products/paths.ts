@@ -3,6 +3,7 @@ export const PRODUCT_DESIGN_PREVIEW_LIMIT = 3;
 export const PRODUCT_OFFERING_PATHS = {
   all: '/products',
   custom: '/products/custom',
+  brandingPack: '/products/branding-pack',
   readyDesigns: '/products/ready-designs',
   textTemplates: '/products/text-templates',
   category: (categoryId: string) => `/products/category/${categoryId}`,

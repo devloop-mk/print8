@@ -9,7 +9,9 @@ import { useCart } from '@/components/cart/CartProvider';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { formatPrice } from '@/lib/utils';
+import { resolveAssetUrl } from '@/lib/storage/asset-url';
 import type { DesignTemplate } from '@/lib/data/catalog';
+import { getDesignThumbAspect } from '@/lib/designs/design-thumb';
 import {
   categoryOrderFields,
   designCategoryPrices,
@@ -32,7 +34,17 @@ const fieldInputType: Partial<
   address: 'textarea',
 };
 
-export function DesignOrderForm({ template }: { template: DesignTemplate }) {
+export function DesignOrderForm({
+  template,
+  displayName,
+  orderable = true,
+  exclusive = false,
+}: {
+  template: DesignTemplate;
+  displayName: string;
+  orderable?: boolean;
+  exclusive?: boolean;
+}) {
   const t = useTranslations('designs.order');
   const td = useTranslations('designs');
   const locale = useLocale();
@@ -43,7 +55,10 @@ export function DesignOrderForm({ template }: { template: DesignTemplate }) {
 
   const fields = categoryOrderFields[template.category];
   const required = requiredOrderFields[template.category];
-  const price = designCategoryPrices[template.category];
+  const price =
+    'customPrice' in template && typeof template.customPrice === 'number'
+      ? template.customPrice
+      : designCategoryPrices[template.category];
 
   const [values, setValues] = useState<Partial<Record<DesignOrderFieldId, string>>>(
     {},
@@ -52,6 +67,7 @@ export function DesignOrderForm({ template }: { template: DesignTemplate }) {
   const [errors, setErrors] = useState<Partial<Record<DesignOrderFieldId, string>>>(
     {},
   );
+  const [unavailableError, setUnavailableError] = useState<string | null>(null);
 
   const editingItem = useMemo(
     () =>
@@ -91,9 +107,24 @@ export function DesignOrderForm({ template }: { template: DesignTemplate }) {
     return Object.keys(next).length === 0;
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!orderable) return;
     if (!validate()) return;
+
+    if (exclusive) {
+      const availabilityResponse = await fetch(
+        `/api/designs/${template.id}/availability`,
+      );
+      if (availabilityResponse.ok) {
+        const availability = await availabilityResponse.json();
+        if (!availability.available) {
+          setUnavailableError(t('unavailableDesign'));
+          return;
+        }
+      }
+    }
+    setUnavailableError(null);
 
     const metadata: Record<string, string | number | boolean> = {
       designTemplateId: template.id,
@@ -108,10 +139,10 @@ export function DesignOrderForm({ template }: { template: DesignTemplate }) {
 
     const cartPayload = {
       type: 'design' as const,
-      name: `${td(`categories.${template.category}`)} — ${td(`templates.${template.id}`)}`,
+      name: `${td(`categories.${template.category}`)} — ${displayName}`,
       price,
       quantity,
-      designPreview: template.image,
+      designPreview: resolveAssetUrl(template.image),
       metadata,
     };
 
@@ -126,10 +157,13 @@ export function DesignOrderForm({ template }: { template: DesignTemplate }) {
   return (
     <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
       <Card className="overflow-hidden p-0">
-        <div className="relative aspect-[4/3] bg-gradient-to-br from-ink-50 to-ink-100">
+        <div
+          className="relative bg-gradient-to-br from-ink-50 to-ink-100"
+          style={{ aspectRatio: getDesignThumbAspect(template) }}
+        >
           <Image
-            src={template.image}
-            alt={td(`templates.${template.id}`)}
+            src={resolveAssetUrl(template.image)}
+            alt={displayName}
             fill
             sizes="(max-width: 1024px) 100vw, 50vw"
             className="object-contain p-6"
@@ -261,8 +295,16 @@ export function DesignOrderForm({ template }: { template: DesignTemplate }) {
           </div>
 
           <p className="text-xs text-ink-500">{t('requiredNote')}</p>
+          {unavailableError ? (
+            <p className="text-sm text-amber-800">{unavailableError}</p>
+          ) : null}
 
-          <Button type="submit" size="lg" className="w-full sm:w-auto">
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full sm:w-auto"
+            disabled={!orderable}
+          >
             {editCartItemId ? t('updateCart') : t('addToCart')}
           </Button>
         </form>

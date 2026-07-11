@@ -18,10 +18,11 @@ export type ProductDesignCatalogEntry = {
   products: Product[];
 };
 
-export function getProductDesignCatalogEntries(
+export function buildProductDesignCatalogEntries(
   category: ProductDesignCategory,
+  templates: ProductDesignTemplate[],
 ): ProductDesignCatalogEntry[] {
-  return productDesignTemplates
+  return templates
     .filter((design) => design.category === category)
     .map((design) => ({
       design,
@@ -32,6 +33,24 @@ export function getProductDesignCatalogEntries(
       ),
     }))
     .filter((entry) => entry.products.length > 0);
+}
+
+export function getProductDesignCatalogEntries(
+  category: ProductDesignCategory,
+  templates?: ProductDesignTemplate[],
+): ProductDesignCatalogEntry[] {
+  const source = templates ?? productDesignTemplates;
+  return buildProductDesignCatalogEntries(category, source);
+}
+
+export async function getMergedProductDesignCatalogEntries(
+  category: ProductDesignCategory,
+): Promise<ProductDesignCatalogEntry[]> {
+  const { getMergedProductDesignTemplates } = await import(
+    '@/lib/products/merged-product-designs'
+  );
+  const templates = await getMergedProductDesignTemplates();
+  return buildProductDesignCatalogEntries(category, templates);
 }
 
 export function getCatalogColors(entries: ProductDesignCatalogEntry[]): string[] {
@@ -49,6 +68,17 @@ export type DesignCatalogFilters = {
   color: string | 'all';
   side: ProductSide | 'all';
 };
+
+export function getProductDesignCatalogEntriesForType(
+  type: ProductType,
+  category: ProductDesignCategory = 'image-designs',
+): ProductDesignCatalogEntry[] {
+  return filterDesignCatalogEntries(getProductDesignCatalogEntries(category), {
+    type,
+    color: 'all',
+    side: 'all',
+  });
+}
 
 export function getCombinedProductDesignCatalogEntries(
   categoryId?: ProductNavCategoryId,

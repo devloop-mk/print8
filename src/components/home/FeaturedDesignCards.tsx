@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Card } from '@/components/ui/Card';
 import { DesignCardThumbnail } from '@/components/designs/DesignCardThumbnail';
@@ -17,9 +17,28 @@ import { getDesignThumbAspect } from '@/lib/designs/design-thumb';
 
 const MAX_VISIBLE = 3;
 
-export function FeaturedDesignCards({ designs }: { designs: DesignTemplate[] }) {
+type FeaturedDesign = DesignTemplate & {
+  nameEn?: string;
+  nameMk?: string;
+};
+
+function getFeaturedDesignName(
+  design: FeaturedDesign,
+  locale: string,
+  fallback: (id: string) => string,
+) {
+  if (design.nameEn || design.nameMk) {
+    return locale === 'mk'
+      ? (design.nameMk ?? design.nameEn ?? design.id)
+      : (design.nameEn ?? design.nameMk ?? design.id);
+  }
+  return fallback(design.id);
+}
+
+export function FeaturedDesignCards({ designs }: { designs: FeaturedDesign[] }) {
   const t = useTranslations('designs');
   const th = useTranslations('home');
+  const locale = useLocale();
 
   const availableCategories = useMemo(() => {
     const cats = new Set(designs.map((design) => design.category));
@@ -70,6 +89,11 @@ export function FeaturedDesignCards({ designs }: { designs: DesignTemplate[] }) 
           <CatalogGridLayout gapClassName="gap-6" defaultMobileColumns={1}>
             {visible.map((design) => {
               const isFixed = design.kind === 'fixed';
+              const displayName = getFeaturedDesignName(
+                design,
+                locale,
+                (id) => t(`templates.${id}`),
+              );
               return (
                 <Link
                   key={design.id}
@@ -83,18 +107,20 @@ export function FeaturedDesignCards({ designs }: { designs: DesignTemplate[] }) 
                     >
                       <DesignCardThumbnail
                         design={design}
-                        alt={t(`templates.${design.id}`)}
+                        alt={displayName}
                       />
-                      <span className="badge-brand absolute left-3 top-3 bg-white/95 shadow-sm">
-                        {isFixed ? t('fixedBadge') : t('customizableBadge')}
-                      </span>
+                      {!isFixed ? (
+                        <span className="badge-brand absolute left-3 top-3 bg-white/95 shadow-sm">
+                          {t('customizableBadge')}
+                        </span>
+                      ) : null}
                     </div>
                     <div className="p-4">
                       <p className="text-xs font-medium uppercase tracking-wide text-brand-600">
                         {t(`categories.${design.category}`)}
                       </p>
                       <p className="mt-1 font-medium text-ink-900 group-hover:text-brand-700">
-                        {t(`templates.${design.id}`)}
+                        {displayName}
                       </p>
                       <p className="mt-3 text-sm font-medium text-brand-600">
                         {isFixed ? t('orderWithInfo') : t('customizeOnline')} →

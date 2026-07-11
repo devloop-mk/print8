@@ -6,6 +6,9 @@ export const adminStrings = {
   admin: 'Админ',
   dashboard: 'Контролна табла',
   orders: 'Нарачки',
+  designs: 'Печат дизајни',
+  productDesigns: 'Дизајни за производи',
+  content: 'Содржина',
   viewWebsite: 'Види го сајтот',
   logout: 'Одјава',
   login: {

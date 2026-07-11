@@ -6,12 +6,16 @@ import {
 } from '@/lib/legal/pages';
 import {
   products,
-  getDesignTemplate,
   type ProductType,
   type ProductDesignCategory,
 } from '@/lib/data/catalog';
+import {
+  getDesignDisplayName,
+  resolveDesignTemplate,
+} from '@/lib/catalog/design-catalog';
 import type { ProductNavCategoryId } from '@/lib/products/product-nav';
 import { buildOgImageUrl, buildPageMetadata } from '@/lib/seo/metadata';
+import { resolveAssetUrl } from '@/lib/storage/asset-url';
 
 export async function buildProductMetadata(locale: Locale, id: string) {
   const product = products.find((item) => item.id === id);
@@ -83,13 +87,16 @@ export async function buildProductDesignsMetadata(
 }
 
 export async function buildDesignMetadata(locale: Locale, id: string) {
-  const template = getDesignTemplate(id);
+  const template = await resolveDesignTemplate(id);
   if (!template) return null;
 
   const td = await getTranslations({ locale, namespace: 'designs' });
   const tm = await getTranslations({ locale, namespace: 'metadata' });
 
-  const designName = td(`templates.${template.id}`);
+  const designName =
+    getDesignDisplayName(template, locale) !== template.id
+      ? getDesignDisplayName(template, locale)
+      : td(`templates.${template.id}`);
   const categoryName = td(`categories.${template.category}`);
   const title = `${designName} | Print 8`;
   const description = td('subtitle');
@@ -104,20 +111,23 @@ export async function buildDesignMetadata(locale: Locale, id: string) {
       title: designName,
       description: categoryName,
       badge: tm('badges.design'),
-      image: template.image,
+      image: resolveAssetUrl(template.image),
     }),
   });
 }
 
 export async function buildDesignCustomizeMetadata(locale: Locale, id: string) {
-  const template = getDesignTemplate(id);
+  const template = await resolveDesignTemplate(id);
   if (!template) return null;
 
   const td = await getTranslations({ locale, namespace: 'designs' });
   const tc = await getTranslations({ locale, namespace: 'designs.customize' });
   const tm = await getTranslations({ locale, namespace: 'metadata' });
 
-  const designName = td(`templates.${template.id}`);
+  const designName =
+    getDesignDisplayName(template, locale) !== template.id
+      ? getDesignDisplayName(template, locale)
+      : td(`templates.${template.id}`);
   const title = `${designName} | Print 8`;
   const description = tc('pageSubtitle');
 
@@ -131,7 +141,7 @@ export async function buildDesignCustomizeMetadata(locale: Locale, id: string) {
       title: designName,
       description: tc('badge'),
       badge: tm('badges.customize'),
-      image: template.image,
+      image: resolveAssetUrl(template.image),
     }),
   });
 }

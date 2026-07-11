@@ -11,6 +11,8 @@ import {
 import { getProductPaths } from '@/lib/products/paths';
 import { formatPrice } from '@/lib/utils';
 import { ProductDesignSection } from '@/components/products/ProductDesignSection';
+import { CatalogPagination } from '@/components/catalog/CatalogPagination';
+import { useCatalogPagination } from '@/hooks/useCatalogPagination';
 import { Reveal } from '@/components/motion/Reveal';
 import { ArrowLeft, Sparkles, Type } from 'lucide-react';
 
@@ -38,6 +40,13 @@ export function ProductDesignsPage({
       product ? getProductDesignTemplatesByCategory(product, category) : [],
     [product, category],
   );
+
+  const { page, setPage, paginate } = useCatalogPagination({
+    totalItems: designs.length,
+  });
+
+  const visibleDesigns = useMemo(() => paginate(designs), [designs, paginate]);
+  const tc = useTranslations('products.catalog');
 
   if (!product) {
     return <p>{td('notFound')}</p>;
@@ -84,7 +93,15 @@ export function ProductDesignsPage({
           title={isPhoto ? td('imageDesigns') : td('textDesigns')}
           hint={isPhoto ? td('imageDesignsPageHint') : td('textDesignsPageHint')}
           product={product}
-          designs={designs}
+          designs={visibleDesigns}
+        />
+        <CatalogPagination
+          page={page}
+          totalItems={designs.length}
+          onPageChange={setPage}
+          previousLabel={tc('paginationPrevious')}
+          nextLabel={tc('paginationNext')}
+          pageLabel={(current, total) => tc('paginationPage', { current, total })}
         />
       </Reveal>
     </div>

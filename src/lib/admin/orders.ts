@@ -5,6 +5,7 @@ import {
 } from '@/lib/db';
 import type { CheckoutInput } from '@/lib/validations/order';
 import { collectOrderFileIds } from '@/lib/orders/order-assets';
+import { syncExclusiveDesignsForOrderStatus } from '@/lib/designs/design-reservations';
 
 export { collectOrderFileIds };
 
@@ -76,7 +77,14 @@ export async function getAdminOrder(id: string): Promise<OrderListItem | null> {
 }
 
 export async function updateAdminOrderStatus(id: string, status: OrderStatus) {
-  return db.orders.updateStatus(id, status);
+  const existing = await getAdminOrder(id);
+  if (!existing) {
+    throw new Error('Order not found');
+  }
+
+  const updated = await db.orders.updateStatus(id, status);
+  await syncExclusiveDesignsForOrderStatus(id, status, existing.items);
+  return updated;
 }
 
 export async function getAdminMetrics(): Promise<AdminMetrics> {

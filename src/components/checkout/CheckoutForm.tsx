@@ -15,6 +15,10 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { CheckoutSteps } from "@/components/checkout/CheckoutSteps";
+import {
+  mapCheckoutApiFieldErrors,
+  validateCheckoutFields,
+} from "@/lib/validations/checkout-form";
 
 export function CheckoutForm() {
   const t = useTranslations("checkout");
@@ -45,16 +49,19 @@ export function CheckoutForm() {
     setErrors((prev) => ({ ...prev, [field]: "" }));
   }
 
+  function getValidationMessages() {
+    return {
+      required: t("required"),
+      fullNameTooShort: t("fullNameTooShort"),
+      invalidPhone: t("invalidPhone"),
+      invalidEmail: t("invalidEmail"),
+      cityTooShort: t("cityTooShort"),
+      addressTooShort: t("addressTooShort"),
+    };
+  }
+
   function validate() {
-    const newErrors: Record<string, string> = {};
-    if (!form.fullName.trim()) newErrors.fullName = t("required");
-    if (!form.phone.trim() || form.phone.length < 8)
-      newErrors.phone = t("invalidPhone");
-    if (!form.city.trim()) newErrors.city = t("required");
-    if (!form.address.trim()) newErrors.address = t("required");
-    if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-      newErrors.email = t("invalidEmail");
-    }
+    const newErrors = validateCheckoutFields(form, getValidationMessages());
     if (!termsAccepted) {
       newErrors.terms = t("acceptTermsRequired");
     }
@@ -157,14 +164,31 @@ export function CheckoutForm() {
           setProcessing(false);
           return;
         }
-        throw new Error(data.error);
+        if (data.code === "design_unavailable") {
+          setErrors({ form: t("designUnavailable") });
+          setProcessing(false);
+          return;
+        }
+        const fieldErrors = mapCheckoutApiFieldErrors(
+          data.details,
+          form,
+          getValidationMessages(),
+        );
+        if (Object.keys(fieldErrors).length > 0) {
+          setErrors(fieldErrors);
+          setProcessing(false);
+          return;
+        }
+        setErrors({ form: t("submitError") });
+        setProcessing(false);
+        return;
       }
 
       setRedirecting(true);
       sessionStorage.removeItem("print8-upload-token");
       router.push(`/order/success?number=${data.orderNumber}`);
     } catch {
-      setErrors({ form: "error" });
+      setErrors({ form: t("submitError") });
       setProcessing(false);
     }
   }

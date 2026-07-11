@@ -16,23 +16,16 @@ import {
 } from '@/lib/products/design-state';
 import { getSideMetadataPrefix } from '@/lib/products/product-sides';
 import { serializePlacedStickers } from '@/lib/products/sticker-library';
+import { writeTextMetadata } from '@/lib/products/text-layers';
 
-function writeSideDesignMetadata(
+export function writeSideDesignMetadata(
   metadata: Record<string, string | number | boolean>,
   side: ProductSide,
   design: SideDesign,
 ) {
   const prefix = getSideMetadataPrefix(side);
 
-  metadata[`${prefix}CustomText`] = design.customText;
-  metadata[`${prefix}CustomTextColor`] = design.customTextColor;
-  metadata[`${prefix}CustomTextSize`] = design.customTextSize;
-  metadata[`${prefix}CustomTextPositionX`] = design.customTextPosition.x;
-  metadata[`${prefix}CustomTextPositionY`] = design.customTextPosition.y;
-  metadata[`${prefix}CustomTextFontWeight`] = design.customTextFontWeight;
-  metadata[`${prefix}CustomTextLetterSpacing`] = design.customTextLetterSpacing;
-  metadata[`${prefix}CustomTextLineHeight`] = design.customTextLineHeight;
-  metadata[`${prefix}CustomTextShadow`] = design.customTextShadow;
+  writeTextMetadata(metadata, prefix, design);
   metadata[`${prefix}IsTextTemplate`] = design.isTextTemplate;
   metadata[`${prefix}UploadedImageScale`] = design.uploadedImageScale;
   metadata[`${prefix}UploadedImagePositionX`] = design.uploadedImagePosition.x;

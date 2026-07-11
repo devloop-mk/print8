@@ -31,10 +31,18 @@ const designCategorySubfilterDefs: Partial<
     { id: 'winter', tags: ['winter', 'snow'] },
   ],
   'business-cards': [
-    { id: 'modern', tags: ['modern', 'tech'] },
+    { id: 'modern', tags: ['modern', 'tech', 'minimal'] },
     { id: 'luxury', tags: ['luxury', 'gold'] },
     { id: 'corporate', tags: ['corporate', 'professional'] },
     { id: 'creative', tags: ['creative', 'abstract'] },
+    { id: 'photography', tags: ['photography'] },
+    { id: 'real-estate', tags: ['real-estate'] },
+    { id: 'spa', tags: ['spa', 'salon'] },
+    { id: 'law', tags: ['law'] },
+    { id: 'vintage', tags: ['vintage'] },
+    { id: 'black-white', tags: ['black-white', 'monochrome'] },
+    { id: 'automotive', tags: ['automotive'] },
+    { id: 'social', tags: ['social'] },
   ],
   menus: [
     { id: 'rustic', tags: ['rustic', 'italian'] },
@@ -90,10 +98,11 @@ export function filterDesignsBySubfilter(
 export function parseDesignSubfilterFilter(
   value: string | null,
   category: DesignCategory | 'all',
+  designs?: DesignTemplate[],
 ): DesignSubfilterId | 'all' {
   if (!value || category === 'all') return 'all';
 
-  const available = getAvailableDesignSubfilters(category);
+  const available = getAvailableDesignSubfilters(category, designs);
   if (available.some((item) => item.id === value)) return value;
   return 'all';
 }

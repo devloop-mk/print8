@@ -5,7 +5,23 @@ import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/Button';
 import { Mail, MapPin, MessageCircle, Phone } from 'lucide-react';
 
-export function HomeContactCta() {
+export function HomeContactCta({
+  badge,
+  title,
+  description,
+  phoneValue,
+  emailValue,
+  addressValue,
+  hoursValue,
+}: {
+  badge: string;
+  title: string;
+  description: string;
+  phoneValue: string;
+  emailValue: string;
+  addressValue: string;
+  hoursValue: string;
+}) {
   const th = useTranslations('home');
   const tc = useTranslations('contact');
 
@@ -22,13 +38,13 @@ export function HomeContactCta() {
             <div>
               <p className="eyebrow-on-dark mb-4">
                 <MessageCircle className="h-3.5 w-3.5" aria-hidden="true" />
-                {th('contactCtaBadge')}
+                {badge}
               </p>
               <h2 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
-                {th('contactCtaTitle')}
+                {title}
               </h2>
               <p className="mt-3 max-w-xl text-sm leading-relaxed text-brand-100 sm:text-base">
-                {th('contactCtaDesc')}
+                {description}
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link href="/contact">
@@ -53,8 +69,8 @@ export function HomeContactCta() {
 
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
               {[
-                { icon: Phone, label: tc('phone'), value: tc('phoneValue') },
-                { icon: Mail, label: tc('email'), value: tc('emailValue') },
+                { icon: Phone, label: tc('phone'), value: phoneValue },
+                { icon: Mail, label: tc('email'), value: emailValue },
               ].map(({ icon: Icon, label, value }) => (
                 <div
                   key={label}
@@ -75,8 +91,8 @@ export function HomeContactCta() {
                   <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-brand-200">
                     {tc('address')}
                   </p>
-                  <p className="mt-0.5 text-sm font-medium text-white">{tc('addressValue')}</p>
-                  <p className="mt-1 text-xs text-brand-200">{tc('hoursValue')}</p>
+                  <p className="mt-0.5 text-sm font-medium text-white">{addressValue}</p>
+                  <p className="mt-1 text-xs text-brand-200">{hoursValue}</p>
                 </div>
               </div>
             </div>

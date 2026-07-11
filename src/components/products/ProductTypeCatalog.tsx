@@ -3,21 +3,32 @@
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { ArrowLeft } from 'lucide-react';
-import { products, type ProductType } from '@/lib/data/catalog';
+import type { Product, ProductType } from '@/lib/data/catalog';
 import {
   getCategoryForProductType,
   productCategoryHref,
 } from '@/lib/products/product-nav';
 import { PRODUCT_OFFERING_PATHS } from '@/lib/products/paths';
+import type { ProductDesignCatalogEntry } from '@/lib/products/design-catalog';
 import { ProductCardGrid } from '@/components/products/ProductCardGrid';
+import { ProductTypeReadyDesignsSection } from '@/components/products/ProductTypeReadyDesignsSection';
 import { ProductTypeSuggestions } from '@/components/products/ProductTypeSuggestions';
 import { Reveal } from '@/components/motion/Reveal';
 
-export function ProductTypeCatalog({ type }: { type: ProductType }) {
+type ProductTypeCatalogProps = {
+  type: ProductType;
+  products: Product[];
+  readyDesignEntries: ProductDesignCatalogEntry[];
+};
+
+export function ProductTypeCatalog({
+  type,
+  products,
+  readyDesignEntries,
+}: ProductTypeCatalogProps) {
   const t = useTranslations('products');
   const tt = useTranslations('products.typePages');
   const tNav = useTranslations('nav.productsMenu.categories');
-  const filtered = products.filter((product) => product.type === type);
   const parentCategory = getCategoryForProductType(type);
 
   return (
@@ -57,11 +68,32 @@ export function ProductTypeCatalog({ type }: { type: ProductType }) {
         </p>
       </div>
 
-      <Reveal delay={80}>
-        <div id="products-grid" className="scroll-mt-24">
-          <ProductCardGrid items={filtered} />
+      <section id="products-grid" className="scroll-mt-24 space-y-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-xl font-bold text-ink-900 sm:text-2xl">
+              {tt('plainProductsTitle')}
+            </h2>
+            <p className="mt-1 text-sm text-ink-600">{tt('plainProductsSubtitle')}</p>
+          </div>
+          {readyDesignEntries.length > 0 ? (
+            <a
+              href="#ready-designs"
+              className="text-sm font-semibold text-brand-600 transition hover:text-brand-700"
+            >
+              {tt('jumpToReadyDesigns', { count: readyDesignEntries.length })}
+            </a>
+          ) : null}
         </div>
-      </Reveal>
+        <Reveal delay={80}>
+          <ProductCardGrid items={products} />
+        </Reveal>
+      </section>
+
+      <ProductTypeReadyDesignsSection
+        type={type}
+        entries={readyDesignEntries}
+      />
 
       <ProductTypeSuggestions type={type} />
     </div>

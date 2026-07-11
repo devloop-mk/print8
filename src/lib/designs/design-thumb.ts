@@ -3,6 +3,7 @@ import { getDesignLayout } from '@/lib/data/design-layouts';
 import { getSvgDesignTemplate } from '@/lib/data/svg-design-templates';
 
 export function getDesignThumbAspect(design: DesignTemplate): number {
+  if (design.thumbAspect) return design.thumbAspect;
   if (design.svgTemplateId) {
     return getSvgDesignTemplate(design.svgTemplateId)?.aspectRatio ?? 4 / 3;
   }

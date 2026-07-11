@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import {
   resolveDesignProduct,
@@ -13,6 +13,8 @@ import {
   isOverlayDesignTemplate,
   isTextDesignTemplate,
 } from '@/lib/data/catalog';
+import { resolveAssetUrl } from '@/lib/storage/asset-url';
+import { getProductDesignDisplayName } from '@/lib/products/design-display-name';
 import {
   getDesignApplicableColors,
   resolveDesignPreviewColor,
@@ -39,6 +41,7 @@ export function ProductDesignCatalogCard({
   colorFilter,
 }: ProductDesignCatalogCardProps) {
   const t = useTranslations('products');
+  const locale = useLocale() as 'mk' | 'en';
   const tc = useTranslations('products.catalog');
   const tp = useTranslations('products.types');
   const td = useTranslations('products.detail');
@@ -50,6 +53,10 @@ export function ProductDesignCatalogCard({
 
   const { product } = resolveDesignProduct(entry, colorFilter);
   const { design } = entry;
+  const displayName =
+    getProductDesignDisplayName(design, locale) !== design.nameKey
+      ? getProductDesignDisplayName(design, locale)
+      : t(`designs.${design.nameKey}`);
 
   const applicableColors = useMemo(
     () => getDesignApplicableColors(design, product),
@@ -85,7 +92,7 @@ export function ProductDesignCatalogCard({
           product,
           design,
           color: previewColor,
-          name: `${tp(product.type)} — ${t(`designs.${design.nameKey}`)}`,
+          name: `${tp(product.type)} — ${displayName}`,
           price: product.basePrice,
           capturedPreview,
         }),
@@ -96,10 +103,15 @@ export function ProductDesignCatalogCard({
     }
   }
 
+  const customizeHref = buildCustomizerUrl(product.id, product.type, {
+    design: design.id,
+    color: previewColor,
+  });
+
   return (
     <Card className="group flex h-full flex-col overflow-hidden p-0 transition hover:border-brand-200 hover:shadow-md">
       <Link
-        href={`/products/${product.id}`}
+        href={customizeHref}
         className="flex flex-1 flex-col outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500"
       >
         <div ref={previewRef}>
@@ -113,8 +125,8 @@ export function ProductDesignCatalogCard({
           ) : isImageDesignTemplate(design) ? (
             <div className="relative aspect-square overflow-hidden bg-white">
               <Image
-                src={design.image!}
-                alt={t(`designs.${design.nameKey}`)}
+                src={resolveAssetUrl(design.image!)}
+                alt={displayName}
                 fill
                 sizes="(max-width: 768px) 50vw, 320px"
                 className="object-contain p-4 transition group-hover:scale-[1.02]"
@@ -142,7 +154,7 @@ export function ProductDesignCatalogCard({
 
           <div>
             <p className="font-medium text-ink-900 group-hover:text-brand-700">
-              {t(`designs.${design.nameKey}`)}
+              {displayName}
             </p>
             {isTextDesignTemplate(design) && design.textStyle ? (
               <p className="mt-1 line-clamp-2 whitespace-pre-line text-sm text-ink-500">

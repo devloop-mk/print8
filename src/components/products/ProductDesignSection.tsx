@@ -12,6 +12,7 @@ import {
   type ProductDesignTemplate,
 } from '@/lib/data/catalog';
 import { buildCustomizerUrl } from '@/lib/products/paths';
+import { resolveAssetUrl } from '@/lib/storage/asset-url';
 import {
   getDesignApplicableColors,
   resolveDesignPreviewColor,
@@ -144,7 +145,7 @@ function DesignCard({
         ) : isImageDesignTemplate(design) ? (
           <div className="relative aspect-square overflow-hidden bg-white">
             <Image
-              src={design.image!}
+              src={resolveAssetUrl(design.image!)}
               alt={t(`designs.${design.nameKey}`)}
               fill
               sizes="(max-width: 768px) 50vw, 300px"

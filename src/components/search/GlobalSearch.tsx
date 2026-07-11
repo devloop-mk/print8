@@ -6,6 +6,7 @@ import { useRouter } from '@/i18n/navigation';
 import { Search, X } from 'lucide-react';
 import { searchGlobalCatalog } from '@/lib/catalog/catalog-search';
 import { useCatalogSearchLabels } from '@/hooks/useCatalogSearchLabels';
+import { useManagedDesignSearchEntries } from '@/hooks/useManagedDesignSearchEntries';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import {
   SearchCollectionsSection,
@@ -24,6 +25,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
   const t = useTranslations('search');
   const router = useRouter();
   const labels = useCatalogSearchLabels();
+  const managedDesigns = useManagedDesignSearchEntries();
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebouncedValue(query, 350);
@@ -47,8 +49,8 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
   }, [open, onClose]);
 
   const results = useMemo(
-    () => searchGlobalCatalog(debouncedQuery, labels).slice(0, 12),
-    [debouncedQuery, labels],
+    () => searchGlobalCatalog(debouncedQuery, labels, managedDesigns).slice(0, 12),
+    [debouncedQuery, labels, managedDesigns],
   );
 
   const grouped = useMemo(() => {

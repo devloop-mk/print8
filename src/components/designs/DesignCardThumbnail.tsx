@@ -15,6 +15,7 @@ import { getSvgDesignTemplate } from '@/lib/data/svg-design-templates';
 import { buildDefaultSvgTemplateState } from '@/lib/designs/svg-template-engine';
 import { fitDesignThumbSize } from '@/lib/designs/design-thumb';
 import type { DesignTemplate } from '@/lib/data/catalog';
+import { resolveAssetUrl } from '@/lib/storage/asset-url';
 
 const THUMB_RENDER_WIDTH = 320;
 
@@ -110,7 +111,7 @@ export function DesignCardThumbnail({
     return (
       <div className={`relative h-full w-full ${className ?? ''}`}>
         <Image
-          src={design.image}
+          src={resolveAssetUrl(design.image)}
           alt={alt}
           fill
           sizes="320px"

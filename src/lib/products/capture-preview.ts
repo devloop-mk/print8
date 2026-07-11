@@ -1,6 +1,9 @@
 import html2canvas from 'html2canvas';
 
 export async function waitForPaint(): Promise<void> {
+  if (typeof document !== 'undefined' && document.fonts?.ready) {
+    await document.fonts.ready;
+  }
   await new Promise<void>((resolve) => {
     requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
   });

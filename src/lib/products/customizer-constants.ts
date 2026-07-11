@@ -1,4 +1,8 @@
-/** Dashed print-area inset on the mockup preview (each side). */
+/**
+ * Default uniform inset (%) when a product type has no custom print area.
+ * Per-type chest/body zones: src/lib/products/print-area.ts
+ * Per-type layout wiring: src/lib/products/product-mockup-layout.ts
+ */
 export const PRODUCT_PRINT_AREA_INSET_PERCENT = 12;
 
 /** Max overlay width/height (% of mockup inner area) so art stays on the product. */

@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/Button";
 import { PageIntro } from "@/components/brand/PageIntro";
 import { buildSectionMetadata } from "@/lib/seo/page-metadata";
 import type { Locale } from "@/i18n/routing";
+import { getPublishedDesignTemplates } from "@/lib/catalog/design-catalog";
+
+export const revalidate = 3600;
 
 export async function generateMetadata({
   params,
@@ -21,6 +24,7 @@ export async function generateMetadata({
 
 export default async function DesignsPage() {
   const t = await getTranslations("designs");
+  const designs = await getPublishedDesignTemplates();
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -34,9 +38,9 @@ export default async function DesignsPage() {
         </div>
       </PageIntro>
       <Suspense fallback={<SectionLoading />}>
-        <DesignsGallery />
+        <DesignsGallery designs={designs} />
       </Suspense>
     </div>
   );
 }
-
+

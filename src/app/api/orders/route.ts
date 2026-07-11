@@ -5,6 +5,10 @@ import { checkoutSchema } from '@/lib/validations/order';
 import { generateOrderNumber } from '@/lib/utils';
 import { sendOrderEmails } from '@/lib/email/order-emails';
 import { validateOrderAssetLimits } from '@/lib/orders/order-assets';
+import {
+  reserveExclusiveDesignsForOrder,
+  validateExclusiveDesignsAvailable,
+} from '@/lib/designs/design-reservations';
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,6 +38,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const availability = await validateExclusiveDesignsAvailable(data.items);
+    if (!availability.ok) {
+      return NextResponse.json(
+        {
+          error: 'One or more exclusive designs are no longer available',
+          code: 'design_unavailable',
+          unavailable: availability.unavailable,
+        },
+        { status: 409 },
+      );
+    }
+
     const totalAmount = data.items.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0,
@@ -60,6 +76,20 @@ export async function POST(request: NextRequest) {
       totalAmount,
       createdAt: now,
     });
+
+    try {
+      await reserveExclusiveDesignsForOrder(orderId, data.items);
+    } catch (reserveError) {
+      await db.orders.updateStatus(orderId, 'cancelled');
+      console.error('[orders] exclusive design reservation failed:', reserveError);
+      return NextResponse.json(
+        {
+          error: 'One or more exclusive designs are no longer available',
+          code: 'design_unavailable',
+        },
+        { status: 409 },
+      );
+    }
 
     try {
       await sendOrderEmails(orderNumber, data, totalAmount);

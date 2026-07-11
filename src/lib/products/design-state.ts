@@ -5,6 +5,8 @@ import type {
 } from "@/lib/data/catalog";
 import { getProductDesignTemplate } from "@/lib/data/catalog";
 import type { PlacedSticker } from "@/lib/products/sticker-library";
+import type { PlacedTextLayer } from "@/lib/products/text-layers";
+import { createPlacedTextLayer } from "@/lib/products/text-layers";
 import {
   ensureInkContrast,
   resolveOverlayPlacement,
@@ -39,6 +41,7 @@ export interface SideDesign {
   isRecolorableOverlay: boolean;
   isTextTemplate: boolean;
   showPhotoGuide: boolean;
+  textLayers: PlacedTextLayer[];
   stickers: PlacedSticker[];
 }
 
@@ -67,6 +70,7 @@ export function createDefaultSideDesign(): SideDesign {
     isRecolorableOverlay: false,
     isTextTemplate: false,
     showPhotoGuide: false,
+    textLayers: [],
     stickers: [],
   };
 }
@@ -75,6 +79,18 @@ export function sideDesignFromTextStyle(
   textStyle: ProductDesignTextStyle,
   templateId: string,
 ): SideDesign {
+  const layer = createPlacedTextLayer(0, {
+    instanceId: `${templateId}-text`,
+    text: textStyle.text,
+    color: textStyle.textColor,
+    size: textStyle.textSize,
+    position: textStyle.textPosition,
+    fontWeight: textStyle.fontWeight ?? 700,
+    letterSpacing: textStyle.letterSpacing ?? "0.02em",
+    lineHeight: textStyle.lineHeight ?? 1.2,
+    textShadow: textStyle.textShadow ?? DEFAULT_TEXT_SHADOW,
+  });
+
   return {
     ...createDefaultSideDesign(),
     customText: textStyle.text,
@@ -85,6 +101,7 @@ export function sideDesignFromTextStyle(
     customTextLetterSpacing: textStyle.letterSpacing ?? "0.02em",
     customTextLineHeight: textStyle.lineHeight ?? 1.2,
     customTextShadow: textStyle.textShadow ?? DEFAULT_TEXT_SHADOW,
+    textLayers: [layer],
     uploadedImagePosition:
       textStyle.photoPosition ?? createDefaultSideDesign().uploadedImagePosition,
     uploadedImageScale: textStyle.photoScale ?? 40,
@@ -197,6 +214,7 @@ export interface RestoredSideDesign {
   uploadedFileId: string | null;
   uploadedPreviewUrl: string | null;
   showPhotoGuide: boolean;
+  textLayers: PlacedTextLayer[];
   stickers: PlacedSticker[];
 }
 
@@ -249,5 +267,6 @@ export function sideDesignFromRestored(data: RestoredSideDesign): SideDesign {
           }
         : null,
     stickers: data.stickers,
+    textLayers: data.textLayers,
   };
 }

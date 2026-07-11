@@ -79,6 +79,12 @@ export function formatSupabaseError(error: unknown): string {
   ) {
     return 'Database tables are missing. Run supabase/schema.sql in the Supabase SQL editor.';
   }
+  if (
+    message.includes('managed_product_designs') &&
+    (message.includes('does not exist') || message.includes('schema cache'))
+  ) {
+    return 'Table managed_product_designs is missing. Run supabase/migrations/add-managed-product-designs.sql in the Supabase SQL editor, then try again.';
+  }
   if (message.includes('Invalid API key') || message.includes('JWT')) {
     return 'Invalid Supabase API key. Check SUPABASE_SERVICE_ROLE_KEY in .env.local';
   }

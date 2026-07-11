@@ -2,15 +2,17 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useRouter, Link } from '@/i18n/navigation';
+import { Palette } from 'lucide-react';
 import {
-  designTemplates,
   designCategories,
   getDesignHref,
   type DesignCategory,
   type DesignTemplate,
 } from '@/lib/data/catalog';
+import type { ResolvedDesignTemplate } from '@/lib/catalog/design-catalog';
+import { getDesignDisplayName } from '@/lib/catalog/design-catalog';
 import { getDesignThumbAspect } from '@/lib/designs/design-thumb';
 import { parseDesignCategoryFilter } from '@/lib/data/service-routes';
 import {
@@ -32,15 +34,21 @@ import {
   CatalogGridProvider,
   CatalogGridToggle,
 } from '@/components/catalog/CatalogGrid';
+import { CatalogPagination } from '@/components/catalog/CatalogPagination';
+import { useCatalogPagination } from '@/hooks/useCatalogPagination';
+import { parseCatalogPage } from '@/lib/catalog/pagination';
+import { cn } from '@/lib/utils';
 
 function DesignCard({
   design,
   actionLabel,
   badgeLabel,
+  displayName,
 }: {
   design: DesignTemplate;
   actionLabel: string;
   badgeLabel?: string;
+  displayName: string;
 }) {
   const t = useTranslations('designs');
 
@@ -51,10 +59,7 @@ function DesignCard({
           className="relative flex items-center justify-center overflow-hidden bg-white p-1"
           style={{ aspectRatio: getDesignThumbAspect(design) }}
         >
-          <DesignCardThumbnail
-            design={design}
-            alt={t(`templates.${design.id}`)}
-          />
+          <DesignCardThumbnail design={design} alt={displayName} />
           {badgeLabel ? (
             <span className="absolute left-3 top-3 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-brand-700 shadow-sm">
               {badgeLabel}
@@ -66,7 +71,7 @@ function DesignCard({
             {t(`categories.${design.category}`)}
           </p>
           <p className="mt-1 font-medium text-ink-900 group-hover:text-brand-700">
-            {t(`templates.${design.id}`)}
+            {displayName}
           </p>
           <p className="mt-3 text-sm font-medium text-brand-600">
             {actionLabel} →
@@ -81,6 +86,7 @@ function buildDesignsHref(
   category: DesignCategory | 'all',
   subfilter: DesignSubfilterId | 'all',
   query = '',
+  page?: number,
 ): string {
   const params = new URLSearchParams();
   if (category !== 'all') params.set('category', category);
@@ -89,12 +95,18 @@ function buildDesignsHref(
   }
   const trimmed = query.trim();
   if (trimmed) params.set('q', trimmed);
+  if (page && page > 1) params.set('page', String(page));
   const queryString = params.toString();
   return queryString ? `/designs?${queryString}` : '/designs';
 }
 
-export function DesignsGallery() {
+export function DesignsGallery({
+  designs,
+}: {
+  designs: ResolvedDesignTemplate[];
+}) {
   const t = useTranslations('designs');
+  const locale = useLocale() as 'mk' | 'en';
   const ts = useTranslations('search');
   const searchLabels = useCatalogSearchLabels();
   const searchParams = useSearchParams();
@@ -106,6 +118,7 @@ export function DesignsGallery() {
     parseDesignSubfilterFilter(
       searchParams.get('tag'),
       parseDesignCategoryFilter(searchParams.get('category')),
+      designs,
     ),
   );
   const [searchQuery, setSearchQuery] = useState(() => searchParams.get('q') ?? '');
@@ -114,26 +127,29 @@ export function DesignsGallery() {
     const nextCategory = parseDesignCategoryFilter(searchParams.get('category'));
     setCategory(nextCategory);
     setSubfilter(
-      parseDesignSubfilterFilter(searchParams.get('tag'), nextCategory),
+      parseDesignSubfilterFilter(searchParams.get('tag'), nextCategory, designs),
     );
     setSearchQuery(searchParams.get('q') ?? '');
-  }, [searchParams]);
+  }, [designs, searchParams]);
 
   const updateSearchQuery = useCallback((nextQuery: string) => {
     setSearchQuery(nextQuery);
   }, []);
 
+  const currentPage = parseCatalogPage(searchParams.get('page'));
+
   useEffect(() => {
     const timer = window.setTimeout(() => {
       const paramsQuery = searchParams.get('q') ?? '';
       if (searchQuery === paramsQuery) return;
-      router.replace(buildDesignsHref(category, subfilter, searchQuery), {
-        scroll: false,
-      });
+      router.replace(
+        buildDesignsHref(category, subfilter, searchQuery, currentPage),
+        { scroll: false },
+      );
     }, 350);
 
     return () => window.clearTimeout(timer);
-  }, [category, router, searchParams, searchQuery, subfilter]);
+  }, [category, currentPage, router, searchParams, searchQuery, subfilter]);
 
   const filterOptions = useMemo(
     () =>
@@ -145,8 +161,8 @@ export function DesignsGallery() {
   );
 
   const availableSubfilters = useMemo(
-    () => (category === 'all' ? [] : getAvailableDesignSubfilters(category)),
-    [category],
+    () => (category === 'all' ? [] : getAvailableDesignSubfilters(category, designs)),
+    [category, designs],
   );
 
   const subfilterOptions = useMemo(
@@ -199,8 +215,8 @@ export function DesignsGallery() {
 
   const filteredByCategory =
     category === 'all'
-      ? designTemplates
-      : designTemplates.filter((d) => d.category === category);
+      ? designs
+      : designs.filter((d) => d.category === category);
 
   const filteredBySubfilter = filterDesignsBySubfilter(
     filteredByCategory,
@@ -217,6 +233,15 @@ export function DesignsGallery() {
   const fixedDesigns = filtered.filter((design) => design.kind === 'fixed');
   const customizableDesigns = filtered.filter(
     (design) => design.kind === 'customizable',
+  );
+
+  const { page, setPage, paginate } = useCatalogPagination({
+    totalItems: fixedDesigns.length,
+  });
+
+  const visibleFixedDesigns = useMemo(
+    () => paginate(fixedDesigns),
+    [fixedDesigns, paginate],
   );
 
   return (
@@ -247,39 +272,74 @@ export function DesignsGallery() {
               </p>
             </div>
             <CatalogGrid gapClassName="gap-6">
-              {fixedDesigns.map((design) => (
+              {visibleFixedDesigns.map((design) => (
                 <DesignCard
                   key={design.id}
                   design={design}
+                  displayName={
+                    getDesignDisplayName(design, locale) !== design.id
+                      ? getDesignDisplayName(design, locale)
+                      : t(`templates.${design.id}`)
+                  }
                   actionLabel={t('orderWithInfo')}
-                  badgeLabel={t('fixedBadge')}
                 />
               ))}
             </CatalogGrid>
+            <CatalogPagination
+              page={page}
+              totalItems={fixedDesigns.length}
+              onPageChange={setPage}
+              previousLabel={t('paginationPrevious')}
+              nextLabel={t('paginationNext')}
+              pageLabel={(current, total) =>
+                t('paginationPage', { current, total })
+              }
+            />
           </section>
         )}
 
         {customizableDesigns.length > 0 && (
-          <section>
-            <div className="mb-5">
-              <h2 className="text-xl font-bold text-ink-900">
-                {t('customizableSectionTitle')}
-              </h2>
-              <p className="mt-1 max-w-2xl text-sm text-ink-500">
-                {t('customizableSectionDesc')}
-              </p>
-            </div>
-            <CatalogGrid gapClassName="gap-6">
-              {customizableDesigns.map((design) => (
-                <DesignCard
-                  key={design.id}
-                  design={design}
-                  actionLabel={t('customizeOnline')}
-                  badgeLabel={t('customizableBadge')}
-                />
-              ))}
-            </CatalogGrid>
-          </section>
+          <div className={cn(fixedDesigns.length > 0 && 'mt-14')}>
+            <section className="relative -mx-4 overflow-hidden border-y-2 border-brand-300 bg-brand-100 px-4 py-12 sm:-mx-6 sm:px-8 lg:-mx-8 lg:px-10">
+              <div
+                className="pointer-events-none absolute inset-0 bg-grid opacity-30"
+                aria-hidden
+              />
+              <div className="relative">
+                <div className="mb-8 flex gap-4 sm:items-start">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center border-2 border-brand-700 bg-brand-600 text-white shadow-lift-brand">
+                    <Palette className="h-6 w-6" aria-hidden />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="badge-brand w-fit border border-brand-200 bg-white px-2.5 py-1">
+                      {t('customizableBadge')}
+                    </p>
+                    <h2 className="mt-3 text-2xl font-bold text-ink-900">
+                      {t('customizableSectionTitle')}
+                    </h2>
+                    <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-700">
+                      {t('customizableSectionDesc')}
+                    </p>
+                  </div>
+                </div>
+                <CatalogGrid gapClassName="gap-6">
+                  {customizableDesigns.map((design) => (
+                    <DesignCard
+                      key={design.id}
+                      design={design}
+                      displayName={
+                        getDesignDisplayName(design, locale) !== design.id
+                          ? getDesignDisplayName(design, locale)
+                          : t(`templates.${design.id}`)
+                      }
+                      actionLabel={t('customizeOnline')}
+                      badgeLabel={t('customizableBadge')}
+                    />
+                  ))}
+                </CatalogGrid>
+              </div>
+            </section>
+          </div>
         )}
 
         {filtered.length === 0 ? (

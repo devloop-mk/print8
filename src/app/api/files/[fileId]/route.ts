@@ -1,14 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUploadedFile } from '@/lib/upload';
-import { getSupabaseAdmin } from '@/lib/supabase/client';
-
-function getStorageBucket() {
-  const bucket = process.env.SUPABASE_STORAGE_BUCKET;
-  if (!bucket) {
-    throw new Error('Storage is not configured');
-  }
-  return bucket;
-}
+import { getUploadObject } from '@/lib/storage/object-storage';
 
 export async function GET(
   _request: NextRequest,
@@ -21,23 +13,11 @@ export async function GET(
       return NextResponse.json({ error: 'File not found' }, { status: 404 });
     }
 
-    const { data, error } = await getSupabaseAdmin().storage
-      .from(getStorageBucket())
-      .download(file.storedName);
+    const { body, contentType } = await getUploadObject(file.storedName);
 
-    if (error || !data) {
-      return NextResponse.json(
-        { error: error?.message ?? 'Download failed' },
-        { status: 500 },
-      );
-    }
-
-    // data is a ReadableStream/Blob; use its stream for the response
-    const body = (data as any).stream?.() ?? data;
-
-    return new NextResponse(body, {
+    return new NextResponse(new Uint8Array(body), {
       headers: {
-        'Content-Type': file.mimeType,
+        'Content-Type': contentType ?? file.mimeType,
         'Cache-Control': 'private, max-age=3600',
         'Content-Disposition': `inline; filename="${file.originalName}"`,
       },

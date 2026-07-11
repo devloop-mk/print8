@@ -23,7 +23,7 @@ export function loadImage(src: string): Promise<HTMLImageElement> {
 export async function cropImageToBlob(
   imageSrc: string,
   crop: CropArea,
-  mimeType: 'image/jpeg' | 'image/png' = 'image/jpeg',
+  mimeType: 'image/jpeg' | 'image/png' | 'image/webp' = 'image/jpeg',
 ): Promise<Blob> {
   const image = await loadImage(imageSrc);
   const canvas = document.createElement('canvas');
@@ -33,6 +33,10 @@ export async function cropImageToBlob(
   const ctx = canvas.getContext('2d');
   if (!ctx) {
     throw new Error('Could not create canvas context');
+  }
+
+  if (mimeType === 'image/png' || mimeType === 'image/webp') {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
 
   ctx.drawImage(
@@ -59,9 +63,14 @@ export async function cropImageToBlob(
   });
 }
 
-export function clampPhotoScale(scale: number): number {
-  return Math.min(
-    PRODUCT_PRINT_AREA_MAX_SCALE,
-    Math.max(PRODUCT_PHOTO_MIN_SCALE, Math.round(scale)),
-  );
+export function clampPhotoScale(
+  scale: number,
+  max = PRODUCT_PRINT_AREA_MAX_SCALE,
+): number {
+  return Math.min(max, Math.max(PRODUCT_PHOTO_MIN_SCALE, Math.round(scale)));
+}
+
+export async function imageSrcToBlob(imageSrc: string): Promise<Blob> {
+  const response = await fetch(imageSrc);
+  return response.blob();
 }

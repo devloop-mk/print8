@@ -1,7 +1,7 @@
 import { Resend } from "resend";
 import type { CheckoutInput } from "@/lib/validations/order";
 import { getUploadedFile } from "@/lib/upload";
-import { getSupabaseAdmin } from "@/lib/supabase/client";
+import { getUploadObject } from "@/lib/storage/object-storage";
 import { formatPrice } from "@/lib/utils";
 import {
   collectOrderFileIds,
@@ -13,6 +13,7 @@ import {
   getSideMetadataPrefix,
 } from "@/lib/products/product-sides";
 import { parsePlacedStickers } from "@/lib/products/sticker-library";
+import { parsePlacedTextLayers } from "@/lib/products/text-layers";
 import { getSvgPrintFilesFromMetadata } from "@/lib/designs/svg-order-assets";
 import {
   getOrderItemPreviewImages,
@@ -26,10 +27,13 @@ interface EmailAttachment {
   contentType: string;
 }
 
-function getStorageBucket() {
-  const bucket = process.env.SUPABASE_STORAGE_BUCKET;
-  if (!bucket) throw new Error("SUPABASE_STORAGE_BUCKET is not set");
-  return bucket;
+async function downloadStoredFile(storedName: string): Promise<Buffer | null> {
+  try {
+    const { body } = await getUploadObject(storedName);
+    return body;
+  } catch {
+    return null;
+  }
 }
 
 function getResend() {
@@ -60,9 +64,21 @@ function buildProductDesignDetailsInnerHtml(item: OrderItem): string {
     const prefix = getSideMetadataPrefix(side);
     const parts: string[] = [];
 
-    const customText = meta[`${prefix}CustomText`];
-    if (typeof customText === "string" && customText.trim()) {
-      parts.push(`Text: “${escapeHtml(customText.trim())}”`);
+    const textLayers = parsePlacedTextLayers(meta[`${prefix}TextLayers`]);
+    if (textLayers.length > 0) {
+      const texts = textLayers
+        .map((layer) => layer.text.trim())
+        .filter(Boolean)
+        .map((text) => `“${escapeHtml(text)}”`)
+        .join(", ");
+      if (texts) {
+        parts.push(`Text: ${texts}`);
+      }
+    } else {
+      const customText = meta[`${prefix}CustomText`];
+      if (typeof customText === "string" && customText.trim()) {
+        parts.push(`Text: “${escapeHtml(customText.trim())}”`);
+      }
     }
 
     const stickers = parsePlacedStickers(meta[`${prefix}Stickers`]);
@@ -224,14 +240,6 @@ function buildOrderItemsEmailHtml(
   );
 
   return `<h3 style="margin:24px 0 12px;">${labels.itemsHeading}</h3>${blocks.join("")}`;
-}
-
-async function downloadStoredFile(storedName: string): Promise<Buffer | null> {
-  const { data, error } = await getSupabaseAdmin()
-    .storage.from(getStorageBucket())
-    .download(storedName);
-  if (error || !data) return null;
-  return Buffer.from(await data.arrayBuffer());
 }
 
 async function buildDesignPreviewAttachments(

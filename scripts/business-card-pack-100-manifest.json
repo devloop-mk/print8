@@ -1,0 +1,956 @@
+{
+  "imported": 100,
+  "categories": {
+    "creative": 62,
+    "minimal": 18,
+    "modern": 19,
+    "photography": 5,
+    "corporate": 12,
+    "law": 1,
+    "real-estate": 8,
+    "spa": 2,
+    "vintage": 1,
+    "social": 1,
+    "black-white": 7,
+    "automotive": 1
+  },
+  "items": [
+    {
+      "id": "bcard-100-001",
+      "folder": "Business Card 1",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 1.jpg",
+      "kb": 47
+    },
+    {
+      "id": "bcard-100-002",
+      "folder": "Business Card 2",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 2.jpg",
+      "kb": 46
+    },
+    {
+      "id": "bcard-100-003",
+      "folder": "Business Card 3",
+      "tags": [
+        "creative"
+      ],
+      "preview": "Creative Business Card 03.jpg",
+      "kb": 43
+    },
+    {
+      "id": "bcard-100-004",
+      "folder": "Business Card 4",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 04.jpg",
+      "kb": 51
+    },
+    {
+      "id": "bcard-100-005",
+      "folder": "Business Card 5",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 05.jpg",
+      "kb": 59
+    },
+    {
+      "id": "bcard-100-006",
+      "folder": "Business Card 6 - Minimal",
+      "tags": [
+        "minimal",
+        "modern"
+      ],
+      "preview": "minimal business card 6.jpg",
+      "kb": 48
+    },
+    {
+      "id": "bcard-100-007",
+      "folder": "Business Card 7",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 07.jpg",
+      "kb": 44
+    },
+    {
+      "id": "bcard-100-008",
+      "folder": "Business Card 8 - Minimal",
+      "tags": [
+        "minimal",
+        "modern"
+      ],
+      "preview": "minimal business card 8.jpg",
+      "kb": 47
+    },
+    {
+      "id": "bcard-100-009",
+      "folder": "Business Card 9 - Photography",
+      "tags": [
+        "photography"
+      ],
+      "preview": "photography business card 9.jpg",
+      "kb": 65
+    },
+    {
+      "id": "bcard-100-010",
+      "folder": "Business Card 10",
+      "tags": [
+        "corporate",
+        "creative"
+      ],
+      "preview": "creative corporate business card 10.jpg",
+      "kb": 47
+    },
+    {
+      "id": "bcard-100-011",
+      "folder": "Business Card 11",
+      "tags": [
+        "corporate",
+        "creative"
+      ],
+      "preview": "creative corporate business card 11.jpg",
+      "kb": 42
+    },
+    {
+      "id": "bcard-100-012",
+      "folder": "Business Card 12",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative-business-cards 12.jpg",
+      "kb": 46
+    },
+    {
+      "id": "bcard-100-013",
+      "folder": "Business Card 13 - Photography",
+      "tags": [
+        "photography"
+      ],
+      "preview": "photography business card 13.jpg",
+      "kb": 65
+    },
+    {
+      "id": "bcard-100-014",
+      "folder": "Business Card 14",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative-business-cards 14.jpg",
+      "kb": 45
+    },
+    {
+      "id": "bcard-100-015",
+      "folder": "Business Card 15",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative-business-cards 15.jpg",
+      "kb": 45
+    },
+    {
+      "id": "bcard-100-016",
+      "folder": "Business Card 16",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 16.jpg",
+      "kb": 45
+    },
+    {
+      "id": "bcard-100-017",
+      "folder": "Business Card 17",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 17.jpg",
+      "kb": 48
+    },
+    {
+      "id": "bcard-100-018",
+      "folder": "Business Card 18",
+      "tags": [
+        "corporate",
+        "creative"
+      ],
+      "preview": "creative corporate business card 18.jpg",
+      "kb": 51
+    },
+    {
+      "id": "bcard-100-019",
+      "folder": "Business Card 19",
+      "tags": [
+        "corporate",
+        "creative"
+      ],
+      "preview": "creative corporate business card 19.jpg",
+      "kb": 42
+    },
+    {
+      "id": "bcard-100-020",
+      "folder": "Business Card 20",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 20.jpg",
+      "kb": 48
+    },
+    {
+      "id": "bcard-100-021",
+      "folder": "Business Card 21",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 21.jpg",
+      "kb": 49
+    },
+    {
+      "id": "bcard-100-022",
+      "folder": "Business Card 22",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 22.jpg",
+      "kb": 51
+    },
+    {
+      "id": "bcard-100-023",
+      "folder": "Business Card 23",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 23.jpg",
+      "kb": 43
+    },
+    {
+      "id": "bcard-100-024",
+      "folder": "Business Card 24",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 24.jpg",
+      "kb": 44
+    },
+    {
+      "id": "bcard-100-025",
+      "folder": "Business Card 25",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 25.jpg",
+      "kb": 45
+    },
+    {
+      "id": "bcard-100-026",
+      "folder": "Business Card 26",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 26.jpg",
+      "kb": 48
+    },
+    {
+      "id": "bcard-100-027",
+      "folder": "Business Card 27 - Law",
+      "tags": [
+        "law"
+      ],
+      "preview": "law business card 27.jpg",
+      "kb": 43
+    },
+    {
+      "id": "bcard-100-028",
+      "folder": "Business Card 28 - Minimal",
+      "tags": [
+        "minimal",
+        "modern"
+      ],
+      "preview": "minimal business card 28.jpg",
+      "kb": 40
+    },
+    {
+      "id": "bcard-100-029",
+      "folder": "Business Card 29 - Real Estate",
+      "tags": [
+        "real-estate",
+        "creative"
+      ],
+      "preview": "creative business card 29.jpg",
+      "kb": 41
+    },
+    {
+      "id": "bcard-100-030",
+      "folder": "Business Card 30 - Real Estate",
+      "tags": [
+        "real-estate"
+      ],
+      "preview": "real estate business card 30.jpg",
+      "kb": 53
+    },
+    {
+      "id": "bcard-100-031",
+      "folder": "Business Card 31 - Real Estate",
+      "tags": [
+        "real-estate"
+      ],
+      "preview": "real estate business card 31-2.jpg",
+      "kb": 45
+    },
+    {
+      "id": "bcard-100-032",
+      "folder": "Business Card 32 - Photography",
+      "tags": [
+        "photography"
+      ],
+      "preview": "photography business card 32.jpg",
+      "kb": 58
+    },
+    {
+      "id": "bcard-100-033",
+      "folder": "Business Card 33 - Real Estate",
+      "tags": [
+        "real-estate"
+      ],
+      "preview": "real estate business card 33.jpg",
+      "kb": 66
+    },
+    {
+      "id": "bcard-100-034",
+      "folder": "Business Card 34 - Real Estate",
+      "tags": [
+        "real-estate"
+      ],
+      "preview": "real estate business card 34.jpg",
+      "kb": 43
+    },
+    {
+      "id": "bcard-100-035",
+      "folder": "Business Card 35 - Spa",
+      "tags": [
+        "spa"
+      ],
+      "preview": "salon spa business card 35.jpg",
+      "kb": 53
+    },
+    {
+      "id": "bcard-100-036",
+      "folder": "Business Card 36 - Spa",
+      "tags": [
+        "spa"
+      ],
+      "preview": "salon spa business card 36.jpg",
+      "kb": 56
+    },
+    {
+      "id": "bcard-100-037",
+      "folder": "Business Card 37 - Real Estate",
+      "tags": [
+        "real-estate"
+      ],
+      "preview": "real estate business card 37.jpg",
+      "kb": 62
+    },
+    {
+      "id": "bcard-100-038",
+      "folder": "Business Card 38 - Minimal",
+      "tags": [
+        "minimal",
+        "modern"
+      ],
+      "preview": "minimal business card 38.jpg",
+      "kb": 31
+    },
+    {
+      "id": "bcard-100-039",
+      "folder": "Business Card 39",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 39.jpg",
+      "kb": 56
+    },
+    {
+      "id": "bcard-100-040",
+      "folder": "Business Card 40 - Real Estate",
+      "tags": [
+        "real-estate"
+      ],
+      "preview": "real estate business card 40.jpg",
+      "kb": 71
+    },
+    {
+      "id": "bcard-100-041",
+      "folder": "Business Card 41",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 41.jpg",
+      "kb": 43
+    },
+    {
+      "id": "bcard-100-042",
+      "folder": "Business Card 42 - Real Estate",
+      "tags": [
+        "real-estate"
+      ],
+      "preview": "real estate business card 42.jpg",
+      "kb": 68
+    },
+    {
+      "id": "bcard-100-043",
+      "folder": "Business Card 43 - Minimal",
+      "tags": [
+        "minimal",
+        "modern"
+      ],
+      "preview": "minimal business card 43.jpg",
+      "kb": 41
+    },
+    {
+      "id": "bcard-100-044",
+      "folder": "Business Card 44 - Vintage",
+      "tags": [
+        "vintage"
+      ],
+      "preview": "vintage business card 44.jpg",
+      "kb": 56
+    },
+    {
+      "id": "bcard-100-045",
+      "folder": "Business Card 45 - minimal",
+      "tags": [
+        "minimal",
+        "modern"
+      ],
+      "preview": "minimal business card template 45.jpg",
+      "kb": 51
+    },
+    {
+      "id": "bcard-100-046",
+      "folder": "Business Card 46 - minimal-b",
+      "tags": [
+        "minimal",
+        "modern"
+      ],
+      "preview": "minimal business card 46.jpg",
+      "kb": 37
+    },
+    {
+      "id": "bcard-100-047",
+      "folder": "Business Card 47 - minimal",
+      "tags": [
+        "minimal",
+        "modern"
+      ],
+      "preview": "minimal business card 47.jpg",
+      "kb": 37
+    },
+    {
+      "id": "bcard-100-048",
+      "folder": "Business Card 48 - minimal",
+      "tags": [
+        "minimal",
+        "modern"
+      ],
+      "preview": "minimal business card 48.jpg",
+      "kb": 45
+    },
+    {
+      "id": "bcard-100-049",
+      "folder": "Business Card 49",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 49.jpg",
+      "kb": 41
+    },
+    {
+      "id": "bcard-100-050",
+      "folder": "Business Card 50 - Photography",
+      "tags": [
+        "photography"
+      ],
+      "preview": "photography business card 50.jpg",
+      "kb": 49
+    },
+    {
+      "id": "bcard-100-051",
+      "folder": "Business Card 51",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 51.jpg",
+      "kb": 44
+    },
+    {
+      "id": "bcard-100-052",
+      "folder": "Business Card 52",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 52.jpg",
+      "kb": 53
+    },
+    {
+      "id": "bcard-100-053",
+      "folder": "Business Card 53",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 53.jpg",
+      "kb": 45
+    },
+    {
+      "id": "bcard-100-054",
+      "folder": "Business Card 54 - minimal",
+      "tags": [
+        "minimal",
+        "modern"
+      ],
+      "preview": "minimal business card 54.jpg",
+      "kb": 44
+    },
+    {
+      "id": "bcard-100-055",
+      "folder": "Business Card 55",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 55.jpg",
+      "kb": 43
+    },
+    {
+      "id": "bcard-100-056",
+      "folder": "Business Card 56 - social",
+      "tags": [
+        "social"
+      ],
+      "preview": "social media individual business card 56.jpg",
+      "kb": 54
+    },
+    {
+      "id": "bcard-100-057",
+      "folder": "Business Card 57",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative individual business card 57.jpg",
+      "kb": 51
+    },
+    {
+      "id": "bcard-100-058",
+      "folder": "Business Card 58",
+      "tags": [
+        "corporate",
+        "creative"
+      ],
+      "preview": "creative corporate business card 58.jpg",
+      "kb": 42
+    },
+    {
+      "id": "bcard-100-059",
+      "folder": "Business Card 59",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 59.jpg",
+      "kb": 47
+    },
+    {
+      "id": "bcard-100-060",
+      "folder": "Business Card 60",
+      "tags": [
+        "corporate",
+        "creative"
+      ],
+      "preview": "creative corporate business card 60.jpg",
+      "kb": 60
+    },
+    {
+      "id": "bcard-100-061",
+      "folder": "Business Card 61 - minimal",
+      "tags": [
+        "minimal",
+        "modern"
+      ],
+      "preview": "minimal business card 61.jpg",
+      "kb": 32
+    },
+    {
+      "id": "bcard-100-062",
+      "folder": "Business Card 62 - B&W",
+      "tags": [
+        "black-white"
+      ],
+      "preview": "black and white business card 62.jpg",
+      "kb": 32
+    },
+    {
+      "id": "bcard-100-063",
+      "folder": "Business Card 63 - Photography",
+      "tags": [
+        "photography"
+      ],
+      "preview": "photography business card 63.jpg",
+      "kb": 62
+    },
+    {
+      "id": "bcard-100-064",
+      "folder": "Business Card 64 - B&W",
+      "tags": [
+        "minimal",
+        "modern",
+        "black-white"
+      ],
+      "preview": "minimal black & white business card 64.jpg",
+      "kb": 32
+    },
+    {
+      "id": "bcard-100-065",
+      "folder": "Business Card 65",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 65.jpg",
+      "kb": 41
+    },
+    {
+      "id": "bcard-100-066",
+      "folder": "Business Card 66 - B&W",
+      "tags": [
+        "minimal",
+        "modern",
+        "black-white"
+      ],
+      "preview": "minimal black & white business card 66.jpg",
+      "kb": 37
+    },
+    {
+      "id": "bcard-100-067",
+      "folder": "Business Card 67",
+      "tags": [
+        "corporate",
+        "creative"
+      ],
+      "preview": "creative corporate business card 67.jpg",
+      "kb": 42
+    },
+    {
+      "id": "bcard-100-068",
+      "folder": "Business Card 68 - B&W",
+      "tags": [
+        "minimal",
+        "modern",
+        "black-white"
+      ],
+      "preview": "minimal black & white business card 68.jpg",
+      "kb": 40
+    },
+    {
+      "id": "bcard-100-069",
+      "folder": "Business Card 69 - B&W",
+      "tags": [
+        "minimal",
+        "modern",
+        "black-white"
+      ],
+      "preview": "minimal black and white business card 69.jpg",
+      "kb": 40
+    },
+    {
+      "id": "bcard-100-070",
+      "folder": "Business Card 70 - B&W",
+      "tags": [
+        "minimal",
+        "modern",
+        "black-white"
+      ],
+      "preview": "minimal black & white business card 70.jpg",
+      "kb": 45
+    },
+    {
+      "id": "bcard-100-071",
+      "folder": "Business Card 71 - B&W",
+      "tags": [
+        "minimal",
+        "modern",
+        "black-white"
+      ],
+      "preview": "minimal black & white business card 71.jpg",
+      "kb": 48
+    },
+    {
+      "id": "bcard-100-072",
+      "folder": "Business Card 72",
+      "tags": [
+        "corporate",
+        "creative"
+      ],
+      "preview": "creative corporate business card 72.jpg",
+      "kb": 44
+    },
+    {
+      "id": "bcard-100-073",
+      "folder": "Business Card 73 - minimal",
+      "tags": [
+        "minimal",
+        "modern",
+        "creative"
+      ],
+      "preview": "creative flat business card 73.jpg",
+      "kb": 50
+    },
+    {
+      "id": "bcard-100-074",
+      "folder": "Business Card 74",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 74.jpg",
+      "kb": 47
+    },
+    {
+      "id": "bcard-100-075",
+      "folder": "Business Card 75",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 75.jpg",
+      "kb": 43
+    },
+    {
+      "id": "bcard-100-076",
+      "folder": "Business Card 76",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 76.jpg",
+      "kb": 44
+    },
+    {
+      "id": "bcard-100-077",
+      "folder": "Business Card 77",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 77.jpg",
+      "kb": 46
+    },
+    {
+      "id": "bcard-100-078",
+      "folder": "Business Card 78",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 78.jpg",
+      "kb": 42
+    },
+    {
+      "id": "bcard-100-079",
+      "folder": "Business Card 79",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 79.jpg",
+      "kb": 44
+    },
+    {
+      "id": "bcard-100-080",
+      "folder": "Business Card 80",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 80.jpg",
+      "kb": 42
+    },
+    {
+      "id": "bcard-100-081",
+      "folder": "Business Card 81",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 81.jpg",
+      "kb": 40
+    },
+    {
+      "id": "bcard-100-082",
+      "folder": "Business Card 82",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 82.jpg",
+      "kb": 42
+    },
+    {
+      "id": "bcard-100-083",
+      "folder": "Business Card 83",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 83.jpg",
+      "kb": 40
+    },
+    {
+      "id": "bcard-100-084",
+      "folder": "Business Card 84",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 84.jpg",
+      "kb": 38
+    },
+    {
+      "id": "bcard-100-085",
+      "folder": "Business Card 85",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 85.jpg",
+      "kb": 45
+    },
+    {
+      "id": "bcard-100-086",
+      "folder": "Business Card 86",
+      "tags": [
+        "corporate"
+      ],
+      "preview": "clean corporate business card 86.jpg",
+      "kb": 43
+    },
+    {
+      "id": "bcard-100-087",
+      "folder": "Business Card 87",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 87.jpg",
+      "kb": 43
+    },
+    {
+      "id": "bcard-100-088",
+      "folder": "Business Card 88",
+      "tags": [
+        "corporate",
+        "creative"
+      ],
+      "preview": "creative corporate business card 88.jpg",
+      "kb": 44
+    },
+    {
+      "id": "bcard-100-089",
+      "folder": "Business Card 89",
+      "tags": [
+        "corporate",
+        "creative"
+      ],
+      "preview": "creative corporate business card 89.jpg",
+      "kb": 51
+    },
+    {
+      "id": "bcard-100-090",
+      "folder": "Business Card 90",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 90.jpg",
+      "kb": 43
+    },
+    {
+      "id": "bcard-100-091",
+      "folder": "Business Card 91 - Rent a car",
+      "tags": [
+        "automotive"
+      ],
+      "preview": "rent a car auto business card 91.jpg",
+      "kb": 44
+    },
+    {
+      "id": "bcard-100-092",
+      "folder": "Business Card 92",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 92.jpg",
+      "kb": 46
+    },
+    {
+      "id": "bcard-100-093",
+      "folder": "Business Card 93",
+      "tags": [
+        "corporate",
+        "creative"
+      ],
+      "preview": "creative corporate business card 93.jpg",
+      "kb": 41
+    },
+    {
+      "id": "bcard-100-094",
+      "folder": "Business Card 94",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card for individual 94.jpg",
+      "kb": 36
+    },
+    {
+      "id": "bcard-100-095",
+      "folder": "Business Card 95",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 95.jpg",
+      "kb": 49
+    },
+    {
+      "id": "bcard-100-096",
+      "folder": "Business Card 96",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card template 96.jpg",
+      "kb": 41
+    },
+    {
+      "id": "bcard-100-097",
+      "folder": "Business Card 97",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card template 97.jpg",
+      "kb": 38
+    },
+    {
+      "id": "bcard-100-098",
+      "folder": "Business Card 98",
+      "tags": [
+        "modern"
+      ],
+      "preview": "blue business card 98.jpg",
+      "kb": 41
+    },
+    {
+      "id": "bcard-100-099",
+      "folder": "Business Card 99",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 99.jpg",
+      "kb": 43
+    },
+    {
+      "id": "bcard-100-100",
+      "folder": "Business Card 100",
+      "tags": [
+        "creative"
+      ],
+      "preview": "creative business card 100.jpg",
+      "kb": 42
+    }
+  ]
+}

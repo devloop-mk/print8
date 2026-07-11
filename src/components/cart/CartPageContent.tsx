@@ -35,6 +35,11 @@ import {
   getCartItemSize,
   isCustomizedCartItem,
 } from "@/lib/cart/product-cart";
+import {
+  buildBrandingPackEditUrl,
+  getBrandingPackCartPreviewImages,
+  isBrandingPackCartItem,
+} from "@/lib/products/branding-pack-cart";
 import { buildDesignEditUrl } from "@/lib/cart/design-cart";
 
 
@@ -153,7 +158,9 @@ export function CartPageContent() {
 
           {items.map((item) => {
 
-            const previewImages = getCartItemPreviewImages(item, {
+            const previewImages = isBrandingPackCartItem(item)
+              ? getBrandingPackCartPreviewImages(item)
+              : getCartItemPreviewImages(item, {
               front: tc('front'),
               back: tc('back'),
               left: tc('left'),
@@ -162,19 +169,27 @@ export function CartPageContent() {
               upload: t('uploadPreview'),
             });
 
-            const product = getCartItemProduct(item);
+            const product = isBrandingPackCartItem(item)
+              ? undefined
+              : getCartItemProduct(item);
 
-            const color = getCartItemColor(item);
+            const color = isBrandingPackCartItem(item)
+              ? undefined
+              : getCartItemColor(item);
 
-            const size = getCartItemSize(item);
+            const size = isBrandingPackCartItem(item)
+              ? undefined
+              : getCartItemSize(item);
 
-            const editUrl =
-              item.type === "design"
+            const editUrl = isBrandingPackCartItem(item)
+              ? buildBrandingPackEditUrl(item.id)
+              : item.type === "design"
                 ? buildDesignEditUrl(item)
                 : buildCustomizerEditUrl(item);
 
-            const showEdit =
-              item.type === "design"
+            const showEdit = isBrandingPackCartItem(item)
+              ? true
+              : item.type === "design"
                 ? Boolean(editUrl)
                 : isCustomizedCartItem(item) && Boolean(editUrl);
             const isMagnet = product?.type === 'magnet';
@@ -392,7 +407,9 @@ export function CartPageContent() {
 
                           <Pencil className="h-3.5 w-3.5" />
 
-                          {t("editDesign")}
+                          {isBrandingPackCartItem(item)
+                            ? t("customizeBrandingPack")
+                            : t("editDesign")}
 
                         </Button>
 
