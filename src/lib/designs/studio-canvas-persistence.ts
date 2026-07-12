@@ -2,15 +2,32 @@ import { buildUploadedFileUrl } from '@/lib/upload/file-url';
 
 export const STUDIO_IMAGE_FILE_ID_KEY = 'print8FileId';
 
-type FabricObjectLike = {
-  type?: string;
-  toDataURL?: (options?: unknown) => string;
-};
-
 type CanvasJson = {
   objects?: Array<Record<string, unknown>>;
   [key: string]: unknown;
 };
+
+function readLiveObjectType(object: unknown): string | undefined {
+  if (!object || typeof object !== 'object') return undefined;
+  const type = (object as { type?: unknown }).type;
+  return typeof type === 'string' ? type : undefined;
+}
+
+function rasterizeLiveImageObject(object: unknown): string | null {
+  if (!object || typeof object !== 'object') return null;
+  const toDataURL = (object as { toDataURL?: unknown }).toDataURL;
+  if (typeof toDataURL !== 'function') return null;
+
+  try {
+    return (toDataURL as (options?: object) => string).call(object, {
+      format: 'jpeg',
+      quality: 0.9,
+      multiplier: 1,
+    });
+  } catch {
+    return null;
+  }
+}
 
 function isImageType(type: unknown) {
   return String(type ?? '').toLowerCase() === 'image';
@@ -26,16 +43,14 @@ export function extractFileIdFromUploadUrl(src: string): string | null {
   }
 }
 
-function embedImageDataUrls(
-  json: CanvasJson,
-  liveObjects: FabricObjectLike[],
-) {
+function embedImageDataUrls(json: CanvasJson, liveObjects: unknown[]) {
   if (!Array.isArray(json.objects)) return;
 
   json.objects.forEach((objectJson, index) => {
     if (!isImageType(objectJson.type)) return;
 
     const liveObject = liveObjects[index];
+    const liveType = readLiveObjectType(liveObject);
     const src = typeof objectJson.src === 'string' ? objectJson.src : '';
     const fileId =
       extractFileIdFromUploadUrl(src) ??
@@ -51,15 +66,10 @@ function embedImageDataUrls(
       objectJson[STUDIO_IMAGE_FILE_ID_KEY] = fileId;
     }
 
-    if (liveObject && isImageType(liveObject.type) && liveObject.toDataURL) {
-      try {
-        objectJson.src = liveObject.toDataURL({
-          format: 'jpeg',
-          quality: 0.9,
-          multiplier: 1,
-        });
-      } catch {
-        // Keep existing src if rasterization fails.
+    if (liveObject && isImageType(liveType)) {
+      const dataUrl = rasterizeLiveImageObject(liveObject);
+      if (dataUrl) {
+        objectJson.src = dataUrl;
       }
     }
   });
@@ -67,7 +77,7 @@ function embedImageDataUrls(
 
 export function serializeStudioCanvasJson(
   json: CanvasJson,
-  liveObjects: FabricObjectLike[],
+  liveObjects: unknown[],
 ): CanvasJson {
   const serialized = structuredClone(json) as CanvasJson;
   embedImageDataUrls(serialized, liveObjects);
