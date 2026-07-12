@@ -59,6 +59,25 @@ export function getCustomizerFontFamily(id: string): string {
   return fontFamilyById.get(id as CustomizerFontId) ?? fontFamilyById.get('inter')!;
 }
 
+const canvasFontFamilyById: Record<CustomizerFontId, string> = {
+  inter: 'Inter, sans-serif',
+  'space-grotesk': '"Space Grotesk", sans-serif',
+  roboto: 'Roboto, sans-serif',
+  montserrat: 'Montserrat, sans-serif',
+  oswald: 'Oswald, sans-serif',
+  playfair: '"Playfair Display", serif',
+  lora: 'Lora, serif',
+  merriweather: 'Merriweather, serif',
+};
+
+/** Canvas 2D cannot resolve CSS variables — use loaded family names instead. */
+export function getCustomizerCanvasFontFamily(id: string): string {
+  return (
+    canvasFontFamilyById[id as CustomizerFontId] ??
+    canvasFontFamilyById.inter
+  );
+}
+
 export function isCustomizerFontId(value: string): value is CustomizerFontId {
   return fontFamilyById.has(value as CustomizerFontId);
 }

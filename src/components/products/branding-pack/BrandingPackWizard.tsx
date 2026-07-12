@@ -125,7 +125,7 @@ export function BrandingPackWizard() {
       const item = cartItems.find((cartItem) => cartItem.id === editCartItemId);
       const fromCart = item ? getBrandingPackStateFromCartItem(item) : null;
       if (fromCart) {
-        setState(hydrateBrandingPackLogo(fromCart));
+        setState(hydrateBrandingPackLogo(fromCart, token));
       }
       setDraftLoaded(true);
       return;

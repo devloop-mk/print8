@@ -1,6 +1,7 @@
 import type { ProductSide } from '@/lib/data/catalog';
 import { getProductSides, type Product } from '@/lib/data/catalog';
 import { getProductById } from '@/lib/cart/product-cart';
+import { buildUploadedFileUrl } from '@/lib/upload/file-url';
 import type { UploadedFile } from '@/lib/products/design-state';
 import {
   BRANDING_PACK_DEFAULT_COLOR,
@@ -294,6 +295,7 @@ export function serializeBrandingPackState(state: BrandingPackState): string {
 
 export function hydrateBrandingPackLogo(
   state: BrandingPackState,
+  uploadToken?: string | null,
 ): BrandingPackState {
   const migrated = migrateBrandingPackState(state);
 
@@ -304,7 +306,7 @@ export function hydrateBrandingPackLogo(
     ...migrated,
     logo: {
       ...migrated.logo,
-      previewUrl: `/api/files/${migrated.logo.fileId}`,
+      previewUrl: buildUploadedFileUrl(migrated.logo.fileId, uploadToken),
     },
   };
 }

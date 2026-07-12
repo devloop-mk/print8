@@ -158,6 +158,9 @@ export type GlobalSearchResult = {
   subtitle: string;
   searchText: string;
   designCategory?: DesignCategory;
+  designKind?: DesignTemplate['kind'];
+  svgTemplateId?: string;
+  layoutId?: string;
   collectionScope?: 'category' | 'subfilter';
   subfilterId?: DesignSubfilterId;
   image?: string;
@@ -281,6 +284,9 @@ function buildCatalogItemResults(
       subtitle: labels.designCategory(design.category),
       searchText: buildDesignSearchText(design, labels),
       designCategory: design.category,
+      designKind: design.kind,
+      svgTemplateId: design.svgTemplateId,
+      layoutId: design.layoutId,
       image: resolveAssetUrl(design.image),
     });
   }
@@ -296,6 +302,9 @@ function buildCatalogItemResults(
       subtitle: labels.designCategory(design.category),
       searchText: buildDesignSearchText(design, labels, design.displayName),
       designCategory: design.category,
+      designKind: design.kind,
+      svgTemplateId: design.svgTemplateId,
+      layoutId: design.layoutId,
       image: resolveAssetUrl(design.image),
     });
   }

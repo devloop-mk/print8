@@ -9,6 +9,7 @@ import {
   isMagnetProduct,
 } from '@/lib/data/catalog';
 import { getProductOffering } from '@/lib/products/offering';
+import { getProductDisplayPrice } from '@/lib/products/tshirt-print-pricing';
 import { getProductPaths, PRODUCT_DESIGN_PREVIEW_LIMIT } from '@/lib/products/paths';
 import { formatPrice } from '@/lib/utils';
 import { Card } from '@/components/ui/Card';
@@ -156,7 +157,7 @@ export function ProductDetail({ productId }: { productId: string }) {
                 {productLabel}
               </h1>
               <p className="mt-2 text-xl text-brand-600">
-                {t('startingFrom')} {formatPrice(product.basePrice, locale)}
+                {t('startingFrom')} {formatPrice(getProductDisplayPrice(product), locale)}
               </p>
               <p className="mt-4 text-ink-600">
                 {isMagnet ? td('magnetDescription') : td('description')}

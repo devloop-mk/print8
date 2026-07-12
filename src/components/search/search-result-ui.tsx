@@ -19,9 +19,12 @@ import type { GlobalSearchResult } from '@/lib/catalog/catalog-search';
 import {
   designCategories,
   getProductDesignTemplate,
+  isCustomizableDesign,
   isImageDesignTemplate,
   products,
+  type DesignTemplate,
 } from '@/lib/data/catalog';
+import { DesignCardThumbnail } from '@/components/designs/DesignCardThumbnail';
 import { DesignTemplatePreview } from '@/components/products/DesignTemplatePreview';
 import { resolveDesignPreviewColor } from '@/lib/products/design-applicable-colors';
 import { getProductTypeIcon } from '@/lib/products/product-type-icons';
@@ -170,6 +173,53 @@ function ResultThumb({
           <Icon className={cn('h-5 w-5', iconClassName)} aria-hidden />
         </div>
       ) : null}
+    </div>
+  );
+}
+
+function designTemplateFromSearchResult(
+  item: GlobalSearchResult,
+): DesignTemplate | null {
+  if (!item.designCategory) return null;
+
+  return {
+    id: item.id,
+    category: item.designCategory,
+    image: item.image ?? '',
+    tags: [],
+    kind: item.designKind ?? 'fixed',
+    svgTemplateId: item.svgTemplateId,
+    layoutId: item.layoutId,
+  };
+}
+
+function SearchDesignThumb({
+  item,
+  compact = false,
+}: {
+  item: GlobalSearchResult;
+  compact?: boolean;
+}) {
+  const design = designTemplateFromSearchResult(item);
+
+  if (!design || !isCustomizableDesign(design)) {
+    return (
+      <ResultThumb
+        image={item.image}
+        alt={item.title}
+        compact={compact}
+      />
+    );
+  }
+
+  return (
+    <div
+      className={cn(
+        'relative shrink-0 overflow-hidden rounded-lg border border-ink-100 bg-white',
+        compact ? 'h-10 w-10' : 'h-16 w-16',
+      )}
+    >
+      <DesignCardThumbnail design={design} alt={item.title} />
     </div>
   );
 }
@@ -389,11 +439,7 @@ export function SearchDesignsSection({
                   compact && 'border-transparent px-2 py-2 hover:border-transparent hover:bg-brand-50',
                 )}
               >
-                <ResultThumb
-                  image={item.image}
-                  alt={item.title}
-                  compact={compact}
-                />
+                <SearchDesignThumb item={item} compact={compact} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-ink-900 group-hover:text-brand-700">
                     {item.title}

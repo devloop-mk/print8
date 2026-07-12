@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { buildUploadedFileUrl } from '@/lib/upload/file-url';
 import { useTranslations } from 'next-intl';
 import { Crop, Upload } from 'lucide-react';
 import { ImageCropModal } from '@/components/products/ImageCropModal';
@@ -117,7 +118,7 @@ export function ProductPhotoUpload({
       onUploadComplete(
         result.fileId,
         result.originalName,
-        `/api/files/${result.fileId}`,
+        buildUploadedFileUrl(result.fileId, token),
       );
       setMessage({ type: 'success', text: tc('uploadSuccess') });
     } catch {
@@ -161,7 +162,7 @@ export function ProductPhotoUpload({
       onUploadComplete(
         result.fileId,
         result.originalName,
-        `/api/files/${result.fileId}`,
+        buildUploadedFileUrl(result.fileId, token),
       );
       setMessage({ type: 'success', text: tc('uploadSuccess') });
       setCropSource(null);
@@ -193,7 +194,7 @@ export function ProductPhotoUpload({
       onUploadComplete(
         result.fileId,
         result.originalName,
-        `/api/files/${result.fileId}`,
+        buildUploadedFileUrl(result.fileId, token),
       );
       setMessage({ type: 'success', text: tc('uploadSuccess') });
       setCropSource(null);

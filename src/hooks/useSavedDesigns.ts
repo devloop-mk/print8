@@ -6,6 +6,7 @@ import {
   writeSavedDesigns,
   type SavedDesign,
 } from '@/lib/designs/saved-designs';
+import { dispatchDesignSaved } from '@/lib/drafts/draft-events';
 
 export function useSavedDesigns() {
   const [designs, setDesigns] = useState<SavedDesign[]>([]);
@@ -16,26 +17,27 @@ export function useSavedDesigns() {
     setHydrated(true);
   }, []);
 
-  useEffect(() => {
-    if (hydrated) {
-      writeSavedDesigns(designs);
-    }
-  }, [designs, hydrated]);
-
   const saveDesign = useCallback((design: SavedDesign) => {
     setDesigns((prev) => {
       const index = prev.findIndex((item) => item.id === design.id);
+      const next =
+        index === -1
+          ? [design, ...prev]
+          : prev.map((item, itemIndex) => (itemIndex === index ? design : item));
+      writeSavedDesigns(next);
       if (index === -1) {
-        return [design, ...prev];
+        dispatchDesignSaved();
       }
-      const next = [...prev];
-      next[index] = design;
       return next;
     });
   }, []);
 
   const deleteDesign = useCallback((id: string) => {
-    setDesigns((prev) => prev.filter((item) => item.id !== id));
+    setDesigns((prev) => {
+      const next = prev.filter((item) => item.id !== id);
+      writeSavedDesigns(next);
+      return next;
+    });
   }, []);
 
   return { designs, hydrated, saveDesign, deleteDesign };

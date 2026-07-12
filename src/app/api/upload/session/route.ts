@@ -1,7 +1,16 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createUploadSession } from "@/lib/upload";
+import { enforceRateLimit } from "@/lib/security/rate-limit";
 
-export async function POST() {
+export async function POST(request: NextRequest) {
+  const rateLimited = enforceRateLimit(
+    request,
+    "upload-session",
+    40,
+    60 * 60 * 1000,
+  );
+  if (rateLimited) return rateLimited;
+
   try {
     const session = await createUploadSession();
     return NextResponse.json({ token: session.token });

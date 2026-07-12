@@ -9,6 +9,7 @@ import {
   type ProductDesignCategory,
 } from '@/lib/data/catalog';
 import { getProductPaths } from '@/lib/products/paths';
+import { getProductDisplayPrice } from '@/lib/products/tshirt-print-pricing';
 import { formatPrice } from '@/lib/utils';
 import { ProductDesignSection } from '@/components/products/ProductDesignSection';
 import { CatalogPagination } from '@/components/catalog/CatalogPagination';
@@ -75,7 +76,7 @@ export function ProductDesignsPage({
             {isPhoto ? td('imageDesignsHint') : td('textDesignsHint')}
           </p>
           <p className="mt-2 text-brand-600">
-            {t('startingFrom')} {formatPrice(product.basePrice, locale)}
+            {t('startingFrom')} {formatPrice(getProductDisplayPrice(product), locale)}
           </p>
         </div>
       </Reveal>

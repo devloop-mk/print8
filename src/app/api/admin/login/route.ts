@@ -6,8 +6,17 @@ import {
   isAdminAuthConfigured,
   validateAdminCredentials,
 } from '@/lib/admin/auth';
+import { enforceRateLimit } from '@/lib/security/rate-limit';
 
 export async function POST(request: NextRequest) {
+  const rateLimited = enforceRateLimit(
+    request,
+    'admin-login',
+    10,
+    15 * 60 * 1000,
+  );
+  if (rateLimited) return rateLimited;
+
   if (!isAdminAuthConfigured()) {
     return NextResponse.json(
       { error: 'Admin login is not configured on this server.' },

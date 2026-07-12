@@ -19,6 +19,8 @@ import {
   mapCheckoutApiFieldErrors,
   validateCheckoutFields,
 } from "@/lib/validations/checkout-form";
+import { prepareCheckoutPayload } from "@/lib/orders/prepare-checkout-payload";
+import type { CheckoutInput } from "@/lib/validations/order";
 
 export function CheckoutForm() {
   const t = useTranslations("checkout");
@@ -112,44 +114,39 @@ export function CheckoutForm() {
 
     setProcessing(true);
     try {
+      const payload = await prepareCheckoutPayload({
+        ...form,
+        locale: locale as CheckoutInput["locale"],
+        items,
+        fileIds,
+        uploadToken: token,
+      });
+
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          locale,
-          items: items.map(
-            ({
-              type,
-              name,
-              price,
-              quantity,
-              metadata,
-              designPreview,
-              backDesignPreview,
-              leftDesignPreview,
-              rightDesignPreview,
-              fileIds: itemFileIds,
-            }) => ({
-              type,
-              name,
-              price,
-              quantity,
-              metadata,
-              designPreview,
-              backDesignPreview,
-              leftDesignPreview,
-              rightDesignPreview,
-              fileIds: itemFileIds,
-            }),
-          ),
-          fileIds,
-          uploadToken: token,
-        }),
+        body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
+      type OrderApiResponse = {
+        code?: string;
+        details?: { fieldErrors?: Record<string, string[] | undefined> };
+        orderNumber?: string;
+      };
+
+      let data: OrderApiResponse = {};
+      try {
+        data = await res.json();
+      } catch {
+        // non-JSON response (e.g. proxy 413)
+      }
+
       if (!res.ok) {
+        if (res.status === 413 || data.code === "payload_too_large") {
+          setErrors({ form: t("payloadTooLarge") });
+          setProcessing(false);
+          return;
+        }
         if (data.code === "too_many_stickers") {
           setErrors({
             form: t("orderStickerLimit", { max: MAX_STICKERS_PER_ORDER }),
@@ -166,6 +163,21 @@ export function CheckoutForm() {
         }
         if (data.code === "design_unavailable") {
           setErrors({ form: t("designUnavailable") });
+          setProcessing(false);
+          return;
+        }
+        if (data.code === "invalid_order_data") {
+          setErrors({ form: t("invalidOrderData") });
+          setProcessing(false);
+          return;
+        }
+        if (
+          data.code === "invalid_price" ||
+          data.code === "upload_token_required" ||
+          data.code === "invalid_upload_token" ||
+          data.code === "invalid_file_reference"
+        ) {
+          setErrors({ form: t("submitError") });
           setProcessing(false);
           return;
         }

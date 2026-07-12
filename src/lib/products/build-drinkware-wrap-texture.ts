@@ -1,8 +1,11 @@
-import { getCustomizerFontFamily } from '@/lib/products/customizer-fonts';
+import { getCustomizerCanvasFontFamily } from '@/lib/products/customizer-fonts';
 import {
-  DRINKWARE_WRAP_TEXTURE_HEIGHT,
-  DRINKWARE_WRAP_TEXTURE_WIDTH,
+  getDrinkwareWrapTextureSize,
+  getDrinkwareWrapScaleFactor,
+  getDrinkwareTextureFontSize,
+  type DrinkwareWrapTextureSize,
 } from '@/lib/products/drinkware-3d-config';
+import type { ProductType } from '@/lib/data/catalog';
 import type { PlacedTextLayer } from '@/lib/products/text-layers';
 import type { PrintAreaInsets } from '@/lib/products/print-area';
 
@@ -13,6 +16,7 @@ export type DrinkwareImageLayer = {
 };
 
 export type BuildDrinkwareWrapTextureInput = {
+  productType: ProductType;
   productColor: string;
   printBounds: PrintAreaInsets;
   images?: DrinkwareImageLayer[];
@@ -36,8 +40,9 @@ function drawImageLayer(
   position: { x: number; y: number },
   canvasWidth: number,
   canvasHeight: number,
+  wrapScaleFactor: number,
 ) {
-  const width = (scale / 100) * canvasWidth;
+  const width = (scale / 100) * canvasWidth * wrapScaleFactor;
   const height = width * (img.naturalHeight / img.naturalWidth);
   const centerX = (position.x / 100) * canvasWidth;
   const centerY = (position.y / 100) * canvasHeight;
@@ -49,21 +54,25 @@ function drawTextLayer(
   layer: PlacedTextLayer,
   canvasWidth: number,
   canvasHeight: number,
+  productType: ProductType,
 ) {
   if (!layer.text.trim()) return;
 
-  const centerX = (layer.position.x / 100) * canvasWidth;
-  const centerY = (layer.position.y / 100) * canvasHeight;
-  const fontSize = Math.max(
-    12,
-    Math.round((layer.size / 400) * canvasHeight * 2.4),
+  const mapped = mapOverlayPosition(layer.position, canvasWidth, canvasHeight);
+  const centerX = mapped.x;
+  const centerY = mapped.y;
+  const fontSize = getDrinkwareTextureFontSize(
+    layer.size,
+    canvasHeight,
+    productType,
   );
 
   ctx.save();
-  ctx.font = `${layer.fontWeight} ${fontSize}px ${getCustomizerFontFamily(layer.fontFamily)}`;
+  ctx.font = `${layer.fontWeight} ${fontSize}px ${getCustomizerCanvasFontFamily(layer.fontFamily)}`;
   ctx.fillStyle = layer.color;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
+  ctx.letterSpacing = layer.letterSpacing;
   ctx.shadowColor = 'rgba(0,0,0,0.2)';
   ctx.shadowBlur = Math.max(2, fontSize * 0.08);
   ctx.fillText(layer.text, centerX, centerY);
@@ -80,29 +89,41 @@ function paintBaseColor(
   ctx.fillRect(0, 0, width, height);
 
   const gradient = ctx.createLinearGradient(0, 0, 0, height);
-  gradient.addColorStop(0, 'rgba(255,255,255,0.12)');
-  gradient.addColorStop(0.45, 'rgba(0,0,0,0)');
-  gradient.addColorStop(1, 'rgba(0,0,0,0.14)');
+  gradient.addColorStop(0, 'rgba(255,255,255,0.1)');
+  gradient.addColorStop(0.5, 'rgba(0,0,0,0)');
+  gradient.addColorStop(1, 'rgba(0,0,0,0.06)');
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, width, height);
+}
+
+function mapOverlayPosition(
+  position: { x: number; y: number },
+  canvasWidth: number,
+  canvasHeight: number,
+) {
+  return {
+    x: (position.x / 100) * canvasWidth,
+    y: (position.y / 100) * canvasHeight,
+  };
 }
 
 export async function buildDrinkwareWrapTexture(
   input: BuildDrinkwareWrapTextureInput,
 ): Promise<HTMLCanvasElement> {
+  const textureSize = getDrinkwareWrapTextureSize(input.productType);
   const canvas = document.createElement('canvas');
-  canvas.width = DRINKWARE_WRAP_TEXTURE_WIDTH;
-  canvas.height = DRINKWARE_WRAP_TEXTURE_HEIGHT;
+  canvas.width = textureSize.width;
+  canvas.height = textureSize.height;
   const ctx = canvas.getContext('2d');
   if (!ctx) {
     throw new Error('Could not create wrap texture canvas');
   }
 
-  paintBaseColor(
-    ctx,
-    input.productColor,
-    DRINKWARE_WRAP_TEXTURE_WIDTH,
-    DRINKWARE_WRAP_TEXTURE_HEIGHT,
+  paintBaseColor(ctx, input.productColor, textureSize.width, textureSize.height);
+
+  const wrapScaleFactor = getDrinkwareWrapScaleFactor(
+    input.productType,
+    input.printBounds,
   );
 
   const loadedImages = await Promise.all(
@@ -118,8 +139,9 @@ export async function buildDrinkwareWrapTexture(
       img,
       layer.scale,
       layer.position,
-      DRINKWARE_WRAP_TEXTURE_WIDTH,
-      DRINKWARE_WRAP_TEXTURE_HEIGHT,
+      textureSize.width,
+      textureSize.height,
+      wrapScaleFactor,
     );
   }
 
@@ -127,10 +149,13 @@ export async function buildDrinkwareWrapTexture(
     drawTextLayer(
       ctx,
       textLayer,
-      DRINKWARE_WRAP_TEXTURE_WIDTH,
-      DRINKWARE_WRAP_TEXTURE_HEIGHT,
+      textureSize.width,
+      textureSize.height,
+      input.productType,
     );
   }
 
   return canvas;
 }
+
+export type { DrinkwareWrapTextureSize };

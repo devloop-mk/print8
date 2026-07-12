@@ -6,6 +6,7 @@ import {
   Palette,
   Sparkles,
   UtensilsCrossed,
+  Wand2,
   type LucideIcon,
 } from 'lucide-react';
 import {
@@ -47,6 +48,13 @@ export const designNavQuickLinks: DesignNavQuickLink[] = [
     icon: Palette,
     labelKey: 'designStudio',
     descriptionKey: 'designStudioDesc',
+  },
+  {
+    id: 'custom',
+    href: '/designs/custom',
+    icon: Wand2,
+    labelKey: 'customDesignOrder',
+    descriptionKey: 'customDesignOrderDesc',
   },
   {
     id: 'customizable',

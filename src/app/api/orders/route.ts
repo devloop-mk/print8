@@ -5,24 +5,61 @@ import { checkoutSchema } from '@/lib/validations/order';
 import { generateOrderNumber } from '@/lib/utils';
 import { sendOrderEmails } from '@/lib/email/order-emails';
 import { validateOrderAssetLimits } from '@/lib/orders/order-assets';
+import { validateOrderPrices } from '@/lib/orders/validate-order-prices';
+import { validateOrderUploadFiles } from '@/lib/orders/validate-order-uploads';
 import {
   reserveExclusiveDesignsForOrder,
   validateExclusiveDesignsAvailable,
 } from '@/lib/designs/design-reservations';
+import { enforceRateLimit } from '@/lib/security/rate-limit';
+
+const MAX_ORDER_BODY_BYTES = 6_000_000;
 
 export async function POST(request: NextRequest) {
+  const rateLimited = enforceRateLimit(request, 'orders', 15, 60 * 60 * 1000);
+  if (rateLimited) return rateLimited;
+
   try {
-    const body = await request.json();
+    const rawBody = await request.text();
+    if (rawBody.length > MAX_ORDER_BODY_BYTES) {
+      return NextResponse.json(
+        { error: 'Request too large', code: 'payload_too_large' },
+        { status: 413 },
+      );
+    }
+
+    let body: unknown;
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+
     const parsed = checkoutSchema.safeParse(body);
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Invalid order data', details: parsed.error.flatten() },
+        {
+          error: 'Invalid order data',
+          code: 'invalid_order_data',
+          details: parsed.error.flatten(),
+        },
         { status: 400 },
       );
     }
 
     const data = parsed.data;
+
+    const uploadValidation = await validateOrderUploadFiles(data);
+    if (!uploadValidation.ok) {
+      return NextResponse.json(
+        {
+          error: 'Invalid file references for this order',
+          code: uploadValidation.code,
+        },
+        { status: 400 },
+      );
+    }
 
     const assetLimits = validateOrderAssetLimits(data);
     if (!assetLimits.ok) {
@@ -33,6 +70,17 @@ export async function POST(request: NextRequest) {
               ? 'Order sticker limit exceeded'
               : 'Order photo limit exceeded',
           code: assetLimits.error,
+        },
+        { status: 400 },
+      );
+    }
+
+    const priceValidation = await validateOrderPrices(data);
+    if (!priceValidation.ok) {
+      return NextResponse.json(
+        {
+          error: 'Order pricing could not be verified',
+          code: priceValidation.code,
         },
         { status: 400 },
       );
@@ -50,10 +98,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const totalAmount = data.items.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0,
-    );
+    const totalAmount = priceValidation.totalAmount;
 
     const orderId = nanoid();
     const orderNumber = generateOrderNumber();

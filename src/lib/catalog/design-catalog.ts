@@ -295,7 +295,49 @@ export async function resolveDesignTemplate(
 
   const managed = await catalogDesignsDb.findById(id);
 
-  if (managed) return mapRecordToTemplate(managed);
+  const staticTemplate = staticDesignIds.has(id)
+
+    ? designTemplates.find((design) => design.id === id) ?? null
+
+    : null;
+
+
+
+  if (managed) {
+
+    const mapped = mapRecordToTemplate(managed);
+
+    if (staticTemplate) {
+
+      return {
+
+        ...staticTemplate,
+
+        ...mapped,
+
+        kind:
+
+          mapped.kind === 'customizable' || staticTemplate.kind === 'customizable'
+
+            ? 'customizable'
+
+            : mapped.kind,
+
+        svgTemplateId: mapped.svgTemplateId ?? staticTemplate.svgTemplateId,
+
+        layoutId: mapped.layoutId ?? staticTemplate.layoutId,
+
+        image: mapped.image || staticTemplate.image,
+
+        tags: mapped.tags.length > 0 ? mapped.tags : staticTemplate.tags,
+
+      };
+
+    }
+
+    return mapped;
+
+  }
 
 
 
@@ -307,9 +349,9 @@ export async function resolveDesignTemplate(
 
 
 
-  if (staticDesignIds.has(id)) {
+  if (staticTemplate) {
 
-    return designTemplates.find((design) => design.id === id) ?? null;
+    return staticTemplate;
 
   }
 

@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useLocale } from 'next-intl';
 import type { SvgDesignTemplate, SvgTemplateState } from '@/lib/data/svg-design-templates';
 import { applySvgTemplate } from '@/lib/designs/svg-template-engine';
+import { toSvgSiteLocale } from '@/lib/designs/svg-locale-defaults';
 
 const rawSvgCache = new Map<string, string>();
 
@@ -21,6 +23,7 @@ export function useRenderedSvgTemplate(
   state: SvgTemplateState,
   side: 'front' | 'back',
 ): string | null {
+  const locale = toSvgSiteLocale(useLocale());
   const path =
     side === 'front' ? template.sides.front.path : template.sides.back?.path;
   const [loaded, setLoaded] = useState<{ path: string; svg: string } | null>(() => {
@@ -59,8 +62,8 @@ export function useRenderedSvgTemplate(
     const cached = rawSvgCache.get(path);
     const svgSource = cached ?? (loaded?.path === path ? loaded.svg : null);
     if (!svgSource) return null;
-    return applySvgTemplate(svgSource, template, state, side);
-  }, [loaded, template, stateKey, side, path]);
+    return applySvgTemplate(svgSource, template, state, side, locale);
+  }, [loaded, template, stateKey, side, path, locale]);
 }
 
 /** @deprecated Use useRenderedSvgTemplate — blob img URLs cannot load external SVG images. */

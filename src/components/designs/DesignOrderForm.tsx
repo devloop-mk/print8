@@ -8,6 +8,7 @@ import { useRouter } from '@/i18n/navigation';
 import { useCart } from '@/components/cart/CartProvider';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { QuantityInput } from '@/components/ui/QuantityInput';
 import { formatPrice } from '@/lib/utils';
 import { resolveAssetUrl } from '@/lib/storage/asset-url';
 import type { DesignTemplate } from '@/lib/data/catalog';
@@ -280,17 +281,14 @@ export function DesignOrderForm({
             >
               {t('quantity')}
             </label>
-            <input
+            <QuantityInput
               id="quantity"
               name="quantity"
-              type="number"
               min={1}
               max={500}
               value={quantity}
-              onChange={(e) =>
-                setQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))
-              }
-              className="w-24 rounded-lg border border-ink-300 px-3 py-2.5 text-ink-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+              onChange={setQuantity}
+              className="w-24"
             />
           </div>
 

@@ -80,7 +80,9 @@
       "sourceStudio": "Studio",
       "sourceProduct": "Product",
       "sourceTemplate": "Template",
-      "delete": "Delete {name}"
+      "delete": "Delete {name}",
+      "saveHint": "Your design is saved — find it anytime here in the navbar.",
+      "dismissHint": "Dismiss hint"
     },
     "languages": {
       "mk": "Macedonian",
@@ -120,6 +122,8 @@
         "allDesignsDesc": "Full catalog with category filters",
         "designStudio": "Design studio",
         "designStudioDesc": "Build a layout from scratch with photos and text",
+        "customDesignOrder": "Custom design request",
+        "customDesignOrderDesc": "Describe your idea — we design it for you",
         "customizable": "Customizable templates",
         "customizableDesc": "Edit text and colors with live preview"
       }
@@ -190,6 +194,33 @@
     "viewAll": "View all",
     "viewAllProducts": "View all products",
     "viewAllDesigns": "View all designs",
+    "trending": {
+      "eyebrow": "Trending now",
+      "title": "Designs everyone loves",
+      "subtitle": "Our most popular templates this season — weddings, birthdays, and business cards you can customize in minutes.",
+      "viewAll": "Browse all designs"
+    },
+    "customDesign": {
+      "eyebrow": "Custom design service",
+      "title": "Have something unique in mind?",
+      "subtitle": "Share your idea — mood, colors, text, and how you'll use it. Our designers will craft a polished layout made just for you.",
+      "cta": "Request a custom design",
+      "contactCta": "Talk to us first",
+      "steps": {
+        "brief": {
+          "title": "Tell us your vision",
+          "description": "Describe the style, content, and purpose — or attach reference images."
+        },
+        "craft": {
+          "title": "We design it for you",
+          "description": "Our team creates a professional layout based on your brief."
+        },
+        "deliver": {
+          "title": "Ready to print",
+          "description": "Receive print-ready files or use the design on your products."
+        }
+      }
+    },
     "highlights": {
       "eyebrow": "Why Print 8",
       "title": "Why choose Print 8",
@@ -895,6 +926,82 @@
         "frontHeadline": "e.g. You're invited!",
         "backHeadline": "e.g. RSVP or Contact"
       }
+    },
+    "customOrder": {
+      "eyebrow": "Custom design service",
+      "title": "Request a custom design",
+      "subtitle": "Describe your idea — style, colors, text, and where you'll use it. Our team will create a polished design tailored to you.",
+      "categoryTitle": "What do you need designed?",
+      "categorySubtitle": "Pick the type that best matches your project.",
+      "productTitle": "Where will you use it?",
+      "productSubtitle": "Tell us if you need print-ready files only, or a design for a specific product.",
+      "briefTitle": "Describe your vision",
+      "briefSubtitle": "The more detail you share, the closer the first draft will be to what you imagine.",
+      "referencesTitle": "Reference images (optional)",
+      "referencesSubtitle": "Upload logos, inspiration photos, or sketches — anything that helps us understand your style.",
+      "referencesAttached": "{count, plural, one {# file attached} other {# files attached}}",
+      "contactTitle": "How can we reach you?",
+      "contactSubtitle": "We'll contact you if we need clarification before starting.",
+      "summaryLabel": "Design service",
+      "startingFrom": "From",
+      "summaryNote": "Includes our team preparing a custom layout based on your brief. Final quote may vary for complex projects.",
+      "priceDisclaimer": "Price shown is a starting rate for the selected design type. Printing or product costs are separate.",
+      "submit": "Add request to cart",
+      "submitting": "Adding to cart…",
+      "cartItemName": "Custom design — {category}",
+      "categories": {
+        "business-cards": "Business card",
+        "wedding": "Wedding invitation",
+        "birthday": "Birthday invitation",
+        "menus": "Menu / menu cover",
+        "logo-branding": "Logo & branding",
+        "social-media": "Social media graphics",
+        "other": "Something else"
+      },
+      "categoryHints": {
+        "business-cards": "Professional cards with your details and brand look.",
+        "wedding": "Invitations, save-the-dates, and wedding stationery.",
+        "birthday": "Kids or adult party invitations and celebration graphics.",
+        "menus": "Restaurant menus, café boards, and cover designs.",
+        "logo-branding": "Logos, brand colors, and visual identity elements.",
+        "social-media": "Posts, stories, banners, and promo graphics.",
+        "other": "Flyers, posters, thank-you cards, or any other print design."
+      },
+      "products": {
+        "print-only": "Print-ready files only",
+        "t-shirt": "T-shirt",
+        "hoodie": "Hoodie",
+        "mug": "Mug",
+        "cup": "Cup",
+        "thermos": "Thermos",
+        "bag": "Bag",
+        "cap": "Cap",
+        "magnet": "Magnet",
+        "other-product": "Other product"
+      },
+      "fields": {
+        "designBrief": "Design brief",
+        "styleNotes": "Colors, style & references",
+        "fullName": "Full name",
+        "phone": "Phone",
+        "email": "Email"
+      },
+      "placeholders": {
+        "designBrief": "Example: Modern minimalist wedding invitation in blush and gold. Names: Ana & Marko. Date: 15 August 2026. Venue: Skopje. Include RSVP line and elegant serif headings…",
+        "styleNotes": "Preferred colors, fonts, mood (elegant, playful, rustic), links to inspiration, or things to avoid…"
+      },
+      "process": {
+        "submit": "Submit your brief and complete checkout",
+        "review": "We review your request and contact you if needed",
+        "deliver": "You receive a custom design ready for print or product use"
+      },
+      "errors": {
+        "categoryRequired": "Please select a design type.",
+        "briefTooShort": "Please describe your design in at least a few sentences (20+ characters).",
+        "fullNameRequired": "Please enter your name.",
+        "phoneRequired": "Please enter a valid phone number.",
+        "invalidEmail": "Please enter a valid email address."
+      }
     }
   },
   "studio": {
@@ -1320,6 +1427,13 @@
       "title": "Customize product",
       "selectColor": "Select color",
       "selectSize": "Select size",
+      "printPackage": "Print package",
+      "printPackageFrontSmall": "Small front print",
+      "printPackageFrontSmallDesc": "Chest logo size · front only",
+      "printPackageFrontLarge": "Large front print",
+      "printPackageFrontLargeDesc": "Full chest print · front only",
+      "printPackageFrontBack": "Front & back",
+      "printPackageFrontBackDesc": "Print on both sides",
       "uploadDesign": "Upload design",
       "quantity": "Quantity",
       "preview": "Preview",
@@ -1616,6 +1730,8 @@
     "addressTooShort": "Enter your full address (at least 5 characters)",
     "invalidPhone": "Enter a valid phone number",
     "submitError": "Something went wrong. Please check your details and try again.",
+    "payloadTooLarge": "Your order includes large design files. Please try again — we're compressing previews automatically. If the problem persists, remove some items or contact us.",
+    "invalidOrderData": "Some design data in your cart could not be submitted. Try removing and re-adding the item, or contact us for help.",
     "acceptTermsBeforeTerms": "I agree to the",
     "acceptTermsBeforePrivacy": "and have read the",
     "acceptTermsRequired": "You must accept the terms before placing an order.",

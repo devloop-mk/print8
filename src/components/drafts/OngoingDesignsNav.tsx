@@ -9,7 +9,7 @@ import type {
   OngoingDesignSource,
 } from '@/lib/drafts/ongoing-designs';
 import { cn } from '@/lib/utils';
-import { PenLine, Trash2 } from 'lucide-react';
+import { BookmarkCheck, PenLine, Trash2, X } from 'lucide-react';
 
 function formatUpdatedAt(value: string, locale: string) {
   const date = new Date(value);
@@ -30,6 +30,86 @@ function sourceLabel(
   if (source === 'studio') return t('sourceStudio');
   if (source === 'product') return t('sourceProduct');
   return t('sourceTemplate');
+}
+
+type SaveDesignHintProps = {
+  message: string;
+  dismissLabel: string;
+  onDismiss: () => void;
+  variant: 'desktop' | 'mobile-banner' | 'mobile-drawer';
+};
+
+function SaveDesignHint({
+  message,
+  dismissLabel,
+  onDismiss,
+  variant,
+}: SaveDesignHintProps) {
+  const isDesktop = variant === 'desktop';
+  const isDrawer = variant === 'mobile-drawer';
+
+  return (
+    <div
+      className={cn(
+        'relative border-2 border-brand-600 bg-white text-ink-900 shadow-lift-brand',
+        isDesktop && 'rounded-xl px-4 py-3.5 pr-10',
+        variant === 'mobile-banner' && 'rounded-lg px-3.5 py-3 pr-9 shadow-md',
+        isDrawer && 'rounded-lg px-3 py-2.5 pr-9 shadow-sm',
+      )}
+    >
+      {isDesktop ? (
+        <div
+          className="absolute -right-[7px] top-1/2 h-3 w-3 -translate-y-1/2 rotate-45 border-r-2 border-t-2 border-brand-600 bg-white"
+          aria-hidden
+        />
+      ) : null}
+
+      <div
+        className={cn(
+          'flex items-start',
+          isDesktop ? 'gap-3' : 'gap-2.5',
+        )}
+      >
+        <div
+          className={cn(
+            'flex shrink-0 items-center justify-center rounded-full bg-brand-600 text-white',
+            isDesktop ? 'h-10 w-10' : isDrawer ? 'h-8 w-8' : 'h-9 w-9',
+          )}
+        >
+          <BookmarkCheck
+            className={cn(
+              'shrink-0',
+              isDesktop ? 'h-5 w-5' : 'h-4 w-4',
+            )}
+            aria-hidden="true"
+          />
+        </div>
+        <p
+          className={cn(
+            'min-w-0 font-semibold leading-snug',
+            isDesktop ? 'pt-1.5 text-sm' : isDrawer ? 'pt-1 text-xs' : 'pt-1 text-sm',
+          )}
+        >
+          {message}
+        </p>
+      </div>
+
+      <button
+        type="button"
+        onClick={onDismiss}
+        className={cn(
+          'absolute rounded text-ink-400 transition hover:bg-ink-50 hover:text-ink-700',
+          isDesktop ? 'right-2 top-2 p-1' : 'right-1.5 top-1.5 p-0.5',
+        )}
+        aria-label={dismissLabel}
+      >
+        <X
+          className={cn(isDesktop ? 'h-4 w-4' : 'h-3.5 w-3.5')}
+          aria-hidden="true"
+        />
+      </button>
+    </div>
+  );
 }
 
 type OngoingDesignRowProps = {
@@ -103,7 +183,8 @@ export function OngoingDesignsNav({
 }: OngoingDesignsNavProps) {
   const t = useTranslations('nav.ongoingDesigns');
   const locale = useLocale();
-  const { items, count, hydrated, remove } = useOngoingDesigns();
+  const { items, count, hydrated, saveHintVisible, remove, dismissSaveHint } =
+    useOngoingDesigns();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const panelId = useId();
@@ -136,13 +217,23 @@ export function OngoingDesignsNav({
     };
   }, [open]);
 
-  if (!hydrated || count === 0) {
+  if (!hydrated || (count === 0 && !saveHintVisible)) {
     return null;
   }
 
   if (variant === 'mobile') {
     return (
       <div className="mt-4 border-t border-ink-100 pt-4">
+        {saveHintVisible ? (
+          <div className="mb-3 px-4" role="status">
+            <SaveDesignHint
+              message={t('saveHint')}
+              dismissLabel={t('dismissHint')}
+              onDismiss={dismissSaveHint}
+              variant="mobile-drawer"
+            />
+          </div>
+        ) : null}
         <p className="mb-2 px-4 text-xs font-semibold uppercase tracking-wider text-ink-400">
           {t('title')}
         </p>
@@ -166,20 +257,52 @@ export function OngoingDesignsNav({
 
   return (
     <div ref={containerRef} className="relative">
+      {saveHintVisible && !open ? (
+        <>
+          <div
+            role="status"
+            className="fixed inset-x-3 top-[calc(3.25rem+2px)] z-[70] sm:inset-x-4 md:hidden"
+          >
+            <SaveDesignHint
+              message={t('saveHint')}
+              dismissLabel={t('dismissHint')}
+              onDismiss={dismissSaveHint}
+              variant="mobile-banner"
+            />
+          </div>
+
+          <div
+            role="status"
+            className="absolute z-[70] hidden w-[min(100vw-8rem,22rem)] md:block md:right-full md:top-1/2 md:mr-4 md:-translate-y-1/2"
+          >
+            <SaveDesignHint
+              message={t('saveHint')}
+              dismissLabel={t('dismissHint')}
+              onDismiss={dismissSaveHint}
+              variant="desktop"
+            />
+          </div>
+        </>
+      ) : null}
+
       <button
         type="button"
-        onClick={() => setOpen((value) => !value)}
+        onClick={() => {
+          dismissSaveHint();
+          setOpen((value) => !value);
+        }}
         aria-expanded={open}
         aria-haspopup="true"
         aria-controls={panelId}
         className={cn(
           'relative border-2 border-transparent p-2 text-ink-600 transition hover:border-ink-200 hover:bg-ink-50',
           open && 'border-ink-200 bg-ink-50',
+          saveHintVisible && !open && 'border-brand-200 bg-brand-50 text-brand-700',
         )}
         aria-label={t('open', { count })}
       >
         <PenLine className="h-5 w-5" />
-        <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center border border-amber-800 bg-amber-500 px-1 text-[10px] font-bold text-white">
+        <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center border border-brand-800 bg-brand-600 px-1 text-[10px] font-bold text-white">
           {count}
         </span>
       </button>

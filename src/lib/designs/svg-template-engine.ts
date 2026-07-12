@@ -24,6 +24,10 @@ import {
   getSvgLogoSlots,
   logoStateKey,
 } from '@/lib/designs/svg-logo-slots';
+import {
+  resolveSvgFieldDefault,
+  type SvgSiteLocale,
+} from '@/lib/designs/svg-locale-defaults';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -182,6 +186,7 @@ function applyDomEdits(
   template: SvgDesignTemplate,
   state: SvgTemplateState,
   side: 'front' | 'back',
+  locale: SvgSiteLocale = 'en',
 ) {
   if (typeof DOMParser === 'undefined') return svg;
 
@@ -222,7 +227,8 @@ function applyDomEdits(
   for (const field of sideConfig.texts) {
     const fieldKey = `${side}:${field.id}`;
     const stored = state.texts[fieldKey];
-    const value = resolveSvgTextDisplayValue(stored, field.default);
+    const fallback = resolveSvgFieldDefault(template.id, side, field, locale);
+    const value = resolveSvgTextDisplayValue(stored, fallback);
     const node = textNodes[field.index];
     if (node) node.textContent = value;
     if (node && !isSvgContactField(template.id, side, field.id)) {
@@ -253,6 +259,7 @@ export function applySvgTemplate(
   template: SvgDesignTemplate,
   state: SvgTemplateState,
   side: 'front' | 'back',
+  locale: SvgSiteLocale = 'en',
 ): string {
   const sidePath =
     side === 'front'
@@ -262,7 +269,7 @@ export function applySvgTemplate(
 
   result = applyCssClassColors(result, template.colors, state.colors);
   result = applyInlineColors(result, template.colors, state.colors);
-  result = applyDomEdits(result, template.sides.front.path, template, state, side);
+  result = applyDomEdits(result, sidePath, template, state, side, locale);
 
   if (!result.includes('<?xml')) {
     result = `<?xml version="1.0" encoding="UTF-8"?>${result}`;
@@ -273,16 +280,27 @@ export function applySvgTemplate(
 
 export function buildDefaultSvgTemplateState(
   template: SvgDesignTemplate,
+  locale: SvgSiteLocale = 'en',
 ): SvgTemplateState {
   const texts: SvgTemplateState['texts'] = {};
   const colors: SvgTemplateState['colors'] = {};
 
   for (const field of template.sides.front.texts) {
-    texts[`front:${field.id}`] = field.default;
+    texts[`front:${field.id}`] = resolveSvgFieldDefault(
+      template.id,
+      'front',
+      field,
+      locale,
+    );
   }
   if (template.sides.back) {
     for (const field of template.sides.back.texts) {
-      texts[`back:${field.id}`] = field.default;
+      texts[`back:${field.id}`] = resolveSvgFieldDefault(
+        template.id,
+        'back',
+        field,
+        locale,
+      );
     }
   }
   for (const slot of template.colors) {
@@ -354,10 +372,11 @@ export async function fetchRenderedSvg(
   template: SvgDesignTemplate,
   state: SvgTemplateState,
   side: 'front' | 'back',
+  locale: SvgSiteLocale = 'en',
 ): Promise<string> {
   const response = await fetch(path);
   const svg = await response.text();
-  return applySvgTemplate(svg, template, state, side);
+  return applySvgTemplate(svg, template, state, side, locale);
 }
 
 export async function fetchRenderedSvgBlobUrl(

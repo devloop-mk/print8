@@ -27,6 +27,12 @@ interface EmailAttachment {
   contentType: string;
 }
 
+type OrderPreviewEmbed = EmailAttachment & {
+  contentId: string;
+  itemIndex: number;
+  label: string;
+};
+
 async function downloadStoredFile(storedName: string): Promise<Buffer | null> {
   try {
     const { body } = await getUploadObject(storedName);
@@ -142,6 +148,40 @@ function buildCustomDesignDetailsInnerHtml(item: OrderItem): string {
     ].join("");
   }
 
+  if (meta.orderType === "custom-design-request") {
+    const lines: string[] = [];
+    if (typeof meta.customDesignCategory === "string") {
+      lines.push(
+        `<li><strong>Design type</strong>: ${escapeHtml(String(meta.customDesignCategory))}</li>`,
+      );
+    }
+    if (typeof meta.targetProductLabel === "string") {
+      lines.push(
+        `<li><strong>Intended product</strong>: ${escapeHtml(meta.targetProductLabel)}</li>`,
+      );
+    }
+    if (typeof meta.designBrief === "string") {
+      lines.push(
+        `<li><strong>Design brief</strong>: ${escapeHtml(meta.designBrief)}</li>`,
+      );
+    }
+    if (typeof meta.styleNotes === "string") {
+      lines.push(
+        `<li><strong>Style notes</strong>: ${escapeHtml(meta.styleNotes)}</li>`,
+      );
+    }
+    for (const key of ["fullName", "phone", "email"] as const) {
+      const value = meta[key];
+      if (typeof value === "string" && value.trim()) {
+        lines.push(
+          `<li><strong>${escapeHtml(key)}</strong>: ${escapeHtml(value)}</li>`,
+        );
+      }
+    }
+    if (lines.length === 0) return "";
+    return `<ul style="margin:0;padding-left:18px;">${lines.join("")}</ul>`;
+  }
+
   if (meta.orderType === "customizable-template") {
     const fields = Object.entries(meta).filter(
       ([key]) =>
@@ -172,17 +212,47 @@ function buildCustomDesignDetailsInnerHtml(item: OrderItem): string {
   return "";
 }
 
-function buildOrderItemPreviewImagesHtml(item: OrderItem): string {
-  const previews = getOrderItemPreviewImages(item);
-  if (previews.length === 0) return "";
+function buildOrderPreviewEmbeds(data: CheckoutInput): OrderPreviewEmbed[] {
+  const embeds: OrderPreviewEmbed[] = [];
 
-  return previews
-    .filter((preview) => preview.src.startsWith("data:"))
+  data.items.forEach((item, itemIndex) => {
+    const previews = getOrderItemPreviewImages(item);
+    const safeName = sanitizeOrderItemFilename(item.name, `item-${itemIndex + 1}`);
+
+    previews.forEach(({ src, label }) => {
+      if (!src.startsWith("data:")) return;
+      const parsed = parseDataUrl(src);
+      if (!parsed) return;
+
+      const slug = label.toLowerCase().replace(/\s+/g, "-");
+      embeds.push({
+        contentId: `preview-${itemIndex}-${slug}`,
+        itemIndex,
+        label,
+        filename: `item-${itemIndex + 1}-${safeName}-${slug}.${parsed.ext}`,
+        content: parsed.buffer,
+        contentType: parsed.mimeType,
+      });
+    });
+  });
+
+  return embeds;
+}
+
+function buildOrderItemPreviewImagesHtml(
+  item: OrderItem,
+  itemIndex: number,
+  embeds: OrderPreviewEmbed[],
+): string {
+  const itemEmbeds = embeds.filter((embed) => embed.itemIndex === itemIndex);
+  if (itemEmbeds.length === 0) return "";
+
+  return itemEmbeds
     .map(
-      (preview) =>
+      (embed) =>
         `<div style="display:inline-block;vertical-align:top;margin:8px 12px 8px 0;">
-          <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">${escapeHtml(preview.label)}</p>
-          <img src="${preview.src}" alt="${escapeHtml(item.name)} ${escapeHtml(preview.label)}" style="max-width:280px;border-radius:8px;border:1px solid #e5e7eb;display:block;background:#fff;" />
+          <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">${escapeHtml(embed.label)}</p>
+          <img src="cid:${embed.contentId}" alt="${escapeHtml(item.name)} ${escapeHtml(embed.label)}" style="max-width:280px;border-radius:8px;border:1px solid #e5e7eb;display:block;background:#fff;" />
         </div>`,
     )
     .join("");
@@ -194,8 +264,9 @@ function buildOrderItemEmailBlock(
   totalItems: number,
   locale: CheckoutInput["locale"],
   labels: { itemOf: string; designDetails: string },
+  previewEmbeds: OrderPreviewEmbed[],
 ): string {
-  const previewHtml = buildOrderItemPreviewImagesHtml(item);
+  const previewHtml = buildOrderItemPreviewImagesHtml(item, index, previewEmbeds);
   const productDetails = buildProductDesignDetailsInnerHtml(item);
   const customDetails = buildCustomDesignDetailsInnerHtml(item);
   const detailsHtml = [productDetails, customDetails].filter(Boolean).join("");
@@ -228,6 +299,7 @@ function buildOrderItemEmailBlock(
 function buildOrderItemsEmailHtml(
   data: CheckoutInput,
   labels: { itemOf: string; designDetails: string; itemsHeading: string },
+  previewEmbeds: OrderPreviewEmbed[],
 ): string {
   const blocks = data.items.map((item, index) =>
     buildOrderItemEmailBlock(
@@ -236,34 +308,30 @@ function buildOrderItemsEmailHtml(
       data.items.length,
       data.locale,
       labels,
+      previewEmbeds,
     ),
   );
 
   return `<h3 style="margin:24px 0 12px;">${labels.itemsHeading}</h3>${blocks.join("")}`;
 }
 
-async function buildDesignPreviewAttachments(
-  data: CheckoutInput,
-): Promise<EmailAttachment[]> {
-  const attachments: EmailAttachment[] = [];
+function buildDesignPreviewAttachments(embeds: OrderPreviewEmbed[]): EmailAttachment[] {
+  return embeds.map(({ filename, content, contentType }) => ({
+    filename,
+    content,
+    contentType,
+  }));
+}
 
-  data.items.forEach((item, itemIndex) => {
-    const previews = getOrderItemPreviewImages(item);
-    const safeName = sanitizeOrderItemFilename(item.name, `item-${itemIndex + 1}`);
-
-    previews.forEach(({ src, label }) => {
-      if (!src.startsWith("data:")) return;
-      const parsed = parseDataUrl(src);
-      if (!parsed) return;
-      attachments.push({
-        filename: `item-${itemIndex + 1}-${safeName}-${label.toLowerCase().replace(/\s+/g, "-")}.${parsed.ext}`,
-        content: parsed.buffer,
-        contentType: parsed.mimeType,
-      });
-    });
-  });
-
-  return attachments;
+function toResendAttachment(
+  attachment: EmailAttachment & { contentId?: string },
+) {
+  return {
+    filename: attachment.filename,
+    content: attachment.content,
+    contentType: attachment.contentType,
+    ...(attachment.contentId ? { contentId: attachment.contentId } : {}),
+  };
 }
 
 function buildSvgPrintAttachments(data: CheckoutInput): EmailAttachment[] {
@@ -339,26 +407,26 @@ export async function sendOrderEmails(
 
   const fileIds = collectOrderFileIds(data);
   const stickerRefs = collectOrderStickers(data.items);
-  const designAttachments = await buildDesignPreviewAttachments(data);
+  const previewEmbeds = buildOrderPreviewEmbeds(data);
+  const designAttachments = buildDesignPreviewAttachments(previewEmbeds);
   const svgPrintAttachments = buildSvgPrintAttachments(data);
   const stickerAttachments = await buildStickerAttachments(stickerRefs);
   const originalAttachments = await buildOriginalUploadAttachments(fileIds);
   const total = formatPrice(totalAmount, data.locale);
   const isMk = data.locale === "mk";
-  const itemsHtml = buildOrderItemsEmailHtml(
-    data,
-    isMk
-      ? {
-          itemsHeading: "Ваши производи",
-          itemOf: "Артикл {current} од {total}",
-          designDetails: "Преглед на дизајнот",
-        }
-      : {
-          itemsHeading: "Your items",
-          itemOf: "Item {current} of {total}",
-          designDetails: "Design preview",
-        },
-  );
+  const itemLabels = isMk
+    ? {
+        itemsHeading: "Ваши производи",
+        itemOf: "Артикл {current} од {total}",
+        designDetails: "Преглед на дизајнот",
+      }
+    : {
+        itemsHeading: "Your items",
+        itemOf: "Item {current} of {total}",
+        designDetails: "Design preview",
+      };
+  const itemsHtml = buildOrderItemsEmailHtml(data, itemLabels, previewEmbeds);
+  const inlinePreviewAttachments = previewEmbeds.map(toResendAttachment);
 
   const customerHtml = isMk
     ? `
@@ -386,6 +454,10 @@ export async function sendOrderEmails(
         ? `Потврда на нарачка ${orderNumber} — Print 8`
         : `Order confirmation ${orderNumber} — Print 8`,
       html: customerHtml,
+      attachments:
+        inlinePreviewAttachments.length > 0
+          ? inlinePreviewAttachments
+          : undefined,
     });
     results.customer = !error;
     if (error) console.error("[email] customer confirmation failed:", error);
@@ -393,26 +465,12 @@ export async function sendOrderEmails(
 
   if (adminEmail) {
     const adminAttachments = [
-      ...designAttachments.map((a) => ({
-        filename: a.filename,
-        content: a.content,
-        contentType: a.contentType,
-      })),
-      ...svgPrintAttachments.map((a) => ({
-        filename: a.filename,
-        content: a.content,
-        contentType: a.contentType,
-      })),
-      ...stickerAttachments.map((a) => ({
-        filename: a.filename,
-        content: a.content,
-        contentType: a.contentType,
-      })),
-      ...originalAttachments.map((a) => ({
-        filename: `original-${a.filename}`,
-        content: a.content,
-        contentType: a.contentType,
-      })),
+      ...inlinePreviewAttachments,
+      ...svgPrintAttachments.map(toResendAttachment),
+      ...stickerAttachments.map(toResendAttachment),
+      ...originalAttachments.map((a) =>
+        toResendAttachment({ ...a, filename: `original-${a.filename}` }),
+      ),
     ];
 
     const { error } = await resend.emails.send({
@@ -430,14 +488,12 @@ export async function sendOrderEmails(
           itemsHeading: "Items",
           itemOf: "Item {current} of {total}",
           designDetails: "Design preview",
-        })}
+        }, previewEmbeds)}
         <p><strong>Total:</strong> ${total}</p>
         <p>${adminAttachments.length} file(s) attached (${designAttachments.length} preview(s), ${svgPrintAttachments.length} print SVG(s), ${stickerAttachments.length} sticker(s), ${originalAttachments.length} original upload(s)).</p>
       `,
-      attachments: adminAttachments.map((a) => ({
-        filename: a.filename,
-        content: a.content,
-      })),
+      attachments:
+        adminAttachments.length > 0 ? adminAttachments : undefined,
     });
     results.admin = !error;
     if (error) console.error("[email] admin notification failed:", error);

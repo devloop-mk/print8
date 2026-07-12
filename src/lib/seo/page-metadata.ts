@@ -5,6 +5,7 @@ import {
   type LegalPageKey,
 } from '@/lib/legal/pages';
 import {
+  isCustomizableDesign,
   products,
   type ProductType,
   type ProductDesignCategory,
@@ -118,7 +119,7 @@ export async function buildDesignMetadata(locale: Locale, id: string) {
 
 export async function buildDesignCustomizeMetadata(locale: Locale, id: string) {
   const template = await resolveDesignTemplate(id);
-  if (!template) return null;
+  if (!template || !isCustomizableDesign(template)) return null;
 
   const td = await getTranslations({ locale, namespace: 'designs' });
   const tc = await getTranslations({ locale, namespace: 'designs.customize' });

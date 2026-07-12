@@ -55,11 +55,14 @@ export function SvgDesignPreviewScaled({
   state,
   side,
   className,
+  fill = false,
 }: {
   template: SvgDesignTemplate;
   state: SvgTemplateState;
   side: 'front' | 'back';
   className?: string;
+  /** Fill the container edge-to-edge (no inset mat or ring). */
+  fill?: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 200, height: 120 });
@@ -69,6 +72,14 @@ export function SvgDesignPreviewScaled({
     if (!container) return;
 
     const updateSize = () => {
+      if (fill) {
+        setSize({
+          width: container.clientWidth,
+          height: container.clientHeight,
+        });
+        return;
+      }
+
       setSize(
         fitDesignThumbSize(
           container.clientWidth,
@@ -82,19 +93,23 @@ export function SvgDesignPreviewScaled({
     const observer = new ResizeObserver(updateSize);
     observer.observe(container);
     return () => observer.disconnect();
-  }, [template.aspectRatio]);
+  }, [fill, template.aspectRatio]);
 
   return (
     <div
       ref={containerRef}
-      className={`relative flex h-full w-full items-center justify-center ${className ?? ''}`}
+      className={`relative h-full w-full ${fill ? '' : 'flex items-center justify-center'} ${className ?? ''}`}
     >
       <SvgDesignPreview
         template={template}
         state={state}
         side={side}
         width={size.width}
-        className="overflow-hidden rounded-md shadow-sm ring-1 ring-ink-200/80"
+        className={
+          fill
+            ? 'h-full w-full'
+            : 'overflow-hidden rounded-md shadow-sm ring-1 ring-ink-200/80'
+        }
       />
     </div>
   );

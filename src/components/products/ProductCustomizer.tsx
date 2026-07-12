@@ -21,7 +21,6 @@ import {
   products,
   getProductMockup,
   getProductSides,
-  productSupportsSides,
   type ProductDesignTemplate,
   type ProductSide,
   type ProductType,
@@ -131,10 +130,19 @@ import { findProductCustomizerDraft } from '@/lib/drafts/ongoing-designs';
 import {
   clampElementCenterToPrintArea,
   getMaxTextSizeForPrintArea,
+  getPrintAreaMaxScale,
   getPrintAreaPositionPresets,
   getPrintAreaWidthPercent,
   type PrintAreaInsets,
 } from '@/lib/products/print-area';
+import {
+  getTshirtPrintAreaInsets,
+  getTshirtUnitPrice,
+  isTshirtPrintPackage,
+  isTshirtProduct,
+  TSHIRT_PRINT_PACKAGES,
+  type TshirtPrintPackage,
+} from '@/lib/products/tshirt-print-pricing';
 import { usePrintAreaMaxScale } from '@/lib/products/use-print-area-max-scale';
 
 function useDraggablePosition(
@@ -617,11 +625,20 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     [productId, type],
   );
 
-  const sides = useMemo(
-    () => (product ? getProductSides(product) : ['front' as ProductSide]),
-    [product],
-  );
-  const hasMultipleSides = product ? productSupportsSides(product) : false;
+  const isTshirt = product ? isTshirtProduct(product) : false;
+
+  const [printPackage, setPrintPackage] =
+    useState<TshirtPrintPackage>('front-large');
+
+  const sides = useMemo(() => {
+    if (!product) return ['front' as ProductSide];
+    const productSides = getProductSides(product);
+    if (isTshirtProduct(product) && printPackage !== 'front-back') {
+      return ['front' as ProductSide];
+    }
+    return productSides;
+  }, [product, printPackage]);
+  const hasMultipleSides = sides.length > 1;
   const sideLabel = useCallback(
     (side: ProductSide) => {
       if (side === 'front') return t('front');
@@ -656,9 +673,10 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         size,
         quantity,
         activeSide,
+        printPackage,
         sideDesigns: serializeSideDesigns(sideDesigns),
       }),
-    [color, size, quantity, activeSide, sideDesigns],
+    [color, size, quantity, activeSide, printPackage, sideDesigns],
   );
   const [baselineReady, setBaselineReady] = useState(false);
 
@@ -684,6 +702,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         size,
         quantity,
         activeSide,
+        printPackage: isTshirt ? printPackage : undefined,
         sideDesigns: serializeSideDesigns(sideDesigns),
         updatedAt: new Date().toISOString(),
       });
@@ -696,7 +715,9 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     activeSide,
     color,
     designId,
+    isTshirt,
     markClean,
+    printPackage,
     product,
     quantity,
     sideDesigns,
@@ -728,7 +749,33 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     shirtColor: color,
   });
 
-  const mockupLayout = product ? getProductMockupLayout(product) : null;
+  const unitPrice = useMemo(() => {
+    if (!product) return 0;
+    if (isTshirtProduct(product)) return getTshirtUnitPrice(printPackage);
+    return product.basePrice;
+  }, [product, printPackage]);
+
+  const effectivePrintAreaInsets = useMemo((): PrintAreaInsets => {
+    if (!product) {
+      return { top: 12, right: 12, bottom: 12, left: 12 };
+    }
+    if (isTshirtProduct(product)) {
+      return getTshirtPrintAreaInsets(printPackage, activeSide);
+    }
+    return getProductMockupLayout(product).printArea;
+  }, [product, printPackage, activeSide]);
+
+  const mockupLayout = useMemo(() => {
+    if (!product) return null;
+    const base = getProductMockupLayout(product);
+    if (!isTshirtProduct(product)) return base;
+    const insets = getTshirtPrintAreaInsets(printPackage, activeSide);
+    return {
+      ...base,
+      printArea: insets,
+      overlayMaxScale: getPrintAreaMaxScale(insets),
+    };
+  }, [product, printPackage, activeSide]);
   const overlayPrintBounds = mockupLayout
     ? getOverlayPrintBounds(mockupLayout)
     : undefined;
@@ -840,7 +887,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   const addTextLayer = useCallback(() => {
     let newLayerId: string | null = null;
     const printPresets = product
-      ? getPrintAreaPositionPresets(getProductMockupLayout(product).printArea)
+      ? getPrintAreaPositionPresets(effectivePrintAreaInsets)
       : null;
 
     setSideDesigns((prev) => {
@@ -876,7 +923,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       setSelectedElement(`text:${newLayerId}`);
       setActivePanel('text');
     }
-  }, [activeSide, product]);
+  }, [activeSide, product, effectivePrintAreaInsets]);
 
   const printTextSizeMax = useMemo(() => {
     if (!product) return 72;
@@ -886,11 +933,8 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     const height =
       inner?.getBoundingClientRect().height ??
       (previewRef.current?.getBoundingClientRect().height ?? 400) * 0.85;
-    return getMaxTextSizeForPrintArea(
-      height,
-      getProductMockupLayout(product).printArea,
-    );
-  }, [product, activeSide, canvasZoom, sideDesigns]);
+    return getMaxTextSizeForPrintArea(height, effectivePrintAreaInsets);
+  }, [product, activeSide, canvasZoom, sideDesigns, effectivePrintAreaInsets]);
 
   const updateTextLayer = useCallback(
     (instanceId: string, updates: Partial<PlacedTextLayer>) => {
@@ -929,14 +973,16 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         const current = normalizeSideDesignText(
           prev[activeSide] ?? createDefaultSideDesign(),
         );
+        const filtered = current.textLayers.filter(
+          (layer) => layer.instanceId !== instanceId,
+        );
 
         return {
           ...prev,
           [activeSide]: syncFlatTextFields({
             ...current,
-            textLayers: current.textLayers.filter(
-              (layer) => layer.instanceId !== instanceId,
-            ),
+            textLayers: filtered,
+            ...(filtered.length === 0 ? { customText: '' } : {}),
           }),
         };
       });
@@ -944,6 +990,16 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     },
     [activeSide],
   );
+
+  useEffect(() => {
+    if (!product || !isTshirtProduct(product)) return;
+    if (printPackage === 'front-back') return;
+    setActiveSide('front');
+    setSideDesigns((prev) => ({
+      ...prev,
+      back: createDefaultSideDesign(),
+    }));
+  }, [printPackage, product?.id, product]);
 
   useEffect(() => {
     if (editCartItemId) return;
@@ -1049,6 +1105,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     setSize(draft.size);
     setQuantity(draft.quantity);
     setActiveSide(draft.activeSide);
+    if (draft.printPackage) setPrintPackage(draft.printPackage);
 
     const productSides = getProductSides(product);
     const restored = createSideDesignsForSides(productSides);
@@ -1073,6 +1130,13 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     if (typeof meta.color === 'string') setColor(meta.color);
     if (typeof meta.size === 'string') setSize(meta.size);
     if (typeof cartItem.quantity === 'number') setQuantity(cartItem.quantity);
+    if (
+      isTshirt &&
+      typeof meta.printPackage === 'string' &&
+      isTshirtPrintPackage(meta.printPackage)
+    ) {
+      setPrintPackage(meta.printPackage);
+    }
 
     const restored = createSideDesignsForSides(sides);
 
@@ -1090,7 +1154,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     ) {
       setActiveSide(meta.activeSide);
     }
-  }, [editCartItemId, product, cartItems, sides]);
+  }, [editCartItemId, product, cartItems, sides, isTshirt]);
 
   const mockupImage = product
     ? getProductMockup(product, color, activeSide)
@@ -1169,6 +1233,9 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     if (product?.sizes?.length && size) {
       metadata.size = size;
     }
+    if (isTshirt) {
+      metadata.printPackage = printPackage;
+    }
 
     for (const side of sides) {
       const d = sideDesigns[side] ?? createDefaultSideDesign();
@@ -1223,7 +1290,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     const cartPayload = {
       type: 'product' as const,
       name: formatProductCartName(tp(type), size, product),
-      price: product?.basePrice ?? 0,
+      price: unitPrice,
       quantity,
       designPreview: captured.front,
       backDesignPreview: captured.back,
@@ -1244,7 +1311,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
 
   function setPositionPreset(preset: 'center' | 'top' | 'bottom') {
     const positions = product
-      ? getPrintAreaPositionPresets(getProductMockupLayout(product).printArea)
+      ? getPrintAreaPositionPresets(effectivePrintAreaInsets)
       : {
           center: { x: 50, y: 45 },
           top: { x: 50, y: 25 },
@@ -1337,6 +1404,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       }
       onRemoveSticker={removeSticker}
       removeStickerLabel={t('removeSticker')}
+      printAreaOverride={isTshirt ? effectivePrintAreaInsets : undefined}
     />
   );
 
@@ -1374,6 +1442,10 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       uploadError={uploadError}
       refreshSession={refreshSession}
       imageMaxScale={imageMaxScale}
+      isTshirt={isTshirt}
+      printPackage={printPackage}
+      setPrintPackage={setPrintPackage}
+      locale={locale}
     />
   );
 
@@ -1397,7 +1469,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
                 {tp(type)}
               </p>
               <p className="text-xs text-brand-600">
-                {formatPrice(product.basePrice, locale)}
+                {formatPrice(unitPrice, locale)}
               </p>
             </div>
           </div>
@@ -1755,6 +1827,7 @@ function InteractivePreview({
   selectedElement,
   onSelectElement,
   imageMaxScale,
+  printAreaOverride,
 }: {
   mockupImage: string;
   sideDesign: SideDesign;
@@ -1788,6 +1861,7 @@ function InteractivePreview({
   selectedElement: SelectedElement;
   onSelectElement: (element: SelectedElement) => void;
   imageMaxScale: number;
+  printAreaOverride?: PrintAreaInsets;
 }) {
   const t = useTranslations('products.customizer');
   const baseImage = sideDesign.premadeDesignImage ?? mockupImage;
@@ -1811,7 +1885,14 @@ function InteractivePreview({
     }
   }, [baseImage]);
 
-  const mockupLayout = getProductMockupLayout(productType);
+  const baseMockupLayout = getProductMockupLayout(productType);
+  const mockupLayout = printAreaOverride
+    ? {
+        ...baseMockupLayout,
+        printArea: printAreaOverride,
+        overlayMaxScale: getPrintAreaMaxScale(printAreaOverride),
+      }
+    : baseMockupLayout;
   const overlayPrintBounds = getOverlayPrintBounds(mockupLayout);
   const isDrinkware = isCylindricalDrinkwareType(productType);
   const [previewMode, setPreviewMode] = useState<DrinkwarePreviewMode>('flat');
@@ -2128,6 +2209,10 @@ function EditorPanelContent({
   uploadError,
   refreshSession,
   imageMaxScale,
+  isTshirt,
+  printPackage,
+  setPrintPackage,
+  locale,
 }: {
   panel: EditorPanel;
   currentDesign: SideDesign;
@@ -2158,6 +2243,10 @@ function EditorPanelContent({
   uploadError: string | null;
   refreshSession: () => Promise<string | null>;
   imageMaxScale: number;
+  isTshirt: boolean;
+  printPackage: TshirtPrintPackage;
+  setPrintPackage: (pkg: TshirtPrintPackage) => void;
+  locale: string;
 }) {
   const t = useTranslations('products.customizer');
   const hasSecondaryInk = designTemplate?.overlayRecolor?.slots === 2;
@@ -2179,6 +2268,10 @@ function EditorPanelContent({
           setSize={setSize}
           quantity={quantity}
           setQuantity={setQuantity}
+          isTshirt={isTshirt}
+          printPackage={printPackage}
+          setPrintPackage={setPrintPackage}
+          locale={locale}
         />
       </div>
     );
@@ -2473,6 +2566,24 @@ function EditorPanelContent({
   return null;
 }
 
+const TSHIRT_PRINT_PACKAGE_LABELS: Record<
+  TshirtPrintPackage,
+  { title: string; description: string }
+> = {
+  'front-small': {
+    title: 'printPackageFrontSmall',
+    description: 'printPackageFrontSmallDesc',
+  },
+  'front-large': {
+    title: 'printPackageFrontLarge',
+    description: 'printPackageFrontLargeDesc',
+  },
+  'front-back': {
+    title: 'printPackageFrontBack',
+    description: 'printPackageFrontBackDesc',
+  },
+};
+
 function ProductOptions({
   product,
   color,
@@ -2481,6 +2592,10 @@ function ProductOptions({
   setSize,
   quantity,
   setQuantity,
+  isTshirt,
+  printPackage,
+  setPrintPackage,
+  locale,
 }: {
   product: (typeof products)[number];
   color: string;
@@ -2489,11 +2604,50 @@ function ProductOptions({
   setSize: (s: string) => void;
   quantity: number;
   setQuantity: (q: number) => void;
+  isTshirt?: boolean;
+  printPackage?: TshirtPrintPackage;
+  setPrintPackage?: (pkg: TshirtPrintPackage) => void;
+  locale?: string;
 }) {
   const t = useTranslations('products.customizer');
 
   return (
     <>
+      {isTshirt && printPackage && setPrintPackage ? (
+        <div>
+          <label className="mb-2 block text-sm font-medium text-ink-700">
+            {t('printPackage')}
+          </label>
+          <div className="space-y-2">
+            {TSHIRT_PRINT_PACKAGES.map((pkg) => {
+              const labels = TSHIRT_PRINT_PACKAGE_LABELS[pkg];
+              return (
+                <button
+                  key={pkg}
+                  type="button"
+                  onClick={() => setPrintPackage(pkg)}
+                  className={cn(
+                    'flex w-full items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left transition',
+                    printPackage === pkg
+                      ? 'border-brand-500 bg-brand-50 ring-1 ring-brand-200'
+                      : 'border-ink-200 bg-white hover:border-brand-200',
+                  )}
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-ink-900">
+                      {t(labels.title)}
+                    </p>
+                    <p className="text-xs text-ink-500">{t(labels.description)}</p>
+                  </div>
+                  <span className="shrink-0 text-sm font-semibold text-brand-700">
+                    {formatPrice(getTshirtUnitPrice(pkg), locale ?? 'mk')}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
       {product.colors && (
         <div>
           <label className="mb-2 block text-sm font-medium text-ink-700">

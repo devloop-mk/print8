@@ -1,6 +1,7 @@
-import { dispatchDraftsChanged } from '@/lib/drafts/draft-events';
+import { dispatchDraftsChanged, dispatchDesignSaved } from '@/lib/drafts/draft-events';
 import type { ProductSide, ProductType } from '@/lib/data/catalog';
 import type { SideDesign } from '@/lib/products/design-state';
+import type { TshirtPrintPackage } from '@/lib/products/tshirt-print-pricing';
 
 const PRODUCT_DRAFTS_KEY = 'print8-product-customizer-drafts';
 const DESIGN_EDITOR_DRAFTS_KEY = 'print8-design-editor-drafts';
@@ -16,6 +17,7 @@ export type ProductCustomizerDraft = {
   quantity: number;
   activeSide: ProductSide;
   sideDesigns: Partial<Record<ProductSide, SideDesign>>;
+  printPackage?: TshirtPrintPackage;
   updatedAt: string;
 };
 
@@ -79,6 +81,9 @@ export function upsertProductCustomizerDraft(draft: ProductCustomizerDraft) {
       : drafts.map((item, itemIndex) => (itemIndex === index ? draft : item));
   writeJson(PRODUCT_DRAFTS_KEY, next.slice(0, 24));
   dispatchDraftsChanged();
+  if (index === -1) {
+    dispatchDesignSaved();
+  }
 }
 
 export function upsertDesignEditorDraft(draft: DesignEditorDraft) {
@@ -90,6 +95,9 @@ export function upsertDesignEditorDraft(draft: DesignEditorDraft) {
       : drafts.map((item, itemIndex) => (itemIndex === index ? draft : item));
   writeJson(DESIGN_EDITOR_DRAFTS_KEY, next.slice(0, 24));
   dispatchDraftsChanged();
+  if (index === -1) {
+    dispatchDesignSaved();
+  }
 }
 
 export function readProductCustomizerDrafts() {

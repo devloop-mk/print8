@@ -10,7 +10,7 @@ const BULKY_METADATA_KEYS = new Set([
   'svgState',
 ]);
 
-const BULKY_METADATA_SUFFIXES = [
+export const BULKY_METADATA_SUFFIXES = [
   'PremadeDesignImage',
   'UploadedPreviewUrl',
   'OverlayRaster',
@@ -19,7 +19,7 @@ const BULKY_METADATA_SUFFIXES = [
   'OverlaySvgSecondary',
 ] as const;
 
-function isDataUrl(value: unknown): value is string {
+export function isDataUrl(value: unknown): value is string {
   return typeof value === 'string' && value.startsWith('data:');
 }
 

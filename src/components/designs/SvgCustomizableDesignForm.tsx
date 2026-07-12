@@ -7,6 +7,7 @@ import { useRouter } from '@/i18n/navigation';
 import { useCart } from '@/components/cart/CartProvider';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { QuantityInput } from '@/components/ui/QuantityInput';
 import { DesignCustomizerStepNav } from '@/components/designs/DesignCustomizerStepNav';
 import { DesignLogoUploadField } from '@/components/designs/DesignLogoUploadField';
 import { DesignCustomizerMobileFieldBar, type DesignCustomizerMobileFieldBarHandle } from '@/components/designs/DesignCustomizerMobileFieldBar';
@@ -26,6 +27,10 @@ import type { DesignTemplate } from '@/lib/data/catalog';
 import { designCategoryPrices } from '@/lib/data/design-order-fields';
 import type { SvgDesignTemplate, SvgTemplateState } from '@/lib/data/svg-design-templates';
 import { buildDefaultSvgTemplateState } from '@/lib/designs/svg-template-engine';
+import {
+  resolveSvgFieldDefault,
+  toSvgSiteLocale,
+} from '@/lib/designs/svg-locale-defaults';
 import {
   getSvgFieldInputProps,
   getSvgFieldLabelId,
@@ -86,6 +91,7 @@ export function SvgCustomizableDesignForm({
   const td = useTranslations('designs');
   const to = useTranslations('designs.order');
   const locale = useLocale();
+  const svgLocale = toSvgSiteLocale(locale);
   const router = useRouter();
   const searchParams = useSearchParams();
   const editCartItemId = searchParams.get('edit');
@@ -110,7 +116,7 @@ export function SvgCustomizableDesignForm({
     reset: resetEditorState,
     canUndo,
     canRedo,
-  } = useUndoRedo(() => buildDefaultSvgTemplateState(svgTemplate));
+  } = useUndoRedo(() => buildDefaultSvgTemplateState(svgTemplate, svgLocale));
   const [quantity, setQuantity] = useState(1);
   const [capturing, setCapturing] = useState(false);
   const [draftHydrated, setDraftHydrated] = useState(false);
@@ -129,7 +135,7 @@ export function SvgCustomizableDesignForm({
   );
 
   useEffect(() => {
-    const defaults = buildDefaultSvgTemplateState(svgTemplate);
+    const defaults = buildDefaultSvgTemplateState(svgTemplate, svgLocale);
 
     if (cartItemMatchesDesignTemplate(editingItem, template.id)) {
       const loaded = parseSvgStateFromCartMetadata(editingItem.metadata ?? {});
@@ -191,7 +197,7 @@ export function SvgCustomizableDesignForm({
       resetEditorState(defaults);
     }
     setDraftHydrated(true);
-  }, [editingItem, resetEditorState, svgTemplate, template.id]);
+  }, [editingItem, resetEditorState, svgTemplate, svgLocale, template.id]);
 
   useUndoRedoKeyboard({
     undo,
@@ -491,7 +497,10 @@ export function SvgCustomizableDesignForm({
             fieldInputRefs.current[key] = node;
           }}
           type="text"
-          value={state.texts[key] ?? field.default}
+          value={
+            state.texts[key] ??
+            resolveSvgFieldDefault(svgTemplate.id, side, field, svgLocale)
+          }
           placeholder={placeholder}
           autoComplete={inputProps.autoComplete}
           inputMode={inputProps.inputMode}
@@ -855,16 +864,13 @@ export function SvgCustomizableDesignForm({
                       >
                         {to('quantity')}
                       </label>
-                      <input
+                      <QuantityInput
                         id="quantity"
-                        type="number"
                         min={1}
                         max={999}
                         value={quantity}
-                        onChange={(e) =>
-                          setQuantity(Math.max(1, Number(e.target.value) || 1))
-                        }
-                        className="w-28 rounded-lg border border-ink-300 px-3 py-2.5 text-ink-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+                        onChange={setQuantity}
+                        className="w-28"
                       />
                     </div>
                     <p className="text-lg font-semibold text-ink-900">

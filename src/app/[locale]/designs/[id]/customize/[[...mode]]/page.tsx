@@ -2,10 +2,11 @@ import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
 import { Link } from '@/i18n/navigation';
+import { isCustomizableDesign } from '@/lib/data/catalog';
 import {
-  getDesignTemplate,
-  isCustomizableDesign,
-} from '@/lib/data/catalog';
+  isDesignOrderable,
+  resolveDesignTemplate,
+} from '@/lib/catalog/design-catalog';
 import { getDesignLayout } from '@/lib/data/design-layouts';
 import { getSvgDesignTemplate } from '@/lib/data/svg-design-templates';
 import { DesignCustomizeModeChooser } from '@/components/designs/DesignCustomizeModeChooser';
@@ -44,8 +45,9 @@ export default async function CustomizeDesignPage({
   params: Promise<{ locale: string; id: string; mode?: string[] }>;
 }) {
   const { id, mode: modeSegments } = await params;
-  const template = getDesignTemplate(id);
+  const template = await resolveDesignTemplate(id);
   if (!template || !isCustomizableDesign(template)) notFound();
+  if (!isDesignOrderable(template)) notFound();
 
   const t = await getTranslations('designs.customize');
   const td = await getTranslations('designs');

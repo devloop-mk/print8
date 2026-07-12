@@ -32,6 +32,7 @@ export function Drinkware3DPreview({
 }: Drinkware3DPreviewProps) {
   const t = useTranslations('products.customizer');
   const { textureCanvas, loading } = useDrinkwareWrapTexture({
+    productType,
     productColor,
     printBounds,
     images,

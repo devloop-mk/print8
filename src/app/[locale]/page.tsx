@@ -8,6 +8,8 @@ import {
   resolveCmsTexts,
   type CmsLocale,
 } from '@/lib/cms/public-content';
+import { pickTrendingDesigns } from '@/lib/data/trending-designs';
+import { TrendingDesignsSection } from '@/components/home/TrendingDesignsSection';
 import { HomeShowcaseCarousel } from '@/components/home/HomeShowcaseCarousel';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -17,6 +19,7 @@ import { HeroSectionBackground } from '@/components/home/HeroSectionBackground';
 import { HeroFeatureBar } from '@/components/home/HeroFeatureBar';
 import { HomeHighlights } from '@/components/home/HomeHighlights';
 import { FeaturedDesignCards } from '@/components/home/FeaturedDesignCards';
+import { HomeCustomDesignCta } from '@/components/home/HomeCustomDesignCta';
 import { HomeContactCta } from '@/components/home/HomeContactCta';
 import { FeaturedProductCategories } from '@/components/home/FeaturedProductCategories';
 import { ServiceCard } from '@/components/services/ServiceCard';
@@ -59,6 +62,8 @@ export default async function HomePage({
     })),
     getPublishedDesignTemplates(),
   ]);
+
+  const trendingDesigns = pickTrendingDesigns(featuredDesigns);
 
   return (
     <>
@@ -109,6 +114,10 @@ export default async function HomePage({
       </section>
 
       <HomeHighlights />
+
+      <Reveal delay={20}>
+        <TrendingDesignsSection designs={trendingDesigns} />
+      </Reveal>
 
       <HomeShowcaseCarousel />
 
@@ -170,6 +179,10 @@ export default async function HomePage({
             <FeaturedDesignCards designs={featuredDesigns} />
           </div>
         </section>
+      </Reveal>
+
+      <Reveal delay={90}>
+        <HomeCustomDesignCta />
       </Reveal>
 
       <Reveal delay={100}>

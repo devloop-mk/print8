@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { cn } from '@/lib/utils';
@@ -12,10 +12,17 @@ type PageTransitionProps = {
 export function PageTransition({ children }: PageTransitionProps) {
   const pathname = usePathname();
   const reducedMotion = useReducedMotion();
-  const [visible, setVisible] = useState(reducedMotion);
+  const isFirstRender = useRef(true);
+  const [visible, setVisible] = useState(true);
 
   useEffect(() => {
     if (reducedMotion) {
+      setVisible(true);
+      return;
+    }
+
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
       setVisible(true);
       return;
     }

@@ -2,6 +2,7 @@ import { nanoid } from 'nanoid';
 import { db } from '../db';
 import { formatSupabaseError } from '@/lib/supabase/client';
 import { putUploadObject } from '@/lib/storage/object-storage';
+import { validateUploadBuffer } from '@/lib/security/validate-upload-content';
 import sharp from 'sharp';
 
 export const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -75,6 +76,10 @@ export async function processUpload(
     throw new Error('Invalid or expired upload session');
   }
 
+  if (new Date(session.expiresAt).getTime() < Date.now()) {
+    throw new Error('Invalid or expired upload session');
+  }
+
   if (session.uploadCount >= MAX_UPLOADS_PER_SESSION) {
     throw new Error('Upload limit reached for this session');
   }
@@ -92,6 +97,8 @@ export async function processUpload(
   const arrayBuffer = await file.arrayBuffer();
   const sourceBuffer = Buffer.from(arrayBuffer) as unknown as Buffer;
 
+  await validateUploadBuffer(sourceBuffer, mimeType);
+
   let storedName: string;
   let originalStoredName: string | null = null;
   let storedMimeType = mimeType;
@@ -106,7 +113,7 @@ export async function processUpload(
 
     const previewBuffer = (await sharp(sourceBuffer)
       .rotate()
-      .resize(4096, 4096, { fit: 'inside', withoutEnlargement: true })
+      .resize(2048, 2048, { fit: 'inside', withoutEnlargement: true })
       .webp({ quality: 85 })
       .toBuffer()) as Buffer;
 

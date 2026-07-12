@@ -6,8 +6,10 @@ import {
   VISITOR_TTL_SECONDS,
 } from '@/lib/analytics/constants';
 import { db } from '@/lib/db';
+import { enforceRateLimit } from '@/lib/security/rate-limit';
 
 const BLOCKED_PREFIXES = ['/admin', '/api', '/_next'];
+const MAX_PAGEVIEW_BODY_BYTES = 4_096;
 
 function isTrackablePath(path: string) {
   if (!path.startsWith('/')) return false;
@@ -19,8 +21,16 @@ function getVisitorId(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const rateLimited = enforceRateLimit(request, 'pageview', 180, 60 * 1000);
+  if (rateLimited) return rateLimited;
+
   try {
-    const body = (await request.json()) as {
+    const rawBody = await request.text();
+    if (rawBody.length > MAX_PAGEVIEW_BODY_BYTES) {
+      return NextResponse.json({ error: 'Request too large' }, { status: 413 });
+    }
+
+    const body = JSON.parse(rawBody) as {
       path?: string;
       locale?: string | null;
     };

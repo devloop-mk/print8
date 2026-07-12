@@ -5,15 +5,18 @@ import {
   buildDrinkwareWrapTexture,
   type DrinkwareImageLayer,
 } from '@/lib/products/build-drinkware-wrap-texture';
+import type { ProductType } from '@/lib/data/catalog';
 import type { PlacedTextLayer } from '@/lib/products/text-layers';
 import type { PrintAreaInsets } from '@/lib/products/print-area';
 
 export function useDrinkwareWrapTexture({
+  productType,
   productColor,
   printBounds,
   images,
   textLayers,
 }: {
+  productType: ProductType;
   productColor: string;
   printBounds: PrintAreaInsets;
   images: DrinkwareImageLayer[];
@@ -51,6 +54,7 @@ export function useDrinkwareWrapTexture({
     setLoading(true);
 
     void buildDrinkwareWrapTexture({
+      productType,
       productColor,
       printBounds,
       images,
@@ -72,7 +76,7 @@ export function useDrinkwareWrapTexture({
     return () => {
       cancelled = true;
     };
-  }, [productColor, printBounds, imageKey, textKey, images, textLayers]);
+  }, [productType, productColor, printBounds, imageKey, textKey, images, textLayers]);
 
   return { textureCanvas, loading };
 }

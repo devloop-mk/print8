@@ -7,6 +7,7 @@ import { useSearchParams } from 'next/navigation';
 import { useRouter } from '@/i18n/navigation';
 import { useCart } from '@/components/cart/CartProvider';
 import { useUploadSession } from '@/hooks/useUploadSession';
+import { buildUploadedFileUrl } from '@/lib/upload/file-url';
 import { useSavedDesigns } from '@/hooks/useSavedDesigns';
 import { useUnsavedWorkGuard } from '@/hooks/useUnsavedWorkGuard';
 import { SecureUpload } from '@/components/upload/SecureUpload';
@@ -16,6 +17,12 @@ import { UnsavedWorkDialog } from '@/components/shared/UnsavedWorkDialog';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import type { SavedDesign, SavedDesignCategory } from '@/lib/designs/saved-designs';
+import {
+  draftNeedsUploadToken,
+  prepareStudioCanvasJsonForRestore,
+  serializeStudioCanvasJson,
+  STUDIO_IMAGE_FILE_ID_KEY,
+} from '@/lib/designs/studio-canvas-persistence';
 
 const categoryPresetSizes = {
   'business-cards': [
@@ -347,6 +354,7 @@ export function DesignStudio() {
 
   useEffect(() => {
     if (!pendingDraft || !canvasReady || !fabricRef.current) return;
+    if (draftNeedsUploadToken(pendingDraft.canvasJson) && !token) return;
 
     let cancelled = false;
     const canvas = fabricRef.current as InstanceType<
@@ -356,7 +364,9 @@ export function DesignStudio() {
     canvas.clear();
     canvas.backgroundColor = pendingDraft.backgroundColor ?? backgroundColor;
 
-    void canvas.loadFromJSON(pendingDraft.canvasJson).then(() => {
+    void canvas.loadFromJSON(
+      prepareStudioCanvasJsonForRestore(pendingDraft.canvasJson, token),
+    ).then(() => {
       if (cancelled) return;
 
       const restoredBg =
@@ -375,7 +385,7 @@ export function DesignStudio() {
     return () => {
       cancelled = true;
     };
-  }, [pendingDraft, canvasWidth, canvasHeight, canvasReady, backgroundColor]);
+  }, [pendingDraft, canvasWidth, canvasHeight, canvasReady, backgroundColor, token]);
 
   const shapeLabels: Record<ShapeKind, string> = {
     circle: t('shapeCircle'),
@@ -429,7 +439,7 @@ export function DesignStudio() {
     setText('');
   }
 
-  async function addImageToCanvas(imageUrl: string) {
+  async function addImageToCanvas(imageUrl: string, fileId?: string) {
     if (!fabricRef.current) return;
     const { FabricImage } = await import('fabric');
     const canvas = fabricRef.current as InstanceType<
@@ -437,14 +447,18 @@ export function DesignStudio() {
     >;
     const img = await FabricImage.fromURL(imageUrl);
     img.scaleToWidth(Math.min(200, canvasWidth * 0.6));
-    img.set({ left: 150, top: 120 });
+    img.set({
+      left: 150,
+      top: 120,
+      ...(fileId ? { [STUDIO_IMAGE_FILE_ID_KEY]: fileId } : {}),
+    });
     canvas.add(img);
     canvas.renderAll();
   }
 
   function handleFileUpload(fileId: string, name: string) {
     setUploadedFiles((prev) => [...prev, { fileId, name }]);
-    addImageToCanvas(`/api/files/${fileId}`);
+    addImageToCanvas(buildUploadedFileUrl(fileId, token), fileId);
   }
 
   function buildSizeLabel(
@@ -464,7 +478,10 @@ export function DesignStudio() {
       Awaited<typeof import('fabric')>['Canvas']
     >;
     const preview = canvas.toDataURL({ format: 'jpeg', quality: 0.82, multiplier: 0.5 });
-    const canvasJson = canvas.toJSON() as Record<string, unknown>;
+    const canvasJson = serializeStudioCanvasJson(
+      canvas.toJSON() as Record<string, unknown>,
+      canvas.getObjects(),
+    );
     const now = new Date().toISOString();
     const existingDraft = activeDraftId
       ? savedDesigns.find((design) => design.id === activeDraftId)
