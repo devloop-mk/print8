@@ -4,11 +4,7 @@ export const STUDIO_IMAGE_FILE_ID_KEY = 'print8FileId';
 
 type FabricObjectLike = {
   type?: string;
-  toDataURL?: (options?: {
-    format?: string;
-    quality?: number;
-    multiplier?: number;
-  }) => string;
+  toDataURL?: (options?: unknown) => string;
 };
 
 type CanvasJson = {
