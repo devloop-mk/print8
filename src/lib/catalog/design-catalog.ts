@@ -184,7 +184,6 @@ function buildPublishedDesignTemplates(
       const overlay = managedById.get(design.id);
       if (!overlay) return true;
       if (overlay.availability === 'available') return false;
-      if (overlay.exclusive && overlay.availability !== 'available') return false;
       if (overlay.exclusive) return false;
       return true;
     })
