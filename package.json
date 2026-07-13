@@ -19,7 +19,9 @@
     "upload:catalog-r2": "node scripts/upload-catalog-to-r2.mjs",
     "import:streetwear": "node scripts/import-streetwear-designs.mjs",
     "upload:streetwear-r2": "node scripts/upload-streetwear-to-r2.mjs",
-    "db:migrate:product-designs": "node scripts/apply-managed-product-designs-migration.mjs"
+    "db:migrate:product-designs": "node scripts/apply-managed-product-designs-migration.mjs",
+    "db:migrate:svg-templates": "node scripts/apply-managed-svg-templates-migration.mjs",
+    "build:wedding-cdr-assets": "node scripts/build-wedding-cdr-assets.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1085.0",
@@ -51,6 +53,7 @@
     "eslint": "^9.19.0",
     "eslint-config-next": "^16.2.9",
     "flag-icons": "^7.5.0",
+    "pg": "^8.22.0",
     "postcss": "^8.5.10",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.3"

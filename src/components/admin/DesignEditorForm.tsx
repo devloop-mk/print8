@@ -7,7 +7,7 @@ import type { CatalogDesignRecord } from '@/lib/db/catalog-designs';
 import {
   DESIGN_AVAILABILITY_OPTIONS,
   DESIGN_CATEGORY_OPTIONS,
-} from '@/lib/admin/designs';
+} from '@/lib/admin/designs-constants';
 import { Button } from '@/components/ui/Button';
 import { AdminAssetUploader } from '@/components/admin/AdminAssetUploader';
 import { resolveAssetUrl } from '@/lib/storage/asset-url';

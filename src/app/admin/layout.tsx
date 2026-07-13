@@ -1,4 +1,6 @@
 import { Inter } from 'next/font/google';
+import { NextIntlClientProvider } from 'next-intl';
+import mkMessages from '../../../messages/mk.json';
 import '@/app/globals.css';
 
 const inter = Inter({
@@ -14,7 +16,9 @@ export default function AdminRootLayout({
   return (
     <html lang="mk">
       <body className={`${inter.variable} min-h-screen bg-ink-50 font-sans antialiased`}>
-        {children}
+        <NextIntlClientProvider locale="mk" messages={mkMessages}>
+          {children}
+        </NextIntlClientProvider>
       </body>
     </html>
   );

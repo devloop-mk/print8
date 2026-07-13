@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import {
   products,
+  getProductDesignTemplates,
   getProductDesignTemplatesByCategory,
   type ProductDesignCategory,
 } from '@/lib/data/catalog';
@@ -19,12 +20,12 @@ import { ArrowLeft, Sparkles, Type } from 'lucide-react';
 
 type ProductDesignsPageProps = {
   productId: string;
-  category: ProductDesignCategory;
+  category?: ProductDesignCategory | 'all';
 };
 
 export function ProductDesignsPage({
   productId,
-  category,
+  category = 'all',
 }: ProductDesignsPageProps) {
   const t = useTranslations('products');
   const td = useTranslations('products.detail');
@@ -38,7 +39,11 @@ export function ProductDesignsPage({
 
   const designs = useMemo(
     () =>
-      product ? getProductDesignTemplatesByCategory(product, category) : [],
+      product
+        ? category === 'all'
+          ? getProductDesignTemplates(product)
+          : getProductDesignTemplatesByCategory(product, category)
+        : [],
     [product, category],
   );
 
@@ -55,6 +60,19 @@ export function ProductDesignsPage({
 
   const paths = getProductPaths(product.id, product.type);
   const isPhoto = category === 'image-designs';
+  const isText = category === 'text-designs';
+  const sectionTitle = isPhoto
+    ? td('imageDesigns')
+    : isText
+      ? td('textDesigns')
+      : td('premadeDesigns');
+  const sectionHint = isPhoto
+    ? td('imageDesignsPageHint')
+    : isText
+      ? td('textDesignsPageHint')
+      : td('premadeDesignsPageHint');
+  const sectionId =
+    category === 'all' ? 'premade-designs' : isPhoto ? 'photo-designs' : 'text-designs';
 
   return (
     <div className="space-y-8">
@@ -69,12 +87,8 @@ export function ProductDesignsPage({
       <Reveal>
         <div className="max-w-2xl">
           <p className="text-sm font-medium text-brand-600">{tp(product.type)}</p>
-          <h1 className="mt-1 text-3xl font-bold text-ink-900">
-            {isPhoto ? td('imageDesigns') : td('textDesigns')}
-          </h1>
-          <p className="mt-2 text-ink-600">
-            {isPhoto ? td('imageDesignsHint') : td('textDesignsHint')}
-          </p>
+          <h1 className="mt-1 text-3xl font-bold text-ink-900">{sectionTitle}</h1>
+          <p className="mt-2 text-ink-600">{sectionHint}</p>
           <p className="mt-2 text-brand-600">
             {t('startingFrom')} {formatPrice(getProductDisplayPrice(product), locale)}
           </p>
@@ -83,16 +97,16 @@ export function ProductDesignsPage({
 
       <Reveal delay={100}>
         <ProductDesignSection
-          id={isPhoto ? 'photo-designs' : 'text-designs'}
+          id={sectionId}
           icon={
-            isPhoto ? (
-              <Sparkles className="h-6 w-6 text-brand-600" />
-            ) : (
+            isText ? (
               <Type className="h-6 w-6 text-brand-600" />
+            ) : (
+              <Sparkles className="h-6 w-6 text-brand-600" />
             )
           }
-          title={isPhoto ? td('imageDesigns') : td('textDesigns')}
-          hint={isPhoto ? td('imageDesignsPageHint') : td('textDesignsPageHint')}
+          title={sectionTitle}
+          hint={sectionHint}
           product={product}
           designs={visibleDesigns}
         />

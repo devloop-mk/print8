@@ -1,5 +1,8 @@
 export const CATALOG_PAGE_SIZE = 24;
 
+/** Smaller page size for design galleries with live SVG previews. */
+export const DESIGN_GALLERY_PAGE_SIZE = 12;
+
 export function parseCatalogPage(value: string | null | undefined): number {
   const parsed = Number.parseInt(value ?? '1', 10);
   return Number.isFinite(parsed) && parsed >= 1 ? parsed : 1;

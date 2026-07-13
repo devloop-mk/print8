@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAdminApi } from '@/lib/admin/api-auth';
-import { listAdminDesigns, saveAdminDesign } from '@/lib/admin/designs';
+import { listAdminDesignsPage, saveAdminDesign } from '@/lib/admin/designs';
+import { revalidateDesignCatalogCache } from '@/lib/catalog/revalidate-design-catalog';
 
 const createSchema = z.object({
   id: z.string().min(1),
@@ -40,15 +41,18 @@ export async function GET(request: NextRequest) {
   const exclusive = params.get('exclusive');
   const search = params.get('search') ?? undefined;
 
-  const designs = await listAdminDesigns({
+  const storage = params.get('storage');
+  const page = Number(params.get('page') ?? '1');
+
+  const result = await listAdminDesignsPage({
     category: category as 'all' | 'business-cards',
-    availability: availability as 'all' | 'available',
-    exclusive:
-      exclusive === 'true' ? true : exclusive === 'false' ? false : 'all',
     search,
+    storage:
+      storage === 'database' || storage === 'code-only' ? storage : 'all',
+    page: Number.isFinite(page) ? page : 1,
   });
 
-  return NextResponse.json({ designs });
+  return NextResponse.json(result);
 }
 
 export async function POST(request: NextRequest) {
@@ -63,6 +67,7 @@ export async function POST(request: NextRequest) {
     }
 
     const design = await saveAdminDesign(parsed.data);
+    revalidateDesignCatalogCache();
     return NextResponse.json({ design }, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to save design';

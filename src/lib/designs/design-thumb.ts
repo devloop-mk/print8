@@ -32,3 +32,8 @@ export function fitDesignThumbSize(
 
   return { width, height };
 }
+
+/** Prefer a pre-rendered gallery thumb when available (e.g. heavy CDR wedding art). */
+export function getDesignGalleryImage(design: DesignTemplate): string | undefined {
+  return design.galleryImage;
+}

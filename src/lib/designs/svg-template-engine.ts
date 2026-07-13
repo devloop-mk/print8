@@ -25,11 +25,37 @@ import {
   logoStateKey,
 } from '@/lib/designs/svg-logo-slots';
 import {
+  getSvgTemplateDefaultTransforms,
+} from '@/lib/designs/svg-template-layout-adjustments';
+import { applySvgCyrillicFontSupport } from '@/lib/designs/svg-font-cyrillic';
+import {
   resolveSvgFieldDefault,
   type SvgSiteLocale,
 } from '@/lib/designs/svg-locale-defaults';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/** Global boost for SVG text that reads small in previews and print exports. */
+export const SVG_BASE_TEXT_SCALE = 1.175;
+
+function applyBaseTextScale(doc: Document) {
+  doc.querySelectorAll('text').forEach((node) => {
+    if (node.hasAttribute('data-print8-scaled-font')) return;
+
+    const raw = node.getAttribute('font-size');
+    if (!raw) return;
+
+    const size = parseFloat(raw);
+    if (!Number.isFinite(size) || size <= 0) return;
+
+    node.setAttribute('data-print8-base-font-size', raw);
+    node.setAttribute(
+      'font-size',
+      String(Math.round(size * SVG_BASE_TEXT_SCALE * 10) / 10),
+    );
+    node.setAttribute('data-print8-scaled-font', 'true');
+  });
+}
 
 function escapeXml(value: string): string {
   return value
@@ -221,6 +247,8 @@ function applyDomEdits(
   }
 
   const textNodes = [...doc.querySelectorAll('text')];
+  applyBaseTextScale(doc);
+  applySvgCyrillicFontSupport(doc);
   const contactGroup = getSvgContactGroup(template.id, side);
   const contactTransformKey = getSvgContactGroupTransformKey(side);
 
@@ -314,7 +342,7 @@ export function buildDefaultSvgTemplateState(
     }
   }
 
-  return { texts, colors, logos, transforms: {} };
+  return { texts, colors, logos, transforms: getSvgTemplateDefaultTransforms(template.id) };
 }
 
 export function prepareSvgForInlineDom(svg: string): string {

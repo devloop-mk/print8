@@ -23,6 +23,12 @@ const getContentMapCached = unstable_cache(
   { revalidate: CMS_CACHE_SECONDS, tags: ['cms-content'] },
 );
 
+const getCmsServicesCached = unstable_cache(
+  async () => cmsDb.services.list(),
+  ['cms-services'],
+  { revalidate: CMS_CACHE_SECONDS, tags: ['cms-services'] },
+);
+
 async function getContentMap(): Promise<ContentMap> {
   const entries = await getContentMapCached();
   return new Map(entries);
@@ -78,8 +84,8 @@ async function resolveServiceLabels(
     description: string;
     detail?: string;
   },
+  cmsServices: Awaited<ReturnType<typeof getCmsServicesCached>>,
 ): Promise<ResolvedService> {
-  const cmsServices = await cmsDb.services.list();
   const cms = cmsServices.find((item) => item.id === service.id);
 
   if (!cms) {
@@ -114,7 +120,7 @@ export async function getResolvedServices(
   locale: CmsLocale,
   labelsFor: (id: string) => { title: string; description: string; detail?: string },
 ): Promise<ResolvedService[]> {
-  const cmsServices = await cmsDb.services.list();
+  const cmsServices = await getCmsServicesCached();
   const inactiveIds = new Set(
     cmsServices.filter((service) => !service.active).map((service) => service.id),
   );
@@ -123,7 +129,7 @@ export async function getResolvedServices(
 
   return Promise.all(
     activeStatic.map((service) =>
-      resolveServiceLabels(service, locale, labelsFor(service.id)),
+      resolveServiceLabels(service, locale, labelsFor(service.id), cmsServices),
     ),
   );
 }

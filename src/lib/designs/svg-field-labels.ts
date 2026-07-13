@@ -160,6 +160,39 @@ const WEDDING_PRINT_WATERCOLOR_10: SvgFieldLabelId[] = [
   'address',
 ];
 
+const WEDDING_WATERCOLOR_DAISY_9: SvgFieldLabelId[] = [
+  'frontHeadline',
+  'coupleNames',
+  'eventDate',
+  'tagline',
+  'invitationLine',
+  'venue',
+  'scheduleLine',
+  'additionalInfo',
+  'tagline',
+];
+
+const WEDDING_LEMON_TILES_7: SvgFieldLabelId[] = [
+  'invitationLine',
+  'coupleNames',
+  'eventDate',
+  'venue',
+  'scheduleLine',
+  'additionalInfo',
+  'tagline',
+];
+
+const WEDDING_ARCH_HANDS_8: SvgFieldLabelId[] = [
+  'tagline',
+  'coupleNames',
+  'invitationLine',
+  'eventDate',
+  'venue',
+  'scheduleLine',
+  'additionalInfo',
+  'tagline',
+];
+
 const WEDDING_PRINT_WINTER_11: SvgFieldLabelId[] = [
   'frontHeadline',
   'invitationLine',
@@ -360,6 +393,22 @@ const TEMPLATE_SIDE_FIELD_LABELS: Record<string, SvgFieldLabelId[]> = {
   [templateSideKey('svg-wedding-print-terracotta', 'front')]: WEDDING_PRINT_TERRACOTTA_11,
   [templateSideKey('svg-wedding-print-watercolor', 'front')]: WEDDING_PRINT_WATERCOLOR_10,
   [templateSideKey('svg-wedding-print-winter', 'front')]: WEDDING_PRINT_WINTER_11,
+  [templateSideKey('svg-wedding-watercolor-daisy', 'front')]: WEDDING_WATERCOLOR_DAISY_9,
+  [templateSideKey('svg-wedding-lemon-tiles', 'front')]: WEDDING_LEMON_TILES_7,
+  [templateSideKey('svg-wedding-arch-hands', 'front')]: WEDDING_ARCH_HANDS_8,
+[templateSideKey('svg-wedding-cdr-floral-garden', 'front')]: WEDDING_WATERCOLOR_DAISY_9,
+  [templateSideKey('svg-wedding-cdr-spring-bloom', 'front')]: WEDDING_WATERCOLOR_DAISY_9,
+  [templateSideKey('svg-wedding-cdr-golden-band', 'front')]: WEDDING_WATERCOLOR_DAISY_9,
+  [templateSideKey('svg-wedding-cdr-elegant-vine', 'front')]: WEDDING_WATERCOLOR_DAISY_9,
+  [templateSideKey('svg-wedding-cdr-classic-frame', 'front')]: WEDDING_WATERCOLOR_DAISY_9,
+  [templateSideKey('svg-wedding-cdr-rustic-wreath', 'front')]: WEDDING_WATERCOLOR_DAISY_9,
+  [templateSideKey('svg-wedding-cdr-romantic-rose', 'front')]: WEDDING_WATERCOLOR_DAISY_9,
+  [templateSideKey('svg-wedding-cdr-vintage-lace', 'front')]: WEDDING_WATERCOLOR_DAISY_9,
+  [templateSideKey('svg-wedding-cdr-botanical-frame', 'front')]: WEDDING_WATERCOLOR_DAISY_9,
+  [templateSideKey('svg-wedding-cdr-navy-gold', 'front')]: WEDDING_WATERCOLOR_DAISY_9,
+  [templateSideKey('svg-wedding-cdr-olive-grove', 'front')]: WEDDING_WATERCOLOR_DAISY_9,
+  [templateSideKey('svg-wedding-cdr-teal-floral', 'front')]: WEDDING_WATERCOLOR_DAISY_9,
+  [templateSideKey('svg-wedding-cdr-magenta-classic', 'front')]: WEDDING_WATERCOLOR_DAISY_9,
   [templateSideKey('svg-bday-gold', 'front')]: BIRTHDAY_GOLD_10,
   [templateSideKey('svg-bday-rosegold', 'front')]: BIRTHDAY_ROSEGOLD_9,
   [templateSideKey('svg-bday-princess', 'front')]: BIRTHDAY_PRINCESS_10,

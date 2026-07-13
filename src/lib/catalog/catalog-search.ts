@@ -238,7 +238,7 @@ function buildCatalogCollectionResults(labels: CatalogSearchLabels): GlobalSearc
     results.push({
       id: `collection:designs:${category}`,
       kind: 'collection',
-      href: `/designs?category=${category}`,
+      href: `/designs/all?category=${category}`,
       title: labels.browseAllDesigns(category),
       subtitle: labels.designCategory(category),
       searchText: buildDesignCategoryCollectionSearchText(category, labels),
@@ -250,7 +250,7 @@ function buildCatalogCollectionResults(labels: CatalogSearchLabels): GlobalSearc
       results.push({
         id: `collection:designs:${category}:${subfilter.id}`,
         kind: 'collection',
-        href: `/designs?category=${category}&tag=${subfilter.id}`,
+        href: `/designs/all?category=${category}&tag=${subfilter.id}`,
         title: labels.designSubfilter(category, subfilter.id),
         subtitle: labels.designCategory(category),
         searchText: buildDesignSubfilterCollectionSearchText(

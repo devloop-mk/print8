@@ -87,6 +87,38 @@ export async function buildProductDesignsMetadata(
   });
 }
 
+export async function buildProductPremadeDesignsMetadata(
+  locale: Locale,
+  id: string,
+) {
+  const product = products.find((item) => item.id === id);
+  if (!product) return null;
+
+  const tp = await getTranslations({ locale, namespace: 'products.types' });
+  const ti = await getTranslations({ locale, namespace: 'products.items' });
+  const td = await getTranslations({ locale, namespace: 'products.detail' });
+  const tm = await getTranslations({ locale, namespace: 'metadata' });
+
+  const productName = product.nameKey ? ti(product.nameKey) : tp(product.type);
+  const sectionTitle = td('premadeDesigns');
+  const description = td('premadeDesignsPageHint');
+  const title = `${sectionTitle} — ${productName} | Print 8`;
+
+  return buildPageMetadata({
+    locale,
+    title,
+    description,
+    path: `/products/${id}/designs`,
+    image: buildOgImageUrl({
+      locale,
+      title: sectionTitle,
+      description: productName,
+      badge: tm('badges.product'),
+      image: product.image,
+    }),
+  });
+}
+
 export async function buildDesignMetadata(locale: Locale, id: string) {
   const template = await resolveDesignTemplate(id);
   if (!template) return null;

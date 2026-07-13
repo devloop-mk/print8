@@ -11,6 +11,7 @@ import {
   reserveExclusiveDesignsForOrder,
   validateExclusiveDesignsAvailable,
 } from '@/lib/designs/design-reservations';
+import { revalidateDesignCatalogCache } from '@/lib/catalog/revalidate-design-catalog';
 import { enforceRateLimit } from '@/lib/security/rate-limit';
 
 const MAX_ORDER_BODY_BYTES = 6_000_000;
@@ -124,6 +125,7 @@ export async function POST(request: NextRequest) {
 
     try {
       await reserveExclusiveDesignsForOrder(orderId, data.items);
+      revalidateDesignCatalogCache();
     } catch (reserveError) {
       await db.orders.updateStatus(orderId, 'cancelled');
       console.error('[orders] exclusive design reservation failed:', reserveError);

@@ -1,0 +1,93 @@
+[
+  {
+    "id": "svg-wedding-cdr-floral-garden",
+    "slug": "wedding-cdr-floral-garden",
+    "art": "cdr-art-01.svg",
+    "layout": "compact",
+    "textColor": "#2C4A2E"
+  },
+  {
+    "id": "svg-wedding-cdr-spring-bloom",
+    "slug": "wedding-cdr-spring-bloom",
+    "art": "cdr-art-02.svg",
+    "layout": "portrait",
+    "textColor": "#3D4A2F"
+  },
+  {
+    "id": "svg-wedding-cdr-golden-band",
+    "slug": "wedding-cdr-golden-band",
+    "art": "cdr-art-03.svg",
+    "layout": "landscape",
+    "textColor": "#5C4A1E"
+  },
+  {
+    "id": "svg-wedding-cdr-elegant-vine",
+    "slug": "wedding-cdr-elegant-vine",
+    "art": "cdr-art-04.svg",
+    "layout": "portrait",
+    "textColor": "#1F4D45"
+  },
+  {
+    "id": "svg-wedding-cdr-classic-frame",
+    "slug": "wedding-cdr-classic-frame",
+    "art": "cdr-art-05.svg",
+    "layout": "portrait",
+    "textColor": "#2D3748"
+  },
+  {
+    "id": "svg-wedding-cdr-rustic-wreath",
+    "slug": "wedding-cdr-rustic-wreath",
+    "art": "cdr-art-06.svg",
+    "layout": "portrait",
+    "textColor": "#4A3728"
+  },
+  {
+    "id": "svg-wedding-cdr-romantic-rose",
+    "slug": "wedding-cdr-romantic-rose",
+    "art": "cdr-art-07.svg",
+    "layout": "portrait",
+    "textColor": "#5C2E3A"
+  },
+  {
+    "id": "svg-wedding-cdr-vintage-lace",
+    "slug": "wedding-cdr-vintage-lace",
+    "art": "cdr-art-08.svg",
+    "layout": "portrait",
+    "textColor": "#3D3229"
+  },
+  {
+    "id": "svg-wedding-cdr-botanical-frame",
+    "slug": "wedding-cdr-botanical-frame",
+    "art": "cdr-art-09.svg",
+    "layout": "portrait",
+    "textColor": "#4A3B2A"
+  },
+  {
+    "id": "svg-wedding-cdr-navy-gold",
+    "slug": "wedding-cdr-navy-gold",
+    "art": "cdr-art-10.svg",
+    "layout": "square",
+    "textColor": "#1E293B"
+  },
+  {
+    "id": "svg-wedding-cdr-olive-grove",
+    "slug": "wedding-cdr-olive-grove",
+    "art": "cdr-art-11.svg",
+    "layout": "square",
+    "textColor": "#2F3D28"
+  },
+  {
+    "id": "svg-wedding-cdr-teal-floral",
+    "slug": "wedding-cdr-teal-floral",
+    "art": "cdr-art-12.svg",
+    "layout": "square",
+    "textColor": "#0F4C5C"
+  },
+  {
+    "id": "svg-wedding-cdr-magenta-classic",
+    "slug": "wedding-cdr-magenta-classic",
+    "art": "cdr-art-13.svg",
+    "layout": "landscape",
+    "textColor": "#4A1540"
+  }
+]

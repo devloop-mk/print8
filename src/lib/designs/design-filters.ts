@@ -21,6 +21,7 @@ const designCategorySubfilterDefs: Partial<
     { id: 'elegant', tags: ['gold', 'rose-gold', 'elegant'] },
   ],
   wedding: [
+    { id: 'cdr', tags: ['cdr'] },
     { id: 'modern', tags: ['modern'] },
     { id: 'romantic', tags: ['romantic', 'blush'] },
     { id: 'classic', tags: ['classic', 'navy'] },

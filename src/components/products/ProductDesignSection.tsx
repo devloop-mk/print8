@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import {
   getProductMockup,
@@ -28,6 +28,7 @@ import { useRouter } from '@/i18n/navigation';
 import { DesignTemplatePreview } from '@/components/products/DesignTemplatePreview';
 import { DesignColorPicker } from '@/components/products/DesignColorPicker';
 import { CatalogGridLayout } from '@/components/catalog/CatalogGrid';
+import { resolveProductDesignDisplayName } from '@/lib/products/design-display-name';
 import Image from 'next/image';
 
 type ProductDesignSectionProps = {
@@ -125,9 +126,13 @@ function DesignCard({
   const td = useTranslations('products.detail');
   const tp = useTranslations('products.types');
   const ti = useTranslations('products.items');
+  const locale = useLocale() as 'mk' | 'en';
   const productLabel = product.nameKey
     ? ti(product.nameKey)
     : tp(product.type);
+  const displayName = resolveProductDesignDisplayName(design, locale, (key) =>
+    t(key),
+  );
 
   const canQuickOrder =
     isImageDesignTemplate(design) || isOverlayDesignTemplate(design);
@@ -146,7 +151,7 @@ function DesignCard({
           <div className="relative aspect-square overflow-hidden bg-white">
             <Image
               src={resolveAssetUrl(design.image!)}
-              alt={t(`designs.${design.nameKey}`)}
+              alt={displayName}
               fill
               sizes="(max-width: 768px) 50vw, 300px"
               className="object-contain p-4"
@@ -157,7 +162,7 @@ function DesignCard({
 
       <div className="space-y-3 p-4">
         <p className="font-medium text-ink-900">
-          {t(`designs.${design.nameKey}`)}
+          {displayName}
         </p>
         {isTextDesignTemplate(design) && design.textStyle && (
           <p className="line-clamp-2 whitespace-pre-line text-sm text-ink-500">
@@ -182,6 +187,7 @@ function DesignCard({
                 size={size}
                 previewRef={previewRef}
                 productLabel={productLabel}
+                displayName={displayName}
               />
             ) : (
               <Link
@@ -229,6 +235,7 @@ function OrderWithDesignButton({
   size,
   previewRef,
   productLabel,
+  displayName,
 }: {
   product: Product;
   design: ProductDesignTemplate;
@@ -236,9 +243,9 @@ function OrderWithDesignButton({
   size?: string;
   previewRef: React.RefObject<HTMLDivElement | null>;
   productLabel: string;
+  displayName: string;
 }) {
   const td = useTranslations('products.detail');
-  const t = useTranslations('products');
   const tCustomizer = useTranslations('products.customizer');
   const { addItem } = useCart();
   const router = useRouter();
@@ -258,7 +265,7 @@ function OrderWithDesignButton({
           design,
           color,
           size,
-          name: `${productLabel} — ${t(`designs.${design.nameKey}`)}`,
+          name: `${productLabel} — ${displayName}`,
           price: product.basePrice,
           capturedPreview,
         }),

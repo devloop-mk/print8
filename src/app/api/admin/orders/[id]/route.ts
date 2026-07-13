@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAdminApi } from '@/lib/admin/api-auth';
 import { getAdminOrder, updateAdminOrderStatus } from '@/lib/admin/orders';
+import { revalidateDesignCatalogCache } from '@/lib/catalog/revalidate-design-catalog';
 import type { OrderStatus } from '@/lib/db';
 
 const statusSchema = z.object({
@@ -53,6 +54,7 @@ export async function PATCH(
     }
 
     const updated = await updateAdminOrderStatus(id, parsed.data.status as OrderStatus);
+    revalidateDesignCatalogCache();
     const order = await getAdminOrder(updated.id);
     return NextResponse.json({ order });
   } catch {

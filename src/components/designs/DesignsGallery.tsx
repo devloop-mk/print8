@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, memo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter, Link } from '@/i18n/navigation';
@@ -36,19 +36,22 @@ import {
 } from '@/components/catalog/CatalogGrid';
 import { CatalogPagination } from '@/components/catalog/CatalogPagination';
 import { useCatalogPagination } from '@/hooks/useCatalogPagination';
-import { parseCatalogPage } from '@/lib/catalog/pagination';
+import { parseCatalogPage, DESIGN_GALLERY_PAGE_SIZE } from '@/lib/catalog/pagination';
 import { cn } from '@/lib/utils';
+import type { ManagedSvgTemplateDefaultsPayload } from '@/lib/db/managed-svg-templates';
 
-function DesignCard({
+const DesignCard = memo(function DesignCard({
   design,
   actionLabel,
   badgeLabel,
   displayName,
+  svgDefaultsMap,
 }: {
   design: DesignTemplate;
   actionLabel: string;
   badgeLabel?: string;
   displayName: string;
+  svgDefaultsMap?: Record<string, ManagedSvgTemplateDefaultsPayload>;
 }) {
   const t = useTranslations('designs');
 
@@ -59,7 +62,12 @@ function DesignCard({
           className="relative flex items-center justify-center overflow-hidden bg-white p-1"
           style={{ aspectRatio: getDesignThumbAspect(design) }}
         >
-          <DesignCardThumbnail design={design} alt={displayName} />
+          <DesignCardThumbnail
+            design={design}
+            alt={displayName}
+            previewMode="lazy"
+            svgDefaultsMap={svgDefaultsMap}
+          />
           {badgeLabel ? (
             <span className="absolute left-3 top-3 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-brand-700 shadow-sm">
               {badgeLabel}
@@ -80,7 +88,7 @@ function DesignCard({
       </Card>
     </Link>
   );
-}
+});
 
 function buildDesignsHref(
   category: DesignCategory | 'all',
@@ -97,13 +105,15 @@ function buildDesignsHref(
   if (trimmed) params.set('q', trimmed);
   if (page && page > 1) params.set('page', String(page));
   const queryString = params.toString();
-  return queryString ? `/designs?${queryString}` : '/designs';
+  return queryString ? `/designs/all?${queryString}` : '/designs/all';
 }
 
 export function DesignsGallery({
   designs,
+  svgDefaultsMap,
 }: {
   designs: ResolvedDesignTemplate[];
+  svgDefaultsMap?: Record<string, ManagedSvgTemplateDefaultsPayload>;
 }) {
   const t = useTranslations('designs');
   const locale = useLocale() as 'mk' | 'en';
@@ -236,12 +246,22 @@ export function DesignsGallery({
   );
 
   const { page, setPage, paginate } = useCatalogPagination({
-    totalItems: fixedDesigns.length,
+    totalItems:
+      fixedDesigns.length > 0 ? fixedDesigns.length : customizableDesigns.length,
+    pageSize: DESIGN_GALLERY_PAGE_SIZE,
   });
 
   const visibleFixedDesigns = useMemo(
     () => paginate(fixedDesigns),
     [fixedDesigns, paginate],
+  );
+
+  const visibleCustomizableDesigns = useMemo(
+    () =>
+      fixedDesigns.length > 0
+        ? customizableDesigns
+        : paginate(customizableDesigns),
+    [customizableDesigns, fixedDesigns.length, paginate],
   );
 
   return (
@@ -282,12 +302,14 @@ export function DesignsGallery({
                       : t(`templates.${design.id}`)
                   }
                   actionLabel={t('orderWithInfo')}
+                  svgDefaultsMap={svgDefaultsMap}
                 />
               ))}
             </CatalogGrid>
             <CatalogPagination
               page={page}
               totalItems={fixedDesigns.length}
+              pageSize={DESIGN_GALLERY_PAGE_SIZE}
               onPageChange={setPage}
               previousLabel={t('paginationPrevious')}
               nextLabel={t('paginationNext')}
@@ -323,7 +345,7 @@ export function DesignsGallery({
                   </div>
                 </div>
                 <CatalogGrid gapClassName="gap-6">
-                  {customizableDesigns.map((design) => (
+                  {visibleCustomizableDesigns.map((design) => (
                     <DesignCard
                       key={design.id}
                       design={design}
@@ -334,9 +356,23 @@ export function DesignsGallery({
                       }
                       actionLabel={t('customizeOnline')}
                       badgeLabel={t('customizableBadge')}
+                      svgDefaultsMap={svgDefaultsMap}
                     />
                   ))}
                 </CatalogGrid>
+                {fixedDesigns.length === 0 ? (
+                  <CatalogPagination
+                    page={page}
+                    totalItems={customizableDesigns.length}
+                    pageSize={DESIGN_GALLERY_PAGE_SIZE}
+                    onPageChange={setPage}
+                    previousLabel={t('paginationPrevious')}
+                    nextLabel={t('paginationNext')}
+                    pageLabel={(current, total) =>
+                      t('paginationPage', { current, total })
+                    }
+                  />
+                ) : null}
               </div>
             </section>
           </div>

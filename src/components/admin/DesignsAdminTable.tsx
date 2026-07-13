@@ -1,96 +1,152 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
-import type { CatalogDesignRecord } from '@/lib/db/catalog-designs';
-import { getDesignAvailabilityLabel } from '@/lib/designs/design-reservations';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useTransition } from 'react';
+import type {
+  AdminDesignListPage,
+  AdminDesignStorage,
+} from '@/lib/admin/designs-shared';
+import { DESIGN_CATEGORY_OPTIONS } from '@/lib/admin/designs-shared';
+import { CatalogPagination } from '@/components/catalog/CatalogPagination';
 import { cn } from '@/lib/utils';
-
-const availabilityStyles: Record<CatalogDesignRecord['availability'], string> = {
-  available: 'bg-emerald-100 text-emerald-800',
-  reserved: 'bg-amber-100 text-amber-800',
-  sold: 'bg-ink-100 text-ink-700',
-  draft: 'bg-slate-100 text-slate-700',
-  archived: 'bg-red-100 text-red-800',
-};
+import {
+  clampCatalogPage,
+  getCatalogPageCount,
+} from '@/lib/catalog/pagination';
 
 export function DesignsAdminTable({
-  initialDesigns,
+  initialResult,
+  initialSearch,
+  initialStorage,
+  initialCategory,
 }: {
-  initialDesigns: CatalogDesignRecord[];
+  initialResult: AdminDesignListPage;
+  initialSearch: string;
+  initialStorage: AdminDesignStorage;
+  initialCategory: string;
 }) {
-  const [designs, setDesigns] = useState(initialDesigns);
-  const [search, setSearch] = useState('');
-  const [availability, setAvailability] = useState<'all' | CatalogDesignRecord['availability']>('all');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const filtered = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    return designs.filter((design) => {
-      if (availability !== 'all' && design.availability !== availability) {
-        return false;
-      }
-      if (!query) return true;
-      return [design.id, design.nameEn, design.nameMk, design.category]
-        .join(' ')
-        .toLowerCase()
-        .includes(query);
-    });
-  }, [availability, designs, search]);
+  const { items, total, page, pageSize, inDatabaseCount, codeOnlyCount, svgTemplateCount } =
+    initialResult;
 
-  async function refresh() {
-    const response = await fetch('/api/admin/designs');
-    if (!response.ok) return;
-    const data = await response.json();
-    setDesigns(data.designs);
+  function buildHref(patch: {
+    page?: number;
+    q?: string;
+    storage?: AdminDesignStorage;
+    category?: string;
+  }) {
+    const params = new URLSearchParams(searchParams.toString());
+    const nextPage = patch.page ?? page;
+    const nextSearch = patch.q ?? initialSearch;
+    const nextStorage = patch.storage ?? initialStorage;
+    const nextCategory = patch.category ?? initialCategory;
+
+    if (nextSearch.trim()) params.set('q', nextSearch.trim());
+    else params.delete('q');
+
+    if (nextCategory && nextCategory !== 'all') params.set('category', nextCategory);
+    else params.delete('category');
+
+    if (nextStorage !== 'all') params.set('storage', nextStorage);
+    else params.delete('storage');
+
+    if (nextPage <= 1) params.delete('page');
+    else params.set('page', String(nextPage));
+
+    const query = params.toString();
+    return query ? `/admin/designs?${query}` : '/admin/designs';
   }
+
+  function navigate(href: string) {
+    startTransition(() => {
+      router.push(href);
+      router.refresh();
+    });
+  }
+
+  function handleFilterSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const q = String(formData.get('q') ?? '');
+    const storage = String(
+      formData.get('storage') ?? 'all',
+    ) as AdminDesignStorage;
+    const category = String(formData.get('category') ?? 'all');
+    navigate(buildHref({ page: 1, q, storage, category }));
+  }
+
+  const totalPages = getCatalogPageCount(total, pageSize);
+  const currentPage = clampCatalogPage(page, total, pageSize);
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex flex-1 flex-col gap-3 sm:flex-row">
-          <label className="flex-1 text-sm">
-            <span className="mb-1 block font-medium text-ink-700">Пребарај</span>
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="ID, име, категорија…"
-              className="w-full rounded-lg border border-ink-200 px-3 py-2"
-            />
-          </label>
-          <label className="text-sm sm:w-48">
-            <span className="mb-1 block font-medium text-ink-700">Статус</span>
-            <select
-              value={availability}
-              onChange={(event) =>
-                setAvailability(event.target.value as typeof availability)
-              }
-              className="w-full rounded-lg border border-ink-200 px-3 py-2"
-            >
-              <option value="all">Сите</option>
-              <option value="available">Достапни</option>
-              <option value="reserved">Резервирани</option>
-              <option value="sold">Продадени</option>
-              <option value="draft">Нацрт</option>
-              <option value="archived">Архивирани</option>
-            </select>
-          </label>
-        </div>
-        <div className="flex gap-2">
-          <Link
-            href="/admin/designs/new"
-            className="rounded-lg bg-brand-700 px-3 py-2 text-sm font-medium text-white hover:bg-brand-800"
-          >
-            + Нов дизајн
-          </Link>
-          <button
-            type="button"
-            onClick={refresh}
-            className="rounded-lg border border-ink-200 px-3 py-2 text-sm font-medium text-ink-700 hover:bg-ink-50"
-          >
-            Освежи
-          </button>
-        </div>
+      <div className="rounded-xl border border-ink-200 bg-white p-4 text-sm text-ink-600">
+        <p>
+          Вкупно <strong>{total}</strong> дизајни од кодот.{' '}
+          <strong>{svgTemplateCount}</strong> имаат SVG шаблон за уредување на
+          стандардни текстови и бои.{' '}
+          <strong>{inDatabaseCount}</strong> се во база (цена, видливост),{' '}
+          <strong>{codeOnlyCount}</strong> се само во кодот.
+        </p>
       </div>
+
+      <form
+        onSubmit={handleFilterSubmit}
+        className="flex flex-col gap-3 rounded-xl border border-ink-200 bg-white p-4 lg:flex-row lg:items-end"
+      >
+        <label className="flex-1 text-sm">
+          <span className="mb-1 block font-medium text-ink-700">Пребарај</span>
+          <input
+            name="q"
+            defaultValue={initialSearch}
+            placeholder="ID, име, категорија…"
+            className="w-full rounded-lg border border-ink-200 px-3 py-2"
+          />
+        </label>
+        <label className="text-sm lg:w-48">
+          <span className="mb-1 block font-medium text-ink-700">Категорија</span>
+          <select
+            name="category"
+            defaultValue={initialCategory}
+            className="w-full rounded-lg border border-ink-200 px-3 py-2"
+          >
+            <option value="all">Сите</option>
+            {DESIGN_CATEGORY_OPTIONS.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="text-sm lg:w-48">
+          <span className="mb-1 block font-medium text-ink-700">Извор</span>
+          <select
+            name="storage"
+            defaultValue={initialStorage}
+            className="w-full rounded-lg border border-ink-200 px-3 py-2"
+          >
+            <option value="all">Сите</option>
+            <option value="database">Во база</option>
+            <option value="code-only">Само код</option>
+          </select>
+        </label>
+        <button
+          type="submit"
+          disabled={isPending}
+          className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white hover:bg-brand-800 disabled:opacity-60"
+        >
+          Филтрирај
+        </button>
+      </form>
+
+      {message ? <p className="text-sm text-emerald-700">{message}</p> : null}
+      {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
       <div className="overflow-hidden rounded-xl border border-ink-200 bg-white">
         <table className="min-w-full divide-y divide-ink-100 text-sm">
@@ -98,35 +154,42 @@ export function DesignsAdminTable({
             <tr>
               <th className="px-4 py-3">Дизајн</th>
               <th className="px-4 py-3">Категорија</th>
-              <th className="px-4 py-3">Статус</th>
-              <th className="px-4 py-3">Ексклузивен</th>
-              <th className="px-4 py-3">Цена</th>
+              <th className="px-4 py-3">Тип</th>
+              <th className="px-4 py-3">Извор</th>
+              <th className="px-4 py-3">Стандардни</th>
               <th className="px-4 py-3" />
             </tr>
           </thead>
           <tbody className="divide-y divide-ink-100">
-            {filtered.map((design) => (
+            {items.map((design) => (
               <tr key={design.id} className="hover:bg-ink-50/60">
                 <td className="px-4 py-3">
-                  <div className="font-medium text-ink-900">{design.nameMk}</div>
+                  <div className="font-medium text-ink-900">{design.title}</div>
                   <div className="text-xs text-ink-500">{design.id}</div>
                 </td>
                 <td className="px-4 py-3 text-ink-600">{design.category}</td>
+                <td className="px-4 py-3 text-ink-600">
+                  {design.kind}
+                  {design.hasSvgTemplate ? ' · SVG' : ''}
+                </td>
+                <td className="px-4 py-3 text-ink-600">
+                  {design.inDatabase ? 'База' : 'Код'}
+                </td>
                 <td className="px-4 py-3">
-                  <span
-                    className={cn(
-                      'inline-flex rounded-full px-2 py-0.5 text-xs font-semibold',
-                      availabilityStyles[design.availability],
-                    )}
-                  >
-                    {getDesignAvailabilityLabel(design.availability)}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-ink-600">
-                  {design.exclusive ? 'Да' : 'Не'}
-                </td>
-                <td className="px-4 py-3 text-ink-600">
-                  {design.price ? `${design.price} ден.` : 'Стандардна'}
+                  {design.hasSvgTemplate ? (
+                    <span
+                      className={cn(
+                        'inline-flex rounded-full px-2 py-0.5 text-xs font-semibold',
+                        design.hasDefaultsOverride
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : 'bg-ink-100 text-ink-600',
+                      )}
+                    >
+                      {design.hasDefaultsOverride ? 'Уредено' : 'Код'}
+                    </span>
+                  ) : (
+                    <span className="text-ink-400">—</span>
+                  )}
                 </td>
                 <td className="px-4 py-3 text-right">
                   <Link
@@ -140,12 +203,27 @@ export function DesignsAdminTable({
             ))}
           </tbody>
         </table>
-        {filtered.length === 0 ? (
+        {items.length === 0 ? (
           <p className="px-4 py-10 text-center text-sm text-ink-500">
             Нема дизајни што одговараат на филтрите.
           </p>
         ) : null}
       </div>
+
+      <CatalogPagination
+        page={currentPage}
+        totalItems={total}
+        onPageChange={(nextPage) => navigate(buildHref({ page: nextPage }))}
+        previousLabel="Претходна"
+        nextLabel="Следна"
+        pageLabel={(current, pages) => `${current} / ${pages}`}
+      />
+
+      {totalPages > 1 ? (
+        <p className="text-center text-xs text-ink-400">
+          Страница {currentPage} од {totalPages}
+        </p>
+      ) : null}
     </div>
   );
 }

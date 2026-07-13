@@ -7,7 +7,10 @@ import {
   scopeSvgIdsForInlineDom,
 } from '@/lib/designs/svg-template-engine';
 import { fitDesignThumbSize } from '@/lib/designs/design-thumb';
-import { useRenderedSvgTemplate } from '@/hooks/useSvgTemplateUrl';
+import {
+  useInlineSvgThumbMarkup,
+  useRenderedSvgTemplate,
+} from '@/hooks/useSvgTemplateUrl';
 
 type SvgDesignPreviewProps = {
   template: SvgDesignTemplate;
@@ -111,6 +114,44 @@ export function SvgDesignPreviewScaled({
             : 'overflow-hidden rounded-md shadow-sm ring-1 ring-ink-200/80'
         }
       />
+    </div>
+  );
+}
+
+/** Gallery thumb: fixed CSS sizing, no ResizeObserver, cached scoped markup. */
+export function SvgDesignPreviewThumb({
+  template,
+  state,
+  side,
+  scopeId,
+  className,
+  fill = false,
+}: {
+  template: SvgDesignTemplate;
+  state: SvgTemplateState;
+  side: 'front' | 'back';
+  scopeId: string;
+  className?: string;
+  fill?: boolean;
+}) {
+  const inlineSvg = useInlineSvgThumbMarkup(template, state, side, scopeId);
+
+  return (
+    <div
+      className={`flex h-full w-full ${fill ? '' : 'items-center justify-center'} ${className ?? ''}`}
+    >
+      {inlineSvg ? (
+        <div
+          className={
+            fill
+              ? 'h-full w-full [&>svg]:block [&>svg]:h-full [&>svg]:w-full'
+              : 'max-h-full max-w-full overflow-hidden rounded-md shadow-sm ring-1 ring-ink-200/80 [&>svg]:block [&>svg]:h-auto [&>svg]:max-h-full [&>svg]:w-full [&>svg]:max-w-full'
+          }
+          dangerouslySetInnerHTML={{ __html: inlineSvg }}
+        />
+      ) : (
+        <div className="h-10 w-10 animate-pulse rounded-full bg-ink-200/80" aria-hidden />
+      )}
     </div>
   );
 }

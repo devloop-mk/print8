@@ -21,7 +21,7 @@ export function getServiceDestination(service: Service): string | null {
   }
 
   if (service.customization === "designs" && service.designCategory) {
-    return `/designs?category=${service.designCategory}`;
+    return `/designs/all?category=${service.designCategory}`;
   }
 
   return null;

@@ -9,3 +9,4 @@ alter table if exists public.catalog_designs enable row level security;
 alter table if exists public.cms_content enable row level security;
 alter table if exists public.cms_services enable row level security;
 alter table if exists public.managed_product_designs enable row level security;
+alter table if exists public.managed_svg_templates enable row level security;

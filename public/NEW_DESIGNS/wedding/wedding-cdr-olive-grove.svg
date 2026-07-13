@@ -1,0 +1,20 @@
+<svg viewBox="0 0 1500 2100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&amp;family=Montserrat:wght@300;400;600&amp;family=Marck+Script&amp;display=swap');
+    </style>
+  </defs>
+  <rect width="1500" height="2100" fill="#FFFFFF"/>
+  <image href="/NEW_DESIGNS/wedding/cdr-art/cdr-art-11.webp" x="0" y="0" width="1500" height="2100" preserveAspectRatio="xMidYMid meet"/>
+  <g class="text-dark" fill="#2F3D28" text-anchor="middle">
+    <text x="750" y="680" text-anchor="middle" font-family="'Montserrat', sans-serif" font-weight="400" font-size="20" letter-spacing="5">SAVE THE DATE</text>
+    <text x="750" y="860" text-anchor="middle" font-family="'Marck Script', cursive" font-weight="400" font-size="92">Mila &amp; Stefan</text>
+    <text x="750" y="1000" text-anchor="middle" font-family="'Playfair Display', serif" font-weight="600" font-size="44" letter-spacing="3">20 SEPTEMBER 2026</text>
+    <text x="750" y="1120" text-anchor="middle" font-family="'Montserrat', sans-serif" font-weight="300" font-size="18" letter-spacing="2">Join us for our wedding day</text>
+    <text x="750" y="1260" text-anchor="middle" font-family="'Playfair Display', serif" font-weight="600" font-size="26" letter-spacing="3">HOTEL DRIM, STRUGA</text>
+    <text x="750" y="1340" text-anchor="middle" font-family="'Montserrat', sans-serif" font-weight="400" font-size="20" letter-spacing="2">Ceremony 17:00</text>
+    <text x="750" y="1420" text-anchor="middle" font-family="'Montserrat', sans-serif" font-weight="300" font-size="18" letter-spacing="1">Dinner and dancing to follow</text>
+    <text x="300" y="1680" text-anchor="start" font-family="'Montserrat', sans-serif" font-weight="400" font-size="17" letter-spacing="2">Mitev Family</text>
+    <text x="1200" y="1680" text-anchor="end" font-family="'Montserrat', sans-serif" font-weight="400" font-size="17" letter-spacing="2">Petrov Family</text>
+  </g>
+</svg>

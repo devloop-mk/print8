@@ -84,7 +84,7 @@ export function DesignsNavDropdown() {
                 </p>
               </div>
               <Link
-                href="/designs"
+                href="/designs/all"
                 onClick={() => setOpen(false)}
                 className="shrink-0 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-white transition hover:bg-brand-700"
               >

@@ -19,6 +19,7 @@ import {
 } from '@/lib/designs/customize-modes';
 import { buildDesignCustomizeMetadata } from '@/lib/seo/page-metadata';
 import type { Locale } from '@/i18n/routing';
+import { getManagedSvgTemplateDefaults } from '@/lib/designs/managed-svg-template-defaults';
 import { ArrowLeft } from 'lucide-react';
 
 export async function generateMetadata({
@@ -47,11 +48,19 @@ export default async function CustomizeDesignPage({
   const { id, mode: modeSegments } = await params;
   const template = await resolveDesignTemplate(id);
   if (!template || !isCustomizableDesign(template)) notFound();
-  if (!isDesignOrderable(template)) notFound();
+
+  const orderable = isDesignOrderable(template);
 
   const t = await getTranslations('designs.customize');
   const td = await getTranslations('designs');
+  const to = await getTranslations('designs.order');
   const mode = resolveCustomizeMode(modeSegments);
+
+  const unavailableNote = !orderable ? (
+    <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+      {to('unavailableDesign')}
+    </p>
+  ) : null;
 
   if (modeSegments && modeSegments.length > 0 && !mode) {
     notFound();
@@ -81,6 +90,7 @@ export default async function CustomizeDesignPage({
           <p className="mt-2 max-w-3xl break-words text-base text-ink-600 lg:text-lg">
             {t('pageSubtitleForm')}
           </p>
+          {unavailableNote}
         </div>
 
         <CustomizableDesignForm template={template} layout={layout} />
@@ -112,6 +122,9 @@ export default async function CustomizeDesignPage({
           <p className="mx-auto mt-2 hidden max-w-xl text-sm text-ink-500 sm:block">
             {t('chooseModeSubtitle')}
           </p>
+          {unavailableNote ? (
+            <div className="mx-auto mt-4 max-w-xl">{unavailableNote}</div>
+          ) : null}
         </div>
 
         <DesignCustomizeModeChooser template={template} />
@@ -121,6 +134,8 @@ export default async function CustomizeDesignPage({
 
   const svgTemplate = getSvgDesignTemplate(template.svgTemplateId);
   if (!svgTemplate) notFound();
+
+  const managedDefaults = await getManagedSvgTemplateDefaults(svgTemplate.id);
 
   const subtitle =
     mode === 'form' ? t('pageSubtitleForm') : t('pageSubtitleCanvas');
@@ -153,12 +168,14 @@ export default async function CustomizeDesignPage({
             {t('changeMode')}
           </Link>
         </p>
+        {unavailableNote}
       </div>
 
       <SvgCustomizableDesignForm
         template={template}
         svgTemplate={svgTemplate}
         mode={mode}
+        managedDefaults={managedDefaults}
       />
     </div>
   );

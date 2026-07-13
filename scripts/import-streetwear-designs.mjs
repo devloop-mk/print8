@@ -9,7 +9,10 @@ const SOURCE_ROOT =
 const WEB_OUT = path.join(process.cwd(), 'public/NEW_DESIGNS/streetwear');
 const MASTER_OUT = path.join(process.cwd(), 'print-masters/streetwear');
 const CATALOG_OUT = path.join(process.cwd(), 'src/lib/data/streetwear-pack.ts');
-const MANIFEST_OUT = path.join(process.cwd(), 'scripts/streetwear-pack-manifest.json');
+const MANIFEST_OUT = path.join(
+  process.cwd(),
+  'scripts/streetwear-pack-manifest.json',
+);
 
 const TARGET_MAX_KB = 400;
 const MIN_QUALITY = 58;
@@ -17,24 +20,29 @@ const MAX_QUALITY = 88;
 const CONCURRENCY = 4;
 
 const COLLECTIONS = [
-  { folder: 'Basketball', slug: 'basketball', labelEn: 'Basketball', labelMk: 'Кошарка' },
+  {
+    folder: 'Basketball',
+    slug: 'basketball',
+    labelEn: 'Basketball',
+    labelMk: 'Кошарка',
+  },
   {
     folder: 'japanese Anime',
     slug: 'anime',
     labelEn: 'Japanese Anime',
-    labelMk: 'Јапонско аниме',
+    labelMk: 'Јапонско Anime',
   },
   {
     folder: 'Streetwear Typography',
     slug: 'typography',
     labelEn: 'Streetwear Typography',
-    labelMk: 'Стритвер типографија',
+    labelMk: 'Streetwear Typography',
   },
   {
     folder: 'Streetwear2',
     slug: 'streetwear',
     labelEn: 'Streetwear',
-    labelMk: 'Стритвер',
+    labelMk: 'Streetwear',
   },
 ];
 
@@ -53,9 +61,9 @@ function loadEnv() {
 function isR2Configured() {
   return Boolean(
     process.env.R2_ACCOUNT_ID &&
-      process.env.R2_ACCESS_KEY_ID &&
-      process.env.R2_SECRET_ACCESS_KEY &&
-      process.env.R2_BUCKET_NAME,
+    process.env.R2_ACCESS_KEY_ID &&
+    process.env.R2_SECRET_ACCESS_KEY &&
+    process.env.R2_BUCKET_NAME,
   );
 }
 
@@ -181,13 +189,7 @@ function tsString(value) {
   return JSON.stringify(value);
 }
 
-async function processDesign({
-  collection,
-  design,
-  index,
-  dryRun,
-  skipR2,
-}) {
+async function processDesign({ collection, design, index, dryRun, skipR2 }) {
   const id = `tee-sw-${collection.slug}-${String(index).padStart(3, '0')}`;
   const slug = slugify(design.title) || `design-${index}`;
   const webRelative = `NEW_DESIGNS/streetwear/${collection.slug}/${slug}.webp`;
@@ -298,7 +300,9 @@ async function main() {
       continue;
     }
 
-    const files = fs.readdirSync(sourceDir).map((name) => path.join(sourceDir, name));
+    const files = fs
+      .readdirSync(sourceDir)
+      .map((name) => path.join(sourceDir, name));
     const designs = pickBestPng(files);
 
     for (const design of designs) {

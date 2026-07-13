@@ -64,7 +64,7 @@ export function FeaturedDesignCards({ designs }: { designs: FeaturedDesign[] }) 
   const visible = filtered.slice(0, MAX_VISIBLE);
 
   const seeAllHref =
-    category === 'all' ? '/designs' : `/designs?category=${category}`;
+    category === 'all' ? '/designs/all' : `/designs/all?category=${category}`;
 
   return (
     <div className="space-y-6">

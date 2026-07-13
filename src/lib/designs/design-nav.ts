@@ -27,17 +27,25 @@ export type DesignNavQuickLink = {
   descriptionKey: string;
 };
 
-export const designNavCategories: DesignNavCategory[] = [
-  { id: 'business-cards', icon: CreditCard },
-  { id: 'wedding', icon: Heart },
-  { id: 'birthday', icon: Cake },
-  { id: 'menus', icon: UtensilsCrossed },
-];
+export const designCategoryIcons: Record<DesignCategory, LucideIcon> = {
+  'business-cards': CreditCard,
+  wedding: Heart,
+  birthday: Cake,
+  menus: UtensilsCrossed,
+  general: LayoutGrid,
+};
+
+export const designNavCategories: DesignNavCategory[] = designCategories.map(
+  (id) => ({
+    id,
+    icon: designCategoryIcons[id],
+  }),
+);
 
 export const designNavQuickLinks: DesignNavQuickLink[] = [
   {
     id: 'all',
-    href: '/designs',
+    href: '/designs/all',
     icon: LayoutGrid,
     labelKey: 'allDesigns',
     descriptionKey: 'allDesignsDesc',
@@ -58,7 +66,7 @@ export const designNavQuickLinks: DesignNavQuickLink[] = [
   },
   {
     id: 'customizable',
-    href: '/designs',
+    href: '/designs/all',
     icon: Sparkles,
     labelKey: 'customizable',
     descriptionKey: 'customizableDesc',
@@ -80,7 +88,11 @@ export function getDesignNavCategory(
 }
 
 export function designCategoryHref(categoryId: DesignCategory): string {
-  return `/designs?category=${categoryId}`;
+  return `/designs/all?category=${categoryId}`;
+}
+
+export function designsAllHref(): string {
+  return '/designs/all';
 }
 
 export function isDesignsNavActive(pathname: string): boolean {

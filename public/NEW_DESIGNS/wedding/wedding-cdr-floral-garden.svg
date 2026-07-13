@@ -1,0 +1,20 @@
+<svg viewBox="0 0 1500 2100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&amp;family=Montserrat:wght@300;400;600&amp;family=Marck+Script&amp;display=swap');
+    </style>
+  </defs>
+  <rect width="1500" height="2100" fill="#FFFFFF"/>
+  <image href="/NEW_DESIGNS/wedding/cdr-art/cdr-art-01.webp" x="0" y="0" width="1500" height="2100" preserveAspectRatio="xMidYMid meet"/>
+  <g class="text-dark" fill="#2C4A2E" text-anchor="middle">
+    <text x="750" y="720" text-anchor="middle" font-family="'Montserrat', sans-serif" font-weight="400" font-size="20" letter-spacing="5">PLEASE JOIN US</text>
+    <text x="750" y="900" text-anchor="middle" font-family="'Marck Script', cursive" font-weight="400" font-size="88">Vera &amp; Aleksandar</text>
+    <text x="750" y="1040" text-anchor="middle" font-family="'Playfair Display', serif" font-weight="600" font-size="42" letter-spacing="3">30 JULY 2026</text>
+    <text x="750" y="1160" text-anchor="middle" font-family="'Montserrat', sans-serif" font-weight="300" font-size="18" letter-spacing="2">As we begin our life together</text>
+    <text x="750" y="1300" text-anchor="middle" font-family="'Playfair Display', serif" font-weight="600" font-size="26" letter-spacing="3">VINARIJA POPOVA KULA</text>
+    <text x="750" y="1380" text-anchor="middle" font-family="'Montserrat', sans-serif" font-weight="400" font-size="20" letter-spacing="2">Kavadarci</text>
+    <text x="750" y="1460" text-anchor="middle" font-family="'Montserrat', sans-serif" font-weight="300" font-size="18" letter-spacing="1">At 18:00</text>
+    <text x="300" y="1720" text-anchor="start" font-family="'Montserrat', sans-serif" font-weight="400" font-size="17" letter-spacing="2">Stojkovski Family</text>
+    <text x="1200" y="1720" text-anchor="end" font-family="'Montserrat', sans-serif" font-weight="400" font-size="17" letter-spacing="2">Nikolov Family</text>
+  </g>
+</svg>

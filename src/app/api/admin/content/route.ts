@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { cmsDb } from '@/lib/db/cms';
 import { requireAdminApi } from '@/lib/admin/api-auth';
 import { z } from 'zod';
@@ -50,6 +51,7 @@ export async function PATCH(request: NextRequest) {
         return NextResponse.json({ error: 'Invalid content entry' }, { status: 400 });
       }
       const entry = await cmsDb.content.upsert(parsed.data);
+      revalidateTag('cms-content', 'max');
       return NextResponse.json({ entry });
     }
 
@@ -59,6 +61,7 @@ export async function PATCH(request: NextRequest) {
         return NextResponse.json({ error: 'Invalid service entry' }, { status: 400 });
       }
       const entry = await cmsDb.services.upsert(parsed.data);
+      revalidateTag('cms-services', 'max');
       return NextResponse.json({ entry });
     }
 

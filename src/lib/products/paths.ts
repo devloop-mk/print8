@@ -41,5 +41,6 @@ export function getProductPaths(
     custom: buildCustomizerUrl(productId, productType, options),
     photoDesigns: `/products/${productId}/photo-designs`,
     textDesigns: `/products/${productId}/text-designs`,
+    premadeDesigns: `/products/${productId}/designs`,
   } as const;
 }

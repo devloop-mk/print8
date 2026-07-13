@@ -1,4 +1,4 @@
-const DEDUP_MS = 60_000;
+const DEDUP_MS = 5 * 60_000;
 const recentTracks = new Map<string, number>();
 const inflight = new Set<string>();
 

@@ -14,7 +14,7 @@ import {
   isTextDesignTemplate,
 } from '@/lib/data/catalog';
 import { resolveAssetUrl } from '@/lib/storage/asset-url';
-import { getProductDesignDisplayName } from '@/lib/products/design-display-name';
+import { resolveProductDesignDisplayName } from '@/lib/products/design-display-name';
 import {
   getDesignApplicableColors,
   resolveDesignPreviewColor,
@@ -53,10 +53,9 @@ export function ProductDesignCatalogCard({
 
   const { product } = resolveDesignProduct(entry, colorFilter);
   const { design } = entry;
-  const displayName =
-    getProductDesignDisplayName(design, locale) !== design.nameKey
-      ? getProductDesignDisplayName(design, locale)
-      : t(`designs.${design.nameKey}`);
+  const displayName = resolveProductDesignDisplayName(design, locale, (key) =>
+    t(key),
+  );
 
   const applicableColors = useMemo(
     () => getDesignApplicableColors(design, product),

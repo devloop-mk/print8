@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import {
   products,
-  getProductDesignTemplatesByCategory,
+  getProductDesignTemplates,
   isMagnetProduct,
 } from '@/lib/data/catalog';
 import { getProductOffering } from '@/lib/products/offering';
@@ -17,7 +17,7 @@ import { ProductImageCarousel } from '@/components/products/ProductImageCarousel
 import { ProductPathChooser } from '@/components/products/ProductPathChooser';
 import { ProductDesignSection } from '@/components/products/ProductDesignSection';
 import { Reveal } from '@/components/motion/Reveal';
-import { ArrowLeft, Palette, Sparkles, Type, Upload } from 'lucide-react';
+import { ArrowLeft, Palette, Sparkles, Upload } from 'lucide-react';
 
 export function ProductDetail({ productId }: { productId: string }) {
   const t = useTranslations('products');
@@ -39,19 +39,8 @@ export function ProductDetail({ productId }: { productId: string }) {
     [product],
   );
 
-  const imageDesigns = useMemo(
-    () =>
-      product
-        ? getProductDesignTemplatesByCategory(product, 'image-designs')
-        : [],
-    [product],
-  );
-
-  const textDesigns = useMemo(
-    () =>
-      product
-        ? getProductDesignTemplatesByCategory(product, 'text-designs')
-        : [],
+  const premadeDesigns = useMemo(
+    () => (product ? getProductDesignTemplates(product) : []),
     [product],
   );
 
@@ -72,11 +61,7 @@ export function ProductDetail({ productId }: { productId: string }) {
     });
   }
 
-  const quickDesignSection = offering.hasPhotoDesigns
-    ? 'photo-designs'
-    : offering.hasTextTemplates
-      ? 'text-designs'
-      : null;
+  const quickDesignSection = offering.hasPremade ? 'premade-designs' : null;
 
   return (
     <div className="space-y-10 pb-24 lg:pb-0">
@@ -191,49 +176,24 @@ export function ProductDetail({ productId }: { productId: string }) {
       </div>
 
       {!isMagnet && offering.hasPremade ? (
-        <div className="space-y-10">
-          {imageDesigns.length > 0 && (
-            <Reveal>
-              <ProductDesignSection
-                id="photo-designs"
-                icon={<Sparkles className="h-6 w-6 text-brand-600" />}
-                title={td('imageDesigns')}
-                hint={td('imageDesignsHint')}
-                product={product}
-                size={size}
-                designs={imageDesigns}
-                limit={PRODUCT_DESIGN_PREVIEW_LIMIT}
-                seeAllHref={
-                  imageDesigns.length > PRODUCT_DESIGN_PREVIEW_LIMIT
-                    ? paths.photoDesigns
-                    : undefined
-                }
-                seeAllLabel={td('seeAllPhotoDesigns')}
-              />
-            </Reveal>
-          )}
-
-          {textDesigns.length > 0 && (
-            <Reveal delay={80}>
-              <ProductDesignSection
-                id="text-designs"
-                icon={<Type className="h-6 w-6 text-brand-600" />}
-                title={td('textDesigns')}
-                hint={td('textDesignsHint')}
-                product={product}
-                size={size}
-                designs={textDesigns}
-                limit={PRODUCT_DESIGN_PREVIEW_LIMIT}
-                seeAllHref={
-                  textDesigns.length > PRODUCT_DESIGN_PREVIEW_LIMIT
-                    ? paths.textDesigns
-                    : undefined
-                }
-                seeAllLabel={td('seeAllTextDesigns')}
-              />
-            </Reveal>
-          )}
-        </div>
+        <Reveal>
+          <ProductDesignSection
+            id="premade-designs"
+            icon={<Sparkles className="h-6 w-6 text-brand-600" />}
+            title={td('premadeDesigns')}
+            hint={td('premadeDesignsHint')}
+            product={product}
+            size={size}
+            designs={premadeDesigns}
+            limit={PRODUCT_DESIGN_PREVIEW_LIMIT}
+            seeAllHref={
+              premadeDesigns.length > PRODUCT_DESIGN_PREVIEW_LIMIT
+                ? paths.premadeDesigns
+                : undefined
+            }
+            seeAllLabel={td('seeAllPremadeDesigns')}
+          />
+        </Reveal>
       ) : null}
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-ink-200 bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
@@ -253,11 +213,7 @@ export function ProductDetail({ productId }: { productId: string }) {
                 onClick={() => scrollToDesigns(quickDesignSection)}
                 className="inline-flex min-h-[3rem] items-center justify-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2.5 text-sm font-medium text-white transition hover:bg-brand-700"
               >
-                {offering.hasPhotoDesigns ? (
-                  <Sparkles className="h-4 w-4 shrink-0" aria-hidden />
-                ) : (
-                  <Type className="h-4 w-4 shrink-0" aria-hidden />
-                )}
+                <Sparkles className="h-4 w-4 shrink-0" aria-hidden />
                 {td('mobileQuickOrder')}
               </button>
               <Link

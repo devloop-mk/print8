@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { ArrowRight, ImageIcon, Palette, Type } from 'lucide-react';
+import { ArrowRight, ImageIcon, Palette } from 'lucide-react';
 import { Reveal } from '@/components/motion/Reveal';
 import { getProductPaths } from '@/lib/products/paths';
 import type { ProductOffering } from '@/lib/products/offering';
@@ -49,29 +49,16 @@ export function ProductPathChooser({
       primary: true,
     },
     {
-      id: 'photo',
+      id: 'premade',
       icon: ImageIcon,
-      title: t('photoTitle'),
-      description: t('photoDesc'),
-      badge: t('badgePhoto'),
-      cta: t('photoCta'),
-      meta: t('countPhoto', { count: offering.imageDesignCount }),
-      href: paths.photoDesigns,
-      show: offering.hasPhotoDesigns,
-      featured: offering.hasPhotoDesigns,
-      primary: false,
-    },
-    {
-      id: 'template',
-      icon: Type,
-      title: t('templateTitle'),
-      description: t('templateDesc'),
-      badge: t('badgeTemplate'),
-      cta: t('templateCta'),
-      meta: t('countTemplate', { count: offering.textDesignCount }),
-      href: paths.textDesigns,
-      show: offering.hasTextTemplates,
-      featured: false,
+      title: t('premadeTitle'),
+      description: t('premadeDesc'),
+      badge: t('badgePremade'),
+      cta: t('premadeCta'),
+      meta: t('countPremade', { count: offering.premadeCount }),
+      href: paths.premadeDesigns,
+      show: offering.hasPremade,
+      featured: offering.hasPremade,
       primary: false,
     },
   ].filter((path) => path.show);

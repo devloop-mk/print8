@@ -12,10 +12,22 @@ export type TrendingDesignAccent = {
 /** Curated trending templates — order is display rank. */
 export const TRENDING_DESIGN_ACCENTS: TrendingDesignAccent[] = [
   {
-    id: 'svg-wedding-modern-arch',
+    id: 'svg-wedding-print-watercolor',
     gradient: 'from-rose-400/30 via-fuchsia-500/10 to-transparent',
     ring: 'ring-rose-400/40',
     badge: 'bg-rose-500/90',
+  },
+  {
+    id: 'svg-wedding-cdr-floral-garden',
+    gradient: 'from-emerald-400/25 via-teal-500/10 to-transparent',
+    ring: 'ring-emerald-400/35',
+    badge: 'bg-emerald-600/90',
+  },
+  {
+    id: 'svg-wedding-cdr-romantic-rose',
+    gradient: 'from-pink-400/30 via-rose-500/10 to-transparent',
+    ring: 'ring-pink-400/40',
+    badge: 'bg-pink-600/90',
   },
   {
     id: 'svg-bday-dino',

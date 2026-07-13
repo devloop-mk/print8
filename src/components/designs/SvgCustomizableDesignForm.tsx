@@ -26,7 +26,8 @@ import { formatPrice } from '@/lib/utils';
 import type { DesignTemplate } from '@/lib/data/catalog';
 import { designCategoryPrices } from '@/lib/data/design-order-fields';
 import type { SvgDesignTemplate, SvgTemplateState } from '@/lib/data/svg-design-templates';
-import { buildDefaultSvgTemplateState } from '@/lib/designs/svg-template-engine';
+import type { ManagedSvgTemplateDefaultsPayload } from '@/lib/db/managed-svg-templates';
+import { buildMergedDefaultSvgTemplateState } from '@/lib/designs/merge-svg-template-defaults';
 import {
   resolveSvgFieldDefault,
   toSvgSiteLocale,
@@ -82,10 +83,12 @@ export function SvgCustomizableDesignForm({
   template,
   svgTemplate,
   mode,
+  managedDefaults = null,
 }: {
   template: DesignTemplate;
   svgTemplate: SvgDesignTemplate;
   mode: DesignCustomizeMode;
+  managedDefaults?: ManagedSvgTemplateDefaultsPayload | null;
 }) {
   const t = useTranslations('designs.customize');
   const td = useTranslations('designs');
@@ -116,7 +119,9 @@ export function SvgCustomizableDesignForm({
     reset: resetEditorState,
     canUndo,
     canRedo,
-  } = useUndoRedo(() => buildDefaultSvgTemplateState(svgTemplate, svgLocale));
+  } = useUndoRedo(() =>
+    buildMergedDefaultSvgTemplateState(svgTemplate, svgLocale, managedDefaults),
+  );
   const [quantity, setQuantity] = useState(1);
   const [capturing, setCapturing] = useState(false);
   const [draftHydrated, setDraftHydrated] = useState(false);
@@ -135,7 +140,11 @@ export function SvgCustomizableDesignForm({
   );
 
   useEffect(() => {
-    const defaults = buildDefaultSvgTemplateState(svgTemplate, svgLocale);
+    const defaults = buildMergedDefaultSvgTemplateState(
+      svgTemplate,
+      svgLocale,
+      managedDefaults,
+    );
 
     if (cartItemMatchesDesignTemplate(editingItem, template.id)) {
       const loaded = parseSvgStateFromCartMetadata(editingItem.metadata ?? {});
@@ -197,7 +206,7 @@ export function SvgCustomizableDesignForm({
       resetEditorState(defaults);
     }
     setDraftHydrated(true);
-  }, [editingItem, resetEditorState, svgTemplate, svgLocale, template.id]);
+  }, [editingItem, managedDefaults, resetEditorState, svgTemplate, svgLocale, template.id]);
 
   useUndoRedoKeyboard({
     undo,

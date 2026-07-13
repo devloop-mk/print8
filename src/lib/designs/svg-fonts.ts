@@ -1,3 +1,5 @@
+import { CYRILLIC_FONTS_URL } from '@/lib/designs/svg-font-cyrillic';
+
 const loadedFontStylesheets = new Set<string>();
 
 /** Google Fonts `@import` URLs embedded in design SVG `<style>` blocks. */
@@ -43,7 +45,10 @@ function loadStylesheet(url: string): Promise<void> {
 export async function ensureSvgFontsReady(svg: string): Promise<void> {
   if (typeof document === 'undefined') return;
 
-  const urls = extractSvgFontImportUrls(svg);
-  await Promise.all(urls.map(loadStylesheet));
+  const urls = [
+    CYRILLIC_FONTS_URL,
+    ...extractSvgFontImportUrls(svg),
+  ];
+  await Promise.all([...new Set(urls)].map(loadStylesheet));
   await document.fonts.ready;
 }

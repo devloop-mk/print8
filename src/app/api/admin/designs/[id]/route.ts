@@ -6,6 +6,7 @@ import {
   getAdminDesign,
   updateAdminDesign,
 } from '@/lib/admin/designs';
+import { revalidateDesignCatalogCache } from '@/lib/catalog/revalidate-design-catalog';
 
 const patchSchema = z.object({
   category: z
@@ -68,6 +69,7 @@ export async function PATCH(
     }
 
     const design = await updateAdminDesign(id, parsed.data);
+    revalidateDesignCatalogCache();
     return NextResponse.json({ design });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to update design';
@@ -86,6 +88,7 @@ export async function DELETE(
 
   try {
     await deleteAdminDesign(id);
+    revalidateDesignCatalogCache();
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to delete design';

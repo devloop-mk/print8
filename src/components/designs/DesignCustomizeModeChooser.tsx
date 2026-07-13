@@ -157,7 +157,7 @@ export function DesignCustomizeModeChooser({
               maxHeight: 'min(52vh, 480px)',
             }}
           >
-            <DesignCardThumbnail design={template} alt={designName} />
+            <DesignCardThumbnail design={template} alt={designName} previewMode="live" />
           </div>
         </div>
 

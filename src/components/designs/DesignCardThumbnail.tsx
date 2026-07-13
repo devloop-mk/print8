@@ -1,11 +1,11 @@
 'use client';
 
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useLocale } from 'next-intl';
 import { Palette } from 'lucide-react';
 import { CustomizableDesignPreview } from '@/components/designs/CustomizableDesignPreview';
-import { SvgDesignPreviewScaled } from '@/components/designs/SvgDesignPreview';
+import { SvgDesignPreviewThumb } from '@/components/designs/SvgDesignPreview';
 import {
   getDefaultFieldValues,
   getDesignLayout,
@@ -13,13 +13,70 @@ import {
   type DesignLayout,
 } from '@/lib/data/design-layouts';
 import { getSvgDesignTemplate } from '@/lib/data/svg-design-templates';
-import { buildDefaultSvgTemplateState } from '@/lib/designs/svg-template-engine';
+import type { ManagedSvgTemplateDefaultsPayload } from '@/lib/db/managed-svg-templates';
+import { buildMergedDefaultSvgTemplateState } from '@/lib/designs/merge-svg-template-defaults';
 import { toSvgSiteLocale } from '@/lib/designs/svg-locale-defaults';
-import { fitDesignThumbSize } from '@/lib/designs/design-thumb';
+import { fitDesignThumbSize, getDesignGalleryImage } from '@/lib/designs/design-thumb';
 import type { DesignTemplate } from '@/lib/data/catalog';
 import { resolveAssetUrl } from '@/lib/storage/asset-url';
+import { useInView } from '@/hooks/useInView';
 
 const THUMB_RENDER_WIDTH = 320;
+
+type DesignCardThumbnailProps = {
+  design: DesignTemplate;
+  alt: string;
+  className?: string;
+  fill?: boolean;
+  svgDefaultsMap?: Record<string, ManagedSvgTemplateDefaultsPayload>;
+  /** lazy: live preview when scrolled into view; live: always; static: image file only */
+  previewMode?: 'static' | 'live' | 'lazy';
+};
+
+function isSvgAsset(path: string) {
+  return path.toLowerCase().endsWith('.svg');
+}
+
+function DesignCardImageThumb({
+  src,
+  alt,
+  fill = false,
+  className,
+}: {
+  src: string;
+  alt: string;
+  fill?: boolean;
+  className?: string;
+}) {
+  const resolved = resolveAssetUrl(src);
+  const imageClassName = fill
+    ? 'h-full w-full object-cover transition group-hover:scale-[1.02]'
+    : 'h-full w-full object-contain p-1 transition group-hover:scale-[1.02]';
+
+  if (isSvgAsset(src)) {
+    return (
+      <img
+        src={resolved}
+        alt={alt}
+        className={`${imageClassName} ${className ?? ''}`}
+        loading="lazy"
+        decoding="async"
+      />
+    );
+  }
+
+  return (
+    <div className={`relative h-full w-full ${className ?? ''}`}>
+      <Image
+        src={resolved}
+        alt={alt}
+        fill
+        sizes="320px"
+        className={imageClassName}
+      />
+    </div>
+  );
+}
 
 function ScaledLayoutPreview({
   layout,
@@ -89,33 +146,65 @@ function ScaledLayoutPreview({
   );
 }
 
-export function DesignCardThumbnail({
+function SvgTemplateCardThumb({
+  design,
+  svgTemplateId,
+  fill = false,
+  className,
+  svgDefaultsMap,
+}: {
+  design: DesignTemplate;
+  svgTemplateId: string;
+  fill?: boolean;
+  className?: string;
+  svgDefaultsMap?: Record<string, ManagedSvgTemplateDefaultsPayload>;
+}) {
+  const locale = useLocale();
+  const svgLocale = toSvgSiteLocale(locale);
+  const svgTemplate = getSvgDesignTemplate(svgTemplateId);
+
+  const state = useMemo(() => {
+    if (!svgTemplate) return null;
+    return buildMergedDefaultSvgTemplateState(
+      svgTemplate,
+      svgLocale,
+      svgDefaultsMap?.[svgTemplateId] ?? null,
+    );
+  }, [svgDefaultsMap, svgLocale, svgTemplate, svgTemplateId]);
+
+  if (!svgTemplate || !state) return null;
+
+  return (
+    <div className={`relative h-full w-full ${className ?? ''}`}>
+      <SvgDesignPreviewThumb
+        template={svgTemplate}
+        state={state}
+        side="front"
+        scopeId={design.id}
+        fill={fill}
+      />
+    </div>
+  );
+}
+
+function DesignCardThumbnailLive({
   design,
   alt,
   className,
   fill = false,
-}: {
-  design: DesignTemplate;
-  alt: string;
-  className?: string;
-  fill?: boolean;
-}) {
-  const locale = useLocale();
-  const svgLocale = toSvgSiteLocale(locale);
-
+  svgDefaultsMap,
+}: DesignCardThumbnailProps) {
   if (design.kind === 'customizable' && design.svgTemplateId) {
     const svgTemplate = getSvgDesignTemplate(design.svgTemplateId);
     if (svgTemplate) {
-      const state = buildDefaultSvgTemplateState(svgTemplate, svgLocale);
       return (
-        <div className={`relative h-full w-full ${className ?? ''}`}>
-          <SvgDesignPreviewScaled
-            template={svgTemplate}
-            state={state}
-            side="front"
-            fill={fill}
-          />
-        </div>
+        <SvgTemplateCardThumb
+          design={design}
+          svgTemplateId={design.svgTemplateId}
+          fill={fill}
+          className={className}
+          svgDefaultsMap={svgDefaultsMap}
+        />
       );
     }
   }
@@ -136,17 +225,7 @@ export function DesignCardThumbnail({
   if (design.image) {
     return (
       <div className={`relative h-full w-full ${className ?? ''}`}>
-        <Image
-          src={resolveAssetUrl(design.image)}
-          alt={alt}
-          fill
-          sizes="320px"
-          className={
-            fill
-              ? 'object-cover transition group-hover:scale-[1.02]'
-              : 'object-contain p-1 transition group-hover:scale-[1.02]'
-          }
-        />
+        <DesignCardImageThumb src={design.image} alt={alt} fill={fill} />
       </div>
     );
   }
@@ -156,4 +235,67 @@ export function DesignCardThumbnail({
       <Palette className="h-16 w-16 text-ink-400" aria-hidden="true" />
     </div>
   );
+}
+
+function DesignCardThumbnailLazy(props: DesignCardThumbnailProps) {
+  const { ref, inView } = useInView<HTMLDivElement>({
+    rootMargin: '80px 0px',
+    once: false,
+  });
+
+  return (
+    <div
+      ref={ref}
+      className={`relative h-full w-full [content-visibility:auto] [contain-intrinsic-size:auto_280px] ${props.className ?? ''}`}
+    >
+      {inView ? (
+        <DesignCardThumbnailLive {...props} className={undefined} />
+      ) : props.design.image ? (
+        <DesignCardImageThumb src={props.design.image} alt={props.alt} fill={props.fill} />
+      ) : (
+        <div
+          className="flex h-full w-full items-center justify-center bg-ink-50"
+          aria-hidden
+        >
+          <div className="h-10 w-10 animate-pulse rounded-full bg-ink-200/80" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function DesignCardThumbnail({
+  previewMode = 'lazy',
+  ...props
+}: DesignCardThumbnailProps) {
+  const galleryImage = getDesignGalleryImage(props.design);
+  if (galleryImage) {
+    return (
+      <div className={`relative h-full w-full ${props.className ?? ''}`}>
+        <DesignCardImageThumb
+          src={galleryImage}
+          alt={props.alt}
+          fill={props.fill}
+        />
+      </div>
+    );
+  }
+
+  if (previewMode === 'lazy') {
+    return <DesignCardThumbnailLazy {...props} />;
+  }
+
+  if (previewMode === 'static' && props.design.image) {
+    return (
+      <div className={`relative h-full w-full ${props.className ?? ''}`}>
+        <DesignCardImageThumb
+          src={props.design.image}
+          alt={props.alt}
+          fill={props.fill}
+        />
+      </div>
+    );
+  }
+
+  return <DesignCardThumbnailLive {...props} />;
 }

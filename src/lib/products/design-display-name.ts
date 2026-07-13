@@ -9,3 +9,13 @@ export function getProductDesignDisplayName(
   if (design.titleMk) return design.titleMk;
   return design.nameKey;
 }
+
+export function resolveProductDesignDisplayName(
+  design: ProductDesignTemplate,
+  locale: 'mk' | 'en',
+  translateNameKey: (key: string) => string,
+) {
+  const fromData = getProductDesignDisplayName(design, locale);
+  if (fromData !== design.nameKey) return fromData;
+  return translateNameKey(`designs.${design.nameKey}`);
+}
