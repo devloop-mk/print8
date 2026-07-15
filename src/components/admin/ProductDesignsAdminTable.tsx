@@ -7,6 +7,7 @@ import type {
   AdminProductDesignListPage,
   AdminProductDesignStorage,
 } from '@/lib/admin/product-designs-shared';
+import { PRODUCT_TYPE_LABELS_MK } from '@/lib/admin/product-designs-shared';
 import { CatalogPagination } from '@/components/catalog/CatalogPagination';
 import { cn } from '@/lib/utils';
 import {
@@ -219,12 +220,19 @@ export function ProductDesignsAdminTable({
                 <td className="px-4 py-3">
                   <p className="font-medium text-ink-900">{design.title}</p>
                   <p className="text-xs text-ink-500">{design.id}</p>
+                  {design.collection === 'couple-packs' ? (
+                    <span className="mt-1 inline-flex rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-medium text-rose-700">
+                      Couple
+                    </span>
+                  ) : null}
                 </td>
                 <td className="px-4 py-3 text-ink-600">
                   {design.kind} · {design.category}
                 </td>
                 <td className="px-4 py-3 text-ink-600">
-                  {design.productTypes.join(', ')}
+                  {design.productTypes
+                    .map((type) => PRODUCT_TYPE_LABELS_MK[type] ?? type)
+                    .join(', ')}
                 </td>
                 <td className="px-4 py-3 text-ink-600">
                   {design.applicableColorCount > 0

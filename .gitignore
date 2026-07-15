@@ -21,6 +21,8 @@
 # misc
 .DS_Store
 *.pem
+/ms-playwright/
+/playwright/.cache/
 
 # debug
 npm-debug.log*
@@ -28,11 +30,21 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files
+# env files (keep only .env.example tracked)
 .env
+.env.*
+!.env.example
 .env*.local
 
 # database & uploads
 /data/
 /uploads/
 /print-masters/
+
+# local / oversized assets (serve via CDN/R2, do not ship in git)
+/public/NEW_DESIGNS/streetwear-art/
+/public/NEW_DESIGNS/streetwear/car/
+/public/NEW_DESIGNS/streetwear/streetwear3/
+/public/wedding-designs-to-add/
+/scripts/*.log
+*.tsbuildinfo

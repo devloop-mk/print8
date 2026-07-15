@@ -45,6 +45,7 @@ import {
   getSelectedBrandingPackProducts,
   hydrateBrandingPackLogo,
   productHasMultipleSides,
+  resolveBrandingPackUnitPrice,
   type BrandingPackPreviewImage,
   type BrandingPackProductState,
   type BrandingPackState,
@@ -68,7 +69,7 @@ import {
   waitForPaint,
 } from '@/lib/products/capture-preview';
 import { clampPhotoScale } from '@/lib/products/crop-image';
-import { getProductColorLabelKey } from '@/lib/products/product-color-labels';
+import { getProductColorLabelKey, getColorSwatchDisplayHex } from '@/lib/products/product-color-labels';
 
 async function waitForCaptureRef(
   ref: RefObject<HTMLDivElement | null>,
@@ -543,7 +544,11 @@ export function BrandingPackWizard() {
                         {tp(item.productType)}
                       </span>
                       <span className="text-sm text-ink-500">
-                        {formatPrice(product.basePrice, locale)} {t('perItem')}
+                        {formatPrice(
+                          resolveBrandingPackUnitPrice(item),
+                          locale,
+                        )}{' '}
+                        {t('perItem')}
                       </span>
                     </span>
                   </div>
@@ -578,7 +583,11 @@ export function BrandingPackWizard() {
                                 />
                                 <span
                                   className="h-7 w-7 shrink-0 rounded-full border border-ink-200"
-                                  style={{ backgroundColor: selection.color }}
+                                  style={{
+                                    backgroundColor: getColorSwatchDisplayHex(
+                                      selection.color,
+                                    ),
+                                  }}
                                 />
                                 <span className="text-sm font-medium text-ink-700">
                                   {getColorLabel(selection.color)}
@@ -796,7 +805,7 @@ export function BrandingPackWizard() {
                     ? 'border-brand-600 ring-2 ring-brand-200'
                     : 'border-ink-200',
                 )}
-                style={{ backgroundColor: color }}
+                style={{ backgroundColor: getColorSwatchDisplayHex(color) }}
               />
             ))}
           </div>
@@ -879,7 +888,6 @@ export function BrandingPackWizard() {
 
         <ul className="mt-6 space-y-2 border-t border-ink-100 pt-4">
           {getBrandingPackLineItems(state).map((line) => {
-            const catalog = getProductById(line.product.productId);
             return (
               <li
                 key={`${line.product.productType}-${line.color}`}
@@ -897,7 +905,7 @@ export function BrandingPackWizard() {
                 </span>
                 <span className="font-medium">
                   {formatPrice(
-                    (catalog?.basePrice ?? 0) * line.quantity,
+                    resolveBrandingPackUnitPrice(line.product) * line.quantity,
                     locale,
                   )}
                 </span>

@@ -8,7 +8,7 @@ import { PageIntro } from '@/components/brand/PageIntro';
 import { buildSectionMetadata } from '@/lib/seo/page-metadata';
 import type { Locale } from '@/i18n/routing';
 import { getPublishedDesignTemplates } from '@/lib/catalog/design-catalog';
-import { getManagedSvgTemplateDefaultsMap } from '@/lib/designs/managed-svg-template-defaults';
+import { getManagedSvgTemplateDefaultsMap, getManagedSvgTemplateVersionMap } from '@/lib/designs/managed-svg-template-defaults';
 import { ArrowLeft } from 'lucide-react';
 
 export const revalidate = 3600;
@@ -30,9 +30,10 @@ export async function generateMetadata({
 
 export default async function DesignsAllPage() {
   const t = await getTranslations('designs');
-  const [designs, svgDefaultsMap] = await Promise.all([
+  const [designs, svgDefaultsMap, svgThumbVersions] = await Promise.all([
     getPublishedDesignTemplates(),
     getManagedSvgTemplateDefaultsMap(),
+    getManagedSvgTemplateVersionMap(),
   ]);
 
   return (
@@ -48,7 +49,11 @@ export default async function DesignsAllPage() {
       <PageIntro title={t('allPage.title')} subtitle={t('allPage.subtitle')} />
 
       <Suspense fallback={<SectionLoading />}>
-        <DesignsGallery designs={designs} svgDefaultsMap={svgDefaultsMap} />
+        <DesignsGallery
+          designs={designs}
+          svgDefaultsMap={svgDefaultsMap}
+          svgThumbVersions={svgThumbVersions}
+        />
       </Suspense>
     </div>
   );

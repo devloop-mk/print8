@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import type { Product } from '@/lib/data/catalog';
 import { CatalogGridLayout } from '@/components/catalog/CatalogGrid';
 import { buildCustomizerUrl } from '@/lib/products/paths';
+import { getColorSwatchDisplayHex } from '@/lib/products/product-color-labels';
 
 export type ProductCardLinkTarget = 'detail' | 'customizer';
 
@@ -129,7 +130,7 @@ export function ProductCardGrid({
                               ? 'border-brand-600 ring-2 ring-brand-200'
                               : 'border-ink-300 hover:border-ink-400',
                           )}
-                          style={{ backgroundColor: c }}
+                          style={{ backgroundColor: getColorSwatchDisplayHex(c) }}
                           aria-label={c}
                         />
                       ))}

@@ -145,9 +145,11 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ orderId, orderNumber });
-  } catch {
+  } catch (err) {
+    const errorId = nanoid(8);
+    console.error(`[orders] create failed id=${errorId}`, err);
     return NextResponse.json(
-      { error: 'Failed to create order' },
+      { error: 'Failed to create order', code: 'order_create_failed', errorId },
       { status: 500 },
     );
   }

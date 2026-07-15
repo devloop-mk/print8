@@ -1,22 +1,27 @@
 import {
   getProductMockup,
   isImageDesignTemplate,
-  isOverlayDesignTemplate,
-  isTextDesignTemplate,
   type Product,
   type ProductDesignTemplate,
   type ProductSide,
 } from '@/lib/data/catalog';
 import type { CartItem } from '@/components/cart/CartProvider';
 import {
-  sideDesignFromImageTemplate,
-  sideDesignFromOverlayTemplate,
-  sideDesignFromTextTemplate,
+  sideDesignsFromTemplate,
   type SideDesign,
 } from '@/lib/products/design-state';
+import {
+  getDesignSides,
+  getInitialCustomizerSide,
+} from '@/lib/products/design-sides';
 import { getSideMetadataPrefix } from '@/lib/products/product-sides';
 import { serializePlacedStickers } from '@/lib/products/sticker-library';
 import { writeTextMetadata } from '@/lib/products/text-layers';
+import {
+  getTshirtUnitPrice,
+  isTshirtProduct,
+  type TshirtPrintPackage,
+} from '@/lib/products/tshirt-print-pricing';
 
 export function writeSideDesignMetadata(
   metadata: Record<string, string | number | boolean>,
@@ -65,21 +70,19 @@ export function writeSideDesignMetadata(
   }
 }
 
-function sideDesignForTemplate(
+export function getPremadeTshirtPrintPackage(
   design: ProductDesignTemplate,
+): TshirtPrintPackage {
+  const sides = getDesignSides(design);
+  return sides.includes('back') ? 'front-back' : 'front-small';
+}
+
+export function getPremadeDesignUnitPrice(
   product: Product,
-  color: string,
-): SideDesign | null {
-  if (isImageDesignTemplate(design)) {
-    return sideDesignFromImageTemplate(design);
-  }
-  if (isOverlayDesignTemplate(design)) {
-    return sideDesignFromOverlayTemplate(design, product, color);
-  }
-  if (isTextDesignTemplate(design)) {
-    return sideDesignFromTextTemplate(design);
-  }
-  return null;
+  design: ProductDesignTemplate,
+): number {
+  if (!isTshirtProduct(product)) return product.basePrice;
+  return getTshirtUnitPrice(getPremadeTshirtPrintPackage(design));
 }
 
 export function buildPremadeDesignOrderMetadata({
@@ -93,23 +96,35 @@ export function buildPremadeDesignOrderMetadata({
   color: string;
   size?: string;
 }): Record<string, string | number | boolean> {
-  const side = design.defaultSide;
-  const sideDesign = sideDesignForTemplate(design, product, color);
+  const sides = getDesignSides(design);
+  const activeSide = getInitialCustomizerSide(design);
+  const sideDesignMap = sideDesignsFromTemplate(design, product, color);
 
   const metadata: Record<string, string | number | boolean> = {
     productId: product.id,
     color,
     designTemplateId: design.id,
     designKind: design.kind,
-    designSide: side,
-    activeSide: side,
-    isCustomized: Boolean(sideDesign),
+    designSide: activeSide,
+    activeSide,
+    isCustomized: Object.keys(sideDesignMap).length > 0,
   };
+
+  if (isTshirtProduct(product)) {
+    metadata.printPackage = getPremadeTshirtPrintPackage(design);
+  }
+
+  if (sides.length > 1) {
+    metadata.designSides = sides.join(',');
+  }
 
   if (size) metadata.size = size;
 
-  if (sideDesign) {
-    writeSideDesignMetadata(metadata, side, sideDesign);
+  for (const side of sides) {
+    const sideDesign = sideDesignMap[side];
+    if (sideDesign) {
+      writeSideDesignMetadata(metadata, side, sideDesign);
+    }
   }
 
   return metadata;
@@ -153,7 +168,6 @@ export function buildPremadeDesignCartPayload({
   color,
   size,
   name,
-  price,
   quantity = 1,
   capturedPreview,
 }: {
@@ -162,7 +176,8 @@ export function buildPremadeDesignCartPayload({
   color: string;
   size?: string;
   name: string;
-  price: number;
+  /** @deprecated Ignored — unit price is derived from product + print package. */
+  price?: number;
   quantity?: number;
   capturedPreview?: string;
 }): Omit<CartItem, 'id'> {
@@ -172,16 +187,24 @@ export function buildPremadeDesignCartPayload({
     color,
     size,
   });
+  const activeSide = getInitialCustomizerSide(design);
   const preview =
     capturedPreview ?? getPremadeDesignOrderPreview(product, design, color);
-  const previewField = sidePreviewFieldForSide(design.defaultSide);
+  const previewField = sidePreviewFieldForSide(activeSide);
+  const sides = getDesignSides(design);
+  const backPreview =
+    sides.includes('back') && activeSide !== 'back'
+      ? getProductMockup(product, color, 'back') ?? undefined
+      : undefined;
+  const unitPrice = getPremadeDesignUnitPrice(product, design);
 
   return {
     type: 'product',
     name,
-    price,
+    price: unitPrice,
     quantity,
     metadata,
     [previewField]: preview,
+    ...(backPreview ? { backDesignPreview: backPreview } : {}),
   };
 }

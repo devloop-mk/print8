@@ -1,6 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { Link } from '@/i18n/navigation';
-import { redirect } from 'next/navigation';
+import { Link, redirect } from '@/i18n/navigation';
 import type { Metadata } from 'next';
 import { DesignsCategoriesOverview } from '@/components/designs/DesignsCategoriesOverview';
 import { Button } from '@/components/ui/Button';
@@ -22,22 +21,28 @@ export async function generateMetadata({
 }
 
 export default async function DesignsPage({
+  params,
   searchParams,
 }: {
+  params: Promise<{ locale: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const params = await searchParams;
+  const { locale } = await params;
+  const query = await searchParams;
   const legacyQuery = new URLSearchParams();
 
   for (const key of ['category', 'tag', 'q', 'page'] as const) {
-    const value = params[key];
+    const value = query[key];
     if (typeof value === 'string' && value.length > 0) {
       legacyQuery.set(key, value);
     }
   }
 
   if (legacyQuery.toString()) {
-    redirect(`/designs/all?${legacyQuery.toString()}`);
+    redirect({
+      href: `/designs/all?${legacyQuery.toString()}`,
+      locale: locale as Locale,
+    });
   }
 
   const t = await getTranslations('designs');

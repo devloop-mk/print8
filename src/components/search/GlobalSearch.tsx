@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { Search, X } from 'lucide-react';
-import { searchGlobalCatalog } from '@/lib/catalog/catalog-search';
+import { searchGlobalCatalog, SEARCH_RESULTS_PREVIEW_LIMIT } from '@/lib/catalog/catalog-search';
 import { useCatalogSearchLabels } from '@/hooks/useCatalogSearchLabels';
 import { useManagedDesignSearchEntries } from '@/hooks/useManagedDesignSearchEntries';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
@@ -48,10 +48,17 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [open, onClose]);
 
-  const results = useMemo(
-    () => searchGlobalCatalog(debouncedQuery, labels, managedDesigns).slice(0, 12),
+  const allResults = useMemo(
+    () => searchGlobalCatalog(debouncedQuery, labels, managedDesigns),
     [debouncedQuery, labels, managedDesigns],
   );
+
+  const results = useMemo(
+    () => allResults.slice(0, SEARCH_RESULTS_PREVIEW_LIMIT),
+    [allResults],
+  );
+
+  const hasMoreResults = allResults.length > SEARCH_RESULTS_PREVIEW_LIMIT;
 
   const grouped = useMemo(() => {
     return {
@@ -144,7 +151,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
           )}
         </div>
 
-        {query.trim() && results.length > 0 ? (
+        {query.trim() && hasMoreResults ? (
           <div className="border-t border-ink-100 p-3">
             <button
               type="button"
@@ -154,7 +161,9 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
               }}
               className="w-full rounded-lg px-3 py-2 text-sm font-semibold text-brand-700 transition hover:bg-brand-50"
             >
-              {t('viewAll')}
+              {t('seeMore', {
+                count: allResults.length - SEARCH_RESULTS_PREVIEW_LIMIT,
+              })}
             </button>
           </div>
         ) : null}

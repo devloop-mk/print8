@@ -46,6 +46,26 @@ const COLLECTIONS = [
   },
 ];
 
+/** Extra batches imported with --append (full sourceDir, optional recursion) */
+const APPEND_COLLECTIONS = [
+  {
+    sourceDir:
+      'D:\\Graphic Design Files\\PRINT 8\\GOTOVI DIZAJNI\\STREETWEARGAME 4\\STREETWEAR\\Streetwear3',
+    slug: 'streetwear3',
+    labelEn: 'Streetwear Vol. 3',
+    labelMk: 'Streetwear Vol. 3',
+    recursive: false,
+  },
+  {
+    sourceDir:
+      'D:\\Graphic Design Files\\PRINT 8\\GOTOVI DIZAJNI\\STREETWEARGAME-20260424T072053Z-3-001\\STREETWEARGAME\\Car',
+    slug: 'car',
+    labelEn: 'Car',
+    labelMk: 'Автомобили',
+    recursive: true,
+  },
+];
+
 function loadEnv() {
   const envPath = path.join(process.cwd(), '.env.local');
   if (!fs.existsSync(envPath)) return;
@@ -99,6 +119,22 @@ function cleanTitle(filename) {
 
 function baseKey(filename) {
   return cleanTitle(filename).toLowerCase();
+}
+
+function collectPngFiles(sourceDir, recursive = false) {
+  if (!fs.existsSync(sourceDir)) return [];
+  const results = [];
+  for (const entry of fs.readdirSync(sourceDir, { withFileTypes: true })) {
+    const fullPath = path.join(sourceDir, entry.name);
+    if (entry.isDirectory() && recursive) {
+      results.push(...collectPngFiles(fullPath, true));
+      continue;
+    }
+    if (entry.isFile() && /\.png$/i.test(entry.name)) {
+      results.push(fullPath);
+    }
+  }
+  return results;
 }
 
 function pickBestPng(files) {
@@ -276,12 +312,58 @@ async function runPool(tasks, concurrency) {
   return results;
 }
 
+function writeCatalog(items) {
+  const catalogTs = `import type { ProductDesignTemplate } from '@/lib/data/catalog';
+
+/** Auto-generated from STREETWEAR import — do not edit by hand */
+export const streetwearPackTemplates: ProductDesignTemplate[] = [
+${items
+  .map((item) => {
+    return `  {
+    id: ${tsString(item.id)},
+    kind: 'overlay',
+    category: 'image-designs',
+    productTypes: ['t-shirt', 'hoodie'],
+    nameKey: ${tsString(item.id)},
+    titleEn: ${tsString(item.title)},
+    titleMk: ${tsString(item.title)},
+    collection: ${tsString(item.collection)},
+    overlayImage: ${tsString(item.overlayImage)},
+    printMasterImage: ${tsString(item.printMasterImage)},
+    overlayScale: 40,
+    overlayPosition: { x: 50, y: 49 },
+    overlayByProductType: {
+      hoodie: { position: { x: 50, y: 59 }, scale: 41 },
+    },
+    recommendedColor: '#000000',
+    defaultSide: 'front',
+  },`;
+  })
+  .join('\n')}
+];
+`;
+  fs.writeFileSync(CATALOG_OUT, catalogTs);
+}
+
+function buildManifest(items, collectionDefs) {
+  return {
+    imported: items.length,
+    targetMaxKb: TARGET_MAX_KB,
+    collections: collectionDefs.map((collection) => ({
+      slug: collection.slug,
+      count: items.filter((item) => item.collection === collection.slug).length,
+    })),
+    items,
+  };
+}
+
 async function main() {
   loadEnv();
   const dryRun = process.argv.includes('--dry-run');
   const skipR2 = process.argv.includes('--skip-r2');
+  const append = process.argv.includes('--append');
 
-  if (!fs.existsSync(SOURCE_ROOT)) {
+  if (!append && !fs.existsSync(SOURCE_ROOT)) {
     console.error('Source folder not found:', SOURCE_ROOT);
     process.exit(1);
   }
@@ -289,21 +371,48 @@ async function main() {
   ensureDir(WEB_OUT);
   ensureDir(MASTER_OUT);
 
-  const items = [];
-  let index = 0;
+  const existingItems =
+    append && fs.existsSync(MANIFEST_OUT)
+      ? JSON.parse(fs.readFileSync(MANIFEST_OUT, 'utf8')).items ?? []
+      : [];
+
+  const collectionDefs = append
+    ? [
+        ...(fs.existsSync(MANIFEST_OUT)
+          ? JSON.parse(fs.readFileSync(MANIFEST_OUT, 'utf8')).collections ?? []
+          : []),
+        ...APPEND_COLLECTIONS.map(({ slug, labelEn, labelMk }) => ({
+          slug,
+          labelEn,
+          labelMk,
+        })),
+      ]
+    : COLLECTIONS;
+
+  const items = [...existingItems];
+  let index = existingItems.length;
   const tasks = [];
 
-  for (const collection of COLLECTIONS) {
-    const sourceDir = path.join(SOURCE_ROOT, collection.folder);
-    if (!fs.existsSync(sourceDir)) {
-      console.warn('Missing collection folder:', collection.folder);
-      continue;
-    }
+  const collectionsToImport = append
+    ? APPEND_COLLECTIONS
+    : COLLECTIONS.map((collection) => ({
+        ...collection,
+        sourceDir: path.join(SOURCE_ROOT, collection.folder),
+        recursive: false,
+      }));
 
-    const files = fs
-      .readdirSync(sourceDir)
-      .map((name) => path.join(sourceDir, name));
-    const designs = pickBestPng(files);
+  for (const collection of collectionsToImport) {
+    const sourceDir = collection.sourceDir ?? path.join(SOURCE_ROOT, collection.folder);
+    const designs = (() => {
+      if (!fs.existsSync(sourceDir)) {
+        console.warn('Missing collection folder:', sourceDir);
+        return [];
+      }
+      const files = collection.recursive
+        ? collectPngFiles(sourceDir, true)
+        : fs.readdirSync(sourceDir).map((name) => path.join(sourceDir, name));
+      return pickBestPng(files);
+    })();
 
     for (const design of designs) {
       index += 1;
@@ -323,48 +432,10 @@ async function main() {
   const results = await runPool(tasks, CONCURRENCY);
   items.push(...results);
 
-  const catalogTs = `import type { ProductDesignTemplate } from '@/lib/data/catalog';
-
-/** Auto-generated from STREETWEAR import — do not edit by hand */
-export const streetwearPackTemplates: ProductDesignTemplate[] = [
-${items
-  .map((item) => {
-    return `  {
-    id: ${tsString(item.id)},
-    kind: 'overlay',
-    category: 'image-designs',
-    productTypes: ['t-shirt', 'hoodie'],
-    nameKey: ${tsString(item.id)},
-    titleEn: ${tsString(item.title)},
-    titleMk: ${tsString(item.title)},
-    collection: ${tsString(item.collection)},
-    overlayImage: ${tsString(item.overlayImage)},
-    printMasterImage: ${tsString(item.printMasterImage)},
-    overlayScale: 52,
-    overlayPosition: { x: 50, y: 49 },
-    overlayByProductType: {
-      hoodie: { position: { x: 50, y: 59 }, scale: 41 },
-    },
-    recommendedColor: '#000000',
-    defaultSide: 'front',
-  },`;
-  })
-  .join('\n')}
-];
-`;
-
-  const manifest = {
-    imported: items.length,
-    targetMaxKb: TARGET_MAX_KB,
-    collections: COLLECTIONS.map((collection) => ({
-      slug: collection.slug,
-      count: items.filter((item) => item.collection === collection.slug).length,
-    })),
-    items,
-  };
+  const manifest = buildManifest(items, collectionDefs);
 
   if (!dryRun) {
-    fs.writeFileSync(CATALOG_OUT, catalogTs);
+    writeCatalog(items);
     fs.writeFileSync(MANIFEST_OUT, JSON.stringify(manifest, null, 2));
   }
 

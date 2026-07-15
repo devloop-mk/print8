@@ -4,6 +4,7 @@ import sharp from 'sharp';
 import { requireAdminApi } from '@/lib/admin/api-auth';
 import { catalogStoragePath, putCatalogObject } from '@/lib/storage/object-storage';
 import { isR2Configured } from '@/lib/storage/r2-client';
+import { sanitizeSvgMarkup } from '@/lib/security/sanitize-svg';
 
 const MAX_FILE_SIZE = 12 * 1024 * 1024;
 const ALLOWED_MIME_TYPES = new Set([
@@ -20,6 +21,11 @@ function sanitizeSegment(value: string) {
     .replace(/[^a-z0-9/_-]+/g, '-')
     .replace(/-+/g, '-')
     .replace(/^\/+|\/+$/g, '');
+}
+
+function looksLikeSvg(buffer: Buffer): boolean {
+  const head = buffer.subarray(0, 256).toString('utf8').trimStart();
+  return head.startsWith('<svg') || head.startsWith('<?xml');
 }
 
 export async function POST(request: NextRequest) {
@@ -57,9 +63,17 @@ export async function POST(request: NextRequest) {
     let body: Buffer;
 
     if (mimeType === 'image/svg+xml') {
+      if (!looksLikeSvg(sourceBuffer)) {
+        return NextResponse.json({ error: 'Invalid SVG file' }, { status: 400 });
+      }
+      const sanitized = sanitizeSvgMarkup(sourceBuffer.toString('utf8'));
+      if (!sanitized.toLowerCase().includes('<svg')) {
+        return NextResponse.json({ error: 'Invalid SVG file' }, { status: 400 });
+      }
       const baseName = file.name.replace(/\.[^.]+$/, '') || nanoid(8);
-      relativePath = `NEW_DESIGNS/${folder}/${baseName}.svg`;
-      body = sourceBuffer;
+      const safeName = sanitizeSegment(baseName) || nanoid(8);
+      relativePath = `NEW_DESIGNS/${folder}/${safeName}.svg`;
+      body = Buffer.from(sanitized, 'utf8');
       contentType = 'image/svg+xml';
     } else {
       const id = nanoid(10);
@@ -79,7 +93,7 @@ export async function POST(request: NextRequest) {
       storageKey: `catalog/${relativePath}`,
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Upload failed';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('[admin/assets/upload]', err);
+    return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
   }
 }

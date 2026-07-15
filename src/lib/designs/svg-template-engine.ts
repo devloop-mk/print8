@@ -32,6 +32,7 @@ import {
   resolveSvgFieldDefault,
   type SvgSiteLocale,
 } from '@/lib/designs/svg-locale-defaults';
+import { sanitizeCssHexColor, sanitizeSvgMarkup } from '@/lib/security/sanitize-svg';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -66,12 +67,12 @@ function escapeXml(value: string): string {
 }
 
 function normalizeColor(color: string): string {
-  return color.trim().toUpperCase();
+  return sanitizeCssHexColor(color).toUpperCase();
 }
 
 function replaceInlineColor(svg: string, from: string, to: string): string {
   const source = normalizeColor(from);
-  const target = to;
+  const target = sanitizeCssHexColor(to, source);
   const patterns = [
     new RegExp(`fill="${source}"`, 'gi'),
     new RegExp(`fill='${source}'`, 'gi'),
@@ -94,7 +95,7 @@ function applyCssClassColors(svg: string, slots: SvgColorSlot[], colors: SvgTemp
   let result = svg;
   for (const slot of slots) {
     if (!slot.cssClass) continue;
-    const color = colors[slot.id] ?? slot.default;
+    const color = sanitizeCssHexColor(colors[slot.id] ?? slot.default);
     const classPattern = new RegExp(
       `\\.${slot.cssClass}\\s*\\{[^}]*fill:\\s*[^;]+;`,
       'gi',
@@ -346,7 +347,7 @@ export function buildDefaultSvgTemplateState(
 }
 
 export function prepareSvgForInlineDom(svg: string): string {
-  return svg.replace(/<\?xml[^?]*\?>\s*/i, '').trim();
+  return sanitizeSvgMarkup(svg);
 }
 
 /** Prefix SVG ids so multiple inline previews on one page do not clash. */

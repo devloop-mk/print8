@@ -1,6 +1,8 @@
 import type { Product, ProductSide } from '@/lib/data/catalog';
 import {
   TSHIRT_PRINT_AREA_INSETS,
+  WOMEN_TSHIRT_PRINT_AREA_INSETS,
+  WOMEN_TSHIRT_SMALL_PRINT_AREA_INSETS,
   type PrintAreaInsets,
 } from '@/lib/products/print-area';
 
@@ -67,11 +69,17 @@ export function getTshirtPriceFromMetadata(
 export function getTshirtPrintAreaInsets(
   pkg: TshirtPrintPackage,
   side: ProductSide,
+  product?: Product,
 ): PrintAreaInsets {
+  const isWomen = product?.fit === 'women';
+
   if (pkg === 'front-small' && side === 'front') {
-    return TSHIRT_SMALL_PRINT_AREA_INSETS;
+    return isWomen
+      ? WOMEN_TSHIRT_SMALL_PRINT_AREA_INSETS
+      : TSHIRT_SMALL_PRINT_AREA_INSETS;
   }
-  return TSHIRT_PRINT_AREA_INSETS;
+
+  return isWomen ? WOMEN_TSHIRT_PRINT_AREA_INSETS : TSHIRT_PRINT_AREA_INSETS;
 }
 
 export function tshirtPackageAllowsBack(pkg: TshirtPrintPackage): boolean {

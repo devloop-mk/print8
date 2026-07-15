@@ -1,24 +1,39 @@
+import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
 import {
   productDesignTemplates as staticProductDesignTemplates,
   type ProductDesignTemplate,
 } from '@/lib/data/catalog';
-import { managedProductDesignsDb } from '@/lib/db/managed-product-designs';
+import {
+  managedProductDesignsDb,
+  type ManagedProductDesignRecord,
+} from '@/lib/db/managed-product-designs';
 import { mergeProductDesignCatalog } from '@/lib/products/merge-product-designs';
 
 export const PRODUCT_DESIGNS_CACHE_TAG = 'product-designs';
 
-async function loadMergedProductDesignTemplates(): Promise<ProductDesignTemplate[]> {
-  const managed = await managedProductDesignsDb.list();
-  return mergeProductDesignCatalog(staticProductDesignTemplates, managed);
-}
-
-export const getMergedProductDesignTemplates = unstable_cache(
-  loadMergedProductDesignTemplates,
-  ['merged-product-design-templates'],
+/**
+ * Cache only managed DB overrides — not the full static streetwear catalog.
+ * Putting ~850 templates into Next's Data Cache exceeds the 2MB limit.
+ */
+const getCachedManagedProductDesignRecords = unstable_cache(
+  async (): Promise<ManagedProductDesignRecord[]> =>
+    managedProductDesignsDb.list(),
+  ['managed-product-design-records'],
   {
     revalidate: 300,
     tags: [PRODUCT_DESIGNS_CACHE_TAG],
+  },
+);
+
+/**
+ * Merge static catalog (already in the module heap) with cached managed rows.
+ * Memoized per request via React cache — never written to Data Cache.
+ */
+export const getMergedProductDesignTemplates = cache(
+  async (): Promise<ProductDesignTemplate[]> => {
+    const managed = await getCachedManagedProductDesignRecords();
+    return mergeProductDesignCatalog(staticProductDesignTemplates, managed);
   },
 );
 

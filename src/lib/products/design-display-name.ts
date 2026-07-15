@@ -10,6 +10,13 @@ export function getProductDesignDisplayName(
   return design.nameKey;
 }
 
+export function humanizeProductDesignNameKey(nameKey: string): string {
+  if (nameKey.includes('-')) return nameKey;
+  return nameKey
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/^./, (char) => char.toUpperCase());
+}
+
 export function resolveProductDesignDisplayName(
   design: ProductDesignTemplate,
   locale: 'mk' | 'en',
@@ -17,5 +24,10 @@ export function resolveProductDesignDisplayName(
 ) {
   const fromData = getProductDesignDisplayName(design, locale);
   if (fromData !== design.nameKey) return fromData;
-  return translateNameKey(`designs.${design.nameKey}`);
+
+  try {
+    return translateNameKey(`designs.${design.nameKey}`);
+  } catch {
+    return humanizeProductDesignNameKey(design.nameKey);
+  }
 }

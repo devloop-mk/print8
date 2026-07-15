@@ -1,9 +1,13 @@
 'use client';
 
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { ChevronDown, SlidersHorizontal, type LucideIcon } from 'lucide-react';
 import { CatalogSearchField } from '@/components/catalog/CatalogSearchField';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import {
+  getColorSwatchDisplayHex,
+  isLightColorSwatch,
+} from '@/lib/products/product-color-labels';
 import { cn } from '@/lib/utils';
 
 export type FilterOption<T extends string> = {
@@ -199,9 +203,11 @@ function FilterGroupPanel({
                 'h-8 w-8 rounded-full border-2 transition',
                 group.value === color
                   ? 'border-brand-600 ring-2 ring-brand-200'
-                  : 'border-ink-200 hover:border-ink-300',
+                  : isLightColorSwatch(color)
+                    ? 'border-ink-300 hover:border-ink-400'
+                    : 'border-ink-200 hover:border-ink-300',
               )}
-              style={{ backgroundColor: color }}
+              style={{ backgroundColor: getColorSwatchDisplayHex(color) }}
               aria-label={color}
               title={color}
             />
@@ -252,7 +258,10 @@ function MobileFilterPanel({
   searchAriaLabel,
   searchClearLabel,
   onSearchChange,
-}: Omit<CatalogFilterLayoutProps, 'children'>) {
+  onFilterSelect,
+}: Omit<CatalogFilterLayoutProps, 'children'> & {
+  onFilterSelect?: () => void;
+}) {
   const [expanded, setExpanded] = useState(false);
   const panelId = useId();
 
@@ -334,7 +343,10 @@ function MobileFilterPanel({
               <FilterGroupPanel
                 key={group.id}
                 group={group}
-                onSelect={() => setExpanded(false)}
+                onSelect={() => {
+                  setExpanded(false);
+                  onFilterSelect?.();
+                }}
               />
             ))}
           </div>
@@ -364,6 +376,15 @@ export function CatalogFilterLayout({
   onSearchChange,
   children,
 }: CatalogFilterLayoutProps) {
+  const resultsRef = useRef<HTMLDivElement>(null);
+
+  const scrollToResults = useCallback(() => {
+    resultsRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  }, []);
+
   const resultsText =
     typeof resultsCount === 'number' && resultsLabel
       ? resultsLabel(resultsCount)
@@ -397,7 +418,11 @@ export function CatalogFilterLayout({
           ) : null}
 
           {groups.map((group) => (
-            <FilterGroupPanel key={group.id} group={group} />
+            <FilterGroupPanel
+              key={group.id}
+              group={group}
+              onSelect={scrollToResults}
+            />
           ))}
 
           {resultsText ? (
@@ -422,9 +447,12 @@ export function CatalogFilterLayout({
             searchAriaLabel={searchAriaLabel}
             searchClearLabel={searchClearLabel}
             onSearchChange={onSearchChange}
+            onFilterSelect={scrollToResults}
           />
         </div>
-        {children}
+        <div ref={resultsRef} className="scroll-mt-24">
+          {children}
+        </div>
       </div>
     </div>
   );

@@ -33,6 +33,16 @@ type OrderPreviewEmbed = EmailAttachment & {
   label: string;
 };
 
+const BRAND = {
+  primary: "#2f7cb2",
+  primaryDark: "#225376",
+  ink: "#0f172a",
+  muted: "#64748b",
+  border: "#e2e8f0",
+  surface: "#f8fafc",
+  white: "#ffffff",
+} as const;
+
 async function downloadStoredFile(storedName: string): Promise<Buffer | null> {
   try {
     const { body } = await getUploadObject(storedName);
@@ -60,11 +70,40 @@ function parseDataUrl(dataUrl: string) {
   };
 }
 
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function mimeTypeFromFilename(filename: string, fallback: string) {
+  const lower = filename.toLowerCase();
+  if (lower.endsWith(".png")) return "image/png";
+  if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
+  if (lower.endsWith(".webp")) return "image/webp";
+  if (lower.endsWith(".pdf")) return "application/pdf";
+  return fallback;
+}
+
+function detailRow(label: string, valueHtml: string): string {
+  return `<tr>
+    <td style="padding:8px 0;border-bottom:1px solid ${BRAND.border};width:34%;vertical-align:top;font-size:13px;font-weight:600;color:${BRAND.muted};">${label}</td>
+    <td style="padding:8px 0;border-bottom:1px solid ${BRAND.border};vertical-align:top;font-size:14px;color:${BRAND.ink};">${valueHtml}</td>
+  </tr>`;
+}
+
+function detailTable(rows: string[]): string {
+  if (rows.length === 0) return "";
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0;">${rows.join("")}</table>`;
+}
+
 function buildProductDesignDetailsInnerHtml(item: OrderItem): string {
   const meta = item.metadata;
   if (!meta) return "";
 
-  const sideLines: string[] = [];
+  const rows: string[] = [];
 
   for (const side of PRODUCT_SIDES) {
     const prefix = getSideMetadataPrefix(side);
@@ -77,9 +116,7 @@ function buildProductDesignDetailsInnerHtml(item: OrderItem): string {
         .filter(Boolean)
         .map((text) => `“${escapeHtml(text)}”`)
         .join(", ");
-      if (texts) {
-        parts.push(`Text: ${texts}`);
-      }
+      if (texts) parts.push(`Text: ${texts}`);
     } else {
       const customText = meta[`${prefix}CustomText`];
       if (typeof customText === "string" && customText.trim()) {
@@ -89,13 +126,12 @@ function buildProductDesignDetailsInnerHtml(item: OrderItem): string {
 
     const stickers = parsePlacedStickers(meta[`${prefix}Stickers`]);
     if (stickers.length > 0) {
-      const ids = stickers.map((s) => s.stickerId).join(", ");
-      parts.push(`Stickers: ${escapeHtml(ids)}`);
+      parts.push(`Stickers: ${escapeHtml(stickers.map((s) => s.stickerId).join(", "))}`);
     }
 
     const uploadedFileId = meta[`${prefix}UploadedFileId`];
     if (typeof uploadedFileId === "string" && uploadedFileId) {
-      parts.push("Photo: attached (original upload)");
+      parts.push("Photo: original upload attached");
     }
 
     const premade = meta[`${prefix}PremadeDesignImage`];
@@ -106,13 +142,20 @@ function buildProductDesignDetailsInnerHtml(item: OrderItem): string {
     if (parts.length === 0) continue;
 
     const sideLabel = side.charAt(0).toUpperCase() + side.slice(1);
-    sideLines.push(
-      `<li><strong>${sideLabel}</strong> — ${parts.join(" · ")}</li>`,
-    );
+    rows.push(detailRow(sideLabel, parts.join("<br/>")));
   }
 
-  if (sideLines.length === 0) return "";
-  return `<ul style="margin:0;padding-left:18px;">${sideLines.join("")}</ul>`;
+  if (typeof meta.size === "string" && meta.size) {
+    rows.unshift(detailRow("Size", escapeHtml(meta.size)));
+  }
+  if (typeof meta.color === "string" && meta.color) {
+    rows.unshift(detailRow("Color", escapeHtml(meta.color)));
+  }
+  if (typeof meta.printPackage === "string" && meta.printPackage) {
+    rows.unshift(detailRow("Print package", escapeHtml(meta.printPackage)));
+  }
+
+  return detailTable(rows);
 }
 
 function buildCustomDesignDetailsInnerHtml(item: OrderItem): string {
@@ -120,66 +163,47 @@ function buildCustomDesignDetailsInnerHtml(item: OrderItem): string {
   if (!meta) return "";
 
   if (meta.orderType === "svg-template") {
-    const summary: string[] = [];
+    const rows: string[] = [];
     if (typeof meta.svgTemplateId === "string") {
-      summary.push(`Template: ${escapeHtml(meta.svgTemplateId)}`);
+      rows.push(detailRow("Template", escapeHtml(meta.svgTemplateId)));
     }
     if (typeof meta.svgFrontContent === "string") {
-      summary.push("Front: print-ready SVG attached");
+      rows.push(detailRow("Front", "Print-ready SVG attached"));
     }
     if (typeof meta.svgBackContent === "string") {
-      summary.push("Back: print-ready SVG attached");
+      rows.push(detailRow("Back", "Print-ready SVG attached"));
     }
 
-    const textEntries = Object.entries(meta)
-      .filter(([key]) => key.startsWith("text_"))
-      .map(([key, value]) => {
-        const label = key.replace(/^text_/, "").replace(":", " · ");
-        return `<li><strong>${escapeHtml(label)}</strong>: ${escapeHtml(String(value))}</li>`;
-      });
+    const textEntries = Object.entries(meta).filter(([key]) =>
+      key.startsWith("text_"),
+    );
+    for (const [key, value] of textEntries) {
+      const label = key.replace(/^text_/, "").replace(":", " · ");
+      rows.push(detailRow(escapeHtml(label), escapeHtml(String(value))));
+    }
 
-    return [
-      summary.length > 0
-        ? `<p style="margin:0 0 8px;">${summary.join("<br/>")}</p>`
-        : "",
-      textEntries.length > 0
-        ? `<ul style="margin:0;padding-left:18px;">${textEntries.join("")}</ul>`
-        : "",
-    ].join("");
+    return detailTable(rows);
   }
 
   if (meta.orderType === "custom-design-request") {
-    const lines: string[] = [];
+    const rows: string[] = [];
     if (typeof meta.customDesignCategory === "string") {
-      lines.push(
-        `<li><strong>Design type</strong>: ${escapeHtml(String(meta.customDesignCategory))}</li>`,
+      rows.push(
+        detailRow("Design type", escapeHtml(String(meta.customDesignCategory))),
       );
     }
     if (typeof meta.targetProductLabel === "string") {
-      lines.push(
-        `<li><strong>Intended product</strong>: ${escapeHtml(meta.targetProductLabel)}</li>`,
+      rows.push(
+        detailRow("Intended product", escapeHtml(meta.targetProductLabel)),
       );
     }
     if (typeof meta.designBrief === "string") {
-      lines.push(
-        `<li><strong>Design brief</strong>: ${escapeHtml(meta.designBrief)}</li>`,
-      );
+      rows.push(detailRow("Design brief", escapeHtml(meta.designBrief)));
     }
     if (typeof meta.styleNotes === "string") {
-      lines.push(
-        `<li><strong>Style notes</strong>: ${escapeHtml(meta.styleNotes)}</li>`,
-      );
+      rows.push(detailRow("Style notes", escapeHtml(meta.styleNotes)));
     }
-    for (const key of ["fullName", "phone", "email"] as const) {
-      const value = meta[key];
-      if (typeof value === "string" && value.trim()) {
-        lines.push(
-          `<li><strong>${escapeHtml(key)}</strong>: ${escapeHtml(value)}</li>`,
-        );
-      }
-    }
-    if (lines.length === 0) return "";
-    return `<ul style="margin:0;padding-left:18px;">${lines.join("")}</ul>`;
+    return detailTable(rows);
   }
 
   if (meta.orderType === "customizable-template") {
@@ -199,14 +223,11 @@ function buildCustomDesignDetailsInnerHtml(item: OrderItem): string {
 
     if (fields.length === 0) return "";
 
-    return `<ul style="margin:0;padding-left:18px;">
-      ${fields
-        .map(
-          ([key, value]) =>
-            `<li><strong>${escapeHtml(key)}</strong>: ${escapeHtml(String(value))}</li>`,
-        )
-        .join("")}
-    </ul>`;
+    return detailTable(
+      fields.map(([key, value]) =>
+        detailRow(escapeHtml(key), escapeHtml(String(value))),
+      ),
+    );
   }
 
   return "";
@@ -247,15 +268,17 @@ function buildOrderItemPreviewImagesHtml(
   const itemEmbeds = embeds.filter((embed) => embed.itemIndex === itemIndex);
   if (itemEmbeds.length === 0) return "";
 
-  return itemEmbeds
+  const cells = itemEmbeds
     .map(
       (embed) =>
-        `<div style="display:inline-block;vertical-align:top;margin:8px 12px 8px 0;">
-          <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">${escapeHtml(embed.label)}</p>
-          <img src="cid:${embed.contentId}" alt="${escapeHtml(item.name)} ${escapeHtml(embed.label)}" style="max-width:280px;border-radius:8px;border:1px solid #e5e7eb;display:block;background:#fff;" />
-        </div>`,
+        `<td style="padding:0 12px 12px 0;vertical-align:top;">
+          <p style="margin:0 0 8px;font-size:11px;font-weight:700;color:${BRAND.muted};text-transform:uppercase;letter-spacing:0.06em;">${escapeHtml(embed.label)}</p>
+          <img src="cid:${embed.contentId}" alt="${escapeHtml(item.name)} ${escapeHtml(embed.label)}" width="240" style="width:240px;max-width:100%;height:auto;border:1px solid ${BRAND.border};display:block;background:${BRAND.white};" />
+        </td>`,
     )
     .join("");
+
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-top:4px;"><tr>${cells}</tr></table>`;
 }
 
 function buildOrderItemEmailBlock(
@@ -270,30 +293,56 @@ function buildOrderItemEmailBlock(
   const productDetails = buildProductDesignDetailsInnerHtml(item);
   const customDetails = buildCustomDesignDetailsInnerHtml(item);
   const detailsHtml = [productDetails, customDetails].filter(Boolean).join("");
+  const lineTotal = formatPrice(item.price * item.quantity, locale);
 
   const itemPosition =
     totalItems > 1
-      ? `<p style="margin:0 0 8px;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">${labels.itemOf.replace("{current}", String(index + 1)).replace("{total}", String(totalItems))}</p>`
+      ? `<p style="margin:0 0 10px;font-size:11px;font-weight:700;color:${BRAND.primary};text-transform:uppercase;letter-spacing:0.06em;">${labels.itemOf
+          .replace("{current}", String(index + 1))
+          .replace("{total}", String(totalItems))}</p>`
       : "";
 
-  return `<div style="margin:24px 0;padding:20px;border:2px solid #d1d5db;border-radius:12px;background:#f9fafb;">
-    ${itemPosition}
-    <p style="margin:0 0 4px;font-size:18px;font-weight:700;color:#111827;">${escapeHtml(item.name)}</p>
-    <p style="margin:0;font-size:14px;color:#374151;">× ${item.quantity} — ${formatPrice(item.price * item.quantity, locale)}</p>
-    ${
-      previewHtml
-        ? `<div style="margin-top:16px;padding-top:16px;border-top:1px solid #e5e7eb;">
-            <p style="margin:0 0 10px;font-size:13px;font-weight:600;color:#374151;">${labels.designDetails}</p>
-            ${previewHtml}
-          </div>`
-        : ""
-    }
-    ${
-      detailsHtml
-        ? `<div style="margin-top:12px;padding-top:12px;border-top:1px solid #e5e7eb;font-size:14px;color:#374151;">${detailsHtml}</div>`
-        : ""
-    }
-  </div>`;
+  return `<tr>
+    <td style="padding:0 0 16px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid ${BRAND.border};background:${BRAND.white};">
+        <tr>
+          <td style="padding:20px 20px 16px;border-bottom:1px solid ${BRAND.border};">
+            ${itemPosition}
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+              <tr>
+                <td style="vertical-align:top;padding-right:12px;">
+                  <p style="margin:0 0 4px;font-size:16px;font-weight:700;color:${BRAND.ink};line-height:1.35;">${escapeHtml(item.name)}</p>
+                  <p style="margin:0;font-size:13px;color:${BRAND.muted};">Qty ${item.quantity} · ${formatPrice(item.price, locale)} each</p>
+                </td>
+                <td style="vertical-align:top;text-align:right;white-space:nowrap;">
+                  <p style="margin:0;font-size:16px;font-weight:700;color:${BRAND.ink};">${lineTotal}</p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        ${
+          previewHtml
+            ? `<tr>
+                <td style="padding:16px 20px;border-bottom:1px solid ${BRAND.border};background:${BRAND.surface};">
+                  <p style="margin:0 0 10px;font-size:12px;font-weight:700;color:${BRAND.ink};">${labels.designDetails}</p>
+                  ${previewHtml}
+                </td>
+              </tr>`
+            : ""
+        }
+        ${
+          detailsHtml
+            ? `<tr>
+                <td style="padding:16px 20px;">
+                  ${detailsHtml}
+                </td>
+              </tr>`
+            : ""
+        }
+      </table>
+    </td>
+  </tr>`;
 }
 
 function buildOrderItemsEmailHtml(
@@ -312,7 +361,164 @@ function buildOrderItemsEmailHtml(
     ),
   );
 
-  return `<h3 style="margin:24px 0 12px;">${labels.itemsHeading}</h3>${blocks.join("")}`;
+  return `<tr>
+    <td style="padding:28px 32px 8px;">
+      <p style="margin:0 0 16px;font-size:13px;font-weight:700;color:${BRAND.ink};text-transform:uppercase;letter-spacing:0.06em;">${labels.itemsHeading}</p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+        ${blocks.join("")}
+      </table>
+    </td>
+  </tr>`;
+}
+
+function buildEmailShell(options: {
+  preheader: string;
+  headerTitle: string;
+  headerSubtitle?: string;
+  bodyRowsHtml: string;
+  footerNote: string;
+}): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>${escapeHtml(options.headerTitle)}</title>
+</head>
+<body style="margin:0;padding:0;background:${BRAND.surface};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:${BRAND.ink};">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${escapeHtml(options.preheader)}</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:${BRAND.surface};">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;max-width:640px;background:${BRAND.white};border:1px solid ${BRAND.border};">
+          <tr>
+            <td style="padding:28px 32px;background:${BRAND.primaryDark};">
+              <p style="margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#b9d5e9;">Print 8</p>
+              <h1 style="margin:0;font-size:24px;line-height:1.25;font-weight:700;color:${BRAND.white};">${escapeHtml(options.headerTitle)}</h1>
+              ${
+                options.headerSubtitle
+                  ? `<p style="margin:10px 0 0;font-size:14px;line-height:1.5;color:#dceaf4;">${escapeHtml(options.headerSubtitle)}</p>`
+                  : ""
+              }
+            </td>
+          </tr>
+          ${options.bodyRowsHtml}
+          <tr>
+            <td style="padding:24px 32px;border-top:1px solid ${BRAND.border};background:${BRAND.surface};">
+              <p style="margin:0;font-size:12px;line-height:1.6;color:${BRAND.muted};">${options.footerNote}</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+function buildSummaryBanner(orderNumber: string, total: string, isMk: boolean): string {
+  const orderLabel = isMk ? "Број на нарачка" : "Order number";
+  const totalLabel = isMk ? "Вкупно" : "Total";
+
+  return `<tr>
+    <td style="padding:24px 32px 0;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:${BRAND.surface};border:1px solid ${BRAND.border};">
+        <tr>
+          <td style="padding:16px 18px;width:50%;vertical-align:top;border-right:1px solid ${BRAND.border};">
+            <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:${BRAND.muted};">${orderLabel}</p>
+            <p style="margin:0;font-size:18px;font-weight:700;color:${BRAND.ink};font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;">${escapeHtml(orderNumber)}</p>
+          </td>
+          <td style="padding:16px 18px;width:50%;vertical-align:top;">
+            <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:${BRAND.muted};">${totalLabel}</p>
+            <p style="margin:0;font-size:18px;font-weight:700;color:${BRAND.primary};">${total}</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>`;
+}
+
+function buildCustomerMessage(isMk: boolean): string {
+  const title = isMk ? "Што следува?" : "What happens next?";
+  const body = isMk
+    ? "Плаќање при достава. Ќе ве контактираме наскоро за потврда на нарачката и детали за достава."
+    : "Payment on delivery. We will contact you soon to confirm the order and arrange delivery.";
+
+  return `<tr>
+    <td style="padding:20px 32px 8px;">
+      <p style="margin:0 0 6px;font-size:14px;font-weight:700;color:${BRAND.ink};">${title}</p>
+      <p style="margin:0;font-size:14px;line-height:1.6;color:${BRAND.muted};">${body}</p>
+    </td>
+  </tr>`;
+}
+
+function buildDeliverySection(data: CheckoutInput, isMk: boolean): string {
+  const heading = isMk ? "Податоци за достава" : "Delivery details";
+  const rows = [
+    detailRow(isMk ? "Име" : "Name", escapeHtml(data.fullName)),
+    detailRow(isMk ? "Телефон" : "Phone", escapeHtml(data.phone)),
+    detailRow(
+      isMk ? "Е-пошта" : "Email",
+      data.email ? escapeHtml(data.email) : "—",
+    ),
+    detailRow(
+      isMk ? "Адреса" : "Address",
+      `${escapeHtml(data.city)}<br/>${escapeHtml(data.address)}`,
+    ),
+  ];
+
+  if (data.notes?.trim()) {
+    rows.push(detailRow(isMk ? "Забелешки" : "Notes", escapeHtml(data.notes.trim())));
+  }
+
+  return `<tr>
+    <td style="padding:20px 32px 8px;">
+      <p style="margin:0 0 12px;font-size:13px;font-weight:700;color:${BRAND.ink};text-transform:uppercase;letter-spacing:0.06em;">${heading}</p>
+      ${detailTable(rows)}
+    </td>
+  </tr>`;
+}
+
+function buildAdminMetaSection(
+  data: CheckoutInput,
+  attachmentSummary: string,
+): string {
+  const rows = [
+    detailRow("Customer", escapeHtml(data.fullName)),
+    detailRow("Phone", escapeHtml(data.phone)),
+    detailRow("Email", data.email ? escapeHtml(data.email) : "—"),
+    detailRow(
+      "Address",
+      `${escapeHtml(data.city)}<br/>${escapeHtml(data.address)}`,
+    ),
+  ];
+
+  if (data.notes?.trim()) {
+    rows.push(detailRow("Notes", escapeHtml(data.notes.trim())));
+  }
+
+  rows.push(detailRow("Attachments", escapeHtml(attachmentSummary)));
+
+  return `<tr>
+    <td style="padding:20px 32px 8px;">
+      <p style="margin:0 0 12px;font-size:13px;font-weight:700;color:${BRAND.ink};text-transform:uppercase;letter-spacing:0.06em;">Order details</p>
+      ${detailTable(rows)}
+    </td>
+  </tr>`;
+}
+
+function buildTotalRow(total: string, isMk: boolean): string {
+  const label = isMk ? "Вкупно за плаќање" : "Amount due";
+  return `<tr>
+    <td style="padding:8px 32px 28px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border-top:2px solid ${BRAND.ink};">
+        <tr>
+          <td style="padding:16px 0 0;font-size:14px;font-weight:700;color:${BRAND.ink};">${label}</td>
+          <td style="padding:16px 0 0;text-align:right;font-size:20px;font-weight:700;color:${BRAND.primary};">${total}</td>
+        </tr>
+      </table>
+    </td>
+  </tr>`;
 }
 
 function buildDesignPreviewAttachments(embeds: OrderPreviewEmbed[]): EmailAttachment[] {
@@ -374,23 +580,6 @@ async function buildOriginalUploadAttachments(
   return attachments;
 }
 
-function escapeHtml(value: string) {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-function mimeTypeFromFilename(filename: string, fallback: string) {
-  const lower = filename.toLowerCase();
-  if (lower.endsWith(".png")) return "image/png";
-  if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
-  if (lower.endsWith(".webp")) return "image/webp";
-  if (lower.endsWith(".pdf")) return "application/pdf";
-  return fallback;
-}
-
 export async function sendOrderEmails(
   orderNumber: string,
   data: CheckoutInput,
@@ -428,21 +617,25 @@ export async function sendOrderEmails(
   const itemsHtml = buildOrderItemsEmailHtml(data, itemLabels, previewEmbeds);
   const inlinePreviewAttachments = previewEmbeds.map(toResendAttachment);
 
-  const customerHtml = isMk
-    ? `
-      <h2>Ви благодариме за нарачката!</h2>
-      <p>Број на нарачка: <strong>${orderNumber}</strong></p>
-      <p>Вкупно: <strong>${total}</strong></p>
-      <p>Плаќање при достава. Ќе ве контактираме наскоро за потврда.</p>
-      ${itemsHtml}
-    `
-    : `
-      <h2>Thank you for your order!</h2>
-      <p>Order number: <strong>${orderNumber}</strong></p>
-      <p>Total: <strong>${total}</strong></p>
-      <p>Payment on delivery. We will contact you soon to confirm.</p>
-      ${itemsHtml}
-    `;
+  const customerHtml = buildEmailShell({
+    preheader: isMk
+      ? `Потврда за нарачка ${orderNumber}. Вкупно ${total}.`
+      : `Order confirmation ${orderNumber}. Total ${total}.`,
+    headerTitle: isMk ? "Ви благодариме за нарачката" : "Thank you for your order",
+    headerSubtitle: isMk
+      ? "Ја добивме вашата нарачка и ја подготвуваме."
+      : "We received your order and are getting it ready.",
+    bodyRowsHtml: [
+      buildSummaryBanner(orderNumber, total, isMk),
+      buildCustomerMessage(isMk),
+      buildDeliverySection(data, isMk),
+      itemsHtml,
+      buildTotalRow(total, isMk),
+    ].join(""),
+    footerNote: isMk
+      ? "Print 8 · Оваа порака е автоматска потврда за вашата нарачка."
+      : "Print 8 · This is an automated confirmation for your order.",
+  });
 
   const results: { customer?: boolean; admin?: boolean } = {};
 
@@ -473,25 +666,35 @@ export async function sendOrderEmails(
       ),
     ];
 
+    const attachmentSummary = `${adminAttachments.length} file(s): ${designAttachments.length} preview(s), ${svgPrintAttachments.length} print SVG(s), ${stickerAttachments.length} sticker(s), ${originalAttachments.length} original upload(s)`;
+
+    const adminHtml = buildEmailShell({
+      preheader: `New order ${orderNumber} from ${data.fullName} — ${total}`,
+      headerTitle: `New order ${orderNumber}`,
+      headerSubtitle: "Review the customer details, items, and attachments below.",
+      bodyRowsHtml: [
+        buildSummaryBanner(orderNumber, total, false),
+        buildAdminMetaSection(data, attachmentSummary),
+        buildOrderItemsEmailHtml(
+          data,
+          {
+            itemsHeading: "Items",
+            itemOf: "Item {current} of {total}",
+            designDetails: "Design preview",
+          },
+          previewEmbeds,
+        ),
+        buildTotalRow(total, false),
+      ].join(""),
+      footerNote:
+        "Print 8 admin notification · Open the attachments for print-ready files and originals.",
+    });
+
     const { error } = await resend.emails.send({
       from,
       to: adminEmail,
       subject: `New order ${orderNumber} — Print 8`,
-      html: `
-        <h2>New order ${orderNumber}</h2>
-        <p><strong>${escapeHtml(data.fullName)}</strong><br/>
-        ${escapeHtml(data.phone)}<br/>
-        ${data.email ? escapeHtml(data.email) : ""}<br/>
-        ${escapeHtml(data.city)}, ${escapeHtml(data.address)}</p>
-        ${data.notes ? `<p><strong>Notes:</strong> ${escapeHtml(data.notes)}</p>` : ""}
-        ${buildOrderItemsEmailHtml(data, {
-          itemsHeading: "Items",
-          itemOf: "Item {current} of {total}",
-          designDetails: "Design preview",
-        }, previewEmbeds)}
-        <p><strong>Total:</strong> ${total}</p>
-        <p>${adminAttachments.length} file(s) attached (${designAttachments.length} preview(s), ${svgPrintAttachments.length} print SVG(s), ${stickerAttachments.length} sticker(s), ${originalAttachments.length} original upload(s)).</p>
-      `,
+      html: adminHtml,
       attachments:
         adminAttachments.length > 0 ? adminAttachments : undefined,
     });

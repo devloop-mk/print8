@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { requireAdminSession } from '@/lib/admin/require-admin';
 import { resolveAdminDesign } from '@/lib/admin/designs';
+import { isGalleryThumbRegenAvailable } from '@/lib/designs/gallery-thumb-local';
 import { DesignEditorForm } from '@/components/admin/DesignEditorForm';
 import { SvgTemplateDefaultsForm } from '@/components/admin/SvgTemplateDefaultsForm';
 import { ImportStaticDesignButton } from '@/components/admin/ImportStaticDesignButton';
@@ -46,6 +47,7 @@ export default async function AdminDesignDetailPage({
             designId={design.id}
             svgTemplate={design.svgTemplate}
             initialDefaults={design.svgDefaults}
+            galleryThumbRegenEnabled={isGalleryThumbRegenAvailable()}
           />
         </section>
       ) : null}

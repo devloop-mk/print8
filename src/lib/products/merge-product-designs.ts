@@ -26,14 +26,41 @@ export function mergeProductDesignTemplate(
     overlayByProductType: override.overlayByProductType
       ? { ...base.overlayByProductType, ...override.overlayByProductType }
       : base.overlayByProductType,
+    backOverlay: mergeSideOverlay(base.backOverlay, override.backOverlay),
     textStyle: override.textStyle
       ? { ...base.textStyle, ...override.textStyle }
       : base.textStyle,
     applicableColors: override.applicableColors ?? base.applicableColors,
+    applicableFits: override.applicableFits ?? base.applicableFits,
     productTypes: override.productTypes?.length
       ? override.productTypes
       : base.productTypes,
     productIds: override.productIds ?? base.productIds,
+    designSides: override.designSides ?? base.designSides,
+  };
+}
+
+function mergeSideOverlay(
+  base?: ProductDesignTemplate['backOverlay'],
+  override?: ProductDesignTemplate['backOverlay'],
+): ProductDesignTemplate['backOverlay'] | undefined {
+  if (!override) return base;
+  if (!base) return override;
+
+  return {
+    ...base,
+    ...pickDefined(override),
+    overlayRecolor: override.overlayRecolor
+      ? { ...base.overlayRecolor, ...override.overlayRecolor }
+      : base.overlayRecolor,
+    overlayColorVariants:
+      override.overlayColorVariants ?? base.overlayColorVariants,
+    overlayPosition: override.overlayPosition
+      ? { ...base.overlayPosition, ...override.overlayPosition }
+      : base.overlayPosition,
+    overlayByProductType: override.overlayByProductType
+      ? { ...base.overlayByProductType, ...override.overlayByProductType }
+      : base.overlayByProductType,
   };
 }
 

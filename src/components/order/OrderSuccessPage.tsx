@@ -17,9 +17,10 @@ function OrderSuccessContent() {
   const { clearCart } = useCart();
 
   useEffect(() => {
+    if (!orderNumber) return;
     clearCart();
     sessionStorage.removeItem("print8-upload-token");
-  }, [clearCart]);
+  }, [clearCart, orderNumber]);
 
   return (
     <>

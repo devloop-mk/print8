@@ -1,4 +1,5 @@
-import { redirect } from 'next/navigation';
+import { redirect } from '@/i18n/navigation';
+import type { Locale } from '@/i18n/routing';
 import {
   isProductNavCategoryId,
   productCategoryCustomHref,
@@ -9,11 +10,14 @@ export default async function ProductCategoryBrowsePage({
 }: {
   params: Promise<{ locale: string; category: string }>;
 }) {
-  const { category } = await params;
+  const { locale, category } = await params;
 
   if (!isProductNavCategoryId(category)) {
-    redirect('/products');
+    redirect({ href: '/products', locale: locale as Locale });
   }
 
-  redirect(productCategoryCustomHref(category));
+  redirect({
+    href: productCategoryCustomHref(category),
+    locale: locale as Locale,
+  });
 }

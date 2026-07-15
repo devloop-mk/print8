@@ -131,15 +131,10 @@ export function CustomDesignOrderForm() {
         customDesignCategory: form.category,
         targetProduct: form.targetProduct,
         designBrief: form.designBrief.trim(),
-        fullName: form.fullName.trim(),
-        phone: form.phone.trim(),
       };
 
       if (form.styleNotes.trim()) {
         metadata.styleNotes = form.styleNotes.trim();
-      }
-      if (form.email.trim()) {
-        metadata.email = form.email.trim();
       }
       metadata.targetProductLabel = targetLabel;
 
@@ -151,6 +146,19 @@ export function CustomDesignOrderForm() {
         metadata,
         fileIds: referenceFileIds.length > 0 ? referenceFileIds : undefined,
       });
+
+      try {
+        sessionStorage.setItem(
+          'print8-checkout-prefill',
+          JSON.stringify({
+            fullName: form.fullName.trim(),
+            phone: form.phone.trim(),
+            email: form.email.trim(),
+          }),
+        );
+      } catch {
+        // ignore quota / private mode
+      }
 
       router.push('/cart');
     } finally {

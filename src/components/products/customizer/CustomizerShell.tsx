@@ -2,13 +2,14 @@
 
 import { cn } from '@/lib/utils';
 import {
-  ImageIcon,
-  Palette,
-  Shirt,
-  Sparkles,
-  Type,
   ZoomIn,
   ZoomOut,
+  Copy,
+  Shirt,
+  Type,
+  Image as ImageIcon,
+  Sparkles,
+  Palette,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { EditorPanel } from '@/components/products/customizer/types';
@@ -28,6 +29,8 @@ export function CustomizerShell({
   sideLabel,
   sideHasContent,
   hasMultipleSides,
+  copyDesignLabel,
+  onCopyDesign,
   canvasZoom,
   onZoomChange,
   mobileBottomBar,
@@ -46,6 +49,8 @@ export function CustomizerShell({
   sideLabel: (side: ProductSide) => string;
   sideHasContent: (side: ProductSide) => boolean;
   hasMultipleSides: boolean;
+  copyDesignLabel?: string;
+  onCopyDesign?: () => void;
   canvasZoom: number;
   onZoomChange: (zoom: number) => void;
   mobileBottomBar: React.ReactNode;
@@ -124,7 +129,7 @@ export function CustomizerShell({
 
         <main className="relative flex min-w-0 flex-1 flex-col bg-[#e9edf2]">
           {hasMultipleSides ? (
-            <div className="flex shrink-0 justify-center border-b border-ink-200/60 bg-white/80 px-3 py-2 backdrop-blur-sm">
+            <div className="flex shrink-0 flex-col items-center gap-2 border-b border-ink-200/60 bg-white/80 px-3 py-2 backdrop-blur-sm sm:flex-row sm:justify-center">
               <div className="inline-flex rounded-lg bg-ink-100/80 p-1">
                 {sides.map((side) => (
                   <button
@@ -145,6 +150,16 @@ export function CustomizerShell({
                   </button>
                 ))}
               </div>
+              {copyDesignLabel && onCopyDesign ? (
+                <button
+                  type="button"
+                  onClick={onCopyDesign}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-800 transition hover:border-brand-300 hover:bg-brand-100"
+                >
+                  <Copy className="h-3.5 w-3.5" aria-hidden />
+                  {copyDesignLabel}
+                </button>
+              ) : null}
             </div>
           ) : null}
 

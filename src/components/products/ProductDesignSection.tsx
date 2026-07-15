@@ -1,10 +1,9 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import {
-  getProductMockup,
   isImageDesignTemplate,
   isOverlayDesignTemplate,
   isTextDesignTemplate,
@@ -17,6 +16,7 @@ import {
   getDesignApplicableColors,
   resolveDesignPreviewColor,
 } from '@/lib/products/design-applicable-colors';
+import { normalizeHex } from '@/lib/products/design-overlay';
 import {
   buildPremadeDesignCartPayload,
 } from '@/lib/products/premade-design-order';
@@ -33,15 +33,19 @@ import Image from 'next/image';
 
 type ProductDesignSectionProps = {
   id: string;
-  icon: React.ReactNode;
-  title: string;
-  hint: string;
+  icon?: React.ReactNode;
+  title?: string;
+  hint?: string;
   product: Product;
   size?: string;
   designs: ProductDesignTemplate[];
   limit?: number;
   seeAllHref?: string;
   seeAllLabel?: string;
+  /** Hide the section heading when the parent page already provides one. */
+  showHeader?: boolean;
+  /** When set, all design previews follow this filter color. */
+  colorFilter?: string | 'all';
 };
 
 export function ProductDesignSection({
@@ -55,29 +59,33 @@ export function ProductDesignSection({
   limit,
   seeAllHref,
   seeAllLabel,
+  showHeader = true,
+  colorFilter = 'all',
 }: ProductDesignSectionProps) {
   const visibleDesigns = limit ? designs.slice(0, limit) : designs;
   const showSeeAll = Boolean(seeAllHref && limit && designs.length > limit);
 
   return (
     <section id={id} className="scroll-mt-28">
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex items-center gap-3">
-          {icon}
-          <div>
-            <h2 className="text-2xl font-bold text-ink-900">{title}</h2>
-            <p className="text-ink-500">{hint}</p>
+      {showHeader && title ? (
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex items-center gap-3">
+            {icon}
+            <div>
+              <h2 className="text-2xl font-bold text-ink-900">{title}</h2>
+              {hint ? <p className="text-ink-500">{hint}</p> : null}
+            </div>
           </div>
+          {showSeeAll ? (
+            <Link
+              href={seeAllHref!}
+              className="shrink-0 text-sm font-medium text-brand-600 hover:text-brand-700"
+            >
+              {seeAllLabel} →
+            </Link>
+          ) : null}
         </div>
-        {showSeeAll ? (
-          <Link
-            href={seeAllHref!}
-            className="shrink-0 text-sm font-medium text-brand-600 hover:text-brand-700"
-          >
-            {seeAllLabel} →
-          </Link>
-        ) : null}
-      </div>
+      ) : null}
 
       <CatalogGridLayout>
         {visibleDesigns.map((design) => (
@@ -86,6 +94,7 @@ export function ProductDesignSection({
             product={product}
             design={design}
             size={size}
+            colorFilter={colorFilter}
           />
         ))}
       </CatalogGridLayout>
@@ -103,14 +112,31 @@ export function ProductDesignSection({
   );
 }
 
+function resolveCardColor(
+  design: ProductDesignTemplate,
+  product: Product,
+  applicableColors: string[],
+  colorFilter: string | 'all',
+): string {
+  if (colorFilter !== 'all') {
+    const matched = applicableColors.find(
+      (value) => normalizeHex(value) === normalizeHex(colorFilter),
+    );
+    if (matched) return matched;
+  }
+  return resolveDesignPreviewColor(design, product);
+}
+
 function DesignCard({
   product,
   design,
   size,
+  colorFilter,
 }: {
   product: Product;
   design: ProductDesignTemplate;
   size?: string;
+  colorFilter: string | 'all';
 }) {
   const previewRef = useRef<HTMLDivElement>(null);
   const applicableColors = useMemo(
@@ -118,8 +144,13 @@ function DesignCard({
     [design, product],
   );
   const [color, setColor] = useState(() =>
-    resolveDesignPreviewColor(design, product),
+    resolveCardColor(design, product, applicableColors, colorFilter),
   );
+
+  useEffect(() => {
+    setColor(resolveCardColor(design, product, applicableColors, colorFilter));
+  }, [applicableColors, colorFilter, design, product]);
+
   const previewColor = resolveDesignPreviewColor(design, product, color);
 
   const t = useTranslations('products');
@@ -143,7 +174,7 @@ function DesignCard({
         {isTextDesignTemplate(design) || isOverlayDesignTemplate(design) ? (
           <DesignTemplatePreview
             product={product}
-            color={previewColor}
+            color={color}
             design={design}
             typeLabel={productLabel}
           />
@@ -172,7 +203,7 @@ function DesignCard({
 
         <DesignColorPicker
           colors={applicableColors}
-          value={previewColor}
+          value={color}
           onChange={setColor}
           variant="compact"
         />

@@ -125,7 +125,7 @@ export const managedSvgTemplatesDb = {
 
     const { data, error } = await getSupabaseAdmin()
       .from('managed_svg_templates')
-      .upsert(row)
+      .upsert(row, { onConflict: 'template_id' })
       .select('*')
       .single();
 

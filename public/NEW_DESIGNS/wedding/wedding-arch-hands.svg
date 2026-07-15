@@ -36,13 +36,13 @@
   </g>
 
   <g fill="#3D3229" text-anchor="middle">
-    <text x="750" y="680" font-family="'Playfair Display', serif" font-style="italic" font-weight="400" font-size="26">Two hearts, one journey — join us as we begin ours</text>
-    <text x="750" y="880" font-family="'Marck Script', cursive" font-size="108">Mia &amp; Martin</text>
-    <text x="750" y="1020" font-family="'Montserrat', sans-serif" font-weight="300" font-size="22" letter-spacing="2">We invite you to celebrate with us</text>
+    <text x="750" y="680" font-family="'Playfair Display', serif" font-style="italic" font-weight="400" font-size="20" textLength="780" lengthAdjust="spacingAndGlyphs">Two hearts, one journey — join us as we begin ours</text>
+    <text x="750" y="880" font-family="'Marck Script', cursive" font-size="108" textLength="900" lengthAdjust="spacingAndGlyphs">Mia &amp; Martin</text>
+    <text x="750" y="1020" font-family="'Montserrat', sans-serif" font-weight="300" font-size="20" letter-spacing="1.5" textLength="720" lengthAdjust="spacingAndGlyphs">We invite you to celebrate with us</text>
     <text x="750" y="1180" font-family="'Playfair Display', serif" font-weight="600" font-size="48">08.09.2026</text>
-    <text x="750" y="1320" font-family="'Marck Script', cursive" font-size="56">The Pool</text>
-    <text x="750" y="1420" font-family="'Montserrat', sans-serif" font-weight="300" font-size="22">Reception 19:30 - 20:00</text>
-    <text x="480" y="1680" text-anchor="start" font-family="'Montserrat', sans-serif" font-weight="400" font-size="20" letter-spacing="1">Arsov Family</text>
-    <text x="1020" y="1680" text-anchor="end" font-family="'Montserrat', sans-serif" font-weight="400" font-size="20" letter-spacing="1">Petrovi Family</text>
+    <text x="750" y="1320" font-family="'Playfair Display', serif" font-weight="600" font-size="30" letter-spacing="2" textLength="760" lengthAdjust="spacingAndGlyphs">HOTEL AQUATERM, OHRID</text>
+    <text x="750" y="1420" font-family="'Montserrat', sans-serif" font-weight="300" font-size="20" textLength="680" lengthAdjust="spacingAndGlyphs">Reception 19:30 - 20:00</text>
+    <text x="400" y="1700" text-anchor="start" font-family="'Montserrat', sans-serif" font-weight="400" font-size="18" letter-spacing="1" textLength="260" lengthAdjust="spacingAndGlyphs">Arsov Family</text>
+    <text x="900" y="1580" text-anchor="end" font-family="'Montserrat', sans-serif" font-weight="400" font-size="18" letter-spacing="1" textLength="260" lengthAdjust="spacingAndGlyphs">Petrovi Family</text>
   </g>
 </svg>

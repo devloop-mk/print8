@@ -7,11 +7,17 @@ import {
   saveAdminSvgTemplateDefaults,
 } from '@/lib/admin/designs';
 import { formatManagedSvgTemplatesError } from '@/lib/db/managed-svg-templates-errors';
+import { sanitizeManagedSvgTemplateDefaults } from '@/lib/designs/merge-svg-template-defaults';
+
+const finiteNumber = z.preprocess((value) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}, z.number());
 
 const transformSchema = z.object({
-  dx: z.number(),
-  dy: z.number(),
-  scale: z.number(),
+  dx: finiteNumber,
+  dy: finiteNumber,
+  scale: finiteNumber,
 });
 
 const defaultsSchema = z.object({
@@ -55,9 +61,27 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const parsed = defaultsSchema.safeParse(body.defaults ?? body);
+    const rawDefaults = body.defaults ?? body;
+    const sanitized = sanitizeManagedSvgTemplateDefaults({
+      textsEn: rawDefaults?.textsEn ?? {},
+      textsMk: rawDefaults?.textsMk ?? {},
+      colors: rawDefaults?.colors ?? {},
+      transforms: rawDefaults?.transforms ?? {},
+    });
+    const parsed = defaultsSchema.safeParse(sanitized);
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid defaults payload' }, { status: 400 });
+      const detail = parsed.error.issues
+        .slice(0, 3)
+        .map((issue) => issue.path.join('.'))
+        .join(', ');
+      return NextResponse.json(
+        {
+          error: detail
+            ? `Invalid defaults payload (${detail})`
+            : 'Invalid defaults payload',
+        },
+        { status: 400 },
+      );
     }
 
     const design = await resolveAdminDesign(id);
@@ -70,7 +94,12 @@ export async function PATCH(
       defaults: parsed.data,
     });
 
-    return NextResponse.json({ defaults: saved.defaults, templateId: saved.templateId });
+    return NextResponse.json({
+      defaults: saved.defaults,
+      templateId: saved.templateId,
+      updatedAt: saved.updatedAt,
+      galleryThumbs: saved.galleryThumbs,
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to save defaults';
     return NextResponse.json(
@@ -94,8 +123,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'SVG template not found' }, { status: 404 });
     }
 
-    await deleteAdminSvgTemplateDefaults(design.svgTemplate.id);
-    return NextResponse.json({ ok: true });
+    const result = await deleteAdminSvgTemplateDefaults(design.svgTemplate.id);
+    return NextResponse.json({ ok: true, galleryThumbs: result.galleryThumbs });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to reset defaults';
     return NextResponse.json(

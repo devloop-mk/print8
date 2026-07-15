@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
@@ -47,18 +48,25 @@ const CartContext = createContext<CartContextValue | null>(null);
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const preHydrationAdds = useRef<CartItem[]>([]);
 
   useEffect(() => {
     let cancelled = false;
 
     loadCartFromStorage()
       .then((stored) => {
-        if (!cancelled && stored) {
-          setItems(stored);
-        }
+        if (cancelled) return;
+        const extras = preHydrationAdds.current;
+        preHydrationAdds.current = [];
+        setItems([...(stored ?? []), ...extras]);
       })
       .catch(() => {
-        // ignore corrupt storage
+        if (cancelled) return;
+        const extras = preHydrationAdds.current;
+        preHydrationAdds.current = [];
+        if (extras.length > 0) {
+          setItems(extras);
+        }
       })
       .finally(() => {
         if (!cancelled) {
@@ -77,12 +85,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     void saveCartToStorage(items);
   }, [items, hydrated]);
 
-  const addItem = useCallback((item: Omit<CartItem, "id">) => {
-    setItems((prev) => [
-      ...prev,
-      { ...item, id: crypto.randomUUID() },
-    ]);
-  }, []);
+  const addItem = useCallback(
+    (item: Omit<CartItem, "id">) => {
+      const next: CartItem = { ...item, id: crypto.randomUUID() };
+      if (!hydrated) {
+        preHydrationAdds.current.push(next);
+      }
+      setItems((prev) => [...prev, next]);
+    },
+    [hydrated],
+  );
 
   const updateItem = useCallback(
     (id: string, updates: Partial<Omit<CartItem, "id">>) => {
@@ -119,27 +131,38 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     [items],
   );
 
-  return (
-    <CartContext.Provider
-      value={{
-        items,
-        addItem,
-        updateItem,
-        removeItem,
-        updateQuantity,
-        clearCart,
-        total,
-        itemCount,
-        hydrated,
-      }}
-    >
-      {children}
-    </CartContext.Provider>
+  const value = useMemo(
+    () => ({
+      items,
+      addItem,
+      updateItem,
+      removeItem,
+      updateQuantity,
+      clearCart,
+      total,
+      itemCount,
+      hydrated,
+    }),
+    [
+      items,
+      addItem,
+      updateItem,
+      removeItem,
+      updateQuantity,
+      clearCart,
+      total,
+      itemCount,
+      hydrated,
+    ],
   );
+
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 
 export function useCart() {
   const ctx = useContext(CartContext);
-  if (!ctx) throw new Error("useCart must be used within CartProvider");
+  if (!ctx) {
+    throw new Error("useCart must be used within CartProvider");
+  }
   return ctx;
 }

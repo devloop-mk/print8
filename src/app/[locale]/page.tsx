@@ -8,7 +8,7 @@ import {
   resolveCmsTexts,
   type CmsLocale,
 } from '@/lib/cms/public-content';
-import { pickTrendingDesigns } from '@/lib/data/trending-designs';
+import { getHomeTrendingProductDesigns } from '@/lib/cms/home-trending';
 import { TrendingDesignsSection } from '@/components/home/TrendingDesignsSection';
 import { HomeShowcaseCarousel } from '@/components/home/HomeShowcaseCarousel';
 import { Card } from '@/components/ui/Card';
@@ -38,7 +38,8 @@ export default async function HomePage({
   const ts = await getTranslations('services.items');
   const tc = await getTranslations('contact');
 
-  const [cmsTexts, contactCms, featuredServices, featuredDesigns] = await Promise.all([
+  const [cmsTexts, contactCms, featuredServices, featuredDesigns, trendingDesigns] =
+    await Promise.all([
     resolveCmsTexts(
       [
         { key: 'home.heroBadge', fallback: t('heroBadge') },
@@ -61,9 +62,8 @@ export default async function HomePage({
       description: ts(`${id}.description`),
     })),
     getPublishedDesignTemplates(),
+    getHomeTrendingProductDesigns(),
   ]);
-
-  const trendingDesigns = pickTrendingDesigns(featuredDesigns);
 
   return (
     <>

@@ -43,12 +43,12 @@
   </g>
 
   <g fill="#1E3A5F">
-    <text x="750" y="620" text-anchor="middle" font-family="'Montserrat', sans-serif" font-weight="400" font-size="18" letter-spacing="2">WITH GREAT HONOR WE INVITE YOU TO OUR WEDDING</text>
-    <text x="750" y="820" text-anchor="middle" font-family="'Marck Script', cursive" font-size="110">Natasha &amp; Stefan</text>
+    <text x="750" y="620" text-anchor="middle" font-family="'Montserrat', sans-serif" font-weight="400" font-size="15" letter-spacing="1.5" textLength="820" lengthAdjust="spacingAndGlyphs">WITH GREAT HONOR WE INVITE YOU TO OUR WEDDING</text>
+    <text x="750" y="820" text-anchor="middle" font-family="'Marck Script', cursive" font-size="110" textLength="900" lengthAdjust="spacingAndGlyphs">Natasha &amp; Stefan</text>
     <text x="750" y="980" text-anchor="middle" font-family="'Playfair Display', serif" font-weight="600" font-size="44" letter-spacing="4">30 JULY 2026</text>
-    <text x="750" y="1180" text-anchor="middle" font-family="'Montserrat', sans-serif" font-weight="600" font-size="26" letter-spacing="5">HOTEL DREAM - STRUGA</text>
-    <text x="750" y="1260" text-anchor="middle" font-family="'Montserrat', sans-serif" font-weight="400" font-size="22" letter-spacing="3">RECEPTION: 19:00 - 19:30</text>
-    <text x="420" y="1720" text-anchor="start" font-family="'Montserrat', sans-serif" font-weight="600" font-size="18" letter-spacing="3">MITEV FAMILY</text>
-    <text x="1080" y="1720" text-anchor="end" font-family="'Montserrat', sans-serif" font-weight="600" font-size="18" letter-spacing="3">PETROV FAMILY</text>
+    <text x="750" y="1180" text-anchor="middle" font-family="'Montserrat', sans-serif" font-weight="600" font-size="22" letter-spacing="3" textLength="760" lengthAdjust="spacingAndGlyphs">HOTEL DREAM - STRUGA</text>
+    <text x="750" y="1260" text-anchor="middle" font-family="'Montserrat', sans-serif" font-weight="400" font-size="20" letter-spacing="2" textLength="680" lengthAdjust="spacingAndGlyphs">RECEPTION: 19:00 - 19:30</text>
+    <text x="440" y="1660" text-anchor="start" font-family="'Montserrat', sans-serif" font-weight="600" font-size="16" letter-spacing="2" textLength="240" lengthAdjust="spacingAndGlyphs">MITEV FAMILY</text>
+    <text x="1060" y="1660" text-anchor="end" font-family="'Montserrat', sans-serif" font-weight="600" font-size="16" letter-spacing="2" textLength="240" lengthAdjust="spacingAndGlyphs">PETROV FAMILY</text>
   </g>
 </svg>

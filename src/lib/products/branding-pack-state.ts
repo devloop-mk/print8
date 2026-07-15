@@ -11,6 +11,10 @@ import {
   type BrandingPackLogoPlacement,
   type BrandingPackProductType,
 } from '@/lib/products/branding-pack-config';
+import {
+  getTshirtUnitPrice,
+  isTshirtProduct,
+} from '@/lib/products/tshirt-print-pricing';
 
 export const BRANDING_PACK_STATE_VERSION = 1;
 
@@ -272,9 +276,46 @@ export function getBrandingPackLineItems(state: BrandingPackState): Array<{
 
 export function calculateBrandingPackTotal(state: BrandingPackState): number {
   return getBrandingPackLineItems(state).reduce((sum, line) => {
-    const catalogProduct = getProductById(line.product.productId);
-    return sum + (catalogProduct?.basePrice ?? 0) * line.quantity;
+    return sum + resolveBrandingPackUnitPrice(line.product) * line.quantity;
   }, 0);
+}
+
+/**
+ * Server-trusted unit price: productId must match the allowlisted default for
+ * that product type (blocks swapping in a cheaper catalog item).
+ * T-shirts use print-package pricing from selected print sides.
+ */
+export function resolveBrandingPackUnitPrice(
+  product: BrandingPackProductState,
+): number {
+  const allowedId = BRANDING_PACK_DEFAULT_PRODUCT_ID[product.productType];
+  if (!allowedId) return 0;
+
+  const catalogProduct = getProductById(allowedId);
+  if (!catalogProduct || catalogProduct.type !== product.productType) {
+    return 0;
+  }
+
+  if (isTshirtProduct(catalogProduct)) {
+    const sideCount = product.printSides?.filter(Boolean).length ?? 1;
+    const pkg = sideCount >= 2 ? 'front-back' : 'front-large';
+    return getTshirtUnitPrice(pkg);
+  }
+
+  return catalogProduct.basePrice;
+}
+
+export function sanitizeBrandingPackProductIds(
+  state: BrandingPackState,
+): BrandingPackState {
+  return {
+    ...state,
+    products: state.products.map((product) => {
+      const allowedId = BRANDING_PACK_DEFAULT_PRODUCT_ID[product.productType];
+      if (!allowedId || product.productId === allowedId) return product;
+      return { ...product, productId: allowedId };
+    }),
+  };
 }
 
 export function productHasMultipleSides(productId: string): boolean {
@@ -337,7 +378,7 @@ export function parseBrandingPackState(
     const parsed = JSON.parse(raw) as BrandingPackState;
     if (parsed.version !== BRANDING_PACK_STATE_VERSION) return null;
     if (!parsed.packId || !Array.isArray(parsed.products)) return null;
-    return migrateBrandingPackState(parsed);
+    return sanitizeBrandingPackProductIds(migrateBrandingPackState(parsed));
   } catch {
     return null;
   }

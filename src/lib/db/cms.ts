@@ -24,6 +24,13 @@ export interface CmsServiceRecord {
   updatedAt: string;
 }
 
+export interface CmsHomeTrendingRecord {
+  designId: string;
+  sortOrder: number;
+  active: boolean;
+  updatedAt: string;
+}
+
 function isMissingTable(message: string, table: string) {
   const lower = message.toLowerCase();
   return lower.includes(table) || (lower.includes('relation') && lower.includes('does not exist'));
@@ -143,6 +150,63 @@ export const cmsDb = {
         sortOrder: data.sort_order as number,
         updatedAt: data.updated_at as string,
       } satisfies CmsServiceRecord;
+    },
+  },
+
+  homeTrending: {
+    async list(): Promise<CmsHomeTrendingRecord[]> {
+      try {
+        const { data, error } = await getSupabaseAdmin()
+          .from('cms_home_trending')
+          .select('*')
+          .order('sort_order')
+          .order('design_id');
+        if (error) throw new Error(error.message);
+        return (data ?? []).map((row) => ({
+          designId: row.design_id as string,
+          sortOrder: row.sort_order as number,
+          active: Boolean(row.active),
+          updatedAt: row.updated_at as string,
+        }));
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (isMissingTable(message, 'cms_home_trending')) return [];
+        throw error;
+      }
+    },
+
+    async replaceAll(
+      entries: Array<Pick<CmsHomeTrendingRecord, 'designId' | 'sortOrder' | 'active'>>,
+    ): Promise<CmsHomeTrendingRecord[]> {
+      const admin = getSupabaseAdmin();
+      const { error: deleteError } = await admin
+        .from('cms_home_trending')
+        .delete()
+        .gte('sort_order', -1);
+      if (deleteError) throw new Error(deleteError.message);
+
+      if (entries.length === 0) return [];
+
+      const now = new Date().toISOString();
+      const { data, error } = await admin
+        .from('cms_home_trending')
+        .insert(
+          entries.map((entry) => ({
+            design_id: entry.designId,
+            sort_order: entry.sortOrder,
+            active: entry.active,
+            updated_at: now,
+          })),
+        )
+        .select('*');
+      if (error) throw new Error(error.message);
+
+      return (data ?? []).map((row) => ({
+        designId: row.design_id as string,
+        sortOrder: row.sort_order as number,
+        active: Boolean(row.active),
+        updatedAt: row.updated_at as string,
+      }));
     },
   },
 };

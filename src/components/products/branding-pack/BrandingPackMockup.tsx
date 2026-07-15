@@ -8,6 +8,7 @@ import {
   type ProductSide,
 } from '@/lib/data/catalog';
 import {
+  getMockupImageDisplayStyle,
   getOverlayPrintBounds,
   getProductMockupLayout,
   isCylindricalDrinkwareType,
@@ -102,6 +103,11 @@ export const BrandingPackMockup = forwardRef<
 
   const baseImage =
     getProductMockup(product, color, side) ?? product.image;
+  const mockupStyle = getMockupImageDisplayStyle(
+    product,
+    baseImage,
+    'customizer',
+  );
 
   return (
     <div className={`flex flex-col items-center gap-2 ${className}`}>
@@ -137,7 +143,8 @@ export const BrandingPackMockup = forwardRef<
       )}
     >
       <div className="absolute inset-0 flex items-center justify-center">
-        <div data-mockup-inner className={mockupLayout.innerClass}>
+        <div data-mockup-inner className={`${mockupLayout.innerClass} overflow-hidden`}>
+          <div className="relative h-full w-full" style={mockupStyle}>
           {baseImage ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -175,6 +182,7 @@ export const BrandingPackMockup = forwardRef<
               interactive={interactive}
             />
           ) : null}
+          </div>
         </div>
       </div>
     </div>

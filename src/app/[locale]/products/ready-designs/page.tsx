@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { ProductDesignsCatalog } from '@/components/products/ProductDesignsCatalog';
 import { SectionLoading } from '@/components/ui/SectionLoading';
+import { getCachedProductDesignCatalogEntries } from '@/lib/cache/catalog-cache';
 import { buildPageMetadata, buildOgImageUrl } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
@@ -32,10 +33,16 @@ export async function generateMetadata({
 }
 
 export default async function ProductReadyDesignsPage() {
+  const initialEntries =
+    await getCachedProductDesignCatalogEntries('image-designs');
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <Suspense fallback={<SectionLoading />}>
-        <ProductDesignsCatalog category="image-designs" />
+        <ProductDesignsCatalog
+          category="image-designs"
+          initialEntries={initialEntries}
+        />
       </Suspense>
     </div>
   );

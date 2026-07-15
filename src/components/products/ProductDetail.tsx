@@ -10,6 +10,7 @@ import {
 } from '@/lib/data/catalog';
 import { getProductOffering } from '@/lib/products/offering';
 import { getProductDisplayPrice } from '@/lib/products/tshirt-print-pricing';
+import { getColorSwatchDisplayHex } from '@/lib/products/product-color-labels';
 import { getProductPaths, PRODUCT_DESIGN_PREVIEW_LIMIT } from '@/lib/products/paths';
 import { formatPrice } from '@/lib/utils';
 import { Card } from '@/components/ui/Card';
@@ -101,7 +102,7 @@ export function ProductDetail({ productId }: { productId: string }) {
                           ? 'border-brand-600 ring-2 ring-brand-200'
                           : 'border-ink-200'
                       }`}
-                      style={{ backgroundColor: c }}
+                      style={{ backgroundColor: getColorSwatchDisplayHex(c) }}
                       aria-label={c}
                     />
                   ))}

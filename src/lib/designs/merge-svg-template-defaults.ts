@@ -5,6 +5,10 @@ import type {
 import type { ManagedSvgTemplateDefaultsPayload } from '@/lib/db/managed-svg-templates';
 import type { SvgSiteLocale } from '@/lib/designs/svg-locale-defaults';
 import { buildDefaultSvgTemplateState } from '@/lib/designs/svg-template-engine';
+import {
+  clampSvgTextScale,
+  type SvgTextTransform,
+} from '@/lib/designs/svg-text-transform';
 
 export function applyManagedSvgTemplateDefaults(
   base: SvgTemplateState,
@@ -57,4 +61,44 @@ export function hasManagedSvgDefaults(
     Object.keys(defaults.colors).length > 0 ||
     Object.keys(defaults.transforms).length > 0
   );
+}
+
+export function sanitizeManagedSvgTemplateDefaults(
+  defaults: ManagedSvgTemplateDefaultsPayload,
+): ManagedSvgTemplateDefaultsPayload {
+  const textsEn: Record<string, string> = {};
+  const textsMk: Record<string, string> = {};
+  const colors: Record<string, string> = {};
+  const transforms: Record<string, SvgTextTransform> = {};
+
+  for (const [key, value] of Object.entries(defaults.textsEn ?? {})) {
+    if (typeof value === 'string') textsEn[key] = value;
+  }
+
+  for (const [key, value] of Object.entries(defaults.textsMk ?? {})) {
+    if (typeof value === 'string') textsMk[key] = value;
+  }
+
+  for (const [key, value] of Object.entries(defaults.colors ?? {})) {
+    if (typeof value === 'string' && value.trim().length > 0) {
+      colors[key] = value;
+    }
+  }
+
+  for (const [key, value] of Object.entries(defaults.transforms ?? {})) {
+    if (!value || typeof value !== 'object') continue;
+    const dx = Number(value.dx);
+    const dy = Number(value.dy);
+    const scale = Number(value.scale);
+    if (!Number.isFinite(dx) || !Number.isFinite(dy) || !Number.isFinite(scale)) {
+      continue;
+    }
+    transforms[key] = {
+      dx,
+      dy,
+      scale: clampSvgTextScale(scale),
+    };
+  }
+
+  return { textsEn, textsMk, colors, transforms };
 }

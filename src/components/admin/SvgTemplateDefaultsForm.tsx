@@ -8,6 +8,7 @@ import { buildDefaultSvgTemplateState } from '@/lib/designs/svg-template-engine'
 import {
   applyManagedSvgTemplateDefaults,
   buildMergedDefaultSvgTemplateState,
+  sanitizeManagedSvgTemplateDefaults,
 } from '@/lib/designs/merge-svg-template-defaults';
 import { getSvgFieldLabelId } from '@/lib/designs/svg-field-labels';
 import { SvgInteractivePreview } from '@/components/designs/SvgInteractivePreview';
@@ -17,11 +18,13 @@ import {
   type SvgTextTransform,
 } from '@/lib/designs/svg-text-transform';
 import { cn } from '@/lib/utils';
+import { invalidateManagedSvgDefaultsMapCache, patchManagedSvgDefaultsCache } from '@/hooks/useManagedSvgDefaultsMap';
 
 type SvgTemplateDefaultsFormProps = {
   designId: string;
   svgTemplate: SvgDesignTemplate;
   initialDefaults: ManagedSvgTemplateDefaultsPayload | null;
+  galleryThumbRegenEnabled?: boolean;
 };
 
 function emptyDefaults(): ManagedSvgTemplateDefaultsPayload {
@@ -77,6 +80,7 @@ export function SvgTemplateDefaultsForm({
   designId,
   svgTemplate,
   initialDefaults,
+  galleryThumbRegenEnabled = false,
 }: SvgTemplateDefaultsFormProps) {
   const router = useRouter();
   const [defaults, setDefaults] = useState<ManagedSvgTemplateDefaultsPayload>(
@@ -87,6 +91,7 @@ export function SvgTemplateDefaultsForm({
   const [activeFieldKey, setActiveFieldKey] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -173,22 +178,81 @@ export function SvgTemplateDefaultsForm({
     setError(null);
 
     try {
+      const payload = sanitizeManagedSvgTemplateDefaults(defaults);
       const response = await fetch(`/api/admin/designs/${designId}/svg-defaults`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ defaults }),
+        body: JSON.stringify({ defaults: payload }),
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(data.error ?? 'Failed to save defaults');
+        const detail =
+          typeof data.error === 'string' && data.error.length > 0
+            ? data.error
+            : `Request failed (${response.status})`;
+        throw new Error(detail);
       }
       setDefaults(data.defaults);
-      setMessage('Стандардните вредности се зачувани.');
+      const regenCount = Array.isArray(data.galleryThumbs)
+        ? data.galleryThumbs.length
+        : 0;
+      if (data.templateId && data.updatedAt && regenCount > 0) {
+        patchManagedSvgDefaultsCache(data.templateId, data.defaults, data.updatedAt);
+      } else {
+        invalidateManagedSvgDefaultsMapCache();
+      }
+      setMessage(
+        regenCount > 0
+          ? `Стандардните вредности се зачувани. Галерискиот WebP преглед е обновен (${regenCount}).`
+          : galleryThumbRegenEnabled
+            ? 'Стандардните вредности се зачувани.'
+            : 'Стандардните вредности се зачувани. За gallery WebP локално пуштете npm run regenerate:design-gallery-thumb.',
+      );
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save defaults');
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleRegenerateGalleryThumb() {
+    setRegenerating(true);
+    setMessage(null);
+    setError(null);
+
+    try {
+      const response = await fetch(
+        `/api/admin/designs/${designId}/regenerate-gallery-thumb`,
+        { method: 'POST' },
+      );
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const detail =
+          typeof data.error === 'string' && data.error.length > 0
+            ? data.error
+            : `Request failed (${response.status})`;
+        throw new Error(detail);
+      }
+      if (!Array.isArray(data.galleryThumbs) || data.galleryThumbs.length === 0) {
+        throw new Error(
+          'Не се генерира gallery WebP. Проверете дали Playwright е инсталиран: npm run playwright:install',
+        );
+      }
+      invalidateManagedSvgDefaultsMapCache();
+      const count = Array.isArray(data.galleryThumbs) ? data.galleryThumbs.length : 0;
+      setMessage(
+        count > 0
+          ? `Галерискиот WebP преглед е обновен (${count}).`
+          : 'Галерискиот WebP преглед е обновен.',
+      );
+      router.refresh();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Failed to regenerate gallery WebP',
+      );
+    } finally {
+      setRegenerating(false);
     }
   }
 
@@ -214,6 +278,7 @@ export function SvgTemplateDefaultsForm({
         throw new Error(data.error ?? 'Failed to reset defaults');
       }
       setDefaults(emptyDefaults());
+      invalidateManagedSvgDefaultsMapCache();
       setMessage('Стандардните вредности се вратени на вредностите од кодот.');
       router.refresh();
     } catch (err) {
@@ -422,7 +487,10 @@ export function SvgTemplateDefaultsForm({
                         value={transform?.dx ?? ''}
                         onChange={(event) =>
                           updateTransform(row.key, {
-                            dx: event.target.value === '' ? 0 : Number(event.target.value),
+                            dx:
+                              event.target.value === ''
+                                ? 0
+                                : Number(event.target.value) || 0,
                           })
                         }
                         className="w-full rounded-lg border border-ink-200 px-3 py-2"
@@ -435,7 +503,10 @@ export function SvgTemplateDefaultsForm({
                         value={transform?.dy ?? ''}
                         onChange={(event) =>
                           updateTransform(row.key, {
-                            dy: event.target.value === '' ? 0 : Number(event.target.value),
+                            dy:
+                              event.target.value === ''
+                                ? 0
+                                : Number(event.target.value) || 0,
                           })
                         }
                         className="w-full rounded-lg border border-ink-200 px-3 py-2"
@@ -452,7 +523,9 @@ export function SvgTemplateDefaultsForm({
                         onChange={(event) =>
                           updateTransform(row.key, {
                             scale:
-                              event.target.value === '' ? 1 : Number(event.target.value),
+                              event.target.value === ''
+                                ? 1
+                                : Number(event.target.value) || 1,
                           })
                         }
                         className="w-full rounded-lg border border-ink-200 px-3 py-2"
@@ -473,6 +546,16 @@ export function SvgTemplateDefaultsForm({
         <Button type="submit" disabled={saving}>
           {saving ? 'Се зачувува…' : 'Зачувај стандардни вредности'}
         </Button>
+        {galleryThumbRegenEnabled ? (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={regenerating}
+            onClick={handleRegenerateGalleryThumb}
+          >
+            {regenerating ? 'Се генерира WebP…' : 'Обнови gallery WebP'}
+          </Button>
+        ) : null}
         <Button
           type="button"
           variant="outline"
@@ -482,6 +565,17 @@ export function SvgTemplateDefaultsForm({
           {resetting ? 'Се ресетира…' : 'Врати на код'}
         </Button>
       </div>
+
+      {!galleryThumbRegenEnabled ? (
+        <p className="text-sm text-ink-500">
+          Gallery WebP се генерира само локално (Playwright). На production зачувајте ги
+          вредностите тука, па локално пуштете{' '}
+          <code className="rounded bg-ink-100 px-1.5 py-0.5 text-xs">
+            npm run regenerate:design-gallery-thumb -- {designId}
+          </code>{' '}
+          и commit-ирајте ги .webp датотеките.
+        </p>
+      ) : null}
     </form>
   );
 }

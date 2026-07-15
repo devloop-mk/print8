@@ -7,9 +7,9 @@ import {
 } from '@/lib/data/catalog';
 import {
   contrastRatio,
-  isDarkShirtColor,
   normalizeHex,
 } from '@/lib/products/design-overlay';
+import { resolveProductColorImageKey } from '@/lib/products/product-color-images';
 
 const MIN_TEXT_CONTRAST = 2.8;
 
@@ -21,6 +21,20 @@ function intersectWithProductColors(
   if (productColors.length === 0) return [];
 
   const allowed = new Set(colors.map(normalizeHex));
+  // Map legacy shirt hex values saved in admin to the current supplier palette.
+  const legacyMap: Record<string, string> = {
+    '#ffffff': '#c5ccd6',
+    '#000000': '#1c1a1d',
+    '#dc2626': '#db0213',
+    '#1e40af': '#0f287c',
+    '#1e293b': '#272d37',
+    '#2563eb': '#0f287c',
+  };
+  for (const color of colors) {
+    const mapped = legacyMap[normalizeHex(color)];
+    if (mapped) allowed.add(normalizeHex(mapped));
+  }
+
   return productColors.filter((color) => allowed.has(normalizeHex(color)));
 }
 
@@ -51,11 +65,10 @@ export function getDesignApplicableColors(
     return productColors;
   }
 
-  if (isOverlayDesignTemplate(design) && design.recommendedColor) {
-    const wantsDarkShirt = isDarkShirtColor(design.recommendedColor);
-    return productColors.filter((color) =>
-      wantsDarkShirt ? isDarkShirtColor(color) : !isDarkShirtColor(color),
-    );
+  // recommendedColor only sets the default preview — admin applicableColors
+  // controls which swatches are shown. Without explicit admin colors, show all.
+  if (isOverlayDesignTemplate(design)) {
+    return productColors;
   }
 
   if (isTextDesignTemplate(design) && design.textStyle) {
@@ -91,14 +104,12 @@ export function resolveDesignPreviewColor(
     return selectedColor;
   }
 
-  if (
-    design.recommendedColor &&
-    applicable.some(
-      (color) =>
-        normalizeHex(color) === normalizeHex(design.recommendedColor!),
-    )
-  ) {
-    return design.recommendedColor;
+  if (design.recommendedColor) {
+    const recommendedKey = resolveProductColorImageKey(design.recommendedColor);
+    const recommended = applicable.find(
+      (color) => normalizeHex(color) === normalizeHex(recommendedKey),
+    );
+    if (recommended) return recommended;
   }
 
   return applicable[0];

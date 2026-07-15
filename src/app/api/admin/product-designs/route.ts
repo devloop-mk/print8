@@ -31,8 +31,19 @@ const templateSchema = z.object({
   overlayColorVariants: z.record(z.string()).optional(),
   overlayScale: z.number().optional(),
   overlayPosition: z.object({ x: z.number(), y: z.number() }).optional(),
+  overlayByProductType: z
+    .record(
+      z.object({
+        scale: z.number().optional(),
+        position: z.object({ x: z.number(), y: z.number() }).optional(),
+      }),
+    )
+    .optional(),
+  designSides: z.array(z.enum(['front', 'back', 'left', 'right'])).optional(),
+  backOverlay: z.record(z.unknown()).optional(),
   recommendedColor: z.string().optional(),
   applicableColors: z.array(z.string()).optional(),
+  applicableFits: z.array(z.enum(['unisex', 'women', 'kids'])).optional(),
   titleEn: z.string().optional(),
   titleMk: z.string().optional(),
   printMasterImage: z.string().optional(),

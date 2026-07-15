@@ -93,7 +93,16 @@ function getProductUnitPrice(
   if (!product) return null;
 
   if (isTshirtProduct(product)) {
-    return getTshirtPriceFromMetadata(metadata);
+    const packaged = getTshirtPriceFromMetadata(metadata);
+    if (packaged !== null) return packaged;
+
+    // Premade ready-designs / couple packs historically omitted printPackage.
+    // Charge the catalog base price (matches front-small for unisex tees).
+    if (typeof metadata.designTemplateId === 'string') {
+      return product.basePrice;
+    }
+
+    return null;
   }
 
   return product.basePrice;

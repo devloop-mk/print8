@@ -11,9 +11,26 @@ export function isMissingManagedSvgTemplatesTable(message: string) {
   );
 }
 
+import { GALLERY_THUMB_REGEN_LOCAL_HINT_MK } from '@/lib/designs/gallery-thumb-local';
+
 export function formatManagedSvgTemplatesError(message: string) {
   if (isMissingManagedSvgTemplatesTable(message)) {
     return MANAGED_SVG_TEMPLATES_MIGRATION_HINT;
+  }
+  return message;
+}
+
+export function formatGalleryThumbBuilderError(message: string) {
+  const lower = message.toLowerCase();
+  if (
+    lower.includes("executable doesn't exist") ||
+    lower.includes('browsertype.launch') ||
+    lower.includes('playwright install')
+  ) {
+    return 'Playwright Chromium не е инсталиран. Во терминал пуштете: npm run playwright:install';
+  }
+  if (message === GALLERY_THUMB_REGEN_LOCAL_HINT_MK) {
+    return message;
   }
   return message;
 }

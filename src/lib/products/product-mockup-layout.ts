@@ -1,5 +1,18 @@
+import type { CSSProperties } from 'react';
 import type { Product, ProductType } from '@/lib/data/catalog';
 import { PRODUCT_PRINT_AREA_INSET_PERCENT } from '@/lib/products/customizer-constants';
+import {
+  getUnisexTshirtCatalogScaleFromMockup,
+  getUnisexTshirtCustomizerScaleFromMockup,
+} from '@/lib/products/tshirt-unisex-colors';
+import {
+  getWomenTshirtCatalogScaleFromMockup,
+  getWomenTshirtCustomizerScaleFromMockup,
+} from '@/lib/products/tshirt-women-colors';
+import {
+  getKidsTshirtCatalogScaleFromMockup,
+  getKidsTshirtCustomizerScaleFromMockup,
+} from '@/lib/products/tshirt-kids-colors';
 import {
   BAG_PRINT_AREA_INSETS,
   CAP_PRINT_AREA_INSETS,
@@ -9,6 +22,7 @@ import {
   getUniformPrintAreaInsets,
   HOODIE_PRINT_AREA_INSETS,
   TSHIRT_PRINT_AREA_INSETS,
+  WOMEN_TSHIRT_PRINT_AREA_INSETS,
   BODYSUIT_PRINT_AREA_INSETS,
   THERMOS_PRINT_AREA_INSETS,
   THERMOS_WRAP_PRINT_AREA_INSETS,
@@ -79,8 +93,9 @@ export function getOverlayPrintBounds(
 
 const DEFAULT_MOCKUP_LAYOUT = createMockupLayout();
 
-/** T-shirt mockups have side padding in the PNG — nudge catalog previews larger. */
+/** Fallback catalog scale when no per-color mockup path is available. */
 const TSHIRT_MOCKUP_LAYOUT = createMockupLayout({
+  customizerInnerScale: 1,
   catalogScale: 1.01,
   printArea: TSHIRT_PRINT_AREA_INSETS,
 });
@@ -129,15 +144,74 @@ const layoutsByType: Partial<Record<ProductType, ProductMockupLayout>> = {
   bag: BAG_MOCKUP_LAYOUT,
 };
 
-/** Per-product catalog scale overrides — merge on top of the type defaults. */
-const catalogScaleByProductId: Partial<Record<string, number>> = {
-  // 'hoodie-basic-charcoal': 1.38,
-};
-
 /** Per-product print-area overrides — merge on top of the type defaults. */
 const printAreaByProductId: Partial<Record<string, PrintAreaInsets>> = {
-  // 'tshirt-basic-white': { top: 26, right: 18, bottom: 52, left: 18 },
+  /** Fitted women's tee — narrower chest zone for the tapered silhouette. */
+  'tshirt-women-fitted': WOMEN_TSHIRT_PRINT_AREA_INSETS,
 };
+
+export type MockupDisplayVariant = 'catalog-card' | 'catalog-design' | 'customizer';
+
+function getPerColorTshirtMockupScale(
+  product: Product,
+  mockupPath: string,
+  variant: MockupDisplayVariant,
+): number {
+  if (product.fit === 'women') {
+    if (variant === 'customizer') {
+      return getWomenTshirtCustomizerScaleFromMockup(mockupPath);
+    }
+    return getWomenTshirtCatalogScaleFromMockup(mockupPath);
+  }
+
+  if (product.fit === 'kids') {
+    if (variant === 'customizer') {
+      return getKidsTshirtCustomizerScaleFromMockup(mockupPath);
+    }
+    return getKidsTshirtCatalogScaleFromMockup(mockupPath);
+  }
+
+  if (variant === 'customizer') {
+    return getUnisexTshirtCustomizerScaleFromMockup(mockupPath);
+  }
+
+  return getUnisexTshirtCatalogScaleFromMockup(mockupPath);
+}
+
+/**
+ * Single source of truth for shirt mockup zoom across storefront, customizer,
+ * and admin previews. Per-color photo mockup scale compensates for extra canvas
+ * padding so overlays stay proportional to the fabric.
+ */
+export function resolveMockupDisplayScale(
+  product: Product,
+  mockupPath?: string,
+  variant: MockupDisplayVariant = 'catalog-design',
+): number {
+  const layout = getProductMockupLayout(product);
+
+  if (product.type !== 't-shirt' || !mockupPath) {
+    return layout.catalogScale;
+  }
+
+  return getPerColorTshirtMockupScale(product, mockupPath, variant);
+}
+
+/**
+ * Zoom for photo mockups with extra canvas padding.
+ * Apply to a wrapper that contains the shirt image AND any overlays / print-area
+ * guides so they stay aligned. For shirt-only catalog thumbnails, the img itself
+ * may use this style instead.
+ */
+export function getMockupImageDisplayStyle(
+  product: Product,
+  mockupPath?: string,
+  variant: MockupDisplayVariant = 'catalog-design',
+): CSSProperties | undefined {
+  const scale = resolveMockupDisplayScale(product, mockupPath, variant);
+  if (scale === 1) return undefined;
+  return { transform: `scale(${scale})`, transformOrigin: 'center center' };
+}
 
 export function getProductMockupLayout(
   productOrType: Product | ProductType,
@@ -147,27 +221,20 @@ export function getProductMockupLayout(
     typeof productOrType === 'string' ? productOrType : productOrType.type;
   const base = layoutsByType[type] ?? DEFAULT_MOCKUP_LAYOUT;
 
-  const productCatalogScale =
-    product?.id && catalogScaleByProductId[product.id] !== undefined
-      ? catalogScaleByProductId[product.id]
-      : undefined;
-
   const productPrintArea =
     product?.id && printAreaByProductId[product.id] !== undefined
       ? printAreaByProductId[product.id]
       : undefined;
 
-  if (productCatalogScale === undefined && productPrintArea === undefined) {
+  if (productPrintArea === undefined) {
     return base;
   }
 
-  const printArea = productPrintArea ?? base.printArea;
-  const placementArea = base.wrapPrintArea ?? printArea;
+  const placementArea = base.wrapPrintArea ?? productPrintArea;
 
   return {
     ...base,
-    catalogScale: productCatalogScale ?? base.catalogScale,
-    printArea,
+    printArea: productPrintArea,
     overlayMaxScale: getPrintAreaMaxScale(placementArea),
   };
 }

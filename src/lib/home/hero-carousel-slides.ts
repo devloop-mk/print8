@@ -24,7 +24,7 @@ export const heroCarouselSlides: HeroCarouselSlide[] = [
   {
     id: 'yourBrand',
     href: '/products/branding-pack',
-    image: '/hero/hero-your-brand-v4.png',
+    image: '/hero/hero-your-brand-v5.png',
   },
   {
     id: 'drinkware',

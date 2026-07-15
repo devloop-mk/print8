@@ -22,7 +22,7 @@ const categoryMeta: Record<
   apparel: {
     images: [
       '/hoodies/hoodie-charcoal.jpg',
-      '/t-shirts/tshirt-white.jpg',
+      '/t-shirts/unisex/bela-front.jpg',
       '/spikozni/mockup-bodysuit-white.png',
       '/caps/cap-charcoal-front.jpg',
     ],

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { ArrowLeft, ArrowRight, Palette } from 'lucide-react';
@@ -31,6 +31,8 @@ import {
 import { useCatalogSearchLabels } from '@/hooks/useCatalogSearchLabels';
 import { Reveal } from '@/components/motion/Reveal';
 import { CatalogGridLayout } from '@/components/catalog/CatalogGrid';
+import { CatalogPagination } from '@/components/catalog/CatalogPagination';
+import { useCatalogPagination } from '@/hooks/useCatalogPagination';
 import { Button } from '@/components/ui/Button';
 
 type TypeFilter = ProductType | 'all';
@@ -94,6 +96,28 @@ export function ProductCategoryPremadeCatalog({
         searchLabels,
       ),
     [filteredByAttributes, searchQuery, searchLabels],
+  );
+
+  const filterSignature = useMemo(
+    () =>
+      [typeFilter, colorFilter, sideFilter, searchQuery.trim()].join('|'),
+    [colorFilter, searchQuery, sideFilter, typeFilter],
+  );
+
+  const { page, setPage, resetPage, paginate } = useCatalogPagination({
+    totalItems: filtered.length,
+  });
+
+  const prevFilterSignature = useRef(filterSignature);
+  useEffect(() => {
+    if (prevFilterSignature.current === filterSignature) return;
+    prevFilterSignature.current = filterSignature;
+    resetPage();
+  }, [filterSignature, resetPage]);
+
+  const visibleEntries = useMemo(
+    () => paginate(filtered),
+    [filtered, paginate],
   );
 
   const filterGroups = useMemo((): CatalogFilterGroup[] => {
@@ -198,7 +222,7 @@ export function ProductCategoryPremadeCatalog({
           ) : (
             <Reveal delay={80}>
               <CatalogGridLayout>
-                {filtered.map((entry) => (
+                {visibleEntries.map((entry) => (
                   <ProductDesignCatalogCard
                     key={entry.design.id}
                     entry={entry}
@@ -206,6 +230,16 @@ export function ProductCategoryPremadeCatalog({
                   />
                 ))}
               </CatalogGridLayout>
+              <CatalogPagination
+                page={page}
+                totalItems={filtered.length}
+                onPageChange={setPage}
+                previousLabel={tc('paginationPrevious')}
+                nextLabel={tc('paginationNext')}
+                pageLabel={(current, total) =>
+                  tc('paginationPage', { current, total })
+                }
+              />
             </Reveal>
           )}
         </CatalogFilterLayout>

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
-import { products, productTypes, type ProductType } from '@/lib/data/catalog';
+import { getBrowsableProducts, productTypes, type ProductType } from '@/lib/data/catalog';
 import { parseProductTypeFilter } from '@/lib/data/service-routes';
 import { productTypeHref } from '@/lib/products/product-nav';
 import { buildProductTypeFilterOptions } from '@/lib/products/product-type-icons';
@@ -46,8 +46,8 @@ export function ProductsCatalog() {
 
   const filtered =
     typeFilter === 'all'
-      ? products
-      : products.filter((p) => p.type === typeFilter);
+      ? getBrowsableProducts()
+      : getBrowsableProducts().filter((p) => p.type === typeFilter);
 
   return (
     <>

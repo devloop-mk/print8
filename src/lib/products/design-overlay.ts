@@ -1,9 +1,13 @@
 import type {
   Product,
+  ProductDesignSideOverlay,
   ProductDesignTemplate,
+  ProductSide,
   ProductType,
 } from '@/lib/data/catalog';
-import { resolveAssetUrl } from '@/lib/storage/asset-url';
+import { resolveSideOverlayConfig } from '@/lib/products/design-sides';
+import { resolveAssetUrl, resolveMasterAssetUrl } from '@/lib/storage/asset-url';
+import { sanitizeCssHexColor } from '@/lib/security/sanitize-svg';
 
 export type OverlaySvgColors = {
   primary: string;
@@ -15,8 +19,9 @@ export type OverlayPlacement = {
   scale: number;
 };
 
-const DEFAULT_OVERLAY_POSITION = { x: 50, y: 45 };
-const DEFAULT_OVERLAY_SCALE = 50;
+const DEFAULT_OVERLAY_POSITION = { x: 50, y: 54 };
+/** Default width % — kept under t-shirt print-area width (~47%). */
+const DEFAULT_OVERLAY_SCALE = 40;
 
 export function resolveOverlayPlacement(
   template: Pick<
@@ -40,6 +45,42 @@ export function resolveOverlayPlacement(
     position: typeOverride.position ?? base.position,
     scale: typeOverride.scale ?? base.scale,
   };
+}
+
+export function resolveSideOverlayPlacement(
+  config: Pick<
+    ProductDesignSideOverlay,
+    'overlayPosition' | 'overlayScale' | 'overlayByProductType'
+  >,
+  productOrType: Product | ProductType,
+): OverlayPlacement {
+  const productType =
+    typeof productOrType === 'string' ? productOrType : productOrType.type;
+
+  const base: OverlayPlacement = {
+    position: config.overlayPosition ?? DEFAULT_OVERLAY_POSITION,
+    scale: config.overlayScale ?? DEFAULT_OVERLAY_SCALE,
+  };
+
+  const typeOverride = config.overlayByProductType?.[productType];
+  if (!typeOverride) return base;
+
+  return {
+    position: typeOverride.position ?? base.position,
+    scale: typeOverride.scale ?? base.scale,
+  };
+}
+
+export function resolveOverlayPlacementForSide(
+  template: ProductDesignTemplate,
+  side: ProductSide,
+  productOrType: Product | ProductType,
+): OverlayPlacement {
+  const config = resolveSideOverlayConfig(template, side);
+  if (config) {
+    return resolveSideOverlayPlacement(config, productOrType);
+  }
+  return resolveOverlayPlacement(template, productOrType);
 }
 
 export function normalizeHex(hex: string): string {
@@ -110,8 +151,11 @@ export function applySvgInkColors(
   svgText: string,
   colors: OverlaySvgColors,
 ): string {
-  const primary = colors.primary;
-  const secondary = colors.secondary ?? colors.primary;
+  const primary = sanitizeCssHexColor(colors.primary);
+  const secondary = sanitizeCssHexColor(
+    colors.secondary ?? colors.primary,
+    primary,
+  );
   const styleBlock = `<style>:root,svg{--ink-primary:${primary};--ink-secondary:${secondary}}</style>`;
 
   if (svgText.includes('--ink-primary')) {
@@ -138,7 +182,7 @@ export async function fetchRecoloredSvgBlobUrl(
   return URL.createObjectURL(blob);
 }
 
-export function resolveOverlayColorVariant(
+function pickOverlayColorVariantRaw(
   template: Pick<ProductDesignTemplate, 'overlayColorVariants' | 'overlayImage'>,
   shirtColor: string,
 ): string | null {
@@ -160,6 +204,81 @@ export function resolveOverlayColorVariant(
   if (shirtLum >= 0.35 && lightFallback) return lightFallback;
 
   return template.overlayImage ?? Object.values(template.overlayColorVariants)[0] ?? null;
+}
+
+export function resolveOverlayColorVariant(
+  template: Pick<ProductDesignTemplate, 'overlayColorVariants' | 'overlayImage'>,
+  shirtColor: string,
+): string | null {
+  return resolveComposableOverlayUrl(
+    pickOverlayColorVariantRaw(template, shirtColor),
+  );
+}
+
+/** Streetwear web previews are full-shirt mockups with a baked-in garment color. */
+export function isMarketingShirtMockupOverlay(path: string | undefined): boolean {
+  if (!path) return false;
+  if (path.includes('/NEW_DESIGNS/streetwear/') && path.endsWith('.webp')) {
+    return true;
+  }
+  if (path.includes('/masters/streetwear/') && path.endsWith('.png')) {
+    return true;
+  }
+  return false;
+}
+
+/** Streetwear catalog webp — marketing preview, not the print overlay. */
+export function isStreetwearMarketingOverlay(
+  path: string | undefined,
+): boolean {
+  return Boolean(
+    path &&
+      path.includes('/NEW_DESIGNS/streetwear/') &&
+      path.endsWith('.webp'),
+  );
+}
+
+/**
+ * Raw overlay artwork URL. Prefers the original print master PNG.
+ */
+export function resolveComposableOverlayUrl(
+  path: string | null | undefined,
+): string | null {
+  if (!path) return null;
+
+  const normalized = path.replace(/^\//, '');
+  if (normalized.startsWith('masters/')) {
+    return resolveMasterAssetUrl(path);
+  }
+
+  if (
+    normalized.includes('NEW_DESIGNS/streetwear-art/') ||
+    isStreetwearMarketingOverlay(`/${normalized}`)
+  ) {
+    return null;
+  }
+
+  return resolveAssetUrl(path);
+}
+
+/**
+ * Design PNG layered on the selectable shirt mockup — original print master only.
+ */
+export function getDesignCompositeOverlayUrl(
+  design: Pick<
+    ProductDesignTemplate,
+    'printMasterImage' | 'overlayImage' | 'overlaySvg'
+  >,
+): string | null {
+  if (design.printMasterImage) {
+    return resolveMasterAssetUrl(design.printMasterImage);
+  }
+
+  if (design.overlayImage && !isStreetwearMarketingOverlay(design.overlayImage)) {
+    return resolveAssetUrl(design.overlayImage);
+  }
+
+  return null;
 }
 
 export function isRecolorableOverlayTemplate(

@@ -70,13 +70,13 @@ async function buildGalleryThumb(wrapperFile) {
 
   const artPath = path.join(publicRoot, artMatch[1].replace(/^\//, ''));
   const artLayer = await sharp(artPath)
-    .resize(THUMB_WIDTH, THUMB_HEIGHT, { fit: 'fill' })
+    .resize(THUMB_WIDTH, THUMB_HEIGHT, { fit: 'inside', background: { r: 255, g: 255, b: 255, alpha: 0 } })
     .png()
     .toBuffer();
 
   const textSvg = textOnlyWrapperSvg(svg);
   const textLayer = await sharp(Buffer.from(textSvg), { density: 150 })
-    .resize(THUMB_WIDTH, THUMB_HEIGHT, { fit: 'fill' })
+    .resize(THUMB_WIDTH, THUMB_HEIGHT, { fit: 'inside', background: { r: 255, g: 255, b: 255, alpha: 0 } })
     .png()
     .toBuffer();
 

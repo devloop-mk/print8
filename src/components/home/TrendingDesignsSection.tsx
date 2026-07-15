@@ -1,31 +1,48 @@
 'use client';
 
+import Image from 'next/image';
 import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Flame, Sparkles, ArrowUpRight } from 'lucide-react';
-import { DesignCardThumbnail } from '@/components/designs/DesignCardThumbnail';
-import {
-  getDesignHref,
-  type DesignTemplate,
-} from '@/lib/data/catalog';
-import type { TrendingDesignAccent } from '@/lib/data/trending-designs';
-import { getDesignThumbAspect } from '@/lib/designs/design-thumb';
+import type { TrendingProductDesign } from '@/lib/cms/home-trending';
+import { resolveProductDesignDisplayName } from '@/lib/products/design-display-name';
+import { buildDesignDetailUrl } from '@/lib/products/paths';
+import { getTrendingDesignThumbnail } from '@/lib/home/trending-thumbnail';
 import { cn } from '@/lib/utils';
 
-type TrendingDesign = DesignTemplate & TrendingDesignAccent;
-
-function getDesignName(
-  design: TrendingDesign,
-  locale: string,
-  fallback: (id: string) => string,
-) {
-  const record = design as TrendingDesign & { nameEn?: string; nameMk?: string };
-  if (record.nameEn || record.nameMk) {
-    return locale === 'mk'
-      ? (record.nameMk ?? record.nameEn ?? design.id)
-      : (record.nameEn ?? record.nameMk ?? design.id);
-  }
-  return fallback(design.id);
+function TrendingThumbnail({
+  design,
+  name,
+  featured = false,
+}: {
+  design: TrendingProductDesign;
+  name: string;
+  featured?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        'relative w-full overflow-hidden shadow-[0_20px_60px_-24px_rgba(0,0,0,0.65)]',
+        'transition duration-500 group-hover:scale-[1.03] group-hover:shadow-[0_28px_70px_-20px_rgba(0,0,0,0.55)]',
+        design.ring,
+      )}
+    >
+      <div className="relative aspect-square w-full bg-white">
+        <Image
+          src={getTrendingDesignThumbnail(design.id)}
+          alt={name}
+          fill
+          sizes={
+            featured
+              ? '(max-width: 1024px) 100vw, 50vw'
+              : '(max-width: 768px) 50vw, 25vw'
+          }
+          className="object-contain"
+          loading="lazy"
+        />
+      </div>
+    </div>
+  );
 }
 
 function TrendingCard({
@@ -33,19 +50,19 @@ function TrendingCard({
   rank,
   featured = false,
   name,
-  categoryLabel,
   customizeLabel,
 }: {
-  design: TrendingDesign;
+  design: TrendingProductDesign;
   rank: number;
   featured?: boolean;
   name: string;
-  categoryLabel: string;
   customizeLabel: string;
 }) {
+  const href = buildDesignDetailUrl(design.id);
+
   return (
     <Link
-      href={getDesignHref(design)}
+      href={href}
       className={cn(
         'group relative flex h-full flex-col overflow-hidden',
         'border border-white/10 bg-white/[0.04] backdrop-blur-sm',
@@ -80,7 +97,7 @@ function TrendingCard({
             #{rank}
           </span>
           <span className="text-[10px] font-semibold uppercase tracking-wider text-white/60">
-            {categoryLabel}
+            T-shirt
           </span>
         </div>
         <ArrowUpRight
@@ -95,21 +112,7 @@ function TrendingCard({
           featured ? 'max-w-[92%]' : 'max-w-[88%]',
         )}
       >
-        <div
-          className={cn(
-            'relative w-full overflow-hidden shadow-[0_20px_60px_-24px_rgba(0,0,0,0.65)]',
-            'transition duration-500 group-hover:scale-[1.03] group-hover:shadow-[0_28px_70px_-20px_rgba(0,0,0,0.55)]',
-            design.ring,
-          )}
-          style={{ aspectRatio: getDesignThumbAspect(design) }}
-        >
-          <DesignCardThumbnail
-            design={design}
-            alt={name}
-            className="h-full w-full"
-            fill
-          />
-        </div>
+        <TrendingThumbnail design={design} name={name} featured={featured} />
       </div>
 
       <div className="relative border-t border-white/10 p-4 sm:p-5">
@@ -132,11 +135,11 @@ function TrendingCard({
 export function TrendingDesignsSection({
   designs,
 }: {
-  designs: TrendingDesign[];
+  designs: TrendingProductDesign[];
 }) {
   const t = useTranslations('home.trending');
-  const td = useTranslations('designs');
-  const locale = useLocale();
+  const tp = useTranslations('products');
+  const locale = useLocale() as 'mk' | 'en';
 
   if (designs.length === 0) return null;
 
@@ -175,7 +178,7 @@ export function TrendingDesignsSection({
           </div>
 
           <Link
-            href="/designs/all"
+            href="/products/ready-designs?type=t-shirt"
             className="inline-flex shrink-0 items-center gap-2 border border-white/25 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:border-white/40 hover:bg-white/10"
           >
             <Sparkles className="h-4 w-4 text-brand-300" aria-hidden />
@@ -190,9 +193,8 @@ export function TrendingDesignsSection({
                 design={hero}
                 rank={1}
                 featured
-                name={getDesignName(hero, locale, (id) => td(`templates.${id}`))}
-                categoryLabel={td(`categories.${hero.category}`)}
-                customizeLabel={td('customizeOnline')}
+                name={resolveProductDesignDisplayName(hero, locale, (key) => tp(key))}
+                customizeLabel={tp('customize')}
               />
             </div>
           ) : null}
@@ -202,11 +204,21 @@ export function TrendingDesignsSection({
               key={design.id}
               design={design}
               rank={index + 2}
-              name={getDesignName(design, locale, (id) => td(`templates.${id}`))}
-              categoryLabel={td(`categories.${design.category}`)}
-              customizeLabel={td('customizeOnline')}
+              name={resolveProductDesignDisplayName(design, locale, (key) => tp(key))}
+              customizeLabel={tp('customize')}
             />
           ))}
+        </div>
+
+        <div className="mt-10 flex justify-center sm:mt-12">
+          <Link
+            href="/products/ready-designs?type=t-shirt"
+            className="inline-flex items-center gap-2 border border-white/25 bg-white/5 px-6 py-3 text-sm font-semibold text-white backdrop-blur-sm transition hover:border-white/40 hover:bg-white/10"
+          >
+            <Sparkles className="h-4 w-4 text-brand-300" aria-hidden />
+            {t('viewAll')}
+            <ArrowUpRight className="h-4 w-4 text-white/50" aria-hidden />
+          </Link>
         </div>
       </div>
     </section>

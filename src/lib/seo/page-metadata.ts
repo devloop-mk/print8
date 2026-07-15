@@ -9,7 +9,9 @@ import {
   products,
   type ProductType,
   type ProductDesignCategory,
+  type ProductDesignTemplate,
 } from '@/lib/data/catalog';
+import { resolveStaticProductDesignTemplate } from '@/lib/products/resolve-product-design-template';
 import {
   getDesignDisplayName,
   resolveDesignTemplate,
@@ -17,6 +19,8 @@ import {
 import type { ProductNavCategoryId } from '@/lib/products/product-nav';
 import { buildOgImageUrl, buildPageMetadata } from '@/lib/seo/metadata';
 import { resolveAssetUrl } from '@/lib/storage/asset-url';
+import { getCouplePackTemplate, getCouplePackPartnerDesign } from '@/lib/data/couple-pack';
+import { resolveProductDesignDisplayName } from '@/lib/products/design-display-name';
 
 export async function buildProductMetadata(locale: Locale, id: string) {
   const product = products.find((item) => item.id === id);
@@ -322,5 +326,72 @@ export async function buildNoIndexMetadata(
     description,
     path,
     noIndex: true,
+  });
+}
+
+export async function buildDesignProductMetadata(
+  locale: Locale,
+  designId: string,
+  designOverride?: ProductDesignTemplate | null,
+) {
+  const coupleMatch = getCouplePackPartnerDesign(designId);
+  const design =
+    designOverride ??
+    coupleMatch?.design ??
+    resolveStaticProductDesignTemplate(designId);
+  if (!design) return null;
+
+  const t = await getTranslations({ locale, namespace: 'products' });
+  const tdp = await getTranslations({ locale, namespace: 'products.designPdp' });
+  const tm = await getTranslations({ locale, namespace: 'metadata' });
+
+  const designName = resolveProductDesignDisplayName(design, locale, (key) =>
+    t(key),
+  );
+  const title = `${designName} | Print 8`;
+  const description = tdp('metaDescription', { name: designName });
+  const previewImage =
+    design.overlayImage ?? design.image ?? products[0]?.image;
+
+  return buildPageMetadata({
+    locale,
+    title,
+    description,
+    path: `/products/design/${designId}`,
+    image: buildOgImageUrl({
+      locale,
+      title: designName,
+      description,
+      badge: tm('badges.product'),
+      image: previewImage ? resolveAssetUrl(previewImage) : undefined,
+    }),
+  });
+}
+
+export async function buildCouplePackMetadata(locale: Locale, packId: string) {
+  const pack = getCouplePackTemplate(packId);
+  if (!pack) return null;
+
+  const tc = await getTranslations({ locale, namespace: 'products.couplePacks' });
+  const tm = await getTranslations({ locale, namespace: 'metadata' });
+
+  const title =
+    locale === 'mk' ? `${pack.titleMk} | Print 8` : `${pack.titleEn} | Print 8`;
+  const description = tc('metaDescription', {
+    name: locale === 'mk' ? pack.titleMk : pack.titleEn,
+  });
+
+  return buildPageMetadata({
+    locale,
+    title,
+    description,
+    path: `/products/design/couple/${packId}`,
+    image: buildOgImageUrl({
+      locale,
+      title: locale === 'mk' ? pack.titleMk : pack.titleEn,
+      description,
+      badge: tc('badge'),
+      image: resolveAssetUrl(pack.partnerDesigns[0].overlayImage),
+    }),
   });
 }

@@ -23,6 +23,7 @@ import {
   filterDesignCatalogEntries,
   getCatalogColors,
   getProductDesignCatalogEntries,
+  type ProductDesignCatalogEntry,
 } from '@/lib/products/design-catalog';
 import { PRODUCT_OFFERING_PATHS } from '@/lib/products/paths';
 import {
@@ -30,6 +31,11 @@ import {
   type CatalogFilterGroup,
 } from '@/components/catalog/CatalogFilterLayout';
 import { ProductDesignCatalogCard } from '@/components/products/ProductDesignCatalogCard';
+import { CouplePackCard } from '@/components/products/CouplePackCard';
+import {
+  getCouplePackTemplates,
+  type CouplePackTemplate,
+} from '@/lib/data/couple-pack';
 import {
   filterProductDesignEntriesBySearchQuery,
 } from '@/lib/catalog/catalog-search';
@@ -41,19 +47,26 @@ import { useCatalogPagination } from '@/hooks/useCatalogPagination';
 
 type ProductDesignsCatalogProps = {
   category: ProductDesignCategory;
+  /** Server-merged catalog entries (includes admin applicableColors). */
+  initialEntries?: ProductDesignCatalogEntry[];
 };
 
 type TypeFilter = ProductType | 'all';
 type SideFilter = ProductSide | 'all';
 
-const STREETWEAR_COLLECTION_LABELS: Record<string, { en: string; mk: string }> = {
+const COLLECTION_LABELS: Record<string, { en: string; mk: string }> = {
   basketball: { en: 'Basketball', mk: 'Кошарка' },
   anime: { en: 'Japanese Anime', mk: 'Јапонско аниме' },
   typography: { en: 'Streetwear Typography', mk: 'Стритвер типографија' },
   streetwear: { en: 'Streetwear', mk: 'Стритвер' },
+  'baby-milestones': { en: 'Baby milestones', mk: 'Беби пресвртници' },
+  'couple-packs': { en: 'Couple packs', mk: 'Парски пакети' },
 };
 
-export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) {
+export function ProductDesignsCatalog({
+  category,
+  initialEntries,
+}: ProductDesignsCatalogProps) {
   const t = useTranslations('products');
   const locale = useLocale() as 'mk' | 'en';
   const tc = useTranslations('products.catalog');
@@ -67,7 +80,8 @@ export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) 
   );
 
   const allEntries = useMemo(() => {
-    const entries = getProductDesignCatalogEntries(category);
+    const entries =
+      initialEntries ?? getProductDesignCatalogEntries(category);
     if (categoryFilter === 'all') return entries;
 
     return entries
@@ -78,7 +92,7 @@ export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) 
         ),
       }))
       .filter((entry) => entry.products.length > 0);
-  }, [category, categoryFilter]);
+  }, [category, categoryFilter, initialEntries]);
 
   const [typeFilter, setTypeFilter] = useState<TypeFilter>(() =>
     parseProductTypeFilter(searchParams.get('type')),
@@ -98,8 +112,8 @@ export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) 
         value,
         label:
           locale === 'mk'
-            ? (STREETWEAR_COLLECTION_LABELS[value]?.mk ?? value)
-            : (STREETWEAR_COLLECTION_LABELS[value]?.en ?? value),
+            ? (COLLECTION_LABELS[value]?.mk ?? value)
+            : (COLLECTION_LABELS[value]?.en ?? value),
       }))
       .sort((a, b) => a.label.localeCompare(b.label));
   }, [allEntries, locale]);
@@ -123,19 +137,72 @@ export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) 
     [allEntries],
   );
 
+  const couplePackPartnerIds = useMemo(() => {
+    return new Set(
+      getCouplePackTemplates().flatMap((pack) =>
+        pack.partnerDesigns.map((partner) => partner.designId),
+      ),
+    );
+  }, []);
+
   const filteredByAttributes = useMemo(
     () =>
       filterDesignCatalogEntries(allEntries, {
         type: typeFilter,
         color: colorFilter,
         side: sideFilter,
-      }).filter((entry) =>
-        collectionFilter === 'all'
-          ? true
-          : entry.design.collection === collectionFilter,
-      ),
-    [allEntries, typeFilter, colorFilter, sideFilter, collectionFilter],
+      })
+        .filter((entry) => !couplePackPartnerIds.has(entry.design.id))
+        .filter((entry) =>
+          collectionFilter === 'all'
+            ? true
+            : entry.design.collection === collectionFilter,
+        ),
+    [
+      allEntries,
+      typeFilter,
+      colorFilter,
+      sideFilter,
+      collectionFilter,
+      couplePackPartnerIds,
+    ],
   );
+
+  const visibleCouplePacks = useMemo(() => {
+    let packs = getCouplePackTemplates();
+
+    if (collectionFilter !== 'all' && collectionFilter !== 'couple-packs') {
+      return [] as CouplePackTemplate[];
+    }
+
+    if (typeFilter !== 'all') {
+      packs = packs.filter((pack) => pack.productTypes.includes(typeFilter));
+    }
+
+    if (colorFilter !== 'all') {
+      packs = packs.filter((pack) => {
+        if (!pack.applicableColors?.length) return true;
+        return pack.applicableColors.some(
+          (color) =>
+            color.toLowerCase() === colorFilter.toLowerCase() ||
+            (colorFilter.toLowerCase() === '#c5ccd6' &&
+              color.toLowerCase() === '#ffffff') ||
+            (colorFilter.toLowerCase() === '#1c1a1d' &&
+              color.toLowerCase() === '#000000'),
+        );
+      });
+    }
+
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return packs;
+
+    return packs.filter((pack) => {
+      const haystack = `${pack.titleEn} ${pack.titleMk} ${pack.partnerDesigns
+        .map((partner) => `${partner.labelEn} ${partner.labelMk}`)
+        .join(' ')}`.toLowerCase();
+      return haystack.includes(query);
+    });
+  }, [collectionFilter, typeFilter, colorFilter, searchQuery]);
 
   const filtered = useMemo(
     () =>
@@ -167,8 +234,16 @@ export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) 
     ],
   );
 
+  const catalogItems = useMemo(
+    () => [
+      ...visibleCouplePacks.map((pack) => ({ kind: 'couple-pack' as const, pack })),
+      ...filtered.map((entry) => ({ kind: 'design' as const, entry })),
+    ],
+    [filtered, visibleCouplePacks],
+  );
+
   const { page, setPage, resetPage, paginate } = useCatalogPagination({
-    totalItems: filtered.length,
+    totalItems: catalogItems.length,
   });
 
   const prevFilterSignature = useRef(filterSignature);
@@ -178,9 +253,9 @@ export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) 
     resetPage();
   }, [filterSignature, resetPage]);
 
-  const visibleEntries = useMemo(
-    () => paginate(filtered),
-    [filtered, paginate],
+  const visibleItems = useMemo(
+    () => paginate(catalogItems),
+    [catalogItems, paginate],
   );
 
   const pageTitle =
@@ -296,7 +371,7 @@ export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) 
           ariaLabel={t('filterLabel')}
           showFiltersLabel={t('showFilters')}
           hideFiltersLabel={t('hideFilters')}
-          resultsCount={filtered.length}
+          resultsCount={catalogItems.length}
           resultsLabel={(count) => tc('resultsDesigns', { count })}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
@@ -304,24 +379,32 @@ export function ProductDesignsCatalog({ category }: ProductDesignsCatalogProps) 
           searchAriaLabel={t('searchAriaLabel')}
           searchClearLabel={ts('clear')}
         >
-          {filtered.length === 0 ? (
+          {catalogItems.length === 0 ? (
             <p className="rounded-xl border border-dashed border-ink-200 bg-ink-50 px-4 py-12 text-center text-sm text-ink-500">
               {tc('noDesigns')}
             </p>
           ) : (
             <Reveal delay={80}>
               <CatalogGridLayout>
-                {visibleEntries.map((entry) => (
-                  <ProductDesignCatalogCard
-                    key={entry.design.id}
-                    entry={entry}
-                    colorFilter={colorFilter}
-                  />
-                ))}
+                {visibleItems.map((item) =>
+                  item.kind === 'couple-pack' ? (
+                    <CouplePackCard
+                      key={item.pack.id}
+                      pack={item.pack}
+                      colorFilter={colorFilter}
+                    />
+                  ) : (
+                    <ProductDesignCatalogCard
+                      key={item.entry.design.id}
+                      entry={item.entry}
+                      colorFilter={colorFilter}
+                    />
+                  ),
+                )}
               </CatalogGridLayout>
               <CatalogPagination
                 page={page}
-                totalItems={filtered.length}
+                totalItems={catalogItems.length}
                 onPageChange={setPage}
                 previousLabel={tc('paginationPrevious')}
                 nextLabel={tc('paginationNext')}

@@ -11,6 +11,7 @@ import { Link } from "@/i18n/navigation";
 import { useCart } from "@/components/cart/CartProvider";
 
 import { formatPrice, cn } from "@/lib/utils";
+import { getColorSwatchDisplayHex } from "@/lib/products/product-color-labels";
 import {
   MAX_PHOTOS_PER_ORDER,
   MAX_STICKERS_PER_ORDER,
@@ -305,7 +306,7 @@ export function CartPageContent() {
 
                               className="inline-block h-4 w-4 rounded-full border border-ink-200"
 
-                              style={{ backgroundColor: color }}
+                              style={{ backgroundColor: getColorSwatchDisplayHex(color) }}
 
                               title={color}
 

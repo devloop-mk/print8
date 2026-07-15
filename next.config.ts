@@ -26,6 +26,7 @@ function getAssetRemotePatterns() {
 
 const nextConfig: NextConfig = {
   outputFileTracingRoot: projectRoot,
+  serverExternalPackages: ['sharp'],
   // Keep catalog images out of serverless API bundles (served via CDN / static).
   outputFileTracingExcludes: {
     '/api/**': ['public/**'],
@@ -35,8 +36,20 @@ const nextConfig: NextConfig = {
   },
   images: {
     remotePatterns: getAssetRemotePatterns(),
+    // Mockup URLs use ?v=N cache-bust; Next requires an explicit localPatterns entry
+    // when src includes a query string (otherwise next/image throws).
+    localPatterns: [
+      {
+        pathname: '/t-shirts/**',
+      },
+      {
+        pathname: '/**',
+        search: '',
+      },
+    ],
   },
   experimental: {
+    optimizePackageImports: ['lucide-react'],
     serverActions: {
       bodySizeLimit: "12mb",
     },

@@ -1,4 +1,23 @@
+import { drinkwarePackTemplates } from '@/lib/data/drinkware-pack';
+import { babyPackTemplates } from '@/lib/data/baby-pack';
 import { streetwearPackTemplates } from '@/lib/data/streetwear-pack';
+import { getCouplePackDesignTemplates } from '@/lib/data/couple-pack';
+import {
+  buildUnisexTshirtColorImages,
+  getUnisexTshirtMockupPath,
+  TSHIRT_UNISEX_COLOR_HEXES,
+} from '@/lib/products/tshirt-unisex-colors';
+import {
+  buildWomenTshirtColorImages,
+  getWomenTshirtMockupPath,
+  TSHIRT_WOMEN_COLOR_HEXES,
+} from '@/lib/products/tshirt-women-colors';
+import {
+  buildKidsTshirtColorImages,
+  getKidsTshirtMockupPath,
+  TSHIRT_KIDS_COLOR_HEXES,
+} from '@/lib/products/tshirt-kids-colors';
+import { getProductColorImagesEntry } from '@/lib/products/product-color-images';
 
 export type ServiceId =
   | 'business-cards'
@@ -691,6 +710,9 @@ export type ProductType =
   | 'thermos'
   | 'magnet'
   | 'gift-set';
+
+/** T-shirt garment cut (unisex, women's fitted, kids). */
+export type GarmentFit = 'unisex' | 'women' | 'kids';
 export type ProductSide = 'front' | 'back' | 'left' | 'right';
 
 export interface ProductSideImages {
@@ -722,7 +744,7 @@ export function productHasPhotoGallery(
   product: Product,
   color: string,
 ): boolean {
-  const entry = product.colorsImages?.[color];
+  const entry = getProductColorImagesEntry(product.colorsImages, color);
   return Boolean(
     entry &&
     typeof entry !== 'string' &&
@@ -755,6 +777,10 @@ export interface Product {
   sizes?: string[];
   /** Products that support separate front/back customization */
   sides?: ProductSide[];
+  /** Garment fit — women's-only SKUs (e.g. fitted white/black tee) use `women`. */
+  fit?: GarmentFit;
+  /** When true, product is only reachable via garment-fit selection on designs. */
+  fitOnly?: boolean;
   /** Default crop aspect for upload-only products (e.g. magnets) */
   uploadAspect?: number;
 }
@@ -767,7 +793,7 @@ export function getMagnetDisplayMockup(
   product: Product,
   color: string,
 ): string {
-  const entry = product.colorsImages?.[color];
+  const entry = getProductColorImagesEntry(product.colorsImages, color);
   if (entry && typeof entry !== 'string' && isProductColorPair(entry)) {
     return entry.secondary ?? entry.primary;
   }
@@ -795,6 +821,23 @@ export interface ProductDesignTextStyle {
   photoScale?: number;
 }
 
+/** Per-side overlay artwork and placement (used for back in dual-sided designs). */
+export interface ProductDesignSideOverlay {
+  overlayImage?: string;
+  overlaySvg?: string;
+  overlayRecolor?: {
+    primary: string;
+    secondary?: string;
+    slots?: 1 | 2;
+  };
+  overlayColorVariants?: Record<string, string>;
+  overlayScale?: number;
+  overlayPosition?: { x: number; y: number };
+  overlayByProductType?: Partial<
+    Record<ProductType, { position?: { x: number; y: number }; scale?: number }>
+  >;
+}
+
 export interface ProductDesignTemplate {
   id: string;
   kind: ProductDesignKind;
@@ -803,6 +846,10 @@ export interface ProductDesignTemplate {
   productIds?: string[];
   nameKey: string;
   defaultSide: ProductSide;
+  /** Which sides have pre-made art. Defaults to [defaultSide]. */
+  designSides?: ProductSide[];
+  /** Back-side overlay when designSides includes both front and back. */
+  backOverlay?: ProductDesignSideOverlay;
   /** Full product JPEG — used for `image` kind thumbnails & customizer base */
   image?: string;
   /** Transparent print artwork (PNG) — overlaid on product mockup */
@@ -826,6 +873,8 @@ export interface ProductDesignTemplate {
   recommendedColor?: string;
   /** Shirt colors this design supports — omit to infer from variants / contrast */
   applicableColors?: string[];
+  /** T-shirt garment fits this design supports — omit defaults to unisex only */
+  applicableFits?: GarmentFit[];
   /** Styled Macedonian text layout — used for `text` kind */
   textStyle?: ProductDesignTextStyle;
   /** Display title (bulk-imported designs) */
@@ -839,46 +888,14 @@ export interface ProductDesignTemplate {
 
 export const productDesignTemplates: ProductDesignTemplate[] = [
   {
-    id: 'tee-print-keep-working-out',
-    kind: 'overlay',
-    category: 'image-designs',
-    productTypes: ['t-shirt', 'hoodie'],
-    nameKey: 'printKeepWorkingOut',
-    overlayImage: '/product-designs/prints/keep-working-out/on-black.png',
-    overlayColorVariants: {
-      '#000000': '/product-designs/prints/keep-working-out/on-black.png',
-      '#1f2937': '/product-designs/prints/keep-working-out/on-black.png',
-      '#ffffff': '/product-designs/prints/keep-working-out/on-white.png',
-      '#1e40af': '/product-designs/prints/keep-working-out/on-blue.png',
-      '#dc2626': '/product-designs/prints/keep-working-out/on-red.png',
-    },
-    overlayScale: 54,
-    overlayPosition: { x: 50, y: 44 },
-    recommendedColor: '#000000',
-    defaultSide: 'front',
-  },
-  {
-    id: 'tee-print-lift-heavy',
-    kind: 'overlay',
-    category: 'image-designs',
-    productTypes: ['t-shirt', 'hoodie'],
-    nameKey: 'printLiftHeavy',
-    overlaySvg: '/product-designs/prints/recolor/lift-heavy.svg',
-    overlayRecolor: { primary: '#F4EDE4', slots: 1 },
-    overlayScale: 52,
-    overlayPosition: { x: 50, y: 44 },
-    recommendedColor: '#000000',
-    defaultSide: 'front',
-  },
-  {
     id: 'tee-print-gym-alfa-mentalitet',
     kind: 'overlay',
     category: 'image-designs',
     productTypes: ['t-shirt', 'hoodie'],
     nameKey: 'gymAlfaMentalitet',
     overlayImage: '/NEW_DESIGNS/t-shirts/gym-alfa-mentalitet.png',
-    overlayScale: 52,
-    overlayPosition: { x: 50, y: 49 },
+    overlayScale: 40,
+    overlayPosition: { x: 50, y: 54 },
     recommendedColor: '#000000',
     defaultSide: 'front',
   },
@@ -889,8 +906,8 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
     productTypes: ['t-shirt', 'hoodie'],
     nameKey: 'gymZverGorilla',
     overlayImage: '/NEW_DESIGNS/t-shirts/gym-zver-gorilla-v2.png',
-    overlayScale: 52,
-    overlayPosition: { x: 50, y: 49 },
+    overlayScale: 40,
+    overlayPosition: { x: 50, y: 54 },
     overlayByProductType: {
       hoodie: { position: { x: 50, y: 59 }, scale: 41 },
     },
@@ -904,7 +921,7 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
     productTypes: ['t-shirt', 'hoodie'],
     nameKey: 'gymPosilenOdVcera',
     overlayImage: '/NEW_DESIGNS/t-shirts/gym-posilen-od-vcera-v2.png',
-    overlayScale: 49,
+    overlayScale: 40,
     overlayPosition: { x: 50, y: 54 },
     recommendedColor: '#000000',
     defaultSide: 'front',
@@ -916,8 +933,8 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
     productTypes: ['t-shirt', 'hoodie'],
     nameKey: 'gymOslobodiGoZverot',
     overlayImage: '/NEW_DESIGNS/t-shirts/gym-oslobodi-go-zverot.png',
-    overlayScale: 52,
-    overlayPosition: { x: 50, y: 47 },
+    overlayScale: 40,
+    overlayPosition: { x: 50, y: 54 },
     recommendedColor: '#000000',
     defaultSide: 'front',
   },
@@ -928,8 +945,8 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
     productTypes: ['t-shirt', 'hoodie'],
     nameKey: 'babyLoadingBoy',
     overlayImage: '/NEW_DESIGNS/t-shirts/baby-loading-boy.png',
-    overlayScale: 52,
-    overlayPosition: { x: 50, y: 52 },
+    overlayScale: 40,
+    overlayPosition: { x: 50, y: 54 },
     recommendedColor: '#000000',
     defaultSide: 'front',
   },
@@ -940,8 +957,8 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
     productTypes: ['t-shirt', 'hoodie'],
     nameKey: 'babyLoadingGirl',
     overlayImage: '/NEW_DESIGNS/t-shirts/baby-loading-girl.png',
-    overlayScale: 52,
-    overlayPosition: { x: 50, y: 52 },
+    overlayScale: 40,
+    overlayPosition: { x: 50, y: 54 },
     recommendedColor: '#000000',
     defaultSide: 'front',
   },
@@ -952,8 +969,8 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
     productTypes: ['t-shirt', 'hoodie'],
     nameKey: 'babyZipperBoy',
     overlayImage: '/NEW_DESIGNS/t-shirts/baby-zipper-boy.png',
-    overlayScale: 52,
-    overlayPosition: { x: 50, y: 68 },
+    overlayScale: 40,
+    overlayPosition: { x: 50, y: 54 },
     recommendedColor: '#000000',
     defaultSide: 'front',
   },
@@ -964,8 +981,8 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
     productTypes: ['t-shirt', 'hoodie'],
     nameKey: 'babyZipperGirl',
     overlayImage: '/NEW_DESIGNS/t-shirts/baby-zipper-girl.png',
-    overlayScale: 52,
-    overlayPosition: { x: 50, y: 68 },
+    overlayScale: 40,
+    overlayPosition: { x: 50, y: 54 },
     recommendedColor: '#000000',
     defaultSide: 'front',
   },
@@ -978,7 +995,7 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
     nameKey: 'bodysuitVujko',
     overlayImage: '/spikozni/dizajni/spikozna-dizajn-vujko-1.png',
     overlayScale: 36,
-    overlayPosition: { x: 50, y: 49 },
+    overlayPosition: { x: 50, y: 54 },
     recommendedColor: '#ffffff',
     defaultSide: 'front',
   },
@@ -991,7 +1008,7 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
     nameKey: 'bodysuitTato',
     overlayImage: '/spikozni/dizajni/spikozna-dizajn-tato-1.png',
     overlayScale: 32,
-    overlayPosition: { x: 50, y: 48 },
+    overlayPosition: { x: 50, y: 53 },
     recommendedColor: '#ffffff',
     defaultSide: 'front',
   },
@@ -1004,7 +1021,7 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
     nameKey: 'bodysuitTetka',
     overlayImage: '/spikozni/dizajni/spikozna-dizajn-tetka-1.png',
     overlayScale: 35,
-    overlayPosition: { x: 50, y: 50 },
+    overlayPosition: { x: 50, y: 55 },
     recommendedColor: '#ffffff',
     defaultSide: 'front',
   },
@@ -1017,7 +1034,7 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
     nameKey: 'bodysuitBabaDedo',
     overlayImage: '/spikozni/dizajni/spikozna-dizajn-babadedo-1.png',
     overlayScale: 34,
-    overlayPosition: { x: 50, y: 50 },
+    overlayPosition: { x: 50, y: 55 },
     recommendedColor: '#ffffff',
     defaultSide: 'front',
   },
@@ -1030,7 +1047,7 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
     nameKey: 'bodysuitMamaTato',
     overlayImage: '/spikozni/dizajni/spikozna-dizajn-mamatato-1.png',
     overlayScale: 34,
-    overlayPosition: { x: 50, y: 49 },
+    overlayPosition: { x: 50, y: 54 },
     recommendedColor: '#ffffff',
     defaultSide: 'front',
   },
@@ -1068,7 +1085,7 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
       fontWeight: 800,
       letterSpacing: '0.02em',
       lineHeight: 1.1,
-      photoPosition: { x: 50, y: 49 },
+      photoPosition: { x: 50, y: 54 },
       photoScale: 36,
     },
   },
@@ -1087,7 +1104,7 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
       fontWeight: 800,
       letterSpacing: '0.02em',
       lineHeight: 1.1,
-      photoPosition: { x: 50, y: 49 },
+      photoPosition: { x: 50, y: 54 },
       photoScale: 36,
     },
   },
@@ -1109,16 +1126,6 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
       photoPosition: { x: 50, y: 50 },
       photoScale: 34,
     },
-  },
-  {
-    id: 'mug-design-1',
-    kind: 'image',
-    category: 'image-designs',
-    productTypes: ['mug'],
-    productIds: ['mug-classic'],
-    nameKey: 'mugDesign1',
-    image: '/product-designs/mug-design-1.jpg',
-    defaultSide: 'front',
   },
   {
     id: 'mug-design-coffee-bear',
@@ -1201,6 +1208,9 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
     defaultSide: 'front',
   },
   ...streetwearPackTemplates,
+  ...drinkwarePackTemplates,
+  ...babyPackTemplates,
+  ...getCouplePackDesignTemplates(),
 ];
 
 export function getProductDesignTemplatesByCategory(
@@ -1223,7 +1233,14 @@ export function isRecolorableOverlayTemplate(d: ProductDesignTemplate) {
 export function isOverlayDesignTemplate(d: ProductDesignTemplate) {
   return (
     d.kind === 'overlay' &&
-    Boolean(d.overlayImage || d.overlaySvg || d.overlayColorVariants)
+    Boolean(
+      d.overlayImage ||
+        d.overlaySvg ||
+        d.overlayColorVariants ||
+        d.backOverlay?.overlayImage ||
+        d.backOverlay?.overlaySvg ||
+        d.backOverlay?.overlayColorVariants,
+    )
   );
 }
 
@@ -1260,7 +1277,7 @@ export function getProductMockup(
   color: string,
   side: ProductSide,
 ): string {
-  const entry = product.colorsImages?.[color];
+  const entry = getProductColorImagesEntry(product.colorsImages, color);
   if (!entry) return product.image;
   if (typeof entry === 'string') {
     return mockupPathForSide(entry, side);
@@ -1269,21 +1286,18 @@ export function getProductMockup(
     return entry.primary;
   }
 
-  const bySide: Partial<Record<ProductSide, string | undefined>> = {
-    front: entry.front,
-    back: entry.back,
-    left: entry.left,
-    right: entry.right,
-  };
+  if (isProductSideImages(entry)) {
+    return entry[side] ?? entry.front;
+  }
 
-  return bySide[side] ?? entry.front;
+  return product.image;
 }
 
 export function getProductGallerySlides(
   product: Product,
   color: string,
 ): ProductGallerySlide[] {
-  const entry = product.colorsImages?.[color];
+  const entry = getProductColorImagesEntry(product.colorsImages, color);
 
   if (entry && typeof entry !== 'string' && isProductColorPair(entry)) {
     const slides: ProductGallerySlide[] = [
@@ -1331,7 +1345,10 @@ export function getProductDesignTemplates(product: Product) {
 }
 
 export function getProductDesignTemplate(id: string) {
-  return productDesignTemplates.find((d) => d.id === id);
+  return (
+    productDesignTemplates.find((d) => d.id === id) ??
+    getCouplePackDesignTemplates().find((d) => d.id === id)
+  );
 }
 
 export function getDesignTemplate(id: string) {
@@ -1375,39 +1392,59 @@ export function getDesignsForService(service: Service) {
   return designTemplates.filter((d) => d.category === service.designCategory);
 }
 
+export function isBrowsableProduct(product: Product): boolean {
+  return !product.fitOnly;
+}
+
+export function getBrowsableProducts(): Product[] {
+  return products.filter(isBrowsableProduct);
+}
+
 export function getProductsForService(service: Service) {
   if (service.customization !== 'products' || !service.productTypes?.length) {
     return [];
   }
-  return products.filter((p) => service.productTypes!.includes(p.type));
+  return products.filter(
+    (p) => service.productTypes!.includes(p.type) && isBrowsableProduct(p),
+  );
 }
 
 export const products: Product[] = [
   {
     id: 'tshirt-basic-white',
     type: 't-shirt',
-    image: '/t-shirts/tshirt-white.jpg',
-    colorsImages: {
-      '#ffffff': {
-        front: '/t-shirts/tshirt-white.jpg',
-        back: '/t-shirts/tshirt-white-back.jpg',
-      },
-      '#000000': {
-        front: '/t-shirts/tshirt-black.jpg',
-        back: '/t-shirts/tshirt-black-back.jpg',
-      },
-      '#1e40af': {
-        front: '/t-shirts/tshirt-blue.jpg',
-        back: '/t-shirts/tshirt-blue-back.jpg',
-      },
-      '#dc2626': {
-        front: '/t-shirts/tshirt-red.jpg',
-        back: '/t-shirts/tshirt-red-back.jpg',
-      },
-    },
+    fit: 'unisex',
+    image: getUnisexTshirtMockupPath('bela', 'front'),
+    colorsImages: buildUnisexTshirtColorImages(),
     basePrice: 450,
-    colors: ['#ffffff', '#000000', '#1e40af', '#dc2626'],
+    colors: TSHIRT_UNISEX_COLOR_HEXES,
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    sides: ['front', 'back'],
+  },
+  {
+    id: 'tshirt-women-fitted',
+    type: 't-shirt',
+    fit: 'women',
+    fitOnly: true,
+    nameKey: 'tshirtWomenFitted',
+    image: getWomenTshirtMockupPath('bela', 'front'),
+    colorsImages: buildWomenTshirtColorImages(),
+    basePrice: 450,
+    colors: TSHIRT_WOMEN_COLOR_HEXES,
+    sizes: ['XS', 'S', 'M', 'L', 'XL'],
+    sides: ['front', 'back'],
+  },
+  {
+    id: 'tshirt-kids',
+    type: 't-shirt',
+    fit: 'kids',
+    fitOnly: true,
+    nameKey: 'tshirtKids',
+    image: getKidsTshirtMockupPath('nebesno-plava', 'front'),
+    colorsImages: buildKidsTshirtColorImages(),
+    basePrice: 450,
+    colors: TSHIRT_KIDS_COLOR_HEXES,
+    sizes: ['2-3', '4-5', '6-7', '8-9', '10-12', '12-14'],
     sides: ['front', 'back'],
   },
   {

@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   fetchRecoloredSvgBlobUrl,
   normalizeHex,
+  getDesignCompositeOverlayUrl,
+  resolveComposableOverlayUrl,
   resolveOverlayColorVariant,
   type OverlaySvgColors,
 } from '@/lib/products/design-overlay';
@@ -29,6 +31,11 @@ export function useOverlayAssetUrl({
   const [svgBlobUrl, setSvgBlobUrl] = useState<string | null>(null);
 
   const variantUrl = useMemo(() => {
+    const raster =
+      resolveComposableOverlayUrl(design.overlayRaster) ??
+      (template ? getDesignCompositeOverlayUrl(template) : null);
+    if (raster) return raster;
+
     if (design.overlayColorVariants) {
       const normalizedVariants = Object.fromEntries(
         Object.entries(design.overlayColorVariants).map(([key, value]) => [
@@ -49,7 +56,7 @@ export function useOverlayAssetUrl({
       return resolveOverlayColorVariant(template, shirtColor);
     }
 
-    return design.overlayRaster;
+    return null;
   }, [design.overlayColorVariants, design.overlayRaster, shirtColor, template]);
 
   useEffect(() => {

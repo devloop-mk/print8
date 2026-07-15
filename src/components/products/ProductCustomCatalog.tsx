@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useRouter, Link } from '@/i18n/navigation';
@@ -25,6 +25,8 @@ import {
 } from '@/components/catalog/CatalogFilterLayout';
 import { filterProductsBySearchQuery } from '@/lib/catalog/catalog-search';
 import { useCatalogSearchLabels } from '@/hooks/useCatalogSearchLabels';
+import { CatalogPagination } from '@/components/catalog/CatalogPagination';
+import { useCatalogPagination } from '@/hooks/useCatalogPagination';
 import { Reveal } from '@/components/motion/Reveal';
 
 type ProductFilter = ProductType | 'all';
@@ -97,10 +99,31 @@ export function ProductCustomCatalog() {
       ? scopedProducts
       : scopedProducts.filter((product) => product.type === typeFilter);
 
-  const filtered = filterProductsBySearchQuery(
-    filteredByType,
-    searchQuery,
-    searchLabels,
+  const filtered = useMemo(
+    () =>
+      filterProductsBySearchQuery(filteredByType, searchQuery, searchLabels),
+    [filteredByType, searchQuery, searchLabels],
+  );
+
+  const filterSignature = useMemo(
+    () => [categoryFilter, typeFilter, searchQuery.trim()].join('|'),
+    [categoryFilter, searchQuery, typeFilter],
+  );
+
+  const { page, setPage, resetPage, paginate } = useCatalogPagination({
+    totalItems: filtered.length,
+  });
+
+  const prevFilterSignature = useRef(filterSignature);
+  useEffect(() => {
+    if (prevFilterSignature.current === filterSignature) return;
+    prevFilterSignature.current = filterSignature;
+    resetPage();
+  }, [filterSignature, resetPage]);
+
+  const visibleProducts = useMemo(
+    () => paginate(filtered),
+    [filtered, paginate],
   );
 
   const categoryOptions = useMemo(
@@ -216,7 +239,17 @@ export function ProductCustomCatalog() {
           searchClearLabel={ts('clear')}
         >
           <Reveal delay={80}>
-            <ProductCardGrid items={filtered} linkTarget="customizer" />
+            <ProductCardGrid items={visibleProducts} linkTarget="customizer" />
+            <CatalogPagination
+              page={page}
+              totalItems={filtered.length}
+              onPageChange={setPage}
+              previousLabel={tc('paginationPrevious')}
+              nextLabel={tc('paginationNext')}
+              pageLabel={(current, total) =>
+                tc('paginationPage', { current, total })
+              }
+            />
           </Reveal>
         </CatalogFilterLayout>
       </Reveal>

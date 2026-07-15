@@ -168,8 +168,8 @@ const WEDDING_WATERCOLOR_DAISY_9: SvgFieldLabelId[] = [
   'invitationLine',
   'venue',
   'scheduleLine',
-  'additionalInfo',
-  'tagline',
+  'name1',
+  'name2',
 ];
 
 const WEDDING_LEMON_TILES_7: SvgFieldLabelId[] = [
@@ -178,8 +178,8 @@ const WEDDING_LEMON_TILES_7: SvgFieldLabelId[] = [
   'eventDate',
   'venue',
   'scheduleLine',
-  'additionalInfo',
-  'tagline',
+  'name1',
+  'name2',
 ];
 
 const WEDDING_ARCH_HANDS_8: SvgFieldLabelId[] = [
@@ -189,8 +189,8 @@ const WEDDING_ARCH_HANDS_8: SvgFieldLabelId[] = [
   'eventDate',
   'venue',
   'scheduleLine',
-  'additionalInfo',
-  'tagline',
+  'name1',
+  'name2',
 ];
 
 const WEDDING_PRINT_WINTER_11: SvgFieldLabelId[] = [

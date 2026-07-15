@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import {
   getProductMockupLayout,
   type ProductMockupLayout,
@@ -16,6 +16,7 @@ export function ProductMockupFrame({
   layout,
   productType,
   variant = "customizer",
+  innerStyle,
 }: {
   children: ReactNode;
   className?: string;
@@ -23,6 +24,8 @@ export function ProductMockupFrame({
   productType?: ProductType;
   /** `catalog` fills the card preview; `customizer` uses the smaller in-canvas frame */
   variant?: "customizer" | "catalog";
+  /** Scale wrapper — keeps shirt, overlays, and print-area guides aligned */
+  innerStyle?: CSSProperties;
 }) {
   const resolvedLayout =
     layout ?? (productType ? getProductMockupLayout(productType) : getProductMockupLayout("t-shirt"));
@@ -34,9 +37,14 @@ export function ProductMockupFrame({
 
   return (
     <div
-      className={`relative flex aspect-square w-full items-center justify-center rounded-2xl border border-ink-100 bg-white ${className}`}
+      data-mockup-frame
+      className={`relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border border-ink-100 bg-white ${className}`}
     >
-      <div className={innerClass}>{children}</div>
+      <div className={innerClass}>
+        <div className="relative h-full w-full" style={innerStyle}>
+          {children}
+        </div>
+      </div>
     </div>
   );
 }

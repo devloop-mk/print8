@@ -68,7 +68,12 @@ export function ProductCategoryPathChooser({
       primary: false,
       show: offering.hasTextTemplates,
     },
-  ].filter((path) => path.show);
+  ].filter((path) => {
+    if (!path.show) return false;
+    const allowed = category.chooserPaths;
+    if (!allowed) return true;
+    return allowed.includes(path.id);
+  });
 
   return (
     <div className="space-y-10">
@@ -149,16 +154,17 @@ export function ProductCategoryPathChooser({
                     />
                     <div
                       className={cn(
-                        'pointer-events-none absolute inset-x-0 bottom-0 h-[38%] bg-gradient-to-t to-transparent',
+                        'pointer-events-none absolute inset-x-0 bottom-0 h-[42%] bg-gradient-to-t to-transparent',
                         visual.accent,
                       )}
                       aria-hidden
                     />
-                    <div className="absolute bottom-3 left-3 right-3">
+                    <div className="absolute left-3 top-3 z-10">
                       <span
                         className={cn(
-                          'inline-flex max-w-full items-center rounded-md border border-white/25 px-2.5 py-1',
-                          'text-[11px] font-semibold uppercase tracking-wide text-white shadow-sm backdrop-blur-sm',
+                          'inline-flex max-w-[calc(100%-1.5rem)] items-center rounded-md px-2.5 py-1',
+                          'text-[11px] font-bold uppercase tracking-wide text-white',
+                          'shadow-md ring-1 ring-white/20',
                           visual.badgeClass,
                         )}
                       >

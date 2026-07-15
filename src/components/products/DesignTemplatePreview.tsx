@@ -10,11 +10,15 @@ import {
 } from '@/lib/data/catalog';
 import { ProductMockupFrame } from '@/components/products/ProductMockupFrame';
 import {
-  getCatalogMockupImageStyle,
+  getMockupImageDisplayStyle,
   getProductMockupLayout,
 } from '@/lib/products/product-mockup-layout';
 import { resolveDesignPreviewColor } from '@/lib/products/design-applicable-colors';
-import { resolveOverlayPlacement, type OverlayPlacement } from '@/lib/products/design-overlay';
+import {
+  resolveOverlayPlacement,
+  type OverlayPlacement,
+  getDesignCompositeOverlayUrl,
+} from '@/lib/products/design-overlay';
 import { useOverlayAssetUrl } from '@/hooks/useOverlayAssetUrl';
 import { Shirt } from 'lucide-react';
 
@@ -67,7 +71,7 @@ function CatalogOverlayPreview({
         }
       : null,
     overlayColorVariants: design.overlayColorVariants ?? null,
-    overlayRaster: design.overlayImage ?? null,
+    overlayRaster: getDesignCompositeOverlayUrl(design),
     premadeDesignId: design.id,
     uploadedImageScale: placement.scale,
     uploadedImagePosition: placement.position,
@@ -114,19 +118,25 @@ export function DesignTemplatePreview({
   const photoGuide = textStyle?.photoPosition;
   const previewColor = resolveDesignPreviewColor(design, product, color);
   const placement = resolveOverlayPlacement(design, product);
-  const mockup = getProductMockup(product, previewColor, design.defaultSide);
+  const mockupSide = design.defaultSide ?? 'front';
+  const shirtMockup = getProductMockup(product, previewColor, mockupSide);
   const mockupLayout = getProductMockupLayout(product);
+  const mockupStyle = getMockupImageDisplayStyle(
+    product,
+    shirtMockup,
+    'catalog-design',
+  );
 
   return (
-    <ProductMockupFrame variant="catalog" layout={mockupLayout}>
-      {mockup ? (
+    <ProductMockupFrame variant="catalog" layout={mockupLayout} innerStyle={mockupStyle}>
+      {shirtMockup ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={mockup}
+          key={`${previewColor}-${mockupSide}-${shirtMockup}`}
+          src={shirtMockup}
           alt={typeLabel}
           draggable={false}
           className={mockupLayout.catalogImageClass}
-          style={getCatalogMockupImageStyle(mockupLayout)}
         />
       ) : (
         <div className="flex h-full items-center justify-center">
@@ -141,10 +151,14 @@ export function DesignTemplatePreview({
           shirtColor={previewColor}
           placement={placement}
         />
-      ) : design.overlayImage ? (
+      ) : (() => {
+        const overlaySrc = getDesignCompositeOverlayUrl(design);
+        if (!overlaySrc) return null;
+        return (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={design.overlayImage}
+          key={`${previewColor}-${mockupSide}-${overlaySrc}`}
+          src={overlaySrc}
           alt=""
           draggable={false}
           className="pointer-events-none absolute max-h-[70%] max-w-[70%] object-contain"
@@ -155,7 +169,8 @@ export function DesignTemplatePreview({
             transform: 'translate(-50%, -50%)',
           }}
         />
-      ) : null}
+        );
+      })()}
 
       {textStyle && <StyledDesignText style={textStyle} />}
 

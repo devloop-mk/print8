@@ -5,12 +5,21 @@ type Bucket = { count: number; resetAt: number };
 const buckets = new Map<string, Bucket>();
 
 export function getClientIp(request: NextRequest | Request): string {
+  // Prefer platform-set headers that clients cannot forge.
+  const cfConnecting = request.headers.get('cf-connecting-ip')?.trim();
+  if (cfConnecting) return cfConnecting;
+
+  const realIp = request.headers.get('x-real-ip')?.trim();
+  if (realIp) return realIp;
+
   const forwarded = request.headers.get('x-forwarded-for');
   if (forwarded) {
+    // On Vercel/Cloudflare the leftmost entry is the client IP added by the edge.
     const first = forwarded.split(',')[0]?.trim();
     if (first) return first;
   }
-  return request.headers.get('x-real-ip')?.trim() || 'unknown';
+
+  return 'unknown';
 }
 
 export function checkRateLimit(

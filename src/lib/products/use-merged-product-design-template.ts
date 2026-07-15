@@ -1,18 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import {
-  getProductDesignTemplate,
-  type ProductDesignTemplate,
-} from '@/lib/data/catalog';
+import { useEffect, useRef, useState } from 'react';
+import type { ProductDesignTemplate } from '@/lib/data/catalog';
+import { resolveStaticProductDesignTemplate } from '@/lib/products/resolve-product-design-template';
 
 export function useMergedProductDesignTemplate(
   id: string | null | undefined,
+  initialTemplate?: ProductDesignTemplate | null,
 ): ProductDesignTemplate | null {
-  const staticTemplate = id ? getProductDesignTemplate(id) ?? null : null;
+  const staticTemplate = id ? resolveStaticProductDesignTemplate(id) : null;
   const [template, setTemplate] = useState<ProductDesignTemplate | null>(
-    staticTemplate,
+    () => initialTemplate ?? staticTemplate,
   );
+
+  // Callers often pass a freshly built object each render (e.g. partnerDesignToTemplate).
+  // Keep it in a ref so the fetch effect only re-runs when `id` changes.
+  const initialTemplateRef = useRef(initialTemplate);
+  initialTemplateRef.current = initialTemplate;
 
   useEffect(() => {
     if (!id) {
@@ -21,10 +25,14 @@ export function useMergedProductDesignTemplate(
     }
 
     let cancelled = false;
-    const fallback = getProductDesignTemplate(id) ?? null;
-    setTemplate(fallback);
+    const fallback =
+      initialTemplateRef.current ?? resolveStaticProductDesignTemplate(id);
 
-    void fetch(`/api/catalog/product-designs/${encodeURIComponent(id)}`)
+    setTemplate((prev) => (prev?.id === id ? prev : fallback));
+
+    void fetch(`/api/catalog/product-designs/${encodeURIComponent(id)}`, {
+      cache: 'no-store',
+    })
       .then((response) => (response.ok ? response.json() : null))
       .then((data: { template?: ProductDesignTemplate } | null) => {
         if (!cancelled && data?.template) {

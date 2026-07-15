@@ -1,5 +1,4 @@
 import { cache } from 'react';
-import { unstable_cache } from 'next/cache';
 import {
   products,
   type Product,
@@ -8,11 +7,12 @@ import {
 } from '@/lib/data/catalog';
 import {
   buildProductDesignCatalogEntries,
-  getMergedProductDesignCatalogEntries,
+  filterDesignCatalogEntries,
   type ProductDesignCatalogEntry,
 } from '@/lib/products/design-catalog';
+import { getMergedProductDesignTemplates } from '@/lib/products/merged-product-designs';
 
-/** Shared TTL for static catalog derivations (products, premade designs). */
+/** Shared TTL for pages that still use route-level revalidate. */
 export const CATALOG_CACHE_SECONDS = 3600;
 
 export const CATALOG_CACHE_TAGS = {
@@ -25,15 +25,16 @@ export const getProductsByType = cache((type: ProductType): Product[] =>
   products.filter((product) => product.type === type),
 );
 
-/** Cross-request cache for premade design lists keyed by product type. */
-export const getCachedReadyDesignEntriesForType = unstable_cache(
-  async (type: ProductType, category: ProductDesignCategory = 'image-designs') => {
-    const { getMergedProductDesignTemplates } = await import(
-      '@/lib/products/merged-product-designs'
-    );
-    const { filterDesignCatalogEntries } = await import(
-      '@/lib/products/design-catalog'
-    );
+/**
+ * Ready-design entries for a product type.
+ * Built in-memory from getMergedProductDesignTemplates (React cache) — do not
+ * put this list in unstable_cache; it exceeds Next's 2MB Data Cache limit.
+ */
+export const getCachedReadyDesignEntriesForType = cache(
+  async (
+    type: ProductType,
+    category: ProductDesignCategory = 'image-designs',
+  ): Promise<ProductDesignCatalogEntry[]> => {
     const templates = await getMergedProductDesignTemplates();
     const entries = buildProductDesignCatalogEntries(category, templates);
     return filterDesignCatalogEntries(entries, {
@@ -42,21 +43,15 @@ export const getCachedReadyDesignEntriesForType = unstable_cache(
       side: 'all',
     });
   },
-  ['catalog-ready-designs-by-type'],
-  {
-    revalidate: CATALOG_CACHE_SECONDS,
-    tags: [CATALOG_CACHE_TAGS.readyDesigns, 'product-designs'],
-  },
 );
 
-/** Cross-request cache for full premade design catalog by category. */
-export const getCachedProductDesignCatalogEntries = unstable_cache(
-  async (category: ProductDesignCategory) =>
-    getMergedProductDesignCatalogEntries(category),
-  ['catalog-product-design-entries'],
-  {
-    revalidate: CATALOG_CACHE_SECONDS,
-    tags: [CATALOG_CACHE_TAGS.readyDesigns, 'product-designs'],
+/** Full premade design catalog by category (per-request memoization only). */
+export const getCachedProductDesignCatalogEntries = cache(
+  async (
+    category: ProductDesignCategory,
+  ): Promise<ProductDesignCatalogEntry[]> => {
+    const templates = await getMergedProductDesignTemplates();
+    return buildProductDesignCatalogEntries(category, templates);
   },
 );
 
@@ -68,9 +63,10 @@ export type ProductTypeCatalogData = {
 export async function getProductTypeCatalogData(
   type: ProductType,
 ): Promise<ProductTypeCatalogData> {
-  const [readyDesignEntries] = await Promise.all([
-    getCachedReadyDesignEntriesForType(type, 'image-designs'),
-  ]);
+  const readyDesignEntries = await getCachedReadyDesignEntriesForType(
+    type,
+    'image-designs',
+  );
 
   return {
     products: getProductsByType(type),

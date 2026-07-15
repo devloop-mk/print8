@@ -28,10 +28,28 @@ export const DEFAULT_PRINT_AREA_INSETS: PrintAreaInsets = {
 
 /** Chest print zone for t-shirts (front). */
 export const TSHIRT_PRINT_AREA_INSETS: PrintAreaInsets = {
-  top: 22,
+  top: 10,
   right: 27,
-  bottom: 14,
+  bottom: 2,
   left: 26,
+};
+
+/**
+ * Fitted women's tee — narrower + shorter chest zone so the guide sits on
+ * fabric through the tapered waist (not sleeve/armhole).
+ */
+export const WOMEN_TSHIRT_PRINT_AREA_INSETS: PrintAreaInsets = {
+  top: 23,
+  right: 27,
+  bottom: 15,
+  left: 27,
+};
+
+export const WOMEN_TSHIRT_SMALL_PRINT_AREA_INSETS: PrintAreaInsets = {
+  top: 28,
+  right: 38,
+  bottom: 40,
+  left: 38,
 };
 
 /** Chest print zone for hoodies. */
@@ -136,8 +154,7 @@ export function getMaxScaleForPrintArea(
 
   const printWidth = getPrintAreaWidthPercent(insets);
   const printHeight = getPrintAreaHeightPercent(insets);
-  const maxByHeight =
-    (printHeight * imageAspectRatio) / parentAspectRatio;
+  const maxByHeight = (printHeight * imageAspectRatio) / parentAspectRatio;
 
   return Math.min(printWidth, maxByHeight);
 }

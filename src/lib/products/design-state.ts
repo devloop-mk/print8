@@ -1,7 +1,9 @@
 import type {
   Product,
+  ProductDesignSideOverlay,
   ProductDesignTemplate,
   ProductDesignTextStyle,
+  ProductSide,
 } from "@/lib/data/catalog";
 import { getProductDesignTemplate } from "@/lib/data/catalog";
 import type { PlacedSticker } from "@/lib/products/sticker-library";
@@ -9,9 +11,16 @@ import type { PlacedTextLayer } from "@/lib/products/text-layers";
 import { createPlacedTextLayer } from "@/lib/products/text-layers";
 import {
   ensureInkContrast,
-  resolveOverlayPlacement,
+  getDesignCompositeOverlayUrl,
+  resolveComposableOverlayUrl,
+  resolveSideOverlayPlacement,
   type OverlaySvgColors,
 } from "@/lib/products/design-overlay";
+import {
+  getDesignSides,
+  resolveSideOverlayConfig,
+  sideHasPremadeArt,
+} from "@/lib/products/design-sides";
 
 export interface UploadedFile {
   fileId: string;
@@ -131,14 +140,13 @@ export function sideDesignFromImageTemplate(
   };
 }
 
-export function sideDesignFromOverlayTemplate(
+export function sideDesignFromOverlaySideConfig(
   template: ProductDesignTemplate,
+  config: ProductDesignSideOverlay,
   product: Product,
   shirtColor?: string,
 ): SideDesign | null {
-  if (template.kind !== "overlay") return null;
-
-  const placement = resolveOverlayPlacement(template, product);
+  const placement = resolveSideOverlayPlacement(config, product);
 
   const base = {
     ...createDefaultSideDesign(),
@@ -149,46 +157,110 @@ export function sideDesignFromOverlayTemplate(
     showPhotoGuide: false,
   };
 
-  if (template.overlaySvg && template.overlayRecolor) {
+  if (config.overlaySvg && config.overlayRecolor) {
     const primary = shirtColor
-      ? ensureInkContrast(template.overlayRecolor.primary, shirtColor)
-      : template.overlayRecolor.primary;
-    const secondary = template.overlayRecolor.secondary
+      ? ensureInkContrast(config.overlayRecolor.primary, shirtColor)
+      : config.overlayRecolor.primary;
+    const secondary = config.overlayRecolor.secondary
       ? shirtColor
-        ? ensureInkContrast(template.overlayRecolor.secondary, shirtColor)
-        : template.overlayRecolor.secondary
+        ? ensureInkContrast(config.overlayRecolor.secondary, shirtColor)
+        : config.overlayRecolor.secondary
       : undefined;
 
     return {
       ...base,
-      overlaySvg: template.overlaySvg,
+      overlaySvg: config.overlaySvg,
       overlaySvgColors: { primary, secondary },
       isRecolorableOverlay: true,
     };
   }
 
-  if (template.overlayColorVariants) {
+  if (config.overlayColorVariants) {
+    const compositeOverlay = getDesignCompositeOverlayUrl({
+      printMasterImage: template.printMasterImage,
+      overlayImage: config.overlayImage,
+      overlaySvg: config.overlaySvg,
+    });
     return {
       ...base,
-      overlayColorVariants: template.overlayColorVariants,
-      overlayRaster: template.overlayImage ?? null,
+      overlayColorVariants: config.overlayColorVariants,
+      overlayRaster: compositeOverlay,
       isRecolorableOverlay: false,
     };
   }
 
-  if (!template.overlayImage) return null;
+  const compositeOverlay = getDesignCompositeOverlayUrl({
+    printMasterImage: template.printMasterImage,
+    overlayImage: config.overlayImage,
+    overlaySvg: config.overlaySvg,
+  });
+  if (!compositeOverlay) return null;
 
   return {
     ...base,
     uploadedFile: {
       fileId: "",
       name: `${template.id}.png`,
-      previewUrl: template.overlayImage,
+      previewUrl: compositeOverlay,
       isImage: true,
     },
-    overlayRaster: template.overlayImage,
+    overlayRaster: compositeOverlay,
     isRecolorableOverlay: false,
   };
+}
+
+export function sideDesignFromOverlayTemplate(
+  template: ProductDesignTemplate,
+  product: Product,
+  shirtColor?: string,
+  side?: ProductSide,
+): SideDesign | null {
+  if (template.kind !== "overlay") return null;
+
+  const targetSide = side ?? template.defaultSide;
+  const config = resolveSideOverlayConfig(template, targetSide);
+  if (!config) return null;
+
+  return sideDesignFromOverlaySideConfig(template, config, product, shirtColor);
+}
+
+export function sideDesignsFromTemplate(
+  template: ProductDesignTemplate,
+  product: Product,
+  shirtColor?: string,
+): Partial<Record<ProductSide, SideDesign>> {
+  const result: Partial<Record<ProductSide, SideDesign>> = {};
+
+  if (template.kind === "text") {
+    const textDesign = sideDesignFromTextTemplate(template);
+    if (textDesign) {
+      result[template.defaultSide] = textDesign;
+    }
+    return result;
+  }
+
+  if (template.kind === "image") {
+    const imageDesign = sideDesignFromImageTemplate(template);
+    if (imageDesign) {
+      result[template.defaultSide] = imageDesign;
+    }
+    return result;
+  }
+
+  if (template.kind === "overlay") {
+    for (const side of getDesignSides(template)) {
+      if (!sideHasPremadeArt(template, side)) continue;
+      const design = sideDesignFromOverlayTemplate(
+        template,
+        product,
+        shirtColor,
+        side,
+      );
+      if (design) result[side] = design;
+    }
+  }
+
+  return result;
 }
 
 export interface RestoredSideDesign {
@@ -252,7 +324,8 @@ export function sideDesignFromRestored(data: RestoredSideDesign): SideDesign {
           : null,
     overlayColorVariants: template?.overlayColorVariants ?? null,
     overlayRaster:
-      data.overlayRaster ?? template?.overlayImage ?? null,
+      resolveComposableOverlayUrl(data.overlayRaster) ??
+      (template ? getDesignCompositeOverlayUrl(template) : null),
     isRecolorableOverlay:
       data.isRecolorableOverlay || Boolean(template?.overlayRecolor),
     isTextTemplate: data.isTextTemplate,

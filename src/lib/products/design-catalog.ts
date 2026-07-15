@@ -7,11 +7,16 @@ import {
   type ProductSide,
   type ProductType,
 } from '@/lib/data/catalog';
-import { getDesignApplicableColors } from '@/lib/products/design-applicable-colors';
+import {
+  getDesignApplicableColors,
+} from '@/lib/products/design-applicable-colors';
+import { normalizeHex } from '@/lib/products/design-overlay';
+import { designMatchesSideFilter } from '@/lib/products/design-sides';
 import {
   productBelongsToCategory,
   type ProductNavCategoryId,
 } from '@/lib/products/product-nav';
+import { resolveDesignProduct as resolveDesignProductByFit } from '@/lib/products/garment-fit';
 
 export type ProductDesignCatalogEntry = {
   design: ProductDesignTemplate;
@@ -57,7 +62,9 @@ export function getCatalogColors(entries: ProductDesignCatalogEntry[]): string[]
   const colors = new Set<string>();
   for (const entry of entries) {
     for (const product of entry.products) {
-      product.colors?.forEach((color) => colors.add(color));
+      for (const color of getDesignApplicableColors(entry.design, product)) {
+        colors.add(color);
+      }
     }
   }
   return [...colors];
@@ -68,6 +75,16 @@ export type DesignCatalogFilters = {
   color: string | 'all';
   side: ProductSide | 'all';
 };
+
+function designSupportsColor(
+  design: ProductDesignTemplate,
+  product: Product,
+  color: string,
+): boolean {
+  return getDesignApplicableColors(design, product).some(
+    (value) => normalizeHex(value) === normalizeHex(color),
+  );
+}
 
 export function getProductDesignCatalogEntriesForType(
   type: ProductType,
@@ -106,13 +123,13 @@ export function filterDesignCatalogEntries(
 ): ProductDesignCatalogEntry[] {
   return entries
     .filter(({ design, products: matchedProducts }) => {
-      if (filters.side !== 'all' && design.defaultSide !== filters.side) {
+      if (!designMatchesSideFilter(design, filters.side)) {
         return false;
       }
 
       if (filters.color !== 'all') {
         const supportsColor = matchedProducts.some((product) =>
-          getDesignApplicableColors(design, product).includes(filters.color),
+          designSupportsColor(design, product, filters.color),
         );
         if (!supportsColor) return false;
       }
@@ -134,7 +151,12 @@ function matchesProductFilters(
   filters: DesignCatalogFilters,
 ): boolean {
   if (filters.type !== 'all' && product.type !== filters.type) return false;
-  if (filters.color !== 'all' && !product.colors?.includes(filters.color)) {
+  if (
+    filters.color !== 'all' &&
+    !product.colors?.some(
+      (color) => normalizeHex(color) === normalizeHex(filters.color),
+    )
+  ) {
     return false;
   }
   return true;
@@ -144,10 +166,18 @@ export function resolveDesignProduct(
   entry: ProductDesignCatalogEntry,
   colorFilter: string | 'all',
 ): { product: Product; color: string } {
-  const product = entry.products[0];
-  const defaultColor = product.colors?.[0] ?? '#ffffff';
+  const product =
+    entry.design.productTypes.includes('t-shirt') &&
+    entry.products.some((item) => item.type === 't-shirt')
+      ? resolveDesignProductByFit(entry.design)
+      : entry.products[0];
+  const applicable = getDesignApplicableColors(entry.design, product);
+  const defaultColor = applicable[0] ?? product.colors?.[0] ?? '#ffffff';
   const color =
-    colorFilter !== 'all' && product.colors?.includes(colorFilter)
+    colorFilter !== 'all' &&
+    applicable.some(
+      (value) => normalizeHex(value) === normalizeHex(colorFilter),
+    )
       ? colorFilter
       : defaultColor;
 

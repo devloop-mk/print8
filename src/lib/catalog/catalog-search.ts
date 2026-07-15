@@ -26,6 +26,9 @@ import { resolveAssetUrl } from '@/lib/storage/asset-url';
 import { buildCustomizerUrl } from '@/lib/products/paths';
 import type { ProductDesignCatalogEntry } from '@/lib/products/design-catalog';
 
+/** Initial matches shown before "See more" on search UIs. */
+export const SEARCH_RESULTS_PREVIEW_LIMIT = 20;
+
 export type CatalogSearchLabels = {
   designName: (id: string) => string;
   designCategory: (category: DesignTemplate['category']) => string;

@@ -4,18 +4,27 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import type {
+  ProductDesignSideOverlay,
   ProductDesignTemplate,
   ProductType,
 } from '@/lib/data/catalog';
 import { products } from '@/lib/data/catalog';
 import type { ResolvedAdminProductDesign } from '@/lib/admin/product-designs-shared';
 import {
+  DESIGN_SIDE_MODE_OPTIONS,
   PRODUCT_DESIGN_CATEGORY_OPTIONS,
   PRODUCT_DESIGN_KIND_OPTIONS,
-  PRODUCT_SIDE_OPTIONS,
+  PRODUCT_TYPE_LABELS_MK,
   productTypes,
 } from '@/lib/admin/product-designs-shared';
+import {
+  designSideModeToConfig,
+  getDesignSideMode,
+  type DesignSideMode,
+} from '@/lib/products/design-sides';
 import { ProductDesignColorMatrix } from '@/components/admin/ProductDesignColorMatrix';
+import { ProductDesignFitMatrix } from '@/components/admin/ProductDesignFitMatrix';
+import { ProductDesignOverlayPlacementEditor } from '@/components/admin/ProductDesignOverlayPlacementEditor';
 import { AdminAssetUploader } from '@/components/admin/AdminAssetUploader';
 import { Button } from '@/components/ui/Button';
 import { resolveAssetUrl } from '@/lib/storage/asset-url';
@@ -78,8 +87,104 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
     const next = template.productTypes.includes(type)
       ? template.productTypes.filter((item) => item !== type)
       : [...template.productTypes, type];
-    patchTemplate({ productTypes: next.length ? next : [type] });
+    const productTypesNext = next.length ? next : [type];
+
+    const nextByType = { ...template.overlayByProductType };
+    for (const key of Object.keys(nextByType) as ProductType[]) {
+      if (!productTypesNext.includes(key)) {
+        delete nextByType[key];
+      }
+    }
+
+    const nextBackByType = { ...template.backOverlay?.overlayByProductType };
+    for (const key of Object.keys(nextBackByType) as ProductType[]) {
+      if (!productTypesNext.includes(key)) {
+        delete nextBackByType[key];
+      }
+    }
+
+    patchTemplate({
+      productTypes: productTypesNext,
+      overlayByProductType:
+        Object.keys(nextByType).length > 0 ? nextByType : undefined,
+      backOverlay: template.backOverlay
+        ? {
+            ...template.backOverlay,
+            overlayByProductType:
+              Object.keys(nextBackByType).length > 0
+                ? nextBackByType
+                : undefined,
+          }
+        : template.backOverlay,
+      productIds: template.productIds?.filter((id) => {
+        const product = products.find((item) => item.id === id);
+        return product ? productTypesNext.includes(product.type) : false;
+      }),
+    });
   }
+
+  function patchFrontPlacement(
+    productType: ProductType,
+    next: { scale: number; position: { x: number; y: number } },
+  ) {
+    setTemplate((current) => ({
+      ...current,
+      overlayByProductType: {
+        ...current.overlayByProductType,
+        [productType]: {
+          scale: next.scale,
+          position: next.position,
+        },
+      },
+      overlayScale: current.overlayScale ?? next.scale,
+      overlayPosition: current.overlayPosition ?? next.position,
+    }));
+  }
+
+  function patchBackPlacement(
+    productType: ProductType,
+    next: { scale: number; position: { x: number; y: number } },
+  ) {
+    setTemplate((current) => ({
+      ...current,
+      backOverlay: {
+        overlayScale: current.backOverlay?.overlayScale ?? next.scale,
+        overlayPosition:
+          current.backOverlay?.overlayPosition ?? next.position,
+        ...current.backOverlay,
+        overlayByProductType: {
+          ...current.backOverlay?.overlayByProductType,
+          [productType]: {
+            scale: next.scale,
+            position: next.position,
+          },
+        },
+      },
+    }));
+  }
+
+  function patchBackOverlay(patch: Partial<ProductDesignSideOverlay>) {
+    setTemplate((current) => ({
+      ...current,
+      backOverlay: {
+        overlayScale: 50,
+        overlayPosition: { x: 50, y: 44 },
+        ...current.backOverlay,
+        ...patch,
+      },
+    }));
+  }
+
+  function setDesignSideMode(mode: DesignSideMode) {
+    const { defaultSide, designSides } = designSideModeToConfig(mode);
+    patchTemplate({ defaultSide, designSides });
+  }
+
+  const designSideMode = getDesignSideMode(template);
+  const backOverlay = template.backOverlay ?? {
+    overlayScale: template.overlayScale ?? 50,
+    overlayPosition: template.overlayPosition ?? { x: 50, y: 44 },
+  };
 
   function toggleProductId(id: string) {
     const current = template.productIds ?? [];
@@ -285,7 +390,23 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
               />
             </label>
             <label className="text-sm">
-              <span className="mb-1 block font-medium text-ink-700">Страна</span>
+              <span className="mb-1 block font-medium text-ink-700">Страни со дизајн</span>
+              <select
+                value={designSideMode}
+                onChange={(event) =>
+                  setDesignSideMode(event.target.value as DesignSideMode)
+                }
+                className="w-full rounded-lg border border-ink-200 px-3 py-2"
+              >
+                {DESIGN_SIDE_MODE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="text-sm">
+              <span className="mb-1 block font-medium text-ink-700">Почетна страна</span>
               <select
                 value={template.defaultSide}
                 onChange={(event) =>
@@ -295,11 +416,8 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
                 }
                 className="w-full rounded-lg border border-ink-200 px-3 py-2"
               >
-                {PRODUCT_SIDE_OPTIONS.map((side) => (
-                  <option key={side} value={side}>
-                    {side}
-                  </option>
-                ))}
+                <option value="front">front</option>
+                <option value="back">back</option>
               </select>
             </label>
             <label className="text-sm">
@@ -324,15 +442,22 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
         </section>
 
         <section className="rounded-xl border border-ink-200 bg-white p-5">
-          <h2 className="text-lg font-semibold text-ink-900">Производи</h2>
+          <h2 className="text-lg font-semibold text-ink-900">
+            Применливи типови производи
+          </h2>
           <p className="mt-1 text-sm text-ink-500">
-            Типови и конкретни производи на кои важи дизајнот.
+            Изберете на кои типови важи дизајнот (маица, дуксер, капа…). Позицијата
+            на печатот се уредува посебно за секој избран тип подолу.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             {productTypes.map((type) => (
               <label
                 key={type}
-                className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-ink-200 px-3 py-2 text-sm"
+                className={`inline-flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${
+                  template.productTypes.includes(type)
+                    ? 'border-brand-300 bg-brand-50 text-brand-900'
+                    : 'border-ink-200 text-ink-700'
+                }`}
               >
                 <input
                   type="checkbox"
@@ -340,14 +465,20 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
                   onChange={() => toggleProductType(type)}
                   className="h-4 w-4 rounded border-ink-300 text-brand-600"
                 />
-                {type}
+                <span className="font-medium">
+                  {PRODUCT_TYPE_LABELS_MK[type] ?? type}
+                </span>
               </label>
             ))}
           </div>
           {linkedProductOptions.length > 0 ? (
             <div className="mt-4">
               <p className="mb-2 text-sm font-medium text-ink-700">
-                Ограничи на производи (опционално)
+                Ограничи на конкретни производи (опционално)
+              </p>
+              <p className="mb-2 text-xs text-ink-500">
+                Ако ништо не е обележано, дизајнот важи за сите производи од
+                избраните типови.
               </p>
               <div className="max-h-48 space-y-1 overflow-y-auto rounded-lg border border-ink-100 p-2">
                 {linkedProductOptions.map((product) => (
@@ -361,7 +492,10 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
                       onChange={() => toggleProductId(product.id)}
                       className="h-4 w-4 rounded border-ink-300 text-brand-600"
                     />
-                    <span>{product.id}</span>
+                    <span>
+                      {PRODUCT_TYPE_LABELS_MK[product.type] ?? product.type}
+                      <span className="ml-1 text-ink-400">({product.id})</span>
+                    </span>
                   </label>
                 ))}
               </div>
@@ -371,19 +505,58 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
 
         <section className="rounded-xl border border-ink-200 bg-white p-5">
           <h2 className="text-lg font-semibold text-ink-900">Слики и overlay</h2>
-          <div className="mt-4 grid gap-4">
-            <AssetField
-              label="image (thumbnail / full product)"
-              value={template.image ?? ''}
-              onChange={(value) => patchTemplate({ image: value || undefined })}
-              folder={uploadFolder}
-            />
-            <AssetField
-              label="overlayImage (PNG print art)"
-              value={template.overlayImage ?? ''}
-              onChange={(value) => patchTemplate({ overlayImage: value || undefined })}
-              folder={uploadFolder}
-            />
+          {template.kind === 'overlay' && designSideMode !== 'back' && template.overlayImage ? (
+            <div className="mt-4">
+              <ProductDesignOverlayPlacementEditor
+                template={template}
+                previewSide="front"
+                title="Предна страна — позиција по тип"
+                onPlacementChange={patchFrontPlacement}
+              />
+            </div>
+          ) : null}
+          {template.kind === 'overlay' && designSideMode === 'back' && template.overlayImage ? (
+            <div className="mt-4">
+              <ProductDesignOverlayPlacementEditor
+                template={template}
+                previewSide="back"
+                title="Задна страна — позиција по тип"
+                onPlacementChange={patchFrontPlacement}
+              />
+            </div>
+          ) : null}
+          <div className={`grid gap-4 ${template.kind === 'overlay' && template.overlayImage ? 'mt-6' : 'mt-4'}`}>
+            {designSideMode !== 'back' ? (
+              <>
+                <AssetField
+                  label="image (thumbnail / full product)"
+                  value={template.image ?? ''}
+                  onChange={(value) => patchTemplate({ image: value || undefined })}
+                  folder={uploadFolder}
+                />
+                <AssetField
+                  label="overlayImage — предна (PNG print art)"
+                  value={template.overlayImage ?? ''}
+                  onChange={(value) => patchTemplate({ overlayImage: value || undefined })}
+                  folder={uploadFolder}
+                />
+              </>
+            ) : (
+              <>
+                <AssetField
+                  label="image (thumbnail / full product)"
+                  value={template.image ?? ''}
+                  onChange={(value) => patchTemplate({ image: value || undefined })}
+                  folder={uploadFolder}
+                />
+                <AssetField
+                  label="overlayImage — задна (PNG print art)"
+                  value={template.overlayImage ?? ''}
+                  onChange={(value) => patchTemplate({ overlayImage: value || undefined })}
+                  folder={uploadFolder}
+                />
+              </>
+            )}
             <AssetField
               label="overlaySvg"
               value={template.overlaySvg ?? ''}
@@ -479,11 +652,89 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
                 />
               </label>
             </div>
+
+            {template.kind === 'overlay' && designSideMode === 'both' ? (
+              <div className="space-y-4 rounded-xl border border-dashed border-brand-200 bg-brand-50/40 p-4">
+                <h3 className="text-sm font-semibold text-ink-900">Задна страна</h3>
+                {backOverlay.overlayImage ? (
+                  <ProductDesignOverlayPlacementEditor
+                    template={template}
+                    previewSide="back"
+                    overlayConfig={backOverlay}
+                    title="Задна страна — позиција по тип"
+                    onPlacementChange={patchBackPlacement}
+                  />
+                ) : null}
+                <AssetField
+                  label="backOverlayImage (PNG print art)"
+                  value={backOverlay.overlayImage ?? ''}
+                  onChange={(value) =>
+                    patchBackOverlay({ overlayImage: value || undefined })
+                  }
+                  folder={uploadFolder}
+                />
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <label className="text-sm">
+                    <span className="mb-1 block font-medium text-ink-700">back overlayScale</span>
+                    <input
+                      type="number"
+                      value={backOverlay.overlayScale ?? ''}
+                      onChange={(event) =>
+                        patchBackOverlay({
+                          overlayScale: event.target.value
+                            ? Number(event.target.value)
+                            : undefined,
+                        })
+                      }
+                      className="w-full rounded-lg border border-ink-200 px-3 py-2"
+                    />
+                  </label>
+                  <label className="text-sm">
+                    <span className="mb-1 block font-medium text-ink-700">back position X</span>
+                    <input
+                      type="number"
+                      value={backOverlay.overlayPosition?.x ?? ''}
+                      onChange={(event) =>
+                        patchBackOverlay({
+                          overlayPosition: {
+                            x: Number(event.target.value) || 0,
+                            y: backOverlay.overlayPosition?.y ?? 44,
+                          },
+                        })
+                      }
+                      className="w-full rounded-lg border border-ink-200 px-3 py-2"
+                    />
+                  </label>
+                  <label className="text-sm">
+                    <span className="mb-1 block font-medium text-ink-700">back position Y</span>
+                    <input
+                      type="number"
+                      value={backOverlay.overlayPosition?.y ?? ''}
+                      onChange={(event) =>
+                        patchBackOverlay({
+                          overlayPosition: {
+                            x: backOverlay.overlayPosition?.x ?? 50,
+                            y: Number(event.target.value) || 0,
+                          },
+                        })
+                      }
+                      className="w-full rounded-lg border border-ink-200 px-3 py-2"
+                    />
+                  </label>
+                </div>
+              </div>
+            ) : null}
           </div>
         </section>
 
         <section className="rounded-xl border border-ink-200 bg-white p-5">
-          <h2 className="text-lg font-semibold text-ink-900">Бои по производ</h2>
+          <h2 className="text-lg font-semibold text-ink-900">
+            Бои — преглед и достапност
+          </h2>
+          <p className="mt-1 text-sm text-ink-500">
+            Прегледајте го дизајнот на сите бои и изберете кои ќе се
+            прикажуваат на страницата.
+          </p>
           <div className="mt-4">
             <ProductDesignColorMatrix
               template={template}
@@ -496,6 +747,21 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
                 patchTemplate({ overlayColorVariants: variants })
               }
               uploadFolder={uploadFolder}
+            />
+          </div>
+        </section>
+
+        <section className="rounded-xl border border-ink-200 bg-white p-5">
+          <h2 className="text-lg font-semibold text-ink-900">
+            Крој (унисекс / женски / детски)
+          </h2>
+          <div className="mt-4">
+            <ProductDesignFitMatrix
+              applicableFits={template.applicableFits ?? ['unisex']}
+              onApplicableFitsChange={(fits) =>
+                patchTemplate({ applicableFits: fits })
+              }
+              productTypes={template.productTypes}
             />
           </div>
         </section>

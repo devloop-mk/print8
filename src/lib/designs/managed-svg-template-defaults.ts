@@ -6,6 +6,8 @@ import {
   type ManagedSvgTemplateDefaultsPayload,
   type ManagedSvgTemplateRecord,
 } from '@/lib/db/managed-svg-templates';
+import { isGalleryThumbFreshForTemplate } from '@/lib/designs/gallery-thumb-meta.server';
+import { hasManagedSvgDefaults } from '@/lib/designs/merge-svg-template-defaults';
 
 export const MANAGED_SVG_TEMPLATES_CACHE_TAG = 'managed-svg-templates';
 
@@ -39,6 +41,59 @@ export async function getManagedSvgTemplateDefaultsMap(): Promise<
     const records = await getManagedSvgTemplatesCached();
     return Object.fromEntries(
       records.map((record) => [record.templateId, record.defaults]),
+    );
+  } catch {
+    return {};
+  }
+}
+
+export async function getManagedSvgTemplateVersionMap(): Promise<
+  Record<string, string>
+> {
+  try {
+    const records = await getManagedSvgTemplatesCached();
+    const result: Record<string, string> = {};
+    for (const record of records) {
+      if (!hasManagedSvgDefaults(record.defaults)) continue;
+      if (
+        !isGalleryThumbFreshForTemplate(
+          record.templateId,
+          record.updatedAt,
+          record.defaults,
+        )
+      ) {
+        continue;
+      }
+      result[record.templateId] = record.updatedAt;
+    }
+    return result;
+  } catch {
+    return {};
+  }
+}
+
+export async function getManagedSvgTemplatePublicMap(): Promise<
+  Record<string, { defaults: ManagedSvgTemplateDefaultsPayload; updatedAt: string }>
+> {
+  try {
+    const records = await getManagedSvgTemplatesCached();
+    return Object.fromEntries(
+      records.map((record) => {
+        const includeVersion =
+          !hasManagedSvgDefaults(record.defaults) ||
+          isGalleryThumbFreshForTemplate(
+            record.templateId,
+            record.updatedAt,
+            record.defaults,
+          );
+        return [
+          record.templateId,
+          {
+            defaults: record.defaults,
+            updatedAt: includeVersion ? record.updatedAt : '',
+          },
+        ];
+      }),
     );
   } catch {
     return {};

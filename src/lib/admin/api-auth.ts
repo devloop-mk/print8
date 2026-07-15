@@ -6,15 +6,26 @@ function isUnsafeAdminMethod(method: string) {
 }
 
 function hasValidAdminOrigin(request: NextRequest) {
-  const origin = request.headers.get('origin');
   const host = request.headers.get('host');
-  if (!origin || !host) return true;
+  if (!host) return false;
 
-  try {
-    return new URL(origin).host === host;
-  } catch {
-    return false;
+  const origin = request.headers.get('origin');
+  if (origin) {
+    try {
+      return new URL(origin).host === host;
+    } catch {
+      return false;
+    }
   }
+
+  // Same-origin navigations / some clients omit Origin; require Sec-Fetch-Site.
+  const fetchSite = request.headers.get('sec-fetch-site');
+  if (fetchSite === 'same-origin' || fetchSite === 'same-site' || fetchSite === 'none') {
+    return true;
+  }
+
+  // Non-browser clients (scripts) should send Origin explicitly.
+  return false;
 }
 
 export async function getAdminSessionFromRequest(request: NextRequest) {

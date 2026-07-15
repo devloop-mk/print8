@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { Shirt } from 'lucide-react';
 import { getProductGallerySlides, type Product } from '@/lib/data/catalog';
 import {
-  getCatalogMockupImageStyle,
+  getMockupImageDisplayStyle,
   getProductMockupLayout,
 } from '@/lib/products/product-mockup-layout';
 
@@ -32,23 +32,27 @@ export function ProductCatalogImage({
             }`}
           >
             <Image
+              key={`${color}-front-${primary}`}
               src={primary}
               alt={typeLabel}
               fill
+              unoptimized
               sizes="(max-width: 768px) 50vw, 320px"
               className={mockupLayout.catalogImageClass}
-              style={getCatalogMockupImageStyle(mockupLayout)}
+              style={getMockupImageDisplayStyle(product, primary, 'catalog-card')}
             />
           </div>
           {secondary ? (
             <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
               <Image
+                key={`${color}-back-${secondary}`}
                 src={secondary}
                 alt={`${typeLabel} — alternate`}
                 fill
+                unoptimized
                 sizes="(max-width: 768px) 50vw, 320px"
                 className={mockupLayout.catalogImageClass}
-                style={getCatalogMockupImageStyle(mockupLayout)}
+                style={getMockupImageDisplayStyle(product, secondary, 'catalog-card')}
               />
             </div>
           ) : null}

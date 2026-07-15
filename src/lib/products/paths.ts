@@ -16,6 +16,7 @@ export type CustomizerUrlOptions = {
   edit?: string;
   color?: string;
   size?: string;
+  fit?: string;
 };
 
 export function buildCustomizerUrl(
@@ -28,7 +29,16 @@ export function buildCustomizerUrl(
   if (options?.edit) params.set('edit', options.edit);
   if (options?.color) params.set('color', options.color);
   if (options?.size) params.set('size', options.size);
+  if (options?.fit) params.set('fit', options.fit);
   return `/products/customize/${productType}?${params.toString()}`;
+}
+
+export function buildDesignDetailUrl(designId: string) {
+  return `/products/design/${designId}`;
+}
+
+export function buildCouplePackDetailUrl(packId: string) {
+  return `/products/design/couple/${packId}`;
 }
 
 export function getProductPaths(

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter, Link } from "@/i18n/navigation";
 import { useCart } from "@/components/cart/CartProvider";
@@ -42,6 +42,36 @@ export function CheckoutForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [processing, setProcessing] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
+
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("print8-checkout-prefill");
+      if (!raw) return;
+      sessionStorage.removeItem("print8-checkout-prefill");
+      const parsed = JSON.parse(raw) as {
+        fullName?: string;
+        phone?: string;
+        email?: string;
+      };
+      setForm((prev) => ({
+        ...prev,
+        fullName:
+          typeof parsed.fullName === "string" && parsed.fullName
+            ? parsed.fullName
+            : prev.fullName,
+        phone:
+          typeof parsed.phone === "string" && parsed.phone
+            ? parsed.phone
+            : prev.phone,
+        email:
+          typeof parsed.email === "string" && parsed.email
+            ? parsed.email
+            : prev.email,
+      }));
+    } catch {
+      // ignore corrupt prefill
+    }
+  }, []);
 
   const hasServiceItems = items.some((item) => item.type === "service");
   const hasCustomProductItems = items.some((item) => item.type === "product");

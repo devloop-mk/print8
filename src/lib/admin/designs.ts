@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { revalidateTag } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import {
   designTemplates,
   getDesignTemplate,
@@ -21,6 +21,7 @@ import {
   hasManagedSvgDefaults,
   MANAGED_SVG_TEMPLATES_CACHE_TAG,
 } from '@/lib/designs/managed-svg-template-defaults';
+import { isGalleryThumbRegenAvailable } from '@/lib/designs/gallery-thumb-local';
 import { revalidateDesignCatalogCache } from '@/lib/catalog/revalidate-design-catalog';
 import {
   ADMIN_DESIGNS_PAGE_SIZE,
@@ -240,13 +241,82 @@ export async function saveAdminSvgTemplateDefaults(input: {
   defaults: ManagedSvgTemplateDefaultsPayload;
 }) {
   const saved = await managedSvgTemplatesDb.upsert(input);
-  revalidateTag(MANAGED_SVG_TEMPLATES_CACHE_TAG, 'max');
-  return saved;
+
+  try {
+    revalidateTag(MANAGED_SVG_TEMPLATES_CACHE_TAG, 'max');
+    revalidatePath('/', 'layout');
+  } catch (error) {
+    console.warn(
+      `[managed-svg] Cache revalidation failed for ${input.templateId}:`,
+      error,
+    );
+  }
+
+  let galleryThumbs: Array<{
+    designId: string;
+    publicPath: string;
+    width: number;
+    height: number;
+    bytes: number;
+  }> = [];
+
+  if (isGalleryThumbRegenAvailable()) {
+    try {
+      const { regenerateGalleryThumbsForTemplate } = await import(
+        '@/lib/designs/gallery-thumb-builder.core'
+      );
+      galleryThumbs = await regenerateGalleryThumbsForTemplate(
+        input.templateId,
+        input.defaults,
+        saved.updatedAt,
+      );
+    } catch (error) {
+      console.warn(
+        `[gallery-thumb] Failed to regenerate WebP for ${input.templateId}:`,
+        error,
+      );
+    }
+  }
+
+  return { ...saved, galleryThumbs };
 }
 
 export async function deleteAdminSvgTemplateDefaults(templateId: string) {
   await managedSvgTemplatesDb.delete(templateId);
-  revalidateTag(MANAGED_SVG_TEMPLATES_CACHE_TAG, 'max');
+
+  let galleryThumbs: Array<{
+    designId: string;
+    publicPath: string;
+    width: number;
+    height: number;
+    bytes: number;
+  }> = [];
+
+  if (isGalleryThumbRegenAvailable()) {
+    try {
+      const { regenerateGalleryThumbsForTemplate } = await import(
+        '@/lib/designs/gallery-thumb-builder.core'
+      );
+      galleryThumbs = await regenerateGalleryThumbsForTemplate(templateId, null, null);
+    } catch (error) {
+      console.warn(
+        `[gallery-thumb] Failed to regenerate WebP for ${templateId}:`,
+        error,
+      );
+    }
+  }
+
+  try {
+    revalidateTag(MANAGED_SVG_TEMPLATES_CACHE_TAG, 'max');
+    revalidatePath('/', 'layout');
+  } catch (error) {
+    console.warn(
+      `[managed-svg] Cache revalidation failed for ${templateId}:`,
+      error,
+    );
+  }
+
+  return { galleryThumbs };
 }
 
 export async function importStaticDesignToDatabase(id: string) {

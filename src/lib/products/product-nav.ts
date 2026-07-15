@@ -10,7 +10,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import type { ProductType } from '@/lib/data/catalog';
-import { products, productTypes } from '@/lib/data/catalog';
+import { products, productTypes, isBrowsableProduct } from '@/lib/data/catalog';
 import { PRODUCT_OFFERING_PATHS } from '@/lib/products/paths';
 
 export type ProductNavCategoryId =
@@ -30,6 +30,8 @@ export type ProductNavCategory = {
   id: ProductNavCategoryId;
   icon: LucideIcon;
   types: ProductType[];
+  /** Paths shown on the category landing chooser (defaults to all applicable). */
+  chooserPaths?: Array<'custom' | 'photo' | 'template'>;
 };
 
 export type ProductNavQuickLink = {
@@ -45,6 +47,7 @@ export const productNavCategories: ProductNavCategory[] = [
     id: 'apparel',
     icon: Shirt,
     types: ['t-shirt', 'hoodie', 'bodysuit', 'cap'],
+    chooserPaths: ['custom', 'photo'],
   },
   {
     id: 'drinkware',
@@ -118,7 +121,10 @@ export function getCategoryForProductType(
 
 export function getProductsForCategory(categoryId: ProductNavCategoryId) {
   const category = getProductNavCategory(categoryId);
-  return products.filter((product) => category.types.includes(product.type));
+  return products.filter(
+    (product) =>
+      category.types.includes(product.type) && isBrowsableProduct(product),
+  );
 }
 
 /** Sample products from other types for cross-sell on type pages. */
@@ -138,7 +144,9 @@ export function getSuggestedProductsForType(
 
   const result: typeof products = [];
   for (const type of orderedTypes) {
-    const matches = products.filter((product) => product.type === type);
+    const matches = products.filter(
+      (product) => product.type === type && isBrowsableProduct(product),
+    );
     for (const product of matches.slice(0, 2)) {
       if (result.length >= limit) return result;
       result.push(product);

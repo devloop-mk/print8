@@ -46,12 +46,14 @@ const DesignCard = memo(function DesignCard({
   badgeLabel,
   displayName,
   svgDefaultsMap,
+  svgThumbVersions,
 }: {
   design: DesignTemplate;
   actionLabel: string;
   badgeLabel?: string;
   displayName: string;
   svgDefaultsMap?: Record<string, ManagedSvgTemplateDefaultsPayload>;
+  svgThumbVersions?: Record<string, string>;
 }) {
   const t = useTranslations('designs');
 
@@ -67,6 +69,7 @@ const DesignCard = memo(function DesignCard({
             alt={displayName}
             previewMode="lazy"
             svgDefaultsMap={svgDefaultsMap}
+            svgThumbVersions={svgThumbVersions}
           />
           {badgeLabel ? (
             <span className="absolute left-3 top-3 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-brand-700 shadow-sm">
@@ -111,9 +114,11 @@ function buildDesignsHref(
 export function DesignsGallery({
   designs,
   svgDefaultsMap,
+  svgThumbVersions,
 }: {
   designs: ResolvedDesignTemplate[];
   svgDefaultsMap?: Record<string, ManagedSvgTemplateDefaultsPayload>;
+  svgThumbVersions?: Record<string, string>;
 }) {
   const t = useTranslations('designs');
   const locale = useLocale() as 'mk' | 'en';
@@ -303,6 +308,7 @@ export function DesignsGallery({
                   }
                   actionLabel={t('orderWithInfo')}
                   svgDefaultsMap={svgDefaultsMap}
+                  svgThumbVersions={svgThumbVersions}
                 />
               ))}
             </CatalogGrid>
@@ -357,6 +363,7 @@ export function DesignsGallery({
                       actionLabel={t('customizeOnline')}
                       badgeLabel={t('customizableBadge')}
                       svgDefaultsMap={svgDefaultsMap}
+                      svgThumbVersions={svgThumbVersions}
                     />
                   ))}
                 </CatalogGrid>

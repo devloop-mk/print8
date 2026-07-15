@@ -25,6 +25,7 @@ import {
   type DesignTemplate,
 } from '@/lib/data/catalog';
 import { DesignCardThumbnail } from '@/components/designs/DesignCardThumbnail';
+import { getDesignThumbAspect } from '@/lib/designs/design-thumb';
 import { DesignTemplatePreview } from '@/components/products/DesignTemplatePreview';
 import { resolveDesignPreviewColor } from '@/lib/products/design-applicable-colors';
 import { getProductTypeIcon } from '@/lib/products/product-type-icons';
@@ -212,12 +213,16 @@ function SearchDesignThumb({
     );
   }
 
+  const aspect = getDesignThumbAspect(design);
+  const height = compact ? 40 : 64;
+  const width = Math.round(height * aspect);
+
   return (
     <div
       className={cn(
         'relative shrink-0 overflow-hidden rounded-lg border border-ink-100 bg-white',
-        compact ? 'h-10 w-10' : 'h-16 w-16',
       )}
+      style={{ width, height }}
     >
       <DesignCardThumbnail design={design} alt={item.title} />
     </div>

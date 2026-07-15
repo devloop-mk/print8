@@ -21,11 +21,21 @@ import {
   products,
   getProductMockup,
   getProductSides,
+  type GarmentFit,
+  type Product,
   type ProductDesignTemplate,
   type ProductSide,
   type ProductType,
 } from '@/lib/data/catalog';
 import { useMergedProductDesignTemplate } from '@/lib/products/use-merged-product-design-template';
+import { getDesignApplicableColors } from '@/lib/products/design-applicable-colors';
+import {
+  getDesignApplicableFits,
+  getProductGarmentFit,
+  resolveDesignProduct,
+} from '@/lib/products/garment-fit';
+import { GarmentFitSelector } from '@/components/products/GarmentFitSelector';
+import { DesignColorPicker } from '@/components/products/DesignColorPicker';
 import {
   evaluateCartAssetLimits,
   MAX_PHOTOS_PER_ORDER,
@@ -42,6 +52,7 @@ import {
 } from '@/lib/cart/product-cart';
 import {
   getOverlayPrintBounds,
+  getMockupImageDisplayStyle,
   getProductMockupLayout,
   isCylindricalDrinkwareType,
 } from '@/lib/products/product-mockup-layout';
@@ -52,13 +63,16 @@ import {
 } from '@/lib/products/product-sides';
 import {
   createDefaultSideDesign,
-  sideDesignFromImageTemplate,
-  sideDesignFromOverlayTemplate,
   sideDesignFromRestored,
-  sideDesignFromTextTemplate,
+  sideDesignsFromTemplate,
   type SideDesign,
   type UploadedFile,
 } from '@/lib/products/design-state';
+import { getInitialCustomizerSide } from '@/lib/products/design-sides';
+import {
+  copySideDesignToTarget,
+  sideHasDesignContent,
+} from '@/lib/products/side-design-copy';
 import {
   PRODUCT_PHOTO_MIN_SCALE,
   PRODUCT_PRINT_AREA_MAX_SCALE,
@@ -101,6 +115,7 @@ import {
 
 import {
   inksHaveLowContrast,
+  normalizeHex,
   suggestInkForShirt,
 } from '@/lib/products/design-overlay';
 import { useOverlayAssetUrl } from '@/hooks/useOverlayAssetUrl';
@@ -617,12 +632,79 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   const editCartItemId = searchParams.get('edit');
   const colorParam = searchParams.get('color');
   const sizeParam = searchParams.get('size');
+  const fitParam = searchParams.get('fit');
+
+  const designTemplateForFit = useMergedProductDesignTemplate(designId);
 
   const product = useMemo(
-    () =>
-      products.find((p) => p.id === productId) ||
-      products.find((p) => p.type === type),
-    [productId, type],
+    () => {
+      const base =
+        products.find((p) => p.id === productId) ||
+        products.find((p) => p.type === type);
+      if (!base || base.type !== 't-shirt' || !designTemplateForFit) {
+        return base;
+      }
+
+      const fits = getDesignApplicableFits(designTemplateForFit);
+      if (fits.length === 0) return base;
+
+      const resolvedFit =
+        fitParam && fits.includes(fitParam as GarmentFit)
+          ? (fitParam as GarmentFit)
+          : fits[0];
+
+      return resolveDesignProduct(designTemplateForFit, resolvedFit);
+    },
+    [productId, type, designTemplateForFit, fitParam],
+  );
+
+  const garmentFits = designTemplateForFit
+    ? getDesignApplicableFits(designTemplateForFit)
+    : [];
+  const garmentFit: GarmentFit = product
+    ? (getProductGarmentFit(product) ?? 'unisex')
+    : 'unisex';
+
+  const selectableColors = useMemo(() => {
+    if (!product?.colors) return [];
+    if (!designTemplateForFit) return product.colors;
+    return getDesignApplicableColors(designTemplateForFit, product);
+  }, [product, designTemplateForFit]);
+
+  const [color, setColor] = useState(() => {
+    const palette = product?.colors ?? [];
+    const fromParam = colorParam
+      ? palette.find((c) => normalizeHex(c) === normalizeHex(colorParam))
+      : undefined;
+    return fromParam ?? palette[0] ?? '#c5ccd6';
+  });
+  const [size, setSize] = useState(() => {
+    const sizes = product?.sizes ?? [];
+    return sizeParam && sizes.includes(sizeParam) ? sizeParam : (sizes[0] ?? '');
+  });
+
+  const handleGarmentFitChange = useCallback(
+    (nextFit: GarmentFit) => {
+      if (!designTemplateForFit || !product) return;
+      const nextProduct = resolveDesignProduct(designTemplateForFit, nextFit);
+      const nextColors = getDesignApplicableColors(
+        designTemplateForFit,
+        nextProduct,
+      );
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('id', nextProduct.id);
+      params.set('fit', nextFit);
+      if (nextColors.length > 0 && !nextColors.includes(color)) {
+        params.set('color', nextColors[0]);
+        setColor(nextColors[0]);
+      }
+      if (nextProduct.sizes?.length) {
+        params.set('size', nextProduct.sizes[0]);
+        setSize(nextProduct.sizes[0]);
+      }
+      router.replace(`/products/customize/${type}?${params.toString()}`);
+    },
+    [color, designTemplateForFit, product, router, searchParams, type],
   );
 
   const isTshirt = product ? isTshirtProduct(product) : false;
@@ -649,8 +731,6 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     [t],
   );
 
-  const [color, setColor] = useState(product?.colors?.[0] || '#ffffff');
-  const [size, setSize] = useState(product?.sizes?.[0] ?? '');
   const [quantity, setQuantity] = useState(1);
   const [activeSide, setActiveSide] = useState<ProductSide>('front');
   const [sideDesigns, setSideDesigns] = useState<Record<ProductSide, SideDesign>>(
@@ -661,6 +741,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   const [canvasZoom, setCanvasZoom] = useState(100);
 
   const previewRef = useRef<HTMLDivElement | null>(null);
+  const designInitializedRef = useRef<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [cartLimitError, setCartLimitError] = useState<
     'stickers' | 'photos' | null
@@ -760,7 +841,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       return { top: 12, right: 12, bottom: 12, left: 12 };
     }
     if (isTshirtProduct(product)) {
-      return getTshirtPrintAreaInsets(printPackage, activeSide);
+      return getTshirtPrintAreaInsets(printPackage, activeSide, product);
     }
     return getProductMockupLayout(product).printArea;
   }, [product, printPackage, activeSide]);
@@ -769,7 +850,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     if (!product) return null;
     const base = getProductMockupLayout(product);
     if (!isTshirtProduct(product)) return base;
-    const insets = getTshirtPrintAreaInsets(printPackage, activeSide);
+    const insets = getTshirtPrintAreaInsets(printPackage, activeSide, product);
     return {
       ...base,
       printArea: insets,
@@ -1034,7 +1115,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     if (
       colorParam &&
       product.colors?.some(
-        (value) => value.toLowerCase() === colorParam.toLowerCase(),
+        (value) => normalizeHex(value) === normalizeHex(colorParam),
       )
     ) {
       setColor(colorParam);
@@ -1048,51 +1129,40 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     if (!designId || editCartItemId || !product || !activeDesignTemplate) return;
     if (activeDesignTemplate.id !== designId) return;
     if (findProductCustomizerDraft(product.id, designId)) return;
+    if (designInitializedRef.current === designId) return;
+    designInitializedRef.current = designId;
 
     const template = activeDesignTemplate;
 
-    const side = template.defaultSide;
     const shirtColor =
       colorParam &&
       product.colors?.some(
-        (value) => value.toLowerCase() === colorParam.toLowerCase(),
+        (value) => normalizeHex(value) === normalizeHex(colorParam),
       )
         ? colorParam
         : color;
-    const textDesign = sideDesignFromTextTemplate(template);
-    const imageDesign = sideDesignFromImageTemplate(template);
-    const overlayDesign = sideDesignFromOverlayTemplate(
-      template,
-      product,
-      shirtColor,
-    );
 
-    if (textDesign) {
+    const sideDesignMap = sideDesignsFromTemplate(template, product, shirtColor);
+    const initialSide = getInitialCustomizerSide(template);
+
+    if (Object.keys(sideDesignMap).length > 0) {
       setSideDesigns((prev) => ({
         ...prev,
-        [side]: textDesign,
+        ...sideDesignMap,
       }));
-    } else if (overlayDesign) {
-      setSideDesigns((prev) => ({
-        ...prev,
-        [side]: overlayDesign,
-      }));
+
       if (
         template.recommendedColor &&
-        product?.colors?.some(
-          (value) => value.toLowerCase() === template.recommendedColor!.toLowerCase(),
+        product.colors?.some(
+          (value) =>
+            normalizeHex(value) === normalizeHex(template.recommendedColor!),
         )
       ) {
         setColor(template.recommendedColor);
       }
-    } else if (imageDesign) {
-      setSideDesigns((prev) => ({
-        ...prev,
-        [side]: imageDesign,
-      }));
     }
 
-    setActiveSide(side);
+    setActiveSide(initialSide);
   }, [activeDesignTemplate, color, colorParam, designId, editCartItemId, product]);
 
   useEffect(() => {
@@ -1160,6 +1230,24 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     ? getProductMockup(product, color, activeSide)
     : '';
 
+  const sideHasContent = useCallback(
+    (side: ProductSide) => sideHasDesignContent(sideDesigns[side]),
+    [sideDesigns],
+  );
+
+  const otherSide =
+    sides.length === 2 ? sides.find((side) => side !== activeSide) : undefined;
+
+  const copyDesignToOtherSide = useCallback(() => {
+    if (!otherSide) return;
+    setSideDesigns((prev) => {
+      const next = copySideDesignToTarget(prev, activeSide, otherSide);
+      return next ?? prev;
+    });
+    setSelectedElement(null);
+    setActiveSide(otherSide);
+  }, [activeSide, otherSide]);
+
   async function capturePreview(
     ref: RefObject<HTMLDivElement | null>,
   ): Promise<string | undefined> {
@@ -1222,6 +1310,13 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       }
     } finally {
       flushSync(() => setIsCapturing(false));
+    }
+
+    // If html2canvas fails, still show the garment mockup in the cart.
+    for (const side of sides) {
+      if (captured[side]) continue;
+      const mockup = getProductMockup(product, color, side);
+      if (mockup) captured[side] = mockup;
     }
 
     const metadata: Record<string, string | number | boolean> = {
@@ -1334,18 +1429,18 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     return <p>Product not found</p>;
   }
 
-  const sideHasContent = (side: ProductSide) => {
-    const d = sideDesigns[side];
-    if (!d) return false;
-    return Boolean(
-      sideHasTextContent(d) ||
-        d.uploadedFile ||
-        d.premadeDesignImage ||
-        d.overlaySvg ||
-        d.overlayColorVariants ||
-        d.stickers.length,
-    );
-  };
+  const canCopyDesignToOtherSide = Boolean(
+    otherSide &&
+      hasMultipleSides &&
+      sideHasDesignContent(sideDesigns[activeSide]) &&
+      !sideHasDesignContent(sideDesigns[otherSide]),
+  );
+
+  const copyDesignLabel = canCopyDesignToOtherSide
+    ? otherSide === 'back'
+      ? t('copyDesignToBack')
+      : t('copyDesignToFront')
+    : undefined;
 
   const hasRecolorableOverlay = Boolean(currentDesign.isRecolorableOverlay);
 
@@ -1370,6 +1465,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       shirtColor={color}
       typeLabel={tp(type)}
       productType={type}
+      product={product}
       containerRef={previewRef}
       isCapturing={isCapturing}
       photoGuideLabel={t('photoGuide')}
@@ -1446,6 +1542,10 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       printPackage={printPackage}
       setPrintPackage={setPrintPackage}
       locale={locale}
+      garmentFits={garmentFits}
+      garmentFit={garmentFit}
+      onGarmentFitChange={handleGarmentFitChange}
+      selectableColors={selectableColors}
     />
   );
 
@@ -1507,6 +1607,8 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       sideLabel={sideLabel}
       sideHasContent={sideHasContent}
       hasMultipleSides={hasMultipleSides}
+      copyDesignLabel={copyDesignLabel}
+      onCopyDesign={canCopyDesignToOtherSide ? copyDesignToOtherSide : undefined}
       canvasZoom={canvasZoom}
       onZoomChange={setCanvasZoom}
       mobileBottomBar={
@@ -1807,6 +1909,7 @@ function InteractivePreview({
   shirtColor,
   typeLabel,
   productType,
+  product,
   containerRef,
   isCapturing,
   photoGuideLabel,
@@ -1835,6 +1938,7 @@ function InteractivePreview({
   shirtColor: string;
   typeLabel: string;
   productType: ProductType;
+  product: Product;
   containerRef: RefObject<HTMLDivElement | null>;
   isCapturing?: boolean;
   photoGuideLabel: string;
@@ -1864,16 +1968,21 @@ function InteractivePreview({
   printAreaOverride?: PrintAreaInsets;
 }) {
   const t = useTranslations('products.customizer');
-  const baseImage = sideDesign.premadeDesignImage ?? mockupImage;
-  const isPremade = Boolean(sideDesign.premadeDesignImage);
+  const usesGarmentColorMockup =
+    productType === 't-shirt' || productType === 'hoodie';
+  const shirtImage = usesGarmentColorMockup
+    ? mockupImage
+    : (sideDesign.premadeDesignImage ?? mockupImage);
   const hasTemplateOverlay = Boolean(
-    sideDesign.overlaySvg || sideDesign.overlayColorVariants,
+    sideDesign.overlaySvg ||
+      sideDesign.overlayColorVariants ||
+      sideDesign.overlayRaster,
   );
   const mockupImgRef = useRef<HTMLImageElement>(null);
   const [mockupLoading, setMockupLoading] = useState(false);
 
   useEffect(() => {
-    if (!baseImage) {
+    if (!shirtImage) {
       setMockupLoading(false);
       return;
     }
@@ -1883,9 +1992,9 @@ function InteractivePreview({
     if (img?.complete && img.naturalWidth > 0) {
       setMockupLoading(false);
     }
-  }, [baseImage]);
+  }, [shirtImage, shirtColor]);
 
-  const baseMockupLayout = getProductMockupLayout(productType);
+  const baseMockupLayout = getProductMockupLayout(product);
   const mockupLayout = printAreaOverride
     ? {
         ...baseMockupLayout,
@@ -1893,6 +2002,11 @@ function InteractivePreview({
         overlayMaxScale: getPrintAreaMaxScale(printAreaOverride),
       }
     : baseMockupLayout;
+  const shirtMockupStyle = getMockupImageDisplayStyle(
+    product,
+    shirtImage,
+    'customizer',
+  );
   const overlayPrintBounds = getOverlayPrintBounds(mockupLayout);
   const isDrinkware = isCylindricalDrinkwareType(productType);
   const [previewMode, setPreviewMode] = useState<DrinkwarePreviewMode>('flat');
@@ -1954,7 +2068,13 @@ function InteractivePreview({
     <div
       ref={containerRef}
       className={cn(
-        'relative flex aspect-[3/4] w-[min(18rem,78vw)] items-center justify-center rounded-sm bg-white shadow-[0_8px_40px_rgba(15,23,42,0.12)] touch-pan-y md:w-[min(28rem,46vh)] lg:w-[min(32rem,52vh)] xl:w-[min(36rem,58vh)]',
+        'relative flex w-[min(18rem,78vw)] items-center justify-center rounded-sm bg-white shadow-[0_8px_40px_rgba(15,23,42,0.12)] touch-pan-y md:w-[min(28rem,46vh)] lg:w-[min(32rem,52vh)] xl:w-[min(36rem,58vh)]',
+        // Landscape unisex mockups fit a square canvas; portrait fits keep 3:4.
+        productType === 't-shirt' && product.fit === 'unisex'
+          ? 'aspect-square'
+          : 'aspect-[3/4]',
+        // Don't clip scaled shirt mockups — keep the full garment visible.
+        productType === 't-shirt' ? 'overflow-visible' : 'overflow-hidden',
         isCapturing && 'opacity-90',
         show3dPreview && 'hidden',
       )}
@@ -1968,14 +2088,19 @@ function InteractivePreview({
 
       <div
         data-mockup-inner
-        className={`${mockupLayout.innerClass} pointer-events-none`}
+        className={cn(
+          mockupLayout.innerClass,
+          'pointer-events-none',
+          productType === 't-shirt' ? 'overflow-visible' : 'overflow-hidden',
+        )}
       >
-        {baseImage ? (
+        <div className="relative h-full w-full" style={shirtMockupStyle}>
+        {shirtImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             ref={mockupImgRef}
-            key={baseImage}
-            src={baseImage}
+            key={`${shirtColor}-${shirtImage}`}
+            src={shirtImage}
             alt={typeLabel}
             draggable={false}
             crossOrigin="anonymous"
@@ -2103,6 +2228,7 @@ function InteractivePreview({
               </span>
             </div>
           )}
+        </div>
       </div>
     </div>
     {!isCapturing && mockupLayout.wrapPrintArea && previewMode === 'flat' ? (
@@ -2213,6 +2339,10 @@ function EditorPanelContent({
   printPackage,
   setPrintPackage,
   locale,
+  garmentFits,
+  garmentFit,
+  onGarmentFitChange,
+  selectableColors,
 }: {
   panel: EditorPanel;
   currentDesign: SideDesign;
@@ -2247,6 +2377,10 @@ function EditorPanelContent({
   printPackage: TshirtPrintPackage;
   setPrintPackage: (pkg: TshirtPrintPackage) => void;
   locale: string;
+  garmentFits: GarmentFit[];
+  garmentFit: GarmentFit;
+  onGarmentFitChange: (fit: GarmentFit) => void;
+  selectableColors: string[];
 }) {
   const t = useTranslations('products.customizer');
   const hasSecondaryInk = designTemplate?.overlayRecolor?.slots === 2;
@@ -2272,6 +2406,10 @@ function EditorPanelContent({
           printPackage={printPackage}
           setPrintPackage={setPrintPackage}
           locale={locale}
+          garmentFits={garmentFits}
+          garmentFit={garmentFit}
+          onGarmentFitChange={onGarmentFitChange}
+          selectableColors={selectableColors}
         />
       </div>
     );
@@ -2596,6 +2734,10 @@ function ProductOptions({
   printPackage,
   setPrintPackage,
   locale,
+  garmentFits,
+  garmentFit,
+  onGarmentFitChange,
+  selectableColors,
 }: {
   product: (typeof products)[number];
   color: string;
@@ -2608,8 +2750,13 @@ function ProductOptions({
   printPackage?: TshirtPrintPackage;
   setPrintPackage?: (pkg: TshirtPrintPackage) => void;
   locale?: string;
+  garmentFits?: GarmentFit[];
+  garmentFit?: GarmentFit;
+  onGarmentFitChange?: (fit: GarmentFit) => void;
+  selectableColors?: string[];
 }) {
   const t = useTranslations('products.customizer');
+  const colors = selectableColors?.length ? selectableColors : product.colors;
 
   return (
     <>
@@ -2648,28 +2795,20 @@ function ProductOptions({
           </div>
         </div>
       ) : null}
-      {product.colors && (
-        <div>
-          <label className="mb-2 block text-sm font-medium text-ink-700">
-            {t('selectColor')}
-          </label>
-          <div className="flex flex-wrap gap-3">
-            {product.colors.map((c) => (
-              <button
-                key={c}
-                type="button"
-                onClick={() => setColor(c)}
-                className={`h-11 w-11 rounded-full border-2 transition ${
-                  color === c
-                    ? 'border-brand-600 ring-2 ring-brand-200'
-                    : 'border-ink-200'
-                }`}
-                style={{ backgroundColor: c }}
-              />
-            ))}
-          </div>
-        </div>
-      )}
+      {garmentFits && garmentFits.length > 1 && garmentFit && onGarmentFitChange ? (
+        <GarmentFitSelector
+          fits={garmentFits}
+          value={garmentFit}
+          onChange={onGarmentFitChange}
+        />
+      ) : null}
+      {colors && colors.length > 1 ? (
+        <DesignColorPicker
+          colors={colors}
+          value={color}
+          onChange={setColor}
+        />
+      ) : null}
       {product.sizes && (
         <div>
           <label className="mb-2 block text-sm font-medium text-ink-700">

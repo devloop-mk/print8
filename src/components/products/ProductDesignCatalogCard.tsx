@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
@@ -12,6 +12,8 @@ import {
   isImageDesignTemplate,
   isOverlayDesignTemplate,
   isTextDesignTemplate,
+  type Product,
+  type ProductDesignTemplate,
 } from '@/lib/data/catalog';
 import { resolveAssetUrl } from '@/lib/storage/asset-url';
 import { resolveProductDesignDisplayName } from '@/lib/products/design-display-name';
@@ -20,10 +22,13 @@ import {
   resolveDesignPreviewColor,
 } from '@/lib/products/design-applicable-colors';
 import {
-  buildPremadeDesignCartPayload,
-} from '@/lib/products/premade-design-order';
+  getDesignSideMode,
+  isDualSidedDesign,
+} from '@/lib/products/design-sides';
+import { normalizeHex } from '@/lib/products/design-overlay';
+import { buildPremadeDesignCartPayload } from '@/lib/products/premade-design-order';
 import { capturePreviewElement } from '@/lib/products/capture-preview';
-import { buildCustomizerUrl } from '@/lib/products/paths';
+import { buildCustomizerUrl, buildDesignDetailUrl } from '@/lib/products/paths';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { useCart } from '@/components/cart/CartProvider';
@@ -35,6 +40,21 @@ type ProductDesignCatalogCardProps = {
   entry: ProductDesignCatalogEntry;
   colorFilter: string | 'all';
 };
+
+function resolvePreviewColorForFilter(
+  design: ProductDesignTemplate,
+  product: Product,
+  applicableColors: string[],
+  colorFilter: string | 'all',
+): string {
+  if (colorFilter !== 'all') {
+    const matched = applicableColors.find(
+      (value) => normalizeHex(value) === normalizeHex(colorFilter),
+    );
+    if (matched) return matched;
+  }
+  return resolveDesignPreviewColor(design, product);
+}
 
 export function ProductDesignCatalogCard({
   entry,
@@ -62,17 +82,20 @@ export function ProductDesignCatalogCard({
     [design, product],
   );
 
-  const [color, setColor] = useState(() => {
-    if (
-      colorFilter !== 'all' &&
-      applicableColors.some(
-        (value) => value.toLowerCase() === colorFilter.toLowerCase(),
-      )
-    ) {
-      return colorFilter;
-    }
-    return resolveDesignPreviewColor(design, product);
-  });
+  const [color, setColor] = useState(() =>
+    resolvePreviewColorForFilter(design, product, applicableColors, colorFilter),
+  );
+
+  useEffect(() => {
+    setColor(
+      resolvePreviewColorForFilter(
+        design,
+        product,
+        applicableColors,
+        colorFilter,
+      ),
+    );
+  }, [applicableColors, colorFilter, design, product]);
 
   const previewColor = resolveDesignPreviewColor(design, product, color);
   const canQuickOrder =
@@ -106,18 +129,19 @@ export function ProductDesignCatalogCard({
     design: design.id,
     color: previewColor,
   });
+  const detailHref = buildDesignDetailUrl(design.id);
 
   return (
     <Card className="group flex h-full flex-col overflow-hidden p-0 transition hover:border-brand-200 hover:shadow-md">
       <Link
-        href={customizeHref}
+        href={detailHref}
         className="flex flex-1 flex-col outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500"
       >
         <div ref={previewRef}>
           {isTextDesignTemplate(design) || isOverlayDesignTemplate(design) ? (
             <DesignTemplatePreview
               product={product}
-              color={previewColor}
+              color={color}
               design={design}
               typeLabel={tp(product.type)}
             />
@@ -136,18 +160,20 @@ export function ProductDesignCatalogCard({
 
         <div className="flex flex-1 flex-col gap-3 p-4 pb-3">
           <div className="flex flex-wrap gap-1.5">
-            {entry.products.map((item) => (
+            {design.productTypes.map((type) => (
               <span
-                key={item.id}
+                key={type}
                 className="rounded-full bg-ink-100 px-2 py-0.5 text-[11px] font-medium text-ink-700"
               >
-                {tp(item.type)}
+                {tp(type)}
               </span>
             ))}
             <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-medium text-brand-700">
-              {design.defaultSide === 'back'
-                ? tc('sideBack')
-                : tc('sideFront')}
+              {isDualSidedDesign(design)
+                ? tc('sideBoth')
+                : getDesignSideMode(design) === 'back'
+                  ? tc('sideBack')
+                  : tc('sideFront')}
             </span>
           </div>
 
@@ -167,7 +193,7 @@ export function ProductDesignCatalogCard({
       <div className="flex flex-col gap-2 px-4 pb-4">
         <DesignColorPicker
           colors={applicableColors}
-          value={previewColor}
+          value={color}
           onChange={setColor}
           variant="compact"
         />
@@ -185,12 +211,7 @@ export function ProductDesignCatalogCard({
                 {ordering ? tCustomizer('capturing') : td('orderWithDesign')}
               </Button>
             ) : (
-              <Link
-                href={buildCustomizerUrl(product.id, product.type, {
-                  design: design.id,
-                  color: previewColor,
-                })}
-              >
+              <Link href={customizeHref}>
                 <Button
                   size="sm"
                   className="w-full normal-case tracking-normal shadow-none hover:translate-y-0 active:translate-y-0 active:shadow-none"
@@ -204,10 +225,7 @@ export function ProductDesignCatalogCard({
 
             {canQuickOrder ? (
               <Link
-                href={buildCustomizerUrl(product.id, product.type, {
-                  design: design.id,
-                  color: previewColor,
-                })}
+                href={customizeHref}
                 className="block text-center text-sm font-medium text-ink-600 transition-colors hover:text-brand-700"
               >
                 {isTextDesignTemplate(design)
