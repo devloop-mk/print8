@@ -27,9 +27,17 @@ function getAssetRemotePatterns() {
 const nextConfig: NextConfig = {
   outputFileTracingRoot: projectRoot,
   serverExternalPackages: ['sharp'],
-  // Keep catalog images out of serverless API bundles (served via CDN / static).
+  // Static catalog images are served by CDN / Vercel static, not the serverless
+  // function. Without this, NFT pulls public/ (~hundreds of MB) into page
+  // bundles (e.g. designs/customize) via fs helpers that join process.cwd()/public.
   outputFileTracingExcludes: {
-    '/api/**': ['public/**'],
+    '/*': [
+      './public/**',
+      './scripts/**',
+      './ms-playwright/**',
+      './playwright/.cache/**',
+      './supabase/**',
+    ],
   },
   turbopack: {
     root: projectRoot,
