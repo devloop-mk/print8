@@ -93,6 +93,8 @@ export function CouplePackDetail({ packId }: { packId: string }) {
   const packPrice = getCouplePackPrice(product);
 
   async function handleAddCouplePack() {
+    if (!pack || !product || !design1 || !design2) return;
+
     setOrdering(true);
     try {
       const previews: [string | undefined, string | undefined] = [

@@ -136,7 +136,7 @@ export function ProductDesignOverlayPlacementEditor({
     return resolveDesignPreviewColor(
       template,
       previewProduct,
-      previewProduct.colors[0],
+      previewProduct.colors?.[0],
     );
   }, [previewProduct, template]);
 

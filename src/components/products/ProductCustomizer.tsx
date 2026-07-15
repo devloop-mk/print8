@@ -1313,10 +1313,12 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     }
 
     // If html2canvas fails, still show the garment mockup in the cart.
-    for (const side of sides) {
-      if (captured[side]) continue;
-      const mockup = getProductMockup(product, color, side);
-      if (mockup) captured[side] = mockup;
+    if (product) {
+      for (const side of sides) {
+        if (captured[side]) continue;
+        const mockup = getProductMockup(product, color, side);
+        if (mockup) captured[side] = mockup;
+      }
     }
 
     const metadata: Record<string, string | number | boolean> = {

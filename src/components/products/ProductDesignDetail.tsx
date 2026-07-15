@@ -132,6 +132,8 @@ export function ProductDesignDetail({
   });
 
   async function handleAddToCart() {
+    if (!product) return;
+
     setOrdering(true);
     try {
       let capturedPreview: string | undefined;
