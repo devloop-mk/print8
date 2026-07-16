@@ -62,10 +62,10 @@ export const HOODIE_PRINT_AREA_INSETS: PrintAreaInsets = {
 
 /** Bodysuit front print zone. */
 export const BODYSUIT_PRINT_AREA_INSETS: PrintAreaInsets = {
-  top: 16,
-  right: 22,
-  bottom: 36,
-  left: 22,
+  top: 17,
+  right: 31,
+  bottom: 20,
+  left: 31,
 };
 
 /** Mug / cup — front-center slice shown on the flat mockup preview. */

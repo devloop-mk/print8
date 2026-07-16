@@ -88,7 +88,7 @@ export function CustomizerShell({
   ].filter((item) => item.show !== false);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white pb-[4.75rem] md:pb-0">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white pb-[7.75rem] md:pb-0">
       {topBar}
 
       <div className="flex min-h-0 flex-1 overflow-hidden">

@@ -215,20 +215,13 @@ export function resolveOverlayColorVariant(
   );
 }
 
-/** Streetwear web previews are full-shirt mockups with a baked-in garment color. */
+/** @deprecated Streetwear catalog webps are design artwork, not full-shirt mockups. */
 export function isMarketingShirtMockupOverlay(path: string | undefined): boolean {
-  if (!path) return false;
-  if (path.includes('/NEW_DESIGNS/streetwear/') && path.endsWith('.webp')) {
-    return true;
-  }
-  if (path.includes('/masters/streetwear/') && path.endsWith('.png')) {
-    return true;
-  }
-  return false;
+  return isStreetwearCatalogOverlay(path);
 }
 
-/** Streetwear catalog webp — marketing preview, not the print overlay. */
-export function isStreetwearMarketingOverlay(
+/** Streetwear catalog webp under `/NEW_DESIGNS/streetwear/` (design art, not a garment). */
+export function isStreetwearCatalogOverlay(
   path: string | undefined,
 ): boolean {
   return Boolean(
@@ -236,6 +229,13 @@ export function isStreetwearMarketingOverlay(
       path.includes('/NEW_DESIGNS/streetwear/') &&
       path.endsWith('.webp'),
   );
+}
+
+/** @deprecated Prefer `isStreetwearCatalogOverlay` — these assets are overlays, not mockups. */
+export function isStreetwearMarketingOverlay(
+  path: string | undefined,
+): boolean {
+  return isStreetwearCatalogOverlay(path);
 }
 
 /**
@@ -250,13 +250,6 @@ export function resolveComposableOverlayUrl(
   if (normalized.startsWith('masters/')) {
     if (!arePrintMasterAssetsAvailable()) return null;
     return resolveMasterAssetUrl(path);
-  }
-
-  if (
-    normalized.includes('NEW_DESIGNS/streetwear-art/') ||
-    isStreetwearMarketingOverlay(`/${normalized}`)
-  ) {
-    return null;
   }
 
   return resolveAssetUrl(path);
@@ -274,19 +267,23 @@ export function arePrintMasterAssetsAvailable(): boolean {
   return process.env.NODE_ENV === 'development';
 }
 
-/** Full-shirt streetwear webp used when masters are not hosted. */
+/**
+ * @deprecated Streetwear webps are layered on the blank shirt via
+ * `getDesignCompositeOverlayUrl` — do not use them as a garment replacement.
+ */
 export function getStreetwearMarketingMockupUrl(
   design: Pick<ProductDesignTemplate, 'overlayImage'>,
 ): string | null {
-  if (!design.overlayImage || !isStreetwearMarketingOverlay(design.overlayImage)) {
+  if (!design.overlayImage || !isStreetwearCatalogOverlay(design.overlayImage)) {
     return null;
   }
   return resolveAssetUrl(design.overlayImage);
 }
 
 /**
- * Design PNG layered on the selectable shirt mockup — original print master only.
- * Returns null in production without CDN so callers can fall back to marketing mockups.
+ * Design artwork layered on the selectable shirt mockup.
+ * Prefers transparent print masters when available; otherwise uses the catalog
+ * overlay image (including streetwear webps on Vercel without a masters CDN).
  */
 export function getDesignCompositeOverlayUrl(
   design: Pick<
@@ -298,7 +295,7 @@ export function getDesignCompositeOverlayUrl(
     return resolveMasterAssetUrl(design.printMasterImage);
   }
 
-  if (design.overlayImage && !isStreetwearMarketingOverlay(design.overlayImage)) {
+  if (design.overlayImage) {
     return resolveAssetUrl(design.overlayImage);
   }
 

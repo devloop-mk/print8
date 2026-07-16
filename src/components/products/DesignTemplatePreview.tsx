@@ -18,7 +18,6 @@ import {
   resolveOverlayPlacement,
   type OverlayPlacement,
   getDesignCompositeOverlayUrl,
-  getStreetwearMarketingMockupUrl,
 } from '@/lib/products/design-overlay';
 import { useOverlayAssetUrl } from '@/hooks/useOverlayAssetUrl';
 import { Shirt } from 'lucide-react';
@@ -122,25 +121,20 @@ export function DesignTemplatePreview({
   const mockupSide = design.defaultSide ?? 'front';
   const shirtMockup = getProductMockup(product, previewColor, mockupSide);
   const compositeOverlay = getDesignCompositeOverlayUrl(design);
-  const marketingMockup =
-    !compositeOverlay && isOverlayDesignTemplate(design)
-      ? getStreetwearMarketingMockupUrl(design)
-      : null;
-  const displayGarment = marketingMockup ?? shirtMockup;
   const mockupLayout = getProductMockupLayout(product);
   const mockupStyle = getMockupImageDisplayStyle(
     product,
-    displayGarment,
+    shirtMockup,
     'catalog-design',
   );
 
   return (
     <ProductMockupFrame variant="catalog" layout={mockupLayout} innerStyle={mockupStyle}>
-      {displayGarment ? (
+      {shirtMockup ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          key={`${previewColor}-${mockupSide}-${displayGarment}`}
-          src={displayGarment}
+          key={`${previewColor}-${mockupSide}-${shirtMockup}`}
+          src={shirtMockup}
           alt={typeLabel}
           draggable={false}
           className={mockupLayout.catalogImageClass}
@@ -151,15 +145,14 @@ export function DesignTemplatePreview({
         </div>
       )}
 
-      {!marketingMockup &&
-      isOverlayDesignTemplate(design) &&
+      {isOverlayDesignTemplate(design) &&
       (isRecolorableOverlayTemplate(design) || design.overlayColorVariants) ? (
         <CatalogOverlayPreview
           design={design}
           shirtColor={previewColor}
           placement={placement}
         />
-      ) : !marketingMockup && compositeOverlay ? (
+      ) : compositeOverlay ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           key={`${previewColor}-${mockupSide}-${compositeOverlay}`}

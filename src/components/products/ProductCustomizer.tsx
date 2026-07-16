@@ -111,6 +111,7 @@ import {
   ArrowUp,
   ArrowDown,
   X,
+  Save,
 } from 'lucide-react';
 
 import {
@@ -141,6 +142,7 @@ import {
   serializeSideDesigns,
   upsertProductCustomizerDraft,
 } from '@/lib/drafts/work-drafts';
+import { dispatchDesignSaved } from '@/lib/drafts/draft-events';
 import { findProductCustomizerDraft } from '@/lib/drafts/ongoing-designs';
 import {
   clampElementCenterToPrintArea,
@@ -746,6 +748,9 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   const [cartLimitError, setCartLimitError] = useState<
     'stickers' | 'photos' | null
   >(null);
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>(
+    'idle',
+  );
 
   const serializedDraft = useMemo(
     () =>
@@ -812,6 +817,22 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     isDirty,
     onSave: saveDraft,
   });
+
+  const handleSaveDesign = useCallback(async () => {
+    setSaveState('saving');
+    try {
+      const saved = await saveDraft();
+      if (!saved) {
+        setSaveState('idle');
+        return;
+      }
+      dispatchDesignSaved();
+      setSaveState('saved');
+      window.setTimeout(() => setSaveState('idle'), 2000);
+    } catch {
+      setSaveState('idle');
+    }
+  }, [saveDraft]);
 
   const currentDesign = useMemo(
     () =>
@@ -1575,14 +1596,26 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
               </p>
             </div>
           </div>
-          <Button
-            size="sm"
-            onClick={handleAddToCart}
-            disabled={isCapturing}
-            className="shrink-0"
-          >
-            {isCapturing ? t('capturing') : t('addToCart')}
-          </Button>
+          <div className="hidden shrink-0 items-center gap-2 md:flex">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => void handleSaveDesign()}
+              loading={saveState === 'saving'}
+              disabled={isCapturing || saveState === 'saving'}
+            >
+              <Save className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+              {saveState === 'saved' ? t('designSaved') : t('saveDesign')}
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleAddToCart}
+              disabled={isCapturing}
+            >
+              {isCapturing ? t('capturing') : t('addToCart')}
+            </Button>
+          </div>
         </div>
       }
       contextBar={
@@ -1614,7 +1647,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       canvasZoom={canvasZoom}
       onZoomChange={setCanvasZoom}
       mobileBottomBar={
-        <div className="fixed inset-x-0 bottom-0 z-[55] border-t border-ink-200 bg-white/95 px-2 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] shadow-[0_-4px_24px_rgba(15,23,42,0.08)] backdrop-blur md:hidden">
+        <div className="fixed inset-x-0 bottom-0 z-[55] border-t border-ink-200 bg-white/95 px-3 pt-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] shadow-[0_-4px_24px_rgba(15,23,42,0.08)] backdrop-blur md:hidden">
           {cartLimitError ? (
             <p className="mb-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
               {cartLimitError === 'stickers'
@@ -1622,6 +1655,29 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
                 : t('orderPhotoLimit', { max: MAX_PHOTOS_PER_ORDER })}
             </p>
           ) : null}
+          <div className="mx-auto mb-2.5 flex max-w-lg gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="md"
+              onClick={() => void handleSaveDesign()}
+              loading={saveState === 'saving'}
+              disabled={isCapturing || saveState === 'saving'}
+              className="min-h-11 flex-1 normal-case tracking-normal"
+            >
+              <Save className="mr-1.5 h-4 w-4 shrink-0" aria-hidden />
+              {saveState === 'saved' ? t('designSaved') : t('saveDesign')}
+            </Button>
+            <Button
+              type="button"
+              size="md"
+              onClick={handleAddToCart}
+              disabled={isCapturing}
+              className="min-h-11 flex-1 normal-case tracking-normal"
+            >
+              {isCapturing ? t('capturing') : t('addToCart')}
+            </Button>
+          </div>
           <div className="mx-auto flex max-w-lg items-center gap-1">
             {(
               [

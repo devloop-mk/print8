@@ -12,7 +12,6 @@ import { createPlacedTextLayer } from "@/lib/products/text-layers";
 import {
   ensureInkContrast,
   getDesignCompositeOverlayUrl,
-  getStreetwearMarketingMockupUrl,
   resolveComposableOverlayUrl,
   resolveSideOverlayPlacement,
   type OverlaySvgColors,
@@ -188,17 +187,7 @@ export function sideDesignFromOverlaySideConfig(
       overlayImage: config.overlayImage,
       overlaySvg: config.overlaySvg,
     });
-    if (!compositeOverlay) {
-      const bakedMockupUrl = getStreetwearMarketingMockupUrl({
-        overlayImage: config.overlayImage ?? template.overlayImage,
-      });
-      if (!bakedMockupUrl) return null;
-      return {
-        ...base,
-        bakedMockupUrl,
-        isRecolorableOverlay: false,
-      };
-    }
+    if (!compositeOverlay) return null;
     return {
       ...base,
       overlayColorVariants: config.overlayColorVariants,
@@ -212,17 +201,7 @@ export function sideDesignFromOverlaySideConfig(
     overlayImage: config.overlayImage,
     overlaySvg: config.overlaySvg,
   });
-  if (!compositeOverlay) {
-    const bakedMockupUrl = getStreetwearMarketingMockupUrl({
-      overlayImage: config.overlayImage ?? template.overlayImage,
-    });
-    if (!bakedMockupUrl) return null;
-    return {
-      ...base,
-      bakedMockupUrl,
-      isRecolorableOverlay: false,
-    };
-  }
+  if (!compositeOverlay) return null;
 
   return {
     ...base,
@@ -356,14 +335,7 @@ export function sideDesignFromRestored(data: RestoredSideDesign): SideDesign {
       (template ? getDesignCompositeOverlayUrl(template) : null),
     isRecolorableOverlay:
       data.isRecolorableOverlay || Boolean(template?.overlayRecolor),
-    bakedMockupUrl:
-      template &&
-      !(
-        resolveComposableOverlayUrl(data.overlayRaster) ??
-        getDesignCompositeOverlayUrl(template)
-      )
-        ? getStreetwearMarketingMockupUrl(template)
-        : null,
+    bakedMockupUrl: null,
     isTextTemplate: data.isTextTemplate,
     showPhotoGuide: data.showPhotoGuide,
     uploadedFile:

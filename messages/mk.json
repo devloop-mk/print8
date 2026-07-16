@@ -1715,6 +1715,9 @@
         "text-bravo": "BRAVO"
       },
       "addToCart": "Во кошничка",
+      "saveDesign": "Зачувај дизајн",
+      "savingDesign": "Зачувување…",
+      "designSaved": "Зачувано",
       "backToProduct": "Назад кон производот",
       "savedDraftName": "Дизајн — {product}",
       "dragHint": "Повлечете го текстот и сликите директно на прегледот за да ги позиционирате",

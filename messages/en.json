@@ -1715,6 +1715,9 @@
         "text-bravo": "BRAVO"
       },
       "addToCart": "Add to cart",
+      "saveDesign": "Save design",
+      "savingDesign": "Saving…",
+      "designSaved": "Saved",
       "backToProduct": "Back to product",
       "savedDraftName": "{product} design",
       "dragHint": "Drag text and images directly on the preview to position them",
