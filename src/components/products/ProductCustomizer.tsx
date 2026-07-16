@@ -1972,14 +1972,16 @@ function InteractivePreview({
   const t = useTranslations('products.customizer');
   const usesGarmentColorMockup =
     productType === 't-shirt' || productType === 'hoodie';
-  const shirtImage = usesGarmentColorMockup
-    ? mockupImage
-    : (sideDesign.premadeDesignImage ?? mockupImage);
   const hasTemplateOverlay = Boolean(
     sideDesign.overlaySvg ||
       sideDesign.overlayColorVariants ||
       sideDesign.overlayRaster,
   );
+  const shirtImage = sideDesign.bakedMockupUrl
+    ? sideDesign.bakedMockupUrl
+    : usesGarmentColorMockup
+      ? mockupImage
+      : (sideDesign.premadeDesignImage ?? mockupImage);
   const mockupImgRef = useRef<HTMLImageElement>(null);
   const [mockupLoading, setMockupLoading] = useState(false);
 

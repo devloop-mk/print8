@@ -15,6 +15,7 @@ export function sideHasDesignContent(design: SideDesign | undefined): boolean {
     sideHasTextContent(design) ||
       design.uploadedFile ||
       design.premadeDesignImage ||
+      design.bakedMockupUrl ||
       design.overlaySvg ||
       design.overlayRaster ||
       design.overlayColorVariants ||

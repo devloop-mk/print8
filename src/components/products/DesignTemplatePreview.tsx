@@ -18,6 +18,7 @@ import {
   resolveOverlayPlacement,
   type OverlayPlacement,
   getDesignCompositeOverlayUrl,
+  getStreetwearMarketingMockupUrl,
 } from '@/lib/products/design-overlay';
 import { useOverlayAssetUrl } from '@/hooks/useOverlayAssetUrl';
 import { Shirt } from 'lucide-react';
@@ -120,20 +121,26 @@ export function DesignTemplatePreview({
   const placement = resolveOverlayPlacement(design, product);
   const mockupSide = design.defaultSide ?? 'front';
   const shirtMockup = getProductMockup(product, previewColor, mockupSide);
+  const compositeOverlay = getDesignCompositeOverlayUrl(design);
+  const marketingMockup =
+    !compositeOverlay && isOverlayDesignTemplate(design)
+      ? getStreetwearMarketingMockupUrl(design)
+      : null;
+  const displayGarment = marketingMockup ?? shirtMockup;
   const mockupLayout = getProductMockupLayout(product);
   const mockupStyle = getMockupImageDisplayStyle(
     product,
-    shirtMockup,
+    displayGarment,
     'catalog-design',
   );
 
   return (
     <ProductMockupFrame variant="catalog" layout={mockupLayout} innerStyle={mockupStyle}>
-      {shirtMockup ? (
+      {displayGarment ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          key={`${previewColor}-${mockupSide}-${shirtMockup}`}
-          src={shirtMockup}
+          key={`${previewColor}-${mockupSide}-${displayGarment}`}
+          src={displayGarment}
           alt={typeLabel}
           draggable={false}
           className={mockupLayout.catalogImageClass}
@@ -144,21 +151,19 @@ export function DesignTemplatePreview({
         </div>
       )}
 
-      {isOverlayDesignTemplate(design) &&
+      {!marketingMockup &&
+      isOverlayDesignTemplate(design) &&
       (isRecolorableOverlayTemplate(design) || design.overlayColorVariants) ? (
         <CatalogOverlayPreview
           design={design}
           shirtColor={previewColor}
           placement={placement}
         />
-      ) : (() => {
-        const overlaySrc = getDesignCompositeOverlayUrl(design);
-        if (!overlaySrc) return null;
-        return (
+      ) : !marketingMockup && compositeOverlay ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          key={`${previewColor}-${mockupSide}-${overlaySrc}`}
-          src={overlaySrc}
+          key={`${previewColor}-${mockupSide}-${compositeOverlay}`}
+          src={compositeOverlay}
           alt=""
           draggable={false}
           className="pointer-events-none absolute max-h-[70%] max-w-[70%] object-contain"
@@ -169,8 +174,7 @@ export function DesignTemplatePreview({
             transform: 'translate(-50%, -50%)',
           }}
         />
-        );
-      })()}
+      ) : null}
 
       {textStyle && <StyledDesignText style={textStyle} />}
 

@@ -12,6 +12,7 @@ import { createPlacedTextLayer } from "@/lib/products/text-layers";
 import {
   ensureInkContrast,
   getDesignCompositeOverlayUrl,
+  getStreetwearMarketingMockupUrl,
   resolveComposableOverlayUrl,
   resolveSideOverlayPlacement,
   type OverlaySvgColors,
@@ -48,6 +49,11 @@ export interface SideDesign {
   overlayColorVariants: Record<string, string> | null;
   overlayRaster: string | null;
   isRecolorableOverlay: boolean;
+  /**
+   * Full-garment marketing mockup (streetwear webp) used when print masters
+   * are not available on the host (production without CDN).
+   */
+  bakedMockupUrl: string | null;
   isTextTemplate: boolean;
   showPhotoGuide: boolean;
   textLayers: PlacedTextLayer[];
@@ -77,6 +83,7 @@ export function createDefaultSideDesign(): SideDesign {
     overlayColorVariants: null,
     overlayRaster: null,
     isRecolorableOverlay: false,
+    bakedMockupUrl: null,
     isTextTemplate: false,
     showPhotoGuide: false,
     textLayers: [],
@@ -181,6 +188,17 @@ export function sideDesignFromOverlaySideConfig(
       overlayImage: config.overlayImage,
       overlaySvg: config.overlaySvg,
     });
+    if (!compositeOverlay) {
+      const bakedMockupUrl = getStreetwearMarketingMockupUrl({
+        overlayImage: config.overlayImage ?? template.overlayImage,
+      });
+      if (!bakedMockupUrl) return null;
+      return {
+        ...base,
+        bakedMockupUrl,
+        isRecolorableOverlay: false,
+      };
+    }
     return {
       ...base,
       overlayColorVariants: config.overlayColorVariants,
@@ -194,7 +212,17 @@ export function sideDesignFromOverlaySideConfig(
     overlayImage: config.overlayImage,
     overlaySvg: config.overlaySvg,
   });
-  if (!compositeOverlay) return null;
+  if (!compositeOverlay) {
+    const bakedMockupUrl = getStreetwearMarketingMockupUrl({
+      overlayImage: config.overlayImage ?? template.overlayImage,
+    });
+    if (!bakedMockupUrl) return null;
+    return {
+      ...base,
+      bakedMockupUrl,
+      isRecolorableOverlay: false,
+    };
+  }
 
   return {
     ...base,
@@ -328,6 +356,14 @@ export function sideDesignFromRestored(data: RestoredSideDesign): SideDesign {
       (template ? getDesignCompositeOverlayUrl(template) : null),
     isRecolorableOverlay:
       data.isRecolorableOverlay || Boolean(template?.overlayRecolor),
+    bakedMockupUrl:
+      template &&
+      !(
+        resolveComposableOverlayUrl(data.overlayRaster) ??
+        getDesignCompositeOverlayUrl(template)
+      )
+        ? getStreetwearMarketingMockupUrl(template)
+        : null,
     isTextTemplate: data.isTextTemplate,
     showPhotoGuide: data.showPhotoGuide,
     uploadedFile:

@@ -248,6 +248,7 @@ export function resolveComposableOverlayUrl(
 
   const normalized = path.replace(/^\//, '');
   if (normalized.startsWith('masters/')) {
+    if (!arePrintMasterAssetsAvailable()) return null;
     return resolveMasterAssetUrl(path);
   }
 
@@ -262,7 +263,30 @@ export function resolveComposableOverlayUrl(
 }
 
 /**
+ * True when transparent print masters can be loaded (local /api/masters in
+ * development, or CDN in production). Masters are ~GB and are not shipped in
+ * the Vercel bundle.
+ */
+export function arePrintMasterAssetsAvailable(): boolean {
+  if (process.env.NEXT_PUBLIC_ASSETS_CDN_URL?.replace(/\/$/, '')) {
+    return true;
+  }
+  return process.env.NODE_ENV === 'development';
+}
+
+/** Full-shirt streetwear webp used when masters are not hosted. */
+export function getStreetwearMarketingMockupUrl(
+  design: Pick<ProductDesignTemplate, 'overlayImage'>,
+): string | null {
+  if (!design.overlayImage || !isStreetwearMarketingOverlay(design.overlayImage)) {
+    return null;
+  }
+  return resolveAssetUrl(design.overlayImage);
+}
+
+/**
  * Design PNG layered on the selectable shirt mockup — original print master only.
+ * Returns null in production without CDN so callers can fall back to marketing mockups.
  */
 export function getDesignCompositeOverlayUrl(
   design: Pick<
@@ -270,7 +294,7 @@ export function getDesignCompositeOverlayUrl(
     'printMasterImage' | 'overlayImage' | 'overlaySvg'
   >,
 ): string | null {
-  if (design.printMasterImage) {
+  if (design.printMasterImage && arePrintMasterAssetsAvailable()) {
     return resolveMasterAssetUrl(design.printMasterImage);
   }
 
