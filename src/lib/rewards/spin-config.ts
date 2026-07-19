@@ -84,6 +84,9 @@ export const SPIN_COUPON_VALID_DAYS = 30;
 export const SPIN_PROMO_DISMISS_KEY = 'print8_spin_promo_dismissed_at';
 export const SPIN_PROMO_DISMISS_MS = 7 * 24 * 60 * 60 * 1000;
 export const SPIN_CLAIMED_FLAG_KEY = 'print8_spin_claimed';
+/** Unclaimed spin session — prevents reroll-by-refresh until claim or expiry */
+export const SPIN_PENDING_CLAIM_KEY = 'print8_spin_pending_claim';
+export const SPIN_PENDING_CLAIM_MS = 15 * 60 * 1000;
 /** Pending coupon from spin “use now” → checkout auto-apply */
 export const SPIN_PENDING_COUPON_KEY = 'print8_pending_coupon';
 

@@ -3,6 +3,8 @@ export type PromoBannerSlide = {
   href: string;
   imageDesktop: string;
   imageMobile: string;
+  /** Mobile hero crop anchor; defaults to center 40% in the carousel. */
+  mobileObjectPosition?: string;
 };
 
 export const promoBannerSlides: PromoBannerSlide[] = [
@@ -29,6 +31,7 @@ export const promoBannerSlides: PromoBannerSlide[] = [
     href: '/products/ready-designs/couples',
     imageDesktop: '/banners/banner-desktop-couples.png',
     imageMobile: '/banners/banner-mobile-couples.png',
+    mobileObjectPosition: 'center top',
   },
   {
     id: 'kids',

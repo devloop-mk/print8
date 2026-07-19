@@ -224,7 +224,7 @@
           "cta": "Browse kids designs"
         },
         "local": {
-          "title": "Štip & Macedonia on a mug",
+          "title": "Local designs",
           "subtitle": "Local motifs on mugs and caps — from Štip across MK.",
           "cta": "See local designs"
         },
@@ -2232,16 +2232,19 @@
   },
   "spinWheel": {
     "metaTitle": "Rewards wheel",
-    "metaDescription": "Spin the wheel, enter your email, and win a unique one-time Print 8 coupon.",
+    "metaDescription": "Spin the wheel first, then enter your email to claim a unique one-time Print 8 coupon.",
     "eyebrow": "Game · rewards",
     "title": "Spin to win a discount",
-    "subtitle": "One play per email. You always win a unique code by email — single use only.",
+    "subtitle": "Spin first, then enter your email to claim your prize. One play per email — single use only.",
     "wheelAria": "Rewards prize wheel",
-    "emailLabel": "Email for your coupon",
+    "emailLabel": "Email to claim your coupon",
     "emailPlaceholder": "you@email.com",
     "spinCta": "Spin",
     "spinning": "Spinning…",
-    "rules": "One play per email. Coupons are single-use and locked to your email. Every spin wins a discount.",
+    "claimCta": "Claim my prize",
+    "claiming": "Claiming…",
+    "claimBody": "Enter your email to receive your unique coupon code.",
+    "rules": "One play per email. Spin first, then claim with your email. Coupons are single-use and locked to your email.",
     "winTitle": "You won −{amount} MKD!",
     "winBody": "Minimum order {min} MKD · Valid {days} days · enter the code at checkout.",
     "emailSent": "We also sent the code to your email.",
@@ -2256,12 +2259,13 @@
     "checkoutCta": "Go to checkout",
     "errors": {
       "invalidEmail": "Enter a valid email.",
-      "generic": "Something went wrong. Please try again."
+      "generic": "Something went wrong. Please try again.",
+      "expiredSpin": "Your spin expired. Please spin again."
     },
     "promo": {
       "eyebrow": "Discount game",
       "title": "Spin the wheel for a coupon",
-      "body": "Quick game — enter your email and win a one-time discount.",
+      "body": "Quick game — spin the wheel and claim a one-time discount.",
       "cta": "Play now",
       "later": "Later",
       "dismiss": "Close"

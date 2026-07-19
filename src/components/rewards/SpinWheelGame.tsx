@@ -10,6 +10,8 @@ import { LOGO_MARK } from '@/lib/brand/logos';
 import { cn } from '@/lib/utils';
 import {
   SPIN_CLAIMED_FLAG_KEY,
+  SPIN_PENDING_CLAIM_KEY,
+  SPIN_PENDING_CLAIM_MS,
   SPIN_PENDING_COUPON_KEY,
   SPIN_SEGMENTS,
   getSpinLandingRotation,
@@ -18,9 +20,7 @@ import {
   type SpinPrizeKey,
 } from '@/lib/rewards/spin-config';
 
-type SpinApiOk = {
-  ok: true;
-  alreadyPlayed: false;
+type SpinResult = {
   prizeKey: string;
   segmentIndex: number;
   discountAmount: number;
@@ -30,7 +30,7 @@ type SpinApiOk = {
   validDays?: number;
 };
 
-type Phase = 'idle' | 'spinning' | 'result' | 'already';
+type Phase = 'idle' | 'spinning' | 'claim' | 'result' | 'already';
 
 const WHEEL_SIZE = 200;
 const WHEEL_CX = WHEEL_SIZE / 2;
@@ -80,6 +80,69 @@ function darken(hex: string, amount: number): string {
   return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
 }
 
+function resolveWinSegment(
+  segmentIndex: number,
+  prizeKey?: string,
+): { segmentIndex: number; segment: (typeof SPIN_SEGMENTS)[number] } {
+  let index = segmentIndex;
+  let segment =
+    SPIN_SEGMENTS[index] ??
+    SPIN_SEGMENTS.find((s) => s.key === prizeKey) ??
+    SPIN_SEGMENTS.find((s) => s.discountAmount > 0 && s.weight > 0) ??
+    SPIN_SEGMENTS[0];
+  if (segment.discountAmount <= 0 || segment.key === 'try_again') {
+    segment =
+      SPIN_SEGMENTS.find((s) => s.discountAmount > 0 && s.weight > 0) ??
+      segment;
+    index = getSpinSegmentIndex(segment.key as SpinPrizeKey);
+  }
+  return { segmentIndex: index, segment };
+}
+
+type PendingClaim = {
+  claimToken: string;
+  result: SpinResult;
+  createdAt: number;
+};
+
+function readPendingClaim(): PendingClaim | null {
+  try {
+    const raw = sessionStorage.getItem(SPIN_PENDING_CLAIM_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PendingClaim;
+    if (
+      !parsed.claimToken ||
+      !parsed.result ||
+      Date.now() - parsed.createdAt > SPIN_PENDING_CLAIM_MS
+    ) {
+      sessionStorage.removeItem(SPIN_PENDING_CLAIM_KEY);
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function savePendingClaim(claimToken: string, result: SpinResult) {
+  try {
+    sessionStorage.setItem(
+      SPIN_PENDING_CLAIM_KEY,
+      JSON.stringify({ claimToken, result, createdAt: Date.now() } satisfies PendingClaim),
+    );
+  } catch {
+    /* ignore */
+  }
+}
+
+function clearPendingClaim() {
+  try {
+    sessionStorage.removeItem(SPIN_PENDING_CLAIM_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
 export function SpinWheelGame() {
   const t = useTranslations('spinWheel');
   const locale = useLocale();
@@ -90,9 +153,11 @@ export function SpinWheelGame() {
   const clipId = `spin-wheel-clip-${uid}`;
   const [email, setEmail] = useState('');
   const [phase, setPhase] = useState<Phase>('idle');
+  const [claiming, setClaiming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rotation, setRotation] = useState(0);
-  const [result, setResult] = useState<SpinApiOk | null>(null);
+  const [claimToken, setClaimToken] = useState<string | null>(null);
+  const [result, setResult] = useState<SpinResult | null>(null);
   const [copied, setCopied] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
 
@@ -107,13 +172,115 @@ export function SpinWheelGame() {
   const sliceDeg = getSpinSliceDegrees();
   const idleMotion = phase === 'idle' && !reduceMotion;
   const winCelebration =
-    phase === 'result' &&
+    (phase === 'claim' || phase === 'result') &&
     Boolean(result && result.discountAmount > 0) &&
     !reduceMotion;
+
+  function animateToSegment(segmentIndex: number) {
+    setRotation((prev) => {
+      const turns = reduceMotion ? 1 : 6;
+      const landing = getSpinLandingRotation(segmentIndex, turns);
+      const base = Math.ceil(prev / 360) * 360;
+      return base + landing;
+    });
+  }
+
+  useEffect(() => {
+    const pending = readPendingClaim();
+    if (!pending) return;
+    setClaimToken(pending.claimToken);
+    setResult(pending.result);
+    setPhase('claim');
+    setRotation(getSpinLandingRotation(pending.result.segmentIndex, reduceMotion ? 1 : 6));
+  }, [reduceMotion]);
 
   async function onSpin(event: FormEvent) {
     event.preventDefault();
     if (phase === 'spinning') return;
+
+    const pending = readPendingClaim();
+    if (pending) {
+      setClaimToken(pending.claimToken);
+      setResult(pending.result);
+      setPhase('claim');
+      setRotation(getSpinLandingRotation(pending.result.segmentIndex, reduceMotion ? 1 : 6));
+      return;
+    }
+
+    setError(null);
+    setPhase('spinning');
+
+    try {
+      const res = await fetch('/api/rewards/spin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          locale: locale === 'en' ? 'en' : 'mk',
+          website: '',
+        }),
+      });
+
+      const data = (await res.json()) as {
+        ok?: boolean;
+        segmentIndex?: number;
+        prizeKey?: string;
+        discountAmount?: number;
+        minOrderAmount?: number;
+        claimToken?: string | null;
+        validDays?: number;
+        error?: string;
+        code?: string;
+      };
+
+      if (!res.ok || !data.ok || typeof data.segmentIndex !== 'number') {
+        setPhase('idle');
+        setError(t('errors.generic'));
+        return;
+      }
+
+      const { segmentIndex, segment } = resolveWinSegment(
+        data.segmentIndex,
+        data.prizeKey,
+      );
+
+      animateToSegment(segmentIndex);
+
+      setClaimToken(data.claimToken ?? null);
+      setResult({
+        prizeKey: data.prizeKey ?? segment.key,
+        segmentIndex,
+        discountAmount: data.discountAmount ?? segment.discountAmount,
+        minOrderAmount: data.minOrderAmount ?? segment.minOrderAmount,
+        couponCode: null,
+        emailSent: false,
+        validDays: data.validDays,
+      });
+
+      if (data.claimToken) {
+        savePendingClaim(data.claimToken, {
+          prizeKey: data.prizeKey ?? segment.key,
+          segmentIndex,
+          discountAmount: data.discountAmount ?? segment.discountAmount,
+          minOrderAmount: data.minOrderAmount ?? segment.minOrderAmount,
+          couponCode: null,
+          emailSent: false,
+          validDays: data.validDays,
+        });
+      }
+
+      const delay = reduceMotion ? 200 : 5200;
+      window.setTimeout(() => {
+        setPhase('claim');
+      }, delay);
+    } catch {
+      setPhase('idle');
+      setError(t('errors.generic'));
+    }
+  }
+
+  async function onClaim(event: FormEvent) {
+    event.preventDefault();
+    if (claiming || !claimToken || !result) return;
     setError(null);
 
     const trimmed = email.trim();
@@ -122,7 +289,7 @@ export function SpinWheelGame() {
       return;
     }
 
-    setPhase('spinning');
+    setClaiming(true);
 
     try {
       const res = await fetch('/api/rewards/spin', {
@@ -130,6 +297,7 @@ export function SpinWheelGame() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: trimmed,
+          claimToken,
           locale: locale === 'en' ? 'en' : 'mk',
           website: '',
         }),
@@ -139,13 +307,8 @@ export function SpinWheelGame() {
         ok?: boolean;
         code?: string;
         alreadyPlayed?: boolean;
-        segmentIndex?: number;
-        prizeKey?: string;
-        discountAmount?: number;
-        minOrderAmount?: number;
         couponCode?: string | null;
         emailSent?: boolean;
-        validDays?: number;
         error?: string;
       };
 
@@ -154,59 +317,32 @@ export function SpinWheelGame() {
         return;
       }
 
-      if (!res.ok || !data.ok || typeof data.segmentIndex !== 'number') {
-        setPhase('idle');
+      if (res.status === 400 && data.code === 'invalid_token') {
+        setError(t('errors.expiredSpin'));
+        return;
+      }
+
+      if (!res.ok || !data.ok || !data.couponCode) {
         setError(t('errors.generic'));
         return;
       }
 
-      // Never animate onto try_again / zero-discount — only winnable slice centers.
-      let segmentIndex = data.segmentIndex;
-      let segment =
-        SPIN_SEGMENTS[segmentIndex] ??
-        SPIN_SEGMENTS.find((s) => s.key === data.prizeKey) ??
-        SPIN_SEGMENTS.find((s) => s.discountAmount > 0 && s.weight > 0) ??
-        SPIN_SEGMENTS[0];
-      if (segment.discountAmount <= 0 || segment.key === 'try_again') {
-        segment =
-          SPIN_SEGMENTS.find((s) => s.discountAmount > 0 && s.weight > 0) ??
-          segment;
-        segmentIndex = getSpinSegmentIndex(segment.key as SpinPrizeKey);
-      }
-
-      setRotation((prev) => {
-        const turns = reduceMotion ? 1 : 6;
-        const landing = getSpinLandingRotation(segmentIndex, turns);
-        // Keep spinning forward from the current angle (no backward snap).
-        const base = Math.ceil(prev / 360) * 360;
-        return base + landing;
-      });
-
-      const okResult: SpinApiOk = {
-        ok: true,
-        alreadyPlayed: false,
-        prizeKey: data.prizeKey ?? segment.key,
-        segmentIndex,
-        discountAmount: data.discountAmount ?? segment.discountAmount,
-        minOrderAmount: data.minOrderAmount ?? segment.minOrderAmount,
-        couponCode: data.couponCode ?? null,
+      setResult({
+        ...result,
+        couponCode: data.couponCode,
         emailSent: Boolean(data.emailSent),
-        validDays: data.validDays,
-      };
-      setResult(okResult);
-
-      const delay = reduceMotion ? 200 : 5200;
-      window.setTimeout(() => {
-        setPhase('result');
-        try {
-          localStorage.setItem(SPIN_CLAIMED_FLAG_KEY, '1');
-        } catch {
-          /* ignore */
-        }
-      }, delay);
+      });
+      setPhase('result');
+      clearPendingClaim();
+      try {
+        localStorage.setItem(SPIN_CLAIMED_FLAG_KEY, '1');
+      } catch {
+        /* ignore */
+      }
     } catch {
-      setPhase('idle');
       setError(t('errors.generic'));
+    } finally {
+      setClaiming(false);
     }
   }
 
@@ -517,6 +653,61 @@ export function SpinWheelGame() {
         </div>
       ) : null}
 
+      {phase === 'claim' && result ? (
+        <div
+          className={cn(
+            'mt-8 border border-ink-200 bg-white px-5 py-6 text-center shadow-lift',
+            winCelebration && 'animate-spin-win-pop',
+          )}
+        >
+          <p className="font-display text-2xl font-bold text-brand-900">
+            {t('winTitle', { amount: result.discountAmount })}
+          </p>
+          <p className="mt-2 text-sm text-ink-600">{t('claimBody')}</p>
+          <form onSubmit={onClaim} className="mt-5 space-y-4 text-left">
+            <label className="block text-sm font-medium text-ink-700">
+              {t('emailLabel')}
+              <input
+                type="email"
+                name="email"
+                autoComplete="email"
+                required
+                value={email}
+                disabled={claiming}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-1.5 w-full border border-ink-300 bg-white px-3 py-2.5 text-ink-900 outline-none focus:border-brand-500"
+                placeholder={t('emailPlaceholder')}
+              />
+            </label>
+            <input
+              type="text"
+              name="website"
+              tabIndex={-1}
+              autoComplete="off"
+              className="absolute left-[-9999px] h-0 w-0 opacity-0"
+              aria-hidden
+            />
+            <Button
+              type="submit"
+              size="lg"
+              loading={claiming}
+              disabled={claiming || !claimToken}
+              className="w-full border-[#e85d04] bg-[#e85d04] hover:border-[#f48c06] hover:bg-[#f48c06]"
+            >
+              {claiming ? t('claiming') : t('claimCta')}
+            </Button>
+            {error ? (
+              <p className="text-center text-sm text-red-600" role="alert">
+                {error}
+              </p>
+            ) : null}
+          </form>
+          <p className="mt-4 text-center text-xs leading-relaxed text-ink-500">
+            {t('rules')}
+          </p>
+        </div>
+      ) : null}
+
       {phase === 'result' && result ? (
         <div
           className={cn(
@@ -597,21 +788,6 @@ export function SpinWheelGame() {
 
       {phase === 'idle' || phase === 'spinning' ? (
         <form onSubmit={onSpin} className="mt-8 space-y-4">
-          <label className="block text-sm font-medium text-ink-700">
-            {t('emailLabel')}
-            <input
-              type="email"
-              name="email"
-              autoComplete="email"
-              required
-              value={email}
-              disabled={phase === 'spinning'}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1.5 w-full border border-ink-300 bg-white px-3 py-2.5 text-ink-900 outline-none focus:border-brand-500"
-              placeholder={t('emailPlaceholder')}
-            />
-          </label>
-          {/* Honeypot */}
           <input
             type="text"
             name="website"

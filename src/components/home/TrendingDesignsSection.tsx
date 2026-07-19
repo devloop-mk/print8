@@ -14,28 +14,38 @@ function TrendingThumbnail({
   design,
   name,
   featured = false,
+  compact = false,
 }: {
   design: TrendingProductDesign;
   name: string;
   featured?: boolean;
+  compact?: boolean;
 }) {
   return (
     <div
       className={cn(
         'relative w-full overflow-hidden shadow-[0_20px_60px_-24px_rgba(0,0,0,0.65)]',
         'transition duration-500 group-hover:scale-[1.03] group-hover:shadow-[0_28px_70px_-20px_rgba(0,0,0,0.55)]',
+        compact && 'shadow-[0_8px_24px_-12px_rgba(0,0,0,0.5)] group-hover:shadow-[0_12px_28px_-10px_rgba(0,0,0,0.45)]',
         design.ring,
       )}
     >
-      <div className="relative aspect-square w-full bg-white">
+      <div
+        className={cn(
+          'relative w-full bg-white',
+          compact ? 'aspect-[5/6]' : 'aspect-square',
+        )}
+      >
         <Image
           src={getTrendingDesignThumbnail(design.id)}
           alt={name}
           fill
           sizes={
-            featured
-              ? '(max-width: 1024px) 100vw, 50vw'
-              : '(max-width: 768px) 50vw, 25vw'
+            compact
+              ? '55vw'
+              : featured
+                ? '(max-width: 1024px) 100vw, 50vw'
+                : '(max-width: 768px) 50vw, 25vw'
           }
           className="object-contain"
           loading="lazy"
@@ -49,12 +59,14 @@ function TrendingCard({
   design,
   rank,
   featured = false,
+  compact = false,
   name,
   customizeLabel,
 }: {
   design: TrendingProductDesign;
   rank: number;
   featured?: boolean;
+  compact?: boolean;
   name: string;
   customizeLabel: string;
 }) {
@@ -68,7 +80,9 @@ function TrendingCard({
         'border border-white/10 bg-white/[0.04] backdrop-blur-sm',
         'transition duration-500 hover:-translate-y-1 hover:border-white/25 hover:bg-white/[0.07]',
         'hover:shadow-[0_24px_80px_-20px_rgba(255,255,255,0.15)]',
-        featured ? 'min-h-[320px] lg:min-h-full' : 'min-h-[240px]',
+        compact && 'w-[55vw] max-w-[210px] shrink-0 snap-start',
+        featured && !compact && 'min-h-[320px] lg:min-h-full',
+        !featured && !compact && 'min-h-[240px]',
       )}
     >
       <div
@@ -80,53 +94,82 @@ function TrendingCard({
       />
       <div
         className={cn(
-          'pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full blur-3xl',
+          'pointer-events-none absolute -right-8 -top-8 rounded-full blur-3xl',
+          compact ? 'h-20 w-20' : 'h-32 w-32',
           design.badge.replace('/90', '/25'),
         )}
         aria-hidden
       />
 
-      <div className="relative flex items-start justify-between gap-3 p-4 sm:p-5">
-        <div className="flex flex-wrap items-center gap-2">
+      <div
+        className={cn(
+          'relative flex items-start justify-between gap-2',
+          compact ? 'p-2.5' : 'gap-3 p-4 sm:p-5',
+        )}
+      >
+        <div className="flex flex-wrap items-center gap-1.5">
           <span
             className={cn(
-              'inline-flex items-center gap-1 border border-white/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white',
+              'inline-flex items-center gap-1 border border-white/20 font-bold uppercase tracking-wider text-white',
+              compact ? 'px-1.5 py-0.5 text-[9px]' : 'px-2 py-0.5 text-[10px]',
               design.badge,
             )}
           >
             #{rank}
           </span>
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-white/60">
-            T-shirt
-          </span>
+          {!compact ? (
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-white/60">
+              T-shirt
+            </span>
+          ) : null}
         </div>
         <ArrowUpRight
-          className="h-4 w-4 shrink-0 text-white/40 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-white"
+          className={cn(
+            'shrink-0 text-white/40 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-white',
+            compact ? 'h-3.5 w-3.5' : 'h-4 w-4',
+          )}
           aria-hidden
         />
       </div>
 
       <div
         className={cn(
-          'relative mx-auto flex w-full flex-1 items-center justify-center px-4 pb-2',
-          featured ? 'max-w-[92%]' : 'max-w-[88%]',
+          'relative mx-auto flex w-full flex-1 items-center justify-center',
+          compact ? 'max-w-[88%] px-2 pb-1' : 'max-w-[88%] px-4 pb-2',
+          featured && !compact && 'max-w-[92%]',
         )}
       >
-        <TrendingThumbnail design={design} name={name} featured={featured} />
+        <TrendingThumbnail
+          design={design}
+          name={name}
+          featured={featured}
+          compact={compact}
+        />
       </div>
 
-      <div className="relative border-t border-white/10 p-4 sm:p-5">
+      <div
+        className={cn(
+          'relative border-t border-white/10',
+          compact ? 'p-2.5' : 'p-4 sm:p-5',
+        )}
+      >
         <h3
           className={cn(
             'font-semibold text-white group-hover:text-brand-100',
-            featured ? 'text-lg sm:text-xl' : 'text-sm sm:text-base',
+            compact
+              ? 'line-clamp-2 text-xs leading-snug'
+              : featured
+                ? 'text-lg sm:text-xl'
+                : 'text-sm sm:text-base',
           )}
         >
           {name}
         </h3>
-        <p className="mt-1.5 text-xs font-medium text-brand-200/90 sm:text-sm">
-          {customizeLabel} →
-        </p>
+        {!compact ? (
+          <p className="mt-1.5 text-xs font-medium text-brand-200/90 sm:text-sm">
+            {customizeLabel} →
+          </p>
+        ) : null}
       </div>
     </Link>
   );
@@ -160,33 +203,58 @@ export function TrendingDesignsSection({
         aria-hidden
       />
 
-      <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
-        <div className="mb-10 flex flex-col gap-6 lg:mb-12 lg:flex-row lg:items-end lg:justify-between">
+      <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
+        <div className="mb-5 flex flex-col gap-4 sm:mb-10 sm:gap-6 lg:mb-12 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
-            <p className="eyebrow-on-dark mb-3 inline-flex items-center gap-2">
+            <p className="eyebrow-on-dark mb-2 inline-flex items-center gap-2 sm:mb-3">
               <Flame className="h-4 w-4 text-orange-400" aria-hidden />
               {t('eyebrow')}
             </p>
-            <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl lg:text-[2.75rem] lg:leading-[1.1]">
+            <h2 className="font-display text-2xl font-bold tracking-tight sm:text-4xl lg:text-[2.75rem] lg:leading-[1.1]">
               <span className="bg-gradient-to-r from-white via-brand-100 to-brand-300 bg-clip-text text-transparent">
                 {t('title')}
               </span>
             </h2>
-            <p className="mt-4 max-w-xl text-base leading-relaxed text-brand-100/80 sm:text-lg">
+            <p className="mt-2 max-w-xl text-sm leading-relaxed text-brand-100/80 sm:mt-4 sm:text-base lg:text-lg">
               {t('subtitle')}
             </p>
           </div>
 
           <Link
             href="/products/ready-designs"
-            className="inline-flex shrink-0 items-center gap-2 border border-white/25 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:border-white/40 hover:bg-white/10"
+            className="inline-flex shrink-0 items-center gap-2 border border-white/25 bg-white/5 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm transition hover:border-white/40 hover:bg-white/10 sm:px-5 sm:py-2.5"
           >
             <Sparkles className="h-4 w-4 text-brand-300" aria-hidden />
             {t('viewAll')}
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:grid-rows-2 lg:gap-5">
+        {/* Mobile: compact horizontal scroll instead of one giant #1 card */}
+        <div
+          className={cn(
+            'overflow-x-auto pb-1 sm:hidden',
+            'snap-x snap-mandatory scroll-pl-4',
+            '-mx-4',
+            '[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+          )}
+          aria-label={t('title')}
+        >
+          <div className="flex w-max gap-3 px-4">
+            {designs.map((design, index) => (
+              <TrendingCard
+                key={design.id}
+                design={design}
+                rank={index + 1}
+                compact
+                name={resolveProductDesignDisplayName(design, locale, (key) => tp(key))}
+                customizeLabel={tp('customize')}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Tablet/desktop: bento grid with featured #1 hero */}
+        <div className="hidden grid-cols-2 gap-4 sm:grid lg:grid-cols-4 lg:grid-rows-2 lg:gap-5">
           {hero ? (
             <div className="sm:col-span-2 lg:col-span-2 lg:row-span-2">
               <TrendingCard
@@ -210,7 +278,7 @@ export function TrendingDesignsSection({
           ))}
         </div>
 
-        <div className="mt-10 flex justify-center sm:mt-12">
+        <div className="mt-8 hidden justify-center sm:mt-12 sm:flex">
           <Link
             href="/products/ready-designs"
             className="inline-flex items-center gap-2 border border-white/25 bg-white/5 px-6 py-3 text-sm font-semibold text-white backdrop-blur-sm transition hover:border-white/40 hover:bg-white/10"

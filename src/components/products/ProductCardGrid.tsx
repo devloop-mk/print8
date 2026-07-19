@@ -10,7 +10,11 @@ import { ProductCatalogImage } from '@/components/products/ProductCatalogImage';
 import { Reveal } from '@/components/motion/Reveal';
 import { cn } from '@/lib/utils';
 import type { Product } from '@/lib/data/catalog';
-import { CatalogGridLayout } from '@/components/catalog/CatalogGrid';
+import {
+  CatalogGridLayout,
+  getCatalogItemClassName,
+  useOptionalCatalogGrid,
+} from '@/components/catalog/CatalogGrid';
 import { buildCustomizerUrl } from '@/lib/products/paths';
 import { getColorSwatchDisplayHex } from '@/lib/products/product-color-labels';
 
@@ -37,6 +41,7 @@ export function ProductCardGrid({
   const tp = useTranslations('products.types');
   const ti = useTranslations('products.items');
   const locale = useLocale();
+  const grid = useOptionalCatalogGrid();
   const [previewColors, setPreviewColors] = useState<Record<string, string>>({});
 
   const offerings = useMemo(
@@ -71,7 +76,11 @@ export function ProductCardGrid({
             : t('card.exploreOptions');
 
         return (
-          <Reveal key={product.id} delay={Math.min(index * 40, 120)}>
+          <Reveal
+            key={product.id}
+            delay={Math.min(index * 40, 120)}
+            className={getCatalogItemClassName(grid)}
+          >
             <Link
               href={productHref}
               className="group block transition hover:-translate-y-1"

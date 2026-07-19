@@ -123,7 +123,7 @@ export function HomeProductShowcase({
             'grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4',
           )}
         >
-          {visibleProducts.map(({ product, categoryId }) => {
+          {visibleProducts.map(({ product, categoryId }, index) => {
             const label = product.nameKey ? ti(product.nameKey) : tp(product.type);
             const mockupLayout = getProductMockupLayout(product);
             const image = product.image;
@@ -132,7 +132,10 @@ export function HomeProductShowcase({
               <Link
                 key={`${categoryId}-${product.id}`}
                 href={`/products/${product.id}`}
-                className="group flex flex-col border border-ink-200 bg-white transition hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-lift"
+                className={cn(
+                  'group flex flex-col border border-ink-200 bg-white transition hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-lift',
+                  index >= 4 && 'max-sm:hidden',
+                )}
               >
                 <div className="relative aspect-square overflow-hidden bg-ink-50">
                   {image ? (

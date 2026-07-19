@@ -6,7 +6,11 @@ import { Link } from '@/i18n/navigation';
 import { Card } from '@/components/ui/Card';
 import { DesignCardThumbnail } from '@/components/designs/DesignCardThumbnail';
 import { FilterChipBar } from '@/components/catalog/FilterChipBar';
-import { CatalogGridLayout } from '@/components/catalog/CatalogGrid';
+import {
+  CatalogGridLayout,
+  getCatalogItemClassName,
+  useOptionalCatalogGrid,
+} from '@/components/catalog/CatalogGrid';
 import {
   designCategories,
   getDesignHref,
@@ -14,6 +18,7 @@ import {
   type DesignTemplate,
 } from '@/lib/data/catalog';
 import { getDesignThumbAspect } from '@/lib/designs/design-thumb';
+import { cn } from '@/lib/utils';
 
 const MAX_VISIBLE = 3;
 
@@ -39,6 +44,7 @@ export function FeaturedDesignCards({ designs }: { designs: FeaturedDesign[] }) 
   const t = useTranslations('designs');
   const th = useTranslations('home');
   const locale = useLocale();
+  const grid = useOptionalCatalogGrid();
 
   const availableCategories = useMemo(() => {
     const cats = new Set(designs.map((design) => design.category));
@@ -98,7 +104,7 @@ export function FeaturedDesignCards({ designs }: { designs: FeaturedDesign[] }) 
                 <Link
                   key={design.id}
                   href={getDesignHref(design)}
-                  className="group block"
+                  className={cn('group block', getCatalogItemClassName(grid))}
                 >
                   <Card className="overflow-hidden p-0 transition group-hover:shadow-md">
                     <div

@@ -33,6 +33,8 @@ import {
   CatalogGrid,
   CatalogGridProvider,
   CatalogGridToggle,
+  getCatalogItemClassName,
+  useOptionalCatalogGrid,
 } from '@/components/catalog/CatalogGrid';
 import { CatalogPagination } from '@/components/catalog/CatalogPagination';
 import { useCatalogPagination } from '@/hooks/useCatalogPagination';
@@ -56,9 +58,13 @@ const DesignCard = memo(function DesignCard({
   svgThumbVersions?: Record<string, string>;
 }) {
   const t = useTranslations('designs');
+  const grid = useOptionalCatalogGrid();
 
   return (
-    <Link href={getDesignHref(design)} className="group block">
+    <Link
+      href={getDesignHref(design)}
+      className={cn('group block', getCatalogItemClassName(grid))}
+    >
       <Card className="overflow-hidden p-0 transition group-hover:shadow-md">
         <div
           className="relative flex items-center justify-center overflow-hidden bg-white p-1"

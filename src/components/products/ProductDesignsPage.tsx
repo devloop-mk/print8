@@ -45,7 +45,7 @@ const COLLECTION_LABELS: Record<string, { en: string; mk: string }> = {
   'trending-mk': { en: 'Trending MK', mk: 'Тренд МК' },
   family: { en: 'Family', mk: 'Семејство' },
   'kids-birthday': { en: 'Kids & birthday', mk: 'Деца и роденден' },
-  'local-mk': { en: 'Macedonia & Štip', mk: 'Македонија и Штип' },
+  'local-mk': { en: 'Local designs', mk: 'Локални дизајни' },
   'caps-local': { en: 'Caps', mk: 'Капи' },
   drinkware: { en: 'Drinkware', mk: 'Шолји' },
   'family-gifts': { en: 'Family gifts', mk: 'Семејни подароци' },
