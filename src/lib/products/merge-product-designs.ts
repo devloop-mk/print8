@@ -64,9 +64,21 @@ function mergeSideOverlay(
   };
 }
 
+function readDisplayOrder(
+  displayOrder: ReadonlyMap<string, number> | Readonly<Record<string, number>> | undefined,
+  id: string,
+): number | undefined {
+  if (!displayOrder) return undefined;
+  if (displayOrder instanceof Map) return displayOrder.get(id);
+  return Object.prototype.hasOwnProperty.call(displayOrder, id)
+    ? (displayOrder as Record<string, number>)[id]
+    : undefined;
+}
+
 export function mergeProductDesignCatalog(
   staticTemplates: ProductDesignTemplate[],
   managedRecords: ManagedProductDesignRecord[],
+  displayOrder?: ReadonlyMap<string, number> | Readonly<Record<string, number>>,
 ): ProductDesignTemplate[] {
   const managedById = new Map(
     managedRecords.map((record) => [record.id, record]),
@@ -90,8 +102,10 @@ export function mergeProductDesignCatalog(
   }
 
   return merged.sort((a, b) => {
-    const orderA = managedById.get(a.id)?.sortOrder ?? 0;
-    const orderB = managedById.get(b.id)?.sortOrder ?? 0;
+    const overrideA = readDisplayOrder(displayOrder, a.id);
+    const overrideB = readDisplayOrder(displayOrder, b.id);
+    const orderA = overrideA ?? managedById.get(a.id)?.sortOrder ?? 0;
+    const orderB = overrideB ?? managedById.get(b.id)?.sortOrder ?? 0;
     if (orderA !== orderB) return orderA - orderB;
     return a.id.localeCompare(b.id);
   });

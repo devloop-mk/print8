@@ -1,11 +1,10 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { ArrowLeft, ArrowRight, Palette } from 'lucide-react';
 import {
-  type ProductSide,
   type ProductType,
 } from '@/lib/data/catalog';
 import { buildProductTypeFilterOptions } from '@/lib/products/product-type-icons';
@@ -19,11 +18,16 @@ import {
   getCatalogColors,
   getCombinedProductDesignCatalogEntries,
 } from '@/lib/products/design-catalog';
+import {
+  sortDesignCatalogEntries,
+  type DesignCatalogSort,
+} from '@/lib/products/design-catalog-sort';
 import { PRODUCT_OFFERING_PATHS } from '@/lib/products/paths';
 import {
   CatalogFilterLayout,
   type CatalogFilterGroup,
 } from '@/components/catalog/CatalogFilterLayout';
+import { CatalogSortSelect } from '@/components/catalog/CatalogSortSelect';
 import { ProductDesignCatalogCard } from '@/components/products/ProductDesignCatalogCard';
 import {
   filterProductDesignEntriesBySearchQuery,
@@ -36,7 +40,6 @@ import { useCatalogPagination } from '@/hooks/useCatalogPagination';
 import { Button } from '@/components/ui/Button';
 
 type TypeFilter = ProductType | 'all';
-type SideFilter = ProductSide | 'all';
 
 export function ProductCategoryPremadeCatalog({
   categoryId,
@@ -48,6 +51,7 @@ export function ProductCategoryPremadeCatalog({
   const tcat = useTranslations('products.categoryPages');
   const tNav = useTranslations('nav.productsMenu.categories');
   const ts = useTranslations('search');
+  const locale = useLocale() as 'mk' | 'en';
   const searchLabels = useCatalogSearchLabels();
   const category = getProductNavCategory(categoryId);
 
@@ -58,7 +62,7 @@ export function ProductCategoryPremadeCatalog({
 
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
   const [colorFilter, setColorFilter] = useState<string | 'all'>('all');
-  const [sideFilter, setSideFilter] = useState<SideFilter>('all');
+  const [sort, setSort] = useState<DesignCatalogSort>('featured');
   const [searchQuery, setSearchQuery] = useState('');
 
   const { allOption, options: typeOptions } = useMemo(() => {
@@ -83,25 +87,35 @@ export function ProductCategoryPremadeCatalog({
       filterDesignCatalogEntries(allEntries, {
         type: typeFilter,
         color: colorFilter,
-        side: sideFilter,
       }),
-    [allEntries, typeFilter, colorFilter, sideFilter],
+    [allEntries, typeFilter, colorFilter],
   );
 
-  const filtered = useMemo(
-    () =>
-      filterProductDesignEntriesBySearchQuery(
-        filteredByAttributes,
-        searchQuery,
-        searchLabels,
-      ),
-    [filteredByAttributes, searchQuery, searchLabels],
-  );
+  const filtered = useMemo(() => {
+    const searched = filterProductDesignEntriesBySearchQuery(
+      filteredByAttributes,
+      searchQuery,
+      searchLabels,
+    );
+    return sortDesignCatalogEntries(searched, sort, {
+      locale,
+      colorFilter,
+      translateName: (key) => t(key),
+    });
+  }, [
+    colorFilter,
+    filteredByAttributes,
+    locale,
+    searchLabels,
+    searchQuery,
+    sort,
+    t,
+  ]);
 
   const filterSignature = useMemo(
     () =>
-      [typeFilter, colorFilter, sideFilter, searchQuery.trim()].join('|'),
-    [colorFilter, searchQuery, sideFilter, typeFilter],
+      [typeFilter, colorFilter, searchQuery.trim(), sort].join('|'),
+    [colorFilter, searchQuery, sort, typeFilter],
   );
 
   const { page, setPage, resetPage, paginate } = useCatalogPagination({
@@ -145,27 +159,11 @@ export function ProductCategoryPremadeCatalog({
       });
     }
 
-    groups.push({
-      kind: 'pills',
-      id: 'side',
-      title: tc('filterSide'),
-      options: [
-        { value: 'all' as const, label: tc('allSides') },
-        { value: 'front' as const, label: tc('sideFront') },
-        { value: 'back' as const, label: tc('sideBack') },
-        { value: 'left' as const, label: tc('sideLeft') },
-        { value: 'right' as const, label: tc('sideRight') },
-      ],
-      value: sideFilter,
-      onChange: (value) => setSideFilter(value as SideFilter),
-    });
-
     return groups;
   }, [
     allOption,
     availableColors,
     colorFilter,
-    sideFilter,
     t,
     tc,
     typeFilter,
@@ -221,7 +219,11 @@ export function ProductCategoryPremadeCatalog({
             </p>
           ) : (
             <Reveal delay={80}>
-              <CatalogGridLayout>
+              <CatalogGridLayout
+                toolbarStart={
+                  <CatalogSortSelect value={sort} onChange={setSort} />
+                }
+              >
                 {visibleEntries.map((entry) => (
                   <ProductDesignCatalogCard
                     key={entry.design.id}

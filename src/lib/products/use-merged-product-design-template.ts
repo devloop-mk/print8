@@ -28,6 +28,8 @@ export function useMergedProductDesignTemplate(
     const fallback =
       initialTemplateRef.current ?? resolveStaticProductDesignTemplate(id);
 
+    // Prefer the current/SSR template when the id already matches — never flash
+    // back to static defaults while the client fetch is in flight.
     setTemplate((prev) => (prev?.id === id ? prev : fallback));
 
     void fetch(`/api/catalog/product-designs/${encodeURIComponent(id)}`, {

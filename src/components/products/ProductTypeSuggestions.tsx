@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import type { ProductType } from '@/lib/data/catalog';
-import { getSuggestedProductsForType } from '@/lib/products/product-nav';
+import { getSuggestedProductsForType } from '@/lib/products/product-nav-catalog';
 import { ProductCardGrid } from '@/components/products/ProductCardGrid';
 import { Reveal } from '@/components/motion/Reveal';
 

@@ -16,6 +16,7 @@ import {
   productTypeHref,
   type ProductNavCategoryId,
 } from '@/lib/products/product-nav';
+import { sortByDisplayOrder } from '@/lib/products/sort-by-display-order';
 import { buildProductTypeFilterOptions } from '@/lib/products/product-type-icons';
 import { PRODUCT_OFFERING_PATHS } from '@/lib/products/paths';
 import { ProductCardGrid } from '@/components/products/ProductCardGrid';
@@ -42,7 +43,11 @@ function buildCustomProductsHref(
   return query ? `/products/custom?${query}` : '/products/custom';
 }
 
-export function ProductCustomCatalog() {
+export function ProductCustomCatalog({
+  displayOrder,
+}: {
+  displayOrder?: Record<string, number>;
+} = {}) {
   const t = useTranslations('products');
   const tc = useTranslations('products.catalog');
   const tcat = useTranslations('products.categoryPages');
@@ -74,11 +79,14 @@ export function ProductCustomCatalog() {
   }, [searchParams, router]);
 
   const scopedProducts = useMemo(() => {
-    if (categoryFilter === 'all') return products;
-    return products.filter((product) =>
-      productBelongsToCategory(product, categoryFilter),
-    );
-  }, [categoryFilter]);
+    const base =
+      categoryFilter === 'all'
+        ? products
+        : products.filter((product) =>
+            productBelongsToCategory(product, categoryFilter),
+          );
+    return sortByDisplayOrder(base, displayOrder);
+  }, [categoryFilter, displayOrder]);
 
   const { allOption, options: filterOptions } = useMemo(() => {
     const built = buildProductTypeFilterOptions((type) =>

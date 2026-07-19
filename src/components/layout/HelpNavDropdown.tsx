@@ -4,9 +4,21 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link, usePathname } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
-import { ChevronDown, HelpCircle, Mail, MessageCircleQuestion } from 'lucide-react';
+import { ChevronDown, HelpCircle, Mail, MessageCircleQuestion, BookOpen, PackageSearch } from 'lucide-react';
 
 const helpLinks = [
+  {
+    href: '/how-to-order',
+    key: 'howToOrder',
+    descriptionKey: 'helpMenu.howToOrderDesc',
+    icon: BookOpen,
+  },
+  {
+    href: '/order-status',
+    key: 'orderStatus',
+    descriptionKey: 'helpMenu.orderStatusDesc',
+    icon: PackageSearch,
+  },
   {
     href: '/contact',
     key: 'contact',

@@ -7,7 +7,7 @@ import {
   getCouplePackTemplate,
   partnerDesignToTemplate,
 } from '@/lib/data/couple-pack';
-import { products } from '@/lib/data/catalog';
+import { products, type ProductDesignTemplate } from '@/lib/data/catalog';
 import {
   getDesignApplicableColors,
   resolveDesignPreviewColor,
@@ -29,12 +29,20 @@ import { useCart } from '@/components/cart/CartProvider';
 import { Reveal } from '@/components/motion/Reveal';
 import { ArrowLeft, Heart, Leaf, ShoppingCart } from 'lucide-react';
 
-export function CouplePackDetail({ packId }: { packId: string }) {
+export function CouplePackDetail({
+  packId,
+  initialDesign1,
+  initialDesign2,
+}: {
+  packId: string;
+  /** Server-merged partner templates (admin overlay placement applied). */
+  initialDesign1?: ProductDesignTemplate | null;
+  initialDesign2?: ProductDesignTemplate | null;
+}) {
   const t = useTranslations('products');
   const td = useTranslations('products.detail');
   const tdp = useTranslations('products.designPdp');
   const tc = useTranslations('products.couplePacks');
-  const tp = useTranslations('products.types');
   const tCustomizer = useTranslations('products.customizer');
   const locale = useLocale();
   const router = useRouter();
@@ -54,11 +62,11 @@ export function CouplePackDetail({ packId }: { packId: string }) {
 
   const design1 = useMergedProductDesignTemplate(
     partner1?.designId,
-    staticDesign1,
+    initialDesign1 ?? staticDesign1,
   );
   const design2 = useMergedProductDesignTemplate(
     partner2?.designId,
-    staticDesign2,
+    initialDesign2 ?? staticDesign2,
   );
 
   const product = useMemo(() => {
@@ -70,10 +78,18 @@ export function CouplePackDetail({ packId }: { packId: string }) {
     );
   }, [pack]);
 
-  const [color, setColor] = useState(() => {
+  const [partner1Color, setPartner1Color] = useState(() => {
     if (!pack || !product || !staticDesign1) return '#ffffff';
     return resolveDesignPreviewColor(
       staticDesign1,
+      product,
+      pack.recommendedColor,
+    );
+  });
+  const [partner2Color, setPartner2Color] = useState(() => {
+    if (!pack || !product || !staticDesign2) return '#ffffff';
+    return resolveDesignPreviewColor(
+      staticDesign2,
       product,
       pack.recommendedColor,
     );
@@ -86,11 +102,25 @@ export function CouplePackDetail({ packId }: { packId: string }) {
     return <p>{td('notFound')}</p>;
   }
 
-  const applicableColors = getDesignApplicableColors(design1, product);
-  const previewColor = resolveDesignPreviewColor(design1, product, color);
+  const partner1Colors = getDesignApplicableColors(design1, product);
+  const partner2Colors = getDesignApplicableColors(design2, product);
+  const previewColor1 = resolveDesignPreviewColor(
+    design1,
+    product,
+    partner1Color,
+  );
+  const previewColor2 = resolveDesignPreviewColor(
+    design2,
+    product,
+    partner2Color,
+  );
   const specs = getProductSpecs(product.type);
   const title = locale === 'mk' ? pack.titleMk : pack.titleEn;
   const packPrice = getCouplePackPrice(product);
+  const partner1Label = locale === 'mk' ? partner1.labelMk : partner1.labelEn;
+  const partner2Label = locale === 'mk' ? partner2.labelMk : partner2.labelEn;
+  const showColorPickers =
+    partner1Colors.length > 1 || partner2Colors.length > 1;
 
   async function handleAddCouplePack() {
     if (!pack || !product || !design1 || !design2) return;
@@ -111,7 +141,8 @@ export function CouplePackDetail({ packId }: { packId: string }) {
       const items = buildCouplePackCartItems({
         pack,
         product,
-        color: previewColor,
+        partner1Color: previewColor1,
+        partner2Color: previewColor2,
         partner1Size,
         partner2Size: sharedSize ? partner1Size : partner2Size,
         name: title,
@@ -143,12 +174,12 @@ export function CouplePackDetail({ packId }: { packId: string }) {
           <div className="grid grid-cols-2 gap-3">
             <Card className="overflow-hidden p-2">
               <p className="mb-2 text-center text-xs font-medium text-ink-500">
-                {locale === 'mk' ? partner1.labelMk : partner1.labelEn}
+                {partner1Label}
               </p>
               <div ref={preview1Ref}>
                 <DesignTemplatePreview
                   product={product}
-                  color={previewColor}
+                  color={previewColor1}
                   design={design1}
                   typeLabel={partner1.labelEn}
                 />
@@ -156,12 +187,12 @@ export function CouplePackDetail({ packId }: { packId: string }) {
             </Card>
             <Card className="overflow-hidden p-2">
               <p className="mb-2 text-center text-xs font-medium text-ink-500">
-                {locale === 'mk' ? partner2.labelMk : partner2.labelEn}
+                {partner2Label}
               </p>
               <div ref={preview2Ref}>
                 <DesignTemplatePreview
                   product={product}
-                  color={previewColor}
+                  color={previewColor2}
                   design={design2}
                   typeLabel={partner2.labelEn}
                 />
@@ -184,15 +215,29 @@ export function CouplePackDetail({ packId }: { packId: string }) {
               <p className="mt-2 text-sm text-ink-500">{tc('packIncludes')}</p>
             </div>
 
-            {applicableColors.length > 1 ? (
-              <div>
-                <DesignColorPicker
-                  colors={applicableColors}
-                  value={previewColor}
-                  onChange={setColor}
-                  variant="default"
-                />
-                <p className="mt-1.5 text-xs text-ink-500">{tc('sharedColorHint')}</p>
+            {showColorPickers ? (
+              <div className="space-y-4">
+                <p className="text-xs text-ink-500">{tc('independentColorHint')}</p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {partner1Colors.length > 1 ? (
+                    <DesignColorPicker
+                      colors={partner1Colors}
+                      value={previewColor1}
+                      onChange={setPartner1Color}
+                      variant="default"
+                      label={tc('partnerColor', { partner: partner1Label })}
+                    />
+                  ) : null}
+                  {partner2Colors.length > 1 ? (
+                    <DesignColorPicker
+                      colors={partner2Colors}
+                      value={previewColor2}
+                      onChange={setPartner2Color}
+                      variant="default"
+                      label={tc('partnerColor', { partner: partner2Label })}
+                    />
+                  ) : null}
+                </div>
               </div>
             ) : null}
 

@@ -10,7 +10,9 @@ import {
 } from '@/lib/products/product-nav';
 import { PRODUCT_OFFERING_PATHS } from '@/lib/products/paths';
 import type { ProductDesignCatalogEntry } from '@/lib/products/design-catalog';
+import type { CategoryMockupPreview } from '@/lib/products/product-type-design-categories';
 import { ProductCardGrid } from '@/components/products/ProductCardGrid';
+import { ProductTypeDesignCategories } from '@/components/products/ProductTypeDesignCategories';
 import { ProductTypeReadyDesignsSection } from '@/components/products/ProductTypeReadyDesignsSection';
 import { ProductTypeSuggestions } from '@/components/products/ProductTypeSuggestions';
 import { Reveal } from '@/components/motion/Reveal';
@@ -19,12 +21,14 @@ type ProductTypeCatalogProps = {
   type: ProductType;
   products: Product[];
   readyDesignEntries: ProductDesignCatalogEntry[];
+  categoryPreviews?: Record<string, CategoryMockupPreview>;
 };
 
 export function ProductTypeCatalog({
   type,
   products,
   readyDesignEntries,
+  categoryPreviews,
 }: ProductTypeCatalogProps) {
   const t = useTranslations('products');
   const tt = useTranslations('products.typePages');
@@ -85,9 +89,15 @@ export function ProductTypeCatalog({
             </a>
           ) : null}
         </div>
+
         <Reveal delay={80}>
           <ProductCardGrid items={products} />
         </Reveal>
+
+        <ProductTypeDesignCategories
+          type={type}
+          categoryPreviews={categoryPreviews}
+        />
       </section>
 
       <ProductTypeReadyDesignsSection

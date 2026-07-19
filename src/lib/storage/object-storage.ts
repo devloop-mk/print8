@@ -8,6 +8,7 @@ import {
 
 const UPLOAD_PREFIX = 'uploads/';
 const CATALOG_PREFIX = 'catalog/';
+const ORDER_PRINT_PREFIX = 'order-prints/';
 
 function getSupabaseBucket() {
   const bucket = process.env.SUPABASE_STORAGE_BUCKET;
@@ -30,6 +31,13 @@ function catalogObjectKey(relativePath: string) {
     ? relativePath.slice(1)
     : relativePath;
   return `${CATALOG_PREFIX}${normalized}`;
+}
+
+function orderPrintObjectKey(storedName: string) {
+  const normalized = storedName
+    .replace(/^\/+/, '')
+    .replace(/^order-prints\//, '');
+  return `${ORDER_PRINT_PREFIX}${normalized}`;
 }
 
 export async function putUploadObject(
@@ -111,4 +119,54 @@ export function catalogStoragePath(relativePath: string) {
     ? relativePath
     : `/${relativePath}`;
   return normalized;
+}
+
+/** Private print-ready order assets (SVGs). Prefer R2; fall back to Supabase Storage. */
+export async function putOrderPrintObject(
+  storedName: string,
+  body: Buffer,
+  contentType: string,
+) {
+  const key = orderPrintObjectKey(storedName);
+
+  if (isR2Configured()) {
+    await r2PutObject(key, body, contentType, {
+      cacheControl: 'private, max-age=31536000',
+    });
+    return;
+  }
+
+  const { error } = await getSupabaseAdmin().storage
+    .from(getSupabaseBucket())
+    .upload(key, body, {
+      contentType,
+      cacheControl: '31536000',
+      upsert: false,
+    });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+export async function getOrderPrintObject(storedName: string): Promise<{
+  body: Buffer;
+  contentType: string | undefined;
+}> {
+  const key = orderPrintObjectKey(storedName);
+
+  if (isR2Configured()) {
+    return r2GetObject(key);
+  }
+
+  const { data, error } = await getSupabaseAdmin().storage
+    .from(getSupabaseBucket())
+    .download(key);
+
+  if (error || !data) {
+    throw new Error(error?.message ?? 'Download failed');
+  }
+
+  const buffer = Buffer.from(await data.arrayBuffer());
+  return { body: buffer, contentType: undefined };
 }

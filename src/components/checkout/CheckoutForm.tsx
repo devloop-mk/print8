@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter, Link } from "@/i18n/navigation";
 import { useCart } from "@/components/cart/CartProvider";
@@ -20,6 +20,7 @@ import {
   validateCheckoutFields,
 } from "@/lib/validations/checkout-form";
 import { prepareCheckoutPayload } from "@/lib/orders/prepare-checkout-payload";
+import { SPIN_PENDING_COUPON_KEY } from "@/lib/rewards/spin-config";
 import type { CheckoutInput } from "@/lib/validations/order";
 
 export function CheckoutForm() {
@@ -33,45 +34,131 @@ export function CheckoutForm() {
     fullName: "",
     phone: "",
     email: "",
+    fulfillmentMethod: "cargo" as "cargo" | "pickup",
     city: "",
     address: "",
     notes: "",
   });
   const [fileIds, setFileIds] = useState<string[]>([]);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [newsletterOptIn, setNewsletterOptIn] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponMessage, setCouponMessage] = useState<string | null>(null);
+  const [couponChecking, setCouponChecking] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [processing, setProcessing] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
+  const pendingCouponAutoApply = useRef(false);
+  const pendingCouponEmail = useRef<string | undefined>(undefined);
+
+  const payableTotal = Math.max(0, total - couponDiscount);
 
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem("print8-checkout-prefill");
-      if (!raw) return;
-      sessionStorage.removeItem("print8-checkout-prefill");
-      const parsed = JSON.parse(raw) as {
-        fullName?: string;
-        phone?: string;
-        email?: string;
-      };
-      setForm((prev) => ({
-        ...prev,
-        fullName:
-          typeof parsed.fullName === "string" && parsed.fullName
-            ? parsed.fullName
-            : prev.fullName,
-        phone:
-          typeof parsed.phone === "string" && parsed.phone
-            ? parsed.phone
-            : prev.phone,
-        email:
-          typeof parsed.email === "string" && parsed.email
-            ? parsed.email
-            : prev.email,
-      }));
+      if (raw) {
+        sessionStorage.removeItem("print8-checkout-prefill");
+        const parsed = JSON.parse(raw) as {
+          fullName?: string;
+          phone?: string;
+          email?: string;
+        };
+        setForm((prev) => ({
+          ...prev,
+          fullName:
+            typeof parsed.fullName === "string" && parsed.fullName
+              ? parsed.fullName
+              : prev.fullName,
+          phone:
+            typeof parsed.phone === "string" && parsed.phone
+              ? parsed.phone
+              : prev.phone,
+          email:
+            typeof parsed.email === "string" && parsed.email
+              ? parsed.email
+              : prev.email,
+        }));
+      }
     } catch {
       // ignore corrupt prefill
     }
+
+    try {
+      const raw = sessionStorage.getItem(SPIN_PENDING_COUPON_KEY);
+      if (!raw) return;
+      sessionStorage.removeItem(SPIN_PENDING_COUPON_KEY);
+      const parsed = JSON.parse(raw) as { code?: string; email?: string };
+      const code =
+        typeof parsed.code === "string" ? parsed.code.trim().toUpperCase() : "";
+      if (!code) return;
+      setCouponCode(code);
+      if (typeof parsed.email === "string" && parsed.email.trim()) {
+        const spinEmail = parsed.email.trim().toLowerCase();
+        pendingCouponEmail.current = spinEmail;
+        setForm((prev) => ({
+          ...prev,
+          email: prev.email || spinEmail,
+        }));
+      }
+      pendingCouponAutoApply.current = true;
+    } catch {
+      // ignore corrupt pending coupon
+    }
   }, []);
+
+  async function applyCoupon(codeOverride?: string, emailOverride?: string) {
+    const code = (codeOverride ?? couponCode).trim();
+    if (!code) return;
+    setCouponChecking(true);
+    setCouponMessage(null);
+    setErrors((prev) => ({ ...prev, form: "" }));
+    try {
+      const res = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code,
+          subtotalAmount: total,
+          email:
+            (emailOverride ?? pendingCouponEmail.current ?? form.email).trim() ||
+            undefined,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        setCouponDiscount(0);
+        setCouponMessage(
+          data.code === "min_order"
+            ? t("couponMinOrder", {
+                amount: formatPrice(Number(data.minOrderAmount ?? 0), locale),
+              })
+            : t("couponInvalid"),
+        );
+        return;
+      }
+      setCouponCode(String(data.code ?? code).toUpperCase());
+      setCouponDiscount(Number(data.discountAmount ?? 0));
+      setCouponMessage(
+        t("couponApplied", {
+          amount: formatPrice(Number(data.discountAmount ?? 0), locale),
+        }),
+      );
+    } catch {
+      setCouponDiscount(0);
+      setCouponMessage(t("couponInvalid"));
+    } finally {
+      setCouponChecking(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!pendingCouponAutoApply.current || !hydrated) return;
+    if (!couponCode.trim() || total <= 0) return;
+    pendingCouponAutoApply.current = false;
+    void applyCoupon(couponCode, pendingCouponEmail.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot after spin "use now"
+  }, [hydrated, couponCode, total]);
 
   const hasServiceItems = items.some((item) => item.type === "service");
   const hasCustomProductItems = items.some((item) => item.type === "product");
@@ -150,6 +237,8 @@ export function CheckoutForm() {
         items,
         fileIds,
         uploadToken: token,
+        newsletterOptIn,
+        couponCode: couponCode.trim() || null,
       });
 
       const res = await fetch("/api/orders", {
@@ -198,6 +287,13 @@ export function CheckoutForm() {
         }
         if (data.code === "invalid_order_data") {
           setErrors({ form: t("invalidOrderData") });
+          setProcessing(false);
+          return;
+        }
+        if (typeof data.code === "string" && data.code.startsWith("coupon_")) {
+          setErrors({ form: t("couponInvalid") });
+          setCouponDiscount(0);
+          setCouponMessage(null);
           setProcessing(false);
           return;
         }
@@ -289,32 +385,91 @@ export function CheckoutForm() {
               className="sm:col-span-2"
               hint={t("emailHint")}
             />
-            <Field
-              label={t("city")}
-              value={form.city}
-              onChange={(v) => updateField("city", v)}
-              error={errors.city}
-              required
-            />
-            <Field
-              label={t("address")}
-              value={form.address}
-              onChange={(v) => updateField("address", v)}
-              error={errors.address}
-              required
-            />
-            <div className="sm:col-span-2">
-              <label className="mb-1 block text-sm font-medium text-ink-700">
-                {t("notes")}
-              </label>
-              <textarea
-                value={form.notes}
-                onChange={(e) => updateField("notes", e.target.value)}
-                placeholder={t("notesPlaceholder")}
-                rows={3}
-                className="w-full rounded-lg border border-ink-300 px-3 py-2 text-sm"
+          </div>
+        </Card>
+
+        <Card>
+          <h2 className="mb-4 text-lg font-semibold text-ink-900">
+            {t("fulfillmentTitle")}
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {(
+              [
+                {
+                  id: "cargo" as const,
+                  title: t("fulfillmentCargo"),
+                  desc: t("fulfillmentCargoDesc"),
+                },
+                {
+                  id: "pickup" as const,
+                  title: t("fulfillmentPickup"),
+                  desc: t("fulfillmentPickupDesc"),
+                },
+              ] as const
+            ).map((option) => {
+              const selected = form.fulfillmentMethod === option.id;
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => {
+                    setForm((prev) => ({
+                      ...prev,
+                      fulfillmentMethod: option.id,
+                    }));
+                    setErrors((prev) => ({
+                      ...prev,
+                      city: "",
+                      address: "",
+                    }));
+                  }}
+                  className={
+                    selected
+                      ? "rounded-xl border-2 border-brand-500 bg-brand-50 p-4 text-left"
+                      : "rounded-xl border border-ink-200 bg-white p-4 text-left hover:border-brand-200"
+                  }
+                >
+                  <p className="font-semibold text-ink-900">{option.title}</p>
+                  <p className="mt-1 text-sm text-ink-600">{option.desc}</p>
+                </button>
+              );
+            })}
+          </div>
+
+          {form.fulfillmentMethod === "cargo" ? (
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <Field
+                label={t("city")}
+                value={form.city}
+                onChange={(v) => updateField("city", v)}
+                error={errors.city}
+                required
+              />
+              <Field
+                label={t("address")}
+                value={form.address}
+                onChange={(v) => updateField("address", v)}
+                error={errors.address}
+                required
               />
             </div>
+          ) : (
+            <p className="mt-4 rounded-lg border border-ink-100 bg-ink-50 px-3 py-2 text-sm text-ink-700">
+              {t("fulfillmentPickupHint")}
+            </p>
+          )}
+
+          <div className="mt-4">
+            <label className="mb-1 block text-sm font-medium text-ink-700">
+              {t("notes")}
+            </label>
+            <textarea
+              value={form.notes}
+              onChange={(e) => updateField("notes", e.target.value)}
+              placeholder={t("notesPlaceholder")}
+              rows={3}
+              className="w-full rounded-lg border border-ink-300 px-3 py-2 text-sm"
+            />
           </div>
         </Card>
 
@@ -351,8 +506,14 @@ export function CheckoutForm() {
             {t("paymentMethod")}
           </h2>
           <div className="rounded-lg border-2 border-brand-200 bg-brand-50 p-4">
-            <p className="font-medium text-brand-800">{t("cod")}</p>
-            <p className="mt-1 text-sm text-brand-600">{t("codDesc")}</p>
+            <p className="font-medium text-brand-800">
+              {form.fulfillmentMethod === "pickup" ? t("codPickup") : t("cod")}
+            </p>
+            <p className="mt-1 text-sm text-brand-600">
+              {form.fulfillmentMethod === "pickup"
+                ? t("codPickupDesc")
+                : t("codDesc")}
+            </p>
           </div>
         </Card>
 
@@ -367,10 +528,54 @@ export function CheckoutForm() {
               </div>
             ))}
           </div>
-          <div className="mt-4 flex justify-between border-t border-ink-200 pt-4">
+          <div className="mt-4 space-y-2 border-t border-ink-200 pt-4">
+            <label className="block text-sm font-medium text-ink-700">
+              {t("couponCode")}
+            </label>
+            <div className="flex gap-2">
+              <input
+                value={couponCode}
+                onChange={(e) => {
+                  setCouponCode(e.target.value.toUpperCase());
+                  setCouponDiscount(0);
+                  setCouponMessage(null);
+                }}
+                placeholder={t("couponPlaceholder")}
+                maxLength={40}
+                className="min-w-0 flex-1 rounded-lg border border-ink-300 px-3 py-2 text-sm uppercase tracking-wide"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                loading={couponChecking}
+                disabled={couponChecking || !couponCode.trim()}
+                onClick={() => void applyCoupon()}
+              >
+                {t("couponApply")}
+              </Button>
+            </div>
+            {couponMessage ? (
+              <p
+                className={`text-xs ${
+                  couponDiscount > 0 ? "text-emerald-700" : "text-red-600"
+                }`}
+              >
+                {couponMessage}
+              </p>
+            ) : null}
+          </div>
+
+          {couponDiscount > 0 ? (
+            <div className="mt-3 flex justify-between text-sm text-ink-600">
+              <span>{t("discount")}</span>
+              <span>−{formatPrice(couponDiscount, locale)}</span>
+            </div>
+          ) : null}
+
+          <div className="mt-3 flex justify-between border-t border-ink-200 pt-3">
             <span className="font-semibold">{t("total")}</span>
             <span className="text-lg font-bold text-brand-600">
-              {formatPrice(total, locale)}
+              {formatPrice(payableTotal, locale)}
             </span>
           </div>
 
@@ -406,6 +611,16 @@ export function CheckoutForm() {
           {errors.terms ? (
             <p className="mt-2 text-xs text-red-600">{errors.terms}</p>
           ) : null}
+
+          <label className="mt-3 flex items-start gap-3 text-sm text-ink-600">
+            <input
+              type="checkbox"
+              checked={newsletterOptIn}
+              onChange={(e) => setNewsletterOptIn(e.target.checked)}
+              className="mt-1 h-4 w-4 rounded border-ink-300 text-brand-600 focus:ring-brand-500"
+            />
+            <span>{t("newsletterOptIn")}</span>
+          </label>
 
           {errors.form ? (
             <p className="mt-2 text-sm text-red-600">{errors.form}</p>

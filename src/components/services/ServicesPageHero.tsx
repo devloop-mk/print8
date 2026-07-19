@@ -1,6 +1,5 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { Printer, Sparkles, Truck, Award } from 'lucide-react';
 import {
   getResolvedFeaturedServices,
   resolveCmsTexts,
@@ -107,10 +106,10 @@ export async function ServicesPageHero({ locale }: { locale: CmsLocale }) {
 
       <HeroFeatureBar
         items={[
-          { icon: Sparkles, label: t('heroStatQuality') },
-          { icon: Printer, label: t('heroStatRange') },
-          { icon: Award, label: t('heroStatPopular') },
-          { icon: Truck, label: t('heroStatDelivery') },
+          { icon: 'sparkles', label: t('heroStatQuality') },
+          { icon: 'printer', label: t('heroStatRange') },
+          { icon: 'award', label: t('heroStatPopular') },
+          { icon: 'truck', label: t('heroStatDelivery') },
         ]}
       />
     </section>

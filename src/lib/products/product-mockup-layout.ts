@@ -152,6 +152,35 @@ const printAreaByProductId: Partial<Record<string, PrintAreaInsets>> = {
 
 export type MockupDisplayVariant = 'catalog-card' | 'catalog-design' | 'customizer';
 
+/**
+ * Per-color drinkware mockup zoom. White ceramic on a white page under-reads vs
+ * colored glaze even when asset fill % matches.
+ * Keys match catalog `colorsImages` basename (no extension).
+ * Prefer fixing the asset (`mug-white-classic-v2.jpg`); keep this as a light
+ * optical correction only — do not stack a large CSS zoom on top of a large reframe.
+ */
+const DRINKWARE_MOCKUP_CATALOG_SCALE: Record<string, number> = {
+  'mug-white-classic-v2': 1.03,
+  'mug-white-classic': 1.03,
+};
+
+const DRINKWARE_MOCKUP_CUSTOMIZER_SCALE: Record<string, number> = {
+  'mug-white-classic-v2': 1.02,
+  'mug-white-classic': 1.02,
+};
+
+function getDrinkwareMockupScaleFromPath(
+  mockupPath: string,
+  variant: MockupDisplayVariant,
+): number | undefined {
+  const file = mockupPath.split('/').pop()?.replace(/\.[^.]+$/, '') ?? '';
+  if (!file) return undefined;
+  if (variant === 'customizer') {
+    return DRINKWARE_MOCKUP_CUSTOMIZER_SCALE[file];
+  }
+  return DRINKWARE_MOCKUP_CATALOG_SCALE[file];
+}
+
 function getPerColorTshirtMockupScale(
   product: Product,
   mockupPath: string,
@@ -179,9 +208,9 @@ function getPerColorTshirtMockupScale(
 }
 
 /**
- * Single source of truth for shirt mockup zoom across storefront, customizer,
+ * Single source of truth for mockup zoom across storefront, customizer,
  * and admin previews. Per-color photo mockup scale compensates for extra canvas
- * padding so overlays stay proportional to the fabric.
+ * padding so overlays stay proportional to the product.
  */
 export function resolveMockupDisplayScale(
   product: Product,
@@ -190,11 +219,22 @@ export function resolveMockupDisplayScale(
 ): number {
   const layout = getProductMockupLayout(product);
 
-  if (product.type !== 't-shirt' || !mockupPath) {
+  if (!mockupPath) {
     return layout.catalogScale;
   }
 
-  return getPerColorTshirtMockupScale(product, mockupPath, variant);
+  if (product.type === 't-shirt') {
+    return getPerColorTshirtMockupScale(product, mockupPath, variant);
+  }
+
+  if (isCylindricalDrinkwareType(product.type)) {
+    const drinkwareScale = getDrinkwareMockupScaleFromPath(mockupPath, variant);
+    if (drinkwareScale !== undefined) {
+      return drinkwareScale;
+    }
+  }
+
+  return layout.catalogScale;
 }
 
 /**

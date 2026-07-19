@@ -1,4 +1,4 @@
-import type { CartItem } from '@/components/cart/CartProvider';
+import type { CartItem } from '@/lib/cart/types';
 import { getProductById } from '@/lib/cart/product-cart';
 import {
   calculateBrandingPackTotal,

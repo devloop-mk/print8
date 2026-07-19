@@ -3,11 +3,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
-import { Link } from '@/i18n/navigation';
+import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import { ArrowLeft } from 'lucide-react';
 import {
   type ProductDesignCategory,
-  type ProductSide,
   type ProductType,
 } from '@/lib/data/catalog';
 import { buildProductTypeFilterOptions } from '@/lib/products/product-type-icons';
@@ -25,17 +24,28 @@ import {
   getProductDesignCatalogEntries,
   type ProductDesignCatalogEntry,
 } from '@/lib/products/design-catalog';
-import { PRODUCT_OFFERING_PATHS } from '@/lib/products/paths';
+import {
+  parseDesignCatalogSort,
+  sortDesignCatalogItems,
+  type DesignCatalogSort,
+} from '@/lib/products/design-catalog-sort';
+import {
+  COUPLES_DESIGN_COLLECTION,
+  KIDS_DESIGN_COLLECTION,
+  PRODUCT_OFFERING_PATHS,
+} from '@/lib/products/paths';
 import {
   CatalogFilterLayout,
   type CatalogFilterGroup,
 } from '@/components/catalog/CatalogFilterLayout';
+import { CatalogSortSelect } from '@/components/catalog/CatalogSortSelect';
 import { ProductDesignCatalogCard } from '@/components/products/ProductDesignCatalogCard';
 import { CouplePackCard } from '@/components/products/CouplePackCard';
 import {
   getCouplePackTemplates,
   type CouplePackTemplate,
 } from '@/lib/data/couple-pack';
+import type { ProductDesignTemplate } from '@/lib/data/catalog';
 import {
   filterProductDesignEntriesBySearchQuery,
 } from '@/lib/catalog/catalog-search';
@@ -49,10 +59,11 @@ type ProductDesignsCatalogProps = {
   category: ProductDesignCategory;
   /** Server-merged catalog entries (includes admin applicableColors). */
   initialEntries?: ProductDesignCatalogEntry[];
+  /** Server-merged couple partner templates keyed by designId. */
+  initialCoupleDesigns?: Record<string, ProductDesignTemplate>;
 };
 
 type TypeFilter = ProductType | 'all';
-type SideFilter = ProductSide | 'all';
 
 const COLLECTION_LABELS: Record<string, { en: string; mk: string }> = {
   basketball: { en: 'Basketball', mk: 'Кошарка' },
@@ -61,11 +72,19 @@ const COLLECTION_LABELS: Record<string, { en: string; mk: string }> = {
   streetwear: { en: 'Streetwear', mk: 'Стритвер' },
   'baby-milestones': { en: 'Baby milestones', mk: 'Беби пресвртници' },
   'couple-packs': { en: 'Couple packs', mk: 'Парски пакети' },
+  'trending-mk': { en: 'Trending MK', mk: 'Тренд МК' },
+  family: { en: 'Family', mk: 'Семејство' },
+  'kids-birthday': { en: 'Kids & birthday', mk: 'Деца и роденден' },
+  'local-mk': { en: 'Macedonia & Štip', mk: 'Македонија и Штип' },
+  'caps-local': { en: 'Caps', mk: 'Капи' },
+  drinkware: { en: 'Drinkware', mk: 'Шолји' },
+  'family-gifts': { en: 'Family gifts', mk: 'Семејни подароци' },
 };
 
 export function ProductDesignsCatalog({
   category,
   initialEntries,
+  initialCoupleDesigns,
 }: ProductDesignsCatalogProps) {
   const t = useTranslations('products');
   const locale = useLocale() as 'mk' | 'en';
@@ -74,6 +93,8 @@ export function ProductDesignsCatalog({
   const tNav = useTranslations('nav.productsMenu.categories');
   const ts = useTranslations('search');
   const searchLabels = useCatalogSearchLabels();
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const categoryFilter = parseProductNavCategoryFilter(
     searchParams.get('category'),
@@ -98,9 +119,30 @@ export function ProductDesignsCatalog({
     parseProductTypeFilter(searchParams.get('type')),
   );
   const [colorFilter, setColorFilter] = useState<string | 'all'>('all');
-  const [sideFilter, setSideFilter] = useState<SideFilter>('all');
-  const [collectionFilter, setCollectionFilter] = useState<string | 'all'>('all');
+  const [collectionFilter, setCollectionFilter] = useState<string | 'all'>(() => {
+    const fromUrl = searchParams.get('collection');
+    return fromUrl && fromUrl.trim() ? fromUrl.trim() : 'all';
+  });
+  const [sort, setSort] = useState<DesignCatalogSort>(() =>
+    parseDesignCatalogSort(searchParams.get('sort')),
+  );
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    const fromUrl = searchParams.get('collection');
+    const next = fromUrl && fromUrl.trim() ? fromUrl.trim() : 'all';
+    setCollectionFilter(next);
+    setSort(parseDesignCatalogSort(searchParams.get('sort')));
+  }, [searchParams]);
+
+  function handleSortChange(next: DesignCatalogSort) {
+    setSort(next);
+    const params = new URLSearchParams(searchParams.toString());
+    if (next === 'featured') params.delete('sort');
+    else params.set('sort', next);
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }
 
   const collectionOptions = useMemo(() => {
     const collections = new Set<string>();
@@ -150,7 +192,6 @@ export function ProductDesignsCatalog({
       filterDesignCatalogEntries(allEntries, {
         type: typeFilter,
         color: colorFilter,
-        side: sideFilter,
       })
         .filter((entry) => !couplePackPartnerIds.has(entry.design.id))
         .filter((entry) =>
@@ -162,7 +203,6 @@ export function ProductDesignsCatalog({
       allEntries,
       typeFilter,
       colorFilter,
-      sideFilter,
       collectionFilter,
       couplePackPartnerIds,
     ],
@@ -171,7 +211,10 @@ export function ProductDesignsCatalog({
   const visibleCouplePacks = useMemo(() => {
     let packs = getCouplePackTemplates();
 
-    if (collectionFilter !== 'all' && collectionFilter !== 'couple-packs') {
+    if (
+      collectionFilter !== 'all' &&
+      collectionFilter !== COUPLES_DESIGN_COLLECTION
+    ) {
       return [] as CouplePackTemplate[];
     }
 
@@ -220,26 +263,38 @@ export function ProductDesignsCatalog({
         categoryFilter,
         typeFilter,
         colorFilter,
-        sideFilter,
         collectionFilter,
         searchQuery.trim(),
+        sort,
       ].join('|'),
     [
       categoryFilter,
       collectionFilter,
       colorFilter,
       searchQuery,
-      sideFilter,
+      sort,
       typeFilter,
     ],
   );
 
   const catalogItems = useMemo(
-    () => [
-      ...visibleCouplePacks.map((pack) => ({ kind: 'couple-pack' as const, pack })),
-      ...filtered.map((entry) => ({ kind: 'design' as const, entry })),
-    ],
-    [filtered, visibleCouplePacks],
+    () =>
+      sortDesignCatalogItems(
+        [
+          ...visibleCouplePacks.map((pack) => ({
+            kind: 'couple-pack' as const,
+            pack,
+          })),
+          ...filtered.map((entry) => ({ kind: 'design' as const, entry })),
+        ],
+        sort,
+        {
+          locale,
+          colorFilter,
+          translateName: (key) => t(key),
+        },
+      ),
+    [colorFilter, filtered, locale, sort, t, visibleCouplePacks],
   );
 
   const { page, setPage, resetPage, paginate } = useCatalogPagination({
@@ -299,21 +354,6 @@ export function ProductDesignsCatalog({
       });
     }
 
-    groups.push({
-      kind: 'pills',
-      id: 'side',
-      title: tc('filterSide'),
-      options: [
-        { value: 'all' as const, label: tc('allSides') },
-        { value: 'front' as const, label: tc('sideFront') },
-        { value: 'back' as const, label: tc('sideBack') },
-        { value: 'left' as const, label: tc('sideLeft') },
-        { value: 'right' as const, label: tc('sideRight') },
-      ],
-      value: sideFilter,
-      onChange: (value) => setSideFilter(value as SideFilter),
-    });
-
     if (collectionOptions.length > 0) {
       groups.unshift({
         kind: 'pills',
@@ -327,7 +367,17 @@ export function ProductDesignsCatalog({
           })),
         ],
         value: collectionFilter,
-        onChange: (value) => setCollectionFilter(value),
+        onChange: (value) => {
+          if (value === KIDS_DESIGN_COLLECTION) {
+            router.push(PRODUCT_OFFERING_PATHS.kidsReadyDesigns);
+            return;
+          }
+          if (value === COUPLES_DESIGN_COLLECTION) {
+            router.push(PRODUCT_OFFERING_PATHS.couplesReadyDesigns);
+            return;
+          }
+          setCollectionFilter(value);
+        },
       });
     }
 
@@ -338,7 +388,7 @@ export function ProductDesignsCatalog({
     colorFilter,
     collectionFilter,
     collectionOptions,
-    sideFilter,
+    router,
     t,
     tc,
     typeFilter,
@@ -385,13 +435,18 @@ export function ProductDesignsCatalog({
             </p>
           ) : (
             <Reveal delay={80}>
-              <CatalogGridLayout>
+              <CatalogGridLayout
+                toolbarStart={
+                  <CatalogSortSelect value={sort} onChange={handleSortChange} />
+                }
+              >
                 {visibleItems.map((item) =>
                   item.kind === 'couple-pack' ? (
                     <CouplePackCard
                       key={item.pack.id}
                       pack={item.pack}
                       colorFilter={colorFilter}
+                      initialDesigns={initialCoupleDesigns}
                     />
                   ) : (
                     <ProductDesignCatalogCard

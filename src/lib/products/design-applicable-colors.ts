@@ -85,6 +85,35 @@ export function getDesignApplicableColors(
   return productColors;
 }
 
+function hashDesignId(designId: string): number {
+  let hash = 0;
+  for (let i = 0; i < designId.length; i += 1) {
+    hash = (hash * 31 + designId.charCodeAt(i)) >>> 0;
+  }
+  return hash;
+}
+
+/**
+ * Stable per-design pick from applicable shirt colors so catalog grids
+ * don't all default to the same tee. Only varies when multiple colors are
+ * applicable — never forces unsupported colors (including recommendedColor
+ * outside the product palette).
+ */
+export function pickVariedDesignPreviewColor(
+  design: ProductDesignTemplate,
+  product: Product,
+): string {
+  const applicable = getDesignApplicableColors(design, product);
+  if (applicable.length === 0) {
+    return product.colors?.[0] ?? '#ffffff';
+  }
+  if (applicable.length === 1) {
+    return applicable[0];
+  }
+
+  return applicable[hashDesignId(design.id) % applicable.length];
+}
+
 export function resolveDesignPreviewColor(
   design: ProductDesignTemplate,
   product: Product,

@@ -10,6 +10,7 @@ import { CartProvider } from "@/components/cart/CartProvider";
 import { OngoingDesignsProvider } from "@/components/drafts/OngoingDesignsProvider";
 import { SiteAnalytics } from "@/components/analytics/SiteAnalytics";
 import { CookieConsent } from "@/components/legal/CookieConsent";
+import { SpinWheelPromoPopupLazy } from "@/components/rewards/SpinWheelPromoPopupLazy";
 import { NavigationProgress } from "@/components/navigation/NavigationProgress";
 import { PageTransition } from "@/components/motion/PageTransition";
 import { buildPageMetadata, buildOgImageUrl } from "@/lib/seo/metadata";
@@ -80,6 +81,7 @@ export default async function LocaleLayout({
             <NavigationProgress />
             <SiteAnalytics />
             <CookieConsent />
+            <SpinWheelPromoPopupLazy />
             <Header />
             <main className="flex min-h-0 min-w-0 flex-1 flex-col">
               <PageTransition>{children}</PageTransition>

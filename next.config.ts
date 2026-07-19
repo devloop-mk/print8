@@ -62,6 +62,15 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "12mb",
     },
   },
+  async redirects() {
+    return [
+      {
+        source: "/:locale/designs/create",
+        destination: "/:locale/designs/custom",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     const securityHeaders = [
       { key: "X-Frame-Options", value: "DENY" },
@@ -96,6 +105,15 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/hero/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=86400, stale-while-revalidate=604800",
+          },
+        ],
+      },
+      {
+        source: "/banners/:path*",
         headers: [
           {
             key: "Cache-Control",

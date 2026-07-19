@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { ProductCustomCatalog } from '@/components/products/ProductCustomCatalog';
 import { SectionLoading } from '@/components/ui/SectionLoading';
+import { getProductDisplayOrderRecord } from '@/lib/cms/display-order';
 import { buildPageMetadata, buildOgImageUrl } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
@@ -30,10 +31,12 @@ export async function generateMetadata({
 }
 
 export default async function ProductCustomPage() {
+  const displayOrder = await getProductDisplayOrderRecord();
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <Suspense fallback={<SectionLoading />}>
-        <ProductCustomCatalog />
+        <ProductCustomCatalog displayOrder={displayOrder} />
       </Suspense>
     </div>
   );

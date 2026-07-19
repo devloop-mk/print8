@@ -10,7 +10,6 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import type { ProductType } from '@/lib/data/catalog';
-import { products, productTypes, isBrowsableProduct } from '@/lib/data/catalog';
 import { PRODUCT_OFFERING_PATHS } from '@/lib/products/paths';
 
 export type ProductNavCategoryId =
@@ -117,42 +116,6 @@ export function getCategoryForProductType(
   type: ProductType,
 ): ProductNavCategory | undefined {
   return productNavCategories.find((category) => category.types.includes(type));
-}
-
-export function getProductsForCategory(categoryId: ProductNavCategoryId) {
-  const category = getProductNavCategory(categoryId);
-  return products.filter(
-    (product) =>
-      category.types.includes(product.type) && isBrowsableProduct(product),
-  );
-}
-
-/** Sample products from other types for cross-sell on type pages. */
-export function getSuggestedProductsForType(
-  currentType: ProductType,
-  limit = 8,
-) {
-  const parentCategory = getCategoryForProductType(currentType);
-  const siblingTypes = (parentCategory?.types ?? []).filter(
-    (type) => type !== currentType,
-  );
-  const otherTypes = productTypes.filter((type) => type !== currentType);
-  const orderedTypes = [
-    ...siblingTypes,
-    ...otherTypes.filter((type) => !siblingTypes.includes(type)),
-  ];
-
-  const result: typeof products = [];
-  for (const type of orderedTypes) {
-    const matches = products.filter(
-      (product) => product.type === type && isBrowsableProduct(product),
-    );
-    for (const product of matches.slice(0, 2)) {
-      if (result.length >= limit) return result;
-      result.push(product);
-    }
-  }
-  return result;
 }
 
 export function productCategoryHref(categoryId: ProductNavCategoryId): string {

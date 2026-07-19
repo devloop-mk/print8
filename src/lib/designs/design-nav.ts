@@ -3,16 +3,21 @@ import {
   CreditCard,
   Heart,
   LayoutGrid,
-  Palette,
-  Sparkles,
   UtensilsCrossed,
   Wand2,
   type LucideIcon,
 } from 'lucide-react';
-import {
-  designCategories,
-  type DesignCategory,
-} from '@/lib/data/catalog';
+import type { DesignCategory } from '@/lib/data/catalog';
+
+/** Keep in sync with `designCategories` in catalog — listed here to avoid
+ *  pulling the full catalog (streetwear packs, etc.) into the Header graph. */
+const DESIGN_NAV_CATEGORY_IDS = [
+  'business-cards',
+  'wedding',
+  'birthday',
+  'menus',
+  'general',
+] as const satisfies readonly DesignCategory[];
 
 export type DesignNavCategory = {
   id: DesignCategory;
@@ -35,12 +40,11 @@ export const designCategoryIcons: Record<DesignCategory, LucideIcon> = {
   general: LayoutGrid,
 };
 
-export const designNavCategories: DesignNavCategory[] = designCategories.map(
-  (id) => ({
+export const designNavCategories: DesignNavCategory[] =
+  DESIGN_NAV_CATEGORY_IDS.map((id) => ({
     id,
     icon: designCategoryIcons[id],
-  }),
-);
+  }));
 
 export const designNavQuickLinks: DesignNavQuickLink[] = [
   {
@@ -51,30 +55,16 @@ export const designNavQuickLinks: DesignNavQuickLink[] = [
     descriptionKey: 'allDesignsDesc',
   },
   {
-    id: 'studio',
-    href: '/designs/create',
-    icon: Palette,
-    labelKey: 'designStudio',
-    descriptionKey: 'designStudioDesc',
-  },
-  {
     id: 'custom',
     href: '/designs/custom',
     icon: Wand2,
     labelKey: 'customDesignOrder',
     descriptionKey: 'customDesignOrderDesc',
   },
-  {
-    id: 'customizable',
-    href: '/designs/all',
-    icon: Sparkles,
-    labelKey: 'customizable',
-    descriptionKey: 'customizableDesc',
-  },
 ];
 
 export function isDesignCategory(value: string): value is DesignCategory {
-  return (designCategories as readonly string[]).includes(value);
+  return (DESIGN_NAV_CATEGORY_IDS as readonly string[]).includes(value);
 }
 
 export function getDesignNavCategory(

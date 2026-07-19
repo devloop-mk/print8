@@ -1,7 +1,7 @@
 'use client';
 
 import { Download } from 'lucide-react';
-import { getSvgPrintFilesFromMetadata } from '@/lib/designs/svg-order-assets';
+import { listSvgPrintFileRefsFromMetadata } from '@/lib/designs/svg-order-assets';
 import {
   getOrderItemPreviewImages,
   sanitizeOrderItemFilename,
@@ -16,21 +16,13 @@ function downloadDataUrl(dataUrl: string, filename: string) {
   link.click();
 }
 
-function downloadSvg(svg: string, filename: string) {
-  const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  link.click();
-  URL.revokeObjectURL(url);
-}
-
 export function OrderItemDesignAssets({
+  orderId,
   item,
   itemIndex,
   itemCount,
 }: {
+  orderId: string;
   item: OrderItem;
   itemIndex: number;
   itemCount: number;
@@ -38,7 +30,7 @@ export function OrderItemDesignAssets({
   const t = adminStrings.orderDetail;
   const previews = getOrderItemPreviewImages(item);
   const svgFiles = item.metadata
-    ? getSvgPrintFilesFromMetadata(item.metadata, item.name)
+    ? listSvgPrintFileRefsFromMetadata(item.metadata, item.name)
     : [];
   const safeName = sanitizeOrderItemFilename(item.name, `item-${itemIndex + 1}`);
 
@@ -100,15 +92,14 @@ export function OrderItemDesignAssets({
           <p className="text-xs font-medium text-brand-800">{t.printReadySvgHint}</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {svgFiles.map((file) => (
-              <button
+              <a
                 key={file.filename}
-                type="button"
-                onClick={() => downloadSvg(file.svg, file.filename)}
+                href={`/api/admin/orders/${orderId}/print/${itemIndex}/${file.side}`}
                 className="inline-flex items-center gap-2 rounded-lg border border-brand-300 bg-white px-3 py-2 text-sm font-medium text-brand-800 transition hover:bg-brand-50"
               >
                 <Download className="h-4 w-4" aria-hidden="true" />
                 {file.side === 'front' ? t.downloadFrontSvg : t.downloadBackSvg}
-              </button>
+              </a>
             ))}
           </div>
         </div>

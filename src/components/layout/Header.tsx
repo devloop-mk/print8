@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -11,10 +12,16 @@ import { ProductsNavDropdown } from "@/components/layout/ProductsNavDropdown";
 import { DesignsNavDropdown } from "@/components/layout/DesignsNavDropdown";
 import { HelpNavDropdown } from "@/components/layout/HelpNavDropdown";
 import { OngoingDesignsNav } from "@/components/drafts/OngoingDesignsNav";
-import { GlobalSearch, GlobalSearchButton } from "@/components/search/GlobalSearch";
+import { GlobalSearchButton } from "@/components/search/GlobalSearchButton";
 import { Logo } from "@/components/brand/Logo";
 import { Menu, ShoppingCart } from "lucide-react";
 import { usePathname } from "@/i18n/navigation";
+
+const GlobalSearch = dynamic(
+  () =>
+    import("@/components/search/GlobalSearch").then((mod) => mod.GlobalSearch),
+  { ssr: false },
+);
 
 const navItems = [
   { href: "/", key: "home" },
@@ -141,7 +148,9 @@ export function Header() {
         />
       ) : null}
 
-      <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
+      {searchOpen ? (
+        <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
+      ) : null}
     </>
   );
 }

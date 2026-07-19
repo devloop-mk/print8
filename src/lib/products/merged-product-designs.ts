@@ -8,6 +8,7 @@ import {
   managedProductDesignsDb,
   type ManagedProductDesignRecord,
 } from '@/lib/db/managed-product-designs';
+import { getDesignDisplayOrderRecord } from '@/lib/cms/display-order';
 import { mergeProductDesignCatalog } from '@/lib/products/merge-product-designs';
 
 export const PRODUCT_DESIGNS_CACHE_TAG = 'product-designs';
@@ -32,8 +33,15 @@ const getCachedManagedProductDesignRecords = unstable_cache(
  */
 export const getMergedProductDesignTemplates = cache(
   async (): Promise<ProductDesignTemplate[]> => {
-    const managed = await getCachedManagedProductDesignRecords();
-    return mergeProductDesignCatalog(staticProductDesignTemplates, managed);
+    const [managed, displayOrder] = await Promise.all([
+      getCachedManagedProductDesignRecords(),
+      getDesignDisplayOrderRecord(),
+    ]);
+    return mergeProductDesignCatalog(
+      staticProductDesignTemplates,
+      managed,
+      displayOrder,
+    );
   },
 );
 

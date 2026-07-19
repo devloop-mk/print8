@@ -9,12 +9,10 @@ import {
   getProductDesignTemplatesByCategory,
   type ProductDesignCategory,
   type ProductDesignTemplate,
-  type ProductSide,
 } from '@/lib/data/catalog';
 import { getProductPaths } from '@/lib/products/paths';
 import { getProductDisplayPrice } from '@/lib/products/tshirt-print-pricing';
 import { getDesignApplicableColors } from '@/lib/products/design-applicable-colors';
-import { designMatchesSideFilter } from '@/lib/products/design-sides';
 import {
   designSupportsGarmentFit,
   getProductGarmentFit,
@@ -37,8 +35,6 @@ type ProductDesignsPageProps = {
   category?: ProductDesignCategory | 'all';
 };
 
-type SideFilter = ProductSide | 'all';
-
 const COLLECTION_LABELS: Record<string, { en: string; mk: string }> = {
   basketball: { en: 'Basketball', mk: 'Кошарка' },
   anime: { en: 'Japanese Anime', mk: 'Јапонско аниме' },
@@ -46,6 +42,13 @@ const COLLECTION_LABELS: Record<string, { en: string; mk: string }> = {
   streetwear: { en: 'Streetwear', mk: 'Стритвер' },
   'baby-milestones': { en: 'Baby milestones', mk: 'Беби пресвртници' },
   'couple-packs': { en: 'Couple packs', mk: 'Парски пакети' },
+  'trending-mk': { en: 'Trending MK', mk: 'Тренд МК' },
+  family: { en: 'Family', mk: 'Семејство' },
+  'kids-birthday': { en: 'Kids & birthday', mk: 'Деца и роденден' },
+  'local-mk': { en: 'Macedonia & Štip', mk: 'Македонија и Штип' },
+  'caps-local': { en: 'Caps', mk: 'Капи' },
+  drinkware: { en: 'Drinkware', mk: 'Шолји' },
+  'family-gifts': { en: 'Family gifts', mk: 'Семејни подароци' },
 };
 
 function designMatchesSearch(
@@ -107,7 +110,6 @@ export function ProductDesignsPage({
   }, [product, category]);
 
   const [colorFilter, setColorFilter] = useState<string | 'all'>('all');
-  const [sideFilter, setSideFilter] = useState<SideFilter>('all');
   const [collectionFilter, setCollectionFilter] = useState<string | 'all'>(
     'all',
   );
@@ -136,8 +138,6 @@ export function ProductDesignsPage({
     if (!product) return [];
 
     return allDesigns.filter((design) => {
-      if (!designMatchesSideFilter(design, sideFilter)) return false;
-
       if (collectionFilter !== 'all' && design.collection !== collectionFilter) {
         return false;
       }
@@ -165,14 +165,13 @@ export function ProductDesignsPage({
     locale,
     product,
     searchQuery,
-    sideFilter,
     t,
   ]);
 
   const filterSignature = useMemo(
     () =>
-      [colorFilter, sideFilter, collectionFilter, searchQuery.trim()].join('|'),
-    [collectionFilter, colorFilter, searchQuery, sideFilter],
+      [colorFilter, collectionFilter, searchQuery.trim()].join('|'),
+    [collectionFilter, colorFilter, searchQuery],
   );
 
   const { page, setPage, resetPage, paginate } = useCatalogPagination({
@@ -206,21 +205,6 @@ export function ProductDesignsPage({
       });
     }
 
-    groups.push({
-      kind: 'pills',
-      id: 'side',
-      title: tc('filterSide'),
-      options: [
-        { value: 'all' as const, label: tc('allSides') },
-        { value: 'front' as const, label: tc('sideFront') },
-        { value: 'back' as const, label: tc('sideBack') },
-        { value: 'left' as const, label: tc('sideLeft') },
-        { value: 'right' as const, label: tc('sideRight') },
-      ],
-      value: sideFilter,
-      onChange: (value) => setSideFilter(value as SideFilter),
-    });
-
     if (availableCollections.length > 0) {
       groups.push({
         kind: 'pills',
@@ -247,7 +231,6 @@ export function ProductDesignsPage({
     collectionFilter,
     colorFilter,
     locale,
-    sideFilter,
     tc,
   ]);
 

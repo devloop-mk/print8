@@ -7,7 +7,7 @@ import {
   type ProductSide,
   type ProductType,
 } from "@/lib/data/catalog";
-import type { CartItem } from "@/components/cart/CartProvider";
+import type { CartItem } from "@/lib/cart/types";
 import {
   getSideMetadataPrefix,
   getSidePreviewFromCartItem,

@@ -1,4 +1,3 @@
-import { Resend } from "resend";
 import type { CheckoutInput } from "@/lib/validations/order";
 import { getUploadedFile } from "@/lib/upload";
 import { getUploadObject } from "@/lib/storage/object-storage";
@@ -14,12 +13,18 @@ import {
 } from "@/lib/products/product-sides";
 import { parsePlacedStickers } from "@/lib/products/sticker-library";
 import { parsePlacedTextLayers } from "@/lib/products/text-layers";
-import { getSvgPrintFilesFromMetadata } from "@/lib/designs/svg-order-assets";
+import { resolveSvgPrintFilesFromMetadata } from "@/lib/designs/svg-order-assets";
 import {
   getOrderItemPreviewImages,
   sanitizeOrderItemFilename,
   type OrderItem,
 } from "@/lib/orders/order-item-previews";
+import {
+  EMAIL_BRAND,
+  escapeHtml,
+  getEmailFromAddress,
+  getResendClient,
+} from "@/lib/email/resend-client";
 
 interface EmailAttachment {
   filename: string;
@@ -34,13 +39,13 @@ type OrderPreviewEmbed = EmailAttachment & {
 };
 
 const BRAND = {
-  primary: "#2f7cb2",
-  primaryDark: "#225376",
-  ink: "#0f172a",
-  muted: "#64748b",
-  border: "#e2e8f0",
-  surface: "#f8fafc",
-  white: "#ffffff",
+  primary: EMAIL_BRAND.primary,
+  primaryDark: EMAIL_BRAND.primaryDark,
+  ink: EMAIL_BRAND.ink,
+  muted: EMAIL_BRAND.muted,
+  border: EMAIL_BRAND.border,
+  surface: EMAIL_BRAND.surface,
+  white: EMAIL_BRAND.white,
 } as const;
 
 async function downloadStoredFile(storedName: string): Promise<Buffer | null> {
@@ -50,12 +55,6 @@ async function downloadStoredFile(storedName: string): Promise<Buffer | null> {
   } catch {
     return null;
   }
-}
-
-function getResend() {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) return null;
-  return new Resend(apiKey);
 }
 
 function parseDataUrl(dataUrl: string) {
@@ -68,14 +67,6 @@ function parseDataUrl(dataUrl: string) {
     buffer: Buffer.from(match[2], "base64"),
     ext,
   };
-}
-
-function escapeHtml(value: string) {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
 }
 
 function mimeTypeFromFilename(filename: string, fallback: string) {
@@ -167,10 +158,16 @@ function buildCustomDesignDetailsInnerHtml(item: OrderItem): string {
     if (typeof meta.svgTemplateId === "string") {
       rows.push(detailRow("Template", escapeHtml(meta.svgTemplateId)));
     }
-    if (typeof meta.svgFrontContent === "string") {
+    if (
+      typeof meta.svgFrontContent === "string" ||
+      typeof meta.svgFrontStoredName === "string"
+    ) {
       rows.push(detailRow("Front", "Print-ready SVG attached"));
     }
-    if (typeof meta.svgBackContent === "string") {
+    if (
+      typeof meta.svgBackContent === "string" ||
+      typeof meta.svgBackStoredName === "string"
+    ) {
       rows.push(detailRow("Back", "Print-ready SVG attached"));
     }
 
@@ -438,11 +435,15 @@ function buildSummaryBanner(orderNumber: string, total: string, isMk: boolean): 
   </tr>`;
 }
 
-function buildCustomerMessage(isMk: boolean): string {
+function buildCustomerMessage(isMk: boolean, isPickup = false): string {
   const title = isMk ? "Што следува?" : "What happens next?";
-  const body = isMk
-    ? "Плаќање при достава. Ќе ве контактираме наскоро за потврда на нарачката и детали за достава."
-    : "Payment on delivery. We will contact you soon to confirm the order and arrange delivery.";
+  const body = isPickup
+    ? isMk
+      ? "Плаќање при подигнување. Ќе ве контактираме наскоро за потврда кога нарачката е готова за подигнување во салон."
+      : "Payment on pickup. We will contact you soon to confirm when your order is ready for store pickup."
+    : isMk
+      ? "Плаќање при достава. Ќе ве контактираме наскоро за потврда на нарачката и детали за достава."
+      : "Payment on delivery. We will contact you soon to confirm the order and arrange delivery.";
 
   return `<tr>
     <td style="padding:20px 32px 8px;">
@@ -453,7 +454,22 @@ function buildCustomerMessage(isMk: boolean): string {
 }
 
 function buildDeliverySection(data: CheckoutInput, isMk: boolean): string {
-  const heading = isMk ? "Податоци за достава" : "Delivery details";
+  const isPickup = data.fulfillmentMethod === "pickup";
+  const heading = isPickup
+    ? isMk
+      ? "Подигнување"
+      : "Pickup"
+    : isMk
+      ? "Податоци за достава"
+      : "Delivery details";
+  const methodLabel = isPickup
+    ? isMk
+      ? "Подигнување во салон (Штип)"
+      : "Store pickup (Shtip)"
+    : isMk
+      ? "Испорака по карго"
+      : "Cargo delivery";
+
   const rows = [
     detailRow(isMk ? "Име" : "Name", escapeHtml(data.fullName)),
     detailRow(isMk ? "Телефон" : "Phone", escapeHtml(data.phone)),
@@ -461,9 +477,12 @@ function buildDeliverySection(data: CheckoutInput, isMk: boolean): string {
       isMk ? "Е-пошта" : "Email",
       data.email ? escapeHtml(data.email) : "—",
     ),
+    detailRow(isMk ? "Начин" : "Method", escapeHtml(methodLabel)),
     detailRow(
       isMk ? "Адреса" : "Address",
-      `${escapeHtml(data.city)}<br/>${escapeHtml(data.address)}`,
+      isPickup
+        ? escapeHtml(methodLabel)
+        : `${escapeHtml(data.city)}<br/>${escapeHtml(data.address)}`,
     ),
   ];
 
@@ -540,19 +559,24 @@ function toResendAttachment(
   };
 }
 
-function buildSvgPrintAttachments(data: CheckoutInput): EmailAttachment[] {
+async function buildSvgPrintAttachments(
+  data: CheckoutInput,
+): Promise<EmailAttachment[]> {
   const attachments: EmailAttachment[] = [];
 
-  data.items.forEach((item, itemIndex) => {
-    const printFiles = getSvgPrintFilesFromMetadata(item.metadata, item.name);
-    printFiles.forEach((file) => {
+  for (const [itemIndex, item] of data.items.entries()) {
+    const printFiles = await resolveSvgPrintFilesFromMetadata(
+      item.metadata,
+      item.name,
+    );
+    for (const file of printFiles) {
       attachments.push({
         filename: `item-${itemIndex + 1}-${file.filename}`,
         content: Buffer.from(file.svg, "utf-8"),
         contentType: "image/svg+xml",
       });
-    });
-  });
+    }
+  }
 
   return attachments;
 }
@@ -580,13 +604,21 @@ async function buildOriginalUploadAttachments(
   return attachments;
 }
 
+export type OrderEmailExtras = {
+  discountAmount?: number;
+  subtotalAmount?: number;
+  couponCode?: string | null;
+  rewardCoupon?: { code: string; amount: number; endsAt: string | null } | null;
+};
+
 export async function sendOrderEmails(
   orderNumber: string,
   data: CheckoutInput,
   totalAmount: number,
+  extras: OrderEmailExtras = {},
 ) {
-  const resend = getResend();
-  const from = process.env.EMAIL_FROM ?? "Print 8 <onboarding@resend.dev>";
+  const resend = getResendClient();
+  const from = getEmailFromAddress("Print 8 <onboarding@resend.dev>");
   const adminEmail = process.env.ORDER_NOTIFICATION_EMAIL;
 
   if (!resend) {
@@ -598,7 +630,7 @@ export async function sendOrderEmails(
   const stickerRefs = collectOrderStickers(data.items);
   const previewEmbeds = buildOrderPreviewEmbeds(data);
   const designAttachments = buildDesignPreviewAttachments(previewEmbeds);
-  const svgPrintAttachments = buildSvgPrintAttachments(data);
+  const svgPrintAttachments = await buildSvgPrintAttachments(data);
   const stickerAttachments = await buildStickerAttachments(stickerRefs);
   const originalAttachments = await buildOriginalUploadAttachments(fileIds);
   const total = formatPrice(totalAmount, data.locale);
@@ -617,6 +649,38 @@ export async function sendOrderEmails(
   const itemsHtml = buildOrderItemsEmailHtml(data, itemLabels, previewEmbeds);
   const inlinePreviewAttachments = previewEmbeds.map(toResendAttachment);
 
+  const discountRows: string[] = [];
+  if (extras.couponCode && extras.discountAmount && extras.discountAmount > 0) {
+    const discountLabel = formatPrice(extras.discountAmount, data.locale);
+    discountRows.push(
+      detailTable([
+        detailRow(
+          isMk ? "Купон" : "Coupon",
+          escapeHtml(extras.couponCode),
+        ),
+        detailRow(isMk ? "Попуст" : "Discount", `−${discountLabel}`),
+      ]),
+    );
+  }
+  if (extras.rewardCoupon) {
+    const rewardAmount = formatPrice(extras.rewardCoupon.amount, data.locale);
+    discountRows.push(
+      detailTable([
+        detailRow(
+          isMk ? "Награда купон" : "Reward coupon",
+          escapeHtml(extras.rewardCoupon.code),
+        ),
+        detailRow(isMk ? "Вредност" : "Value", rewardAmount),
+        detailRow(
+          isMk ? "Важно до" : "Valid until",
+          extras.rewardCoupon.endsAt
+            ? escapeHtml(extras.rewardCoupon.endsAt.slice(0, 10))
+            : "—",
+        ),
+      ]),
+    );
+  }
+
   const customerHtml = buildEmailShell({
     preheader: isMk
       ? `Потврда за нарачка ${orderNumber}. Вкупно ${total}.`
@@ -627,9 +691,10 @@ export async function sendOrderEmails(
       : "We received your order and are getting it ready.",
     bodyRowsHtml: [
       buildSummaryBanner(orderNumber, total, isMk),
-      buildCustomerMessage(isMk),
+      buildCustomerMessage(isMk, data.fulfillmentMethod === "pickup"),
       buildDeliverySection(data, isMk),
       itemsHtml,
+      ...discountRows,
       buildTotalRow(total, isMk),
     ].join(""),
     footerNote: isMk

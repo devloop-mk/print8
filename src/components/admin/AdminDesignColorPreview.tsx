@@ -6,18 +6,36 @@ import {
   products,
   type Product,
   type ProductDesignTemplate,
+  type ProductType,
 } from '@/lib/data/catalog';
 import {
+  DESIGN_OVERLAY_LAYER_CLASS,
   getDesignCompositeOverlayUrl,
+  getDesignOverlayLayerStyle,
   normalizeHex,
-  resolveOverlayPlacement,
+  resolveOverlayPlacementForSide,
 } from '@/lib/products/design-overlay';
-import { resolveDesignProduct } from '@/lib/products/garment-fit';
+import {
+  getDesignApplicableFits,
+  getDesignPrimaryProductType,
+  resolveTshirtProductForDesign,
+} from '@/lib/products/garment-fit';
 import {
   getMockupImageDisplayStyle,
   getProductMockupLayout,
 } from '@/lib/products/product-mockup-layout';
 import { resolveAssetUrl } from '@/lib/storage/asset-url';
+
+const PREVIEW_PRODUCT_BY_TYPE: Partial<Record<ProductType, string>> = {
+  cup: 'cup-glass-beer',
+  mug: 'mug-classic',
+  thermos: 'thermos-classic',
+  't-shirt': 'tshirt-basic-white',
+  hoodie: 'hoodie-basic',
+  cap: 'cap-classic',
+  bag: 'bag-tote',
+  bodysuit: 'bodysuit-basic',
+};
 
 function getAdminOverlayUrl(
   design: ProductDesignTemplate,
@@ -42,13 +60,13 @@ export function AdminDesignColorPreview({
   const shirtColor = normalizeHex(color);
   const mockupSide = design.defaultSide ?? 'front';
   const shirtMockup = getProductMockup(product, shirtColor, mockupSide);
-  const placement = resolveOverlayPlacement(design, product);
+  const placement = resolveOverlayPlacementForSide(design, mockupSide, product);
   const overlaySrc = useMemo(() => getAdminOverlayUrl(design), [design]);
   const mockupLayout = getProductMockupLayout(product);
   const mockupStyle = getMockupImageDisplayStyle(
     product,
     shirtMockup,
-    'catalog-design',
+    'customizer',
   );
 
   return (
@@ -74,13 +92,8 @@ export function AdminDesignColorPreview({
             src={overlaySrc}
             alt=""
             draggable={false}
-            className="pointer-events-none absolute z-[2] object-contain"
-            style={{
-              left: `${placement.position.x}%`,
-              top: `${placement.position.y}%`,
-              width: `${placement.scale}%`,
-              transform: 'translate(-50%, -50%)',
-            }}
+            className={DESIGN_OVERLAY_LAYER_CLASS}
+            style={getDesignOverlayLayerStyle(placement)}
           />
         ) : null}
       </div>
@@ -88,28 +101,47 @@ export function AdminDesignColorPreview({
   );
 }
 
+/**
+ * Product used for admin color-matrix mockups.
+ * Prefers productTypes[0] (e.g. bodysuit for baby milestones), not t-shirt.
+ */
 export function resolveAdminPreviewProduct(
   template: ProductDesignTemplate,
+  productType?: ProductType,
 ): Product | null {
-  if (template.productTypes.includes('t-shirt')) {
+  const type =
+    productType && template.productTypes.includes(productType)
+      ? productType
+      : (template.productTypes[0] ?? getDesignPrimaryProductType(template));
+
+  if (type === 't-shirt') {
     try {
-      return resolveDesignProduct(template);
+      const fits = getDesignApplicableFits(template);
+      return resolveTshirtProductForDesign(template, fits[0] ?? 'unisex');
     } catch {
       // Fall through to linked-product lookup.
     }
   }
 
+  if (template.productIds?.length) {
+    const byId = template.productIds
+      .map((id) => products.find((product) => product.id === id))
+      .find((product) => product?.type === type);
+    if (byId) return byId;
+  }
+
+  const preferredId = PREVIEW_PRODUCT_BY_TYPE[type];
+  if (preferredId) {
+    const preferred = products.find((product) => product.id === preferredId);
+    if (preferred) return preferred;
+  }
+
   const linked = products.filter(
     (product) =>
-      template.productTypes.includes(product.type) &&
+      product.type === type &&
       (!template.productIds?.length ||
         template.productIds.includes(product.id)),
   );
 
-  return (
-    linked.find((product) => product.type === 't-shirt') ??
-    products.find((product) => product.id === 'tshirt-basic-white') ??
-    linked[0] ??
-    null
-  );
+  return linked[0] ?? products.find((product) => product.type === type) ?? null;
 }

@@ -1,4 +1,4 @@
-import type { CartItem } from '@/components/cart/CartProvider';
+import type { CartItem } from '@/lib/cart/types';
 import type { CheckoutInput } from '@/lib/validations/order';
 import type { ProductSide } from '@/lib/data/catalog';
 import { PRODUCT_SIDES, getSideMetadataPrefix } from '@/lib/products/product-sides';

@@ -9,6 +9,7 @@ import {
   type Product,
   type ProductDesignTemplate,
 } from '@/lib/data/catalog';
+import { DEFAULT_TRENDING_PRODUCT_DESIGN_IDS } from '@/lib/data/trending-designs';
 import { matchesCatalogSearch } from '@/lib/catalog/search-match';
 import {
   DESIGN_CATEGORY_KEYWORDS,
@@ -23,7 +24,7 @@ import { productBelongsToCategory, productNavCategories } from '@/lib/products/p
 import { resolveDesignPreviewColor } from '@/lib/products/design-applicable-colors';
 import { getProductDesignThumbnail } from '@/lib/products/design-overlay';
 import { resolveAssetUrl } from '@/lib/storage/asset-url';
-import { buildCustomizerUrl } from '@/lib/products/paths';
+import { buildDesignDetailUrl } from '@/lib/products/paths';
 import type { ProductDesignCatalogEntry } from '@/lib/products/design-catalog';
 
 /** Initial matches shown before "See more" on search UIs. */
@@ -316,7 +317,7 @@ function buildCatalogItemResults(
     results.push({
       id: product.id,
       kind: 'product',
-      href: buildCustomizerUrl(product.id, product.type),
+      href: `/products/${product.id}`,
       title: labels.productName(product),
       subtitle: labels.productTypePlural(product.type),
       searchText: buildProductSearchText(product, labels),
@@ -331,31 +332,32 @@ function buildCatalogItemResults(
         design.productTypes.includes(product.type) &&
         (!design.productIds || design.productIds.includes(product.id)),
     );
+    if (matchedProducts.length === 0) continue;
+    // Prefer productTypes[0] (e.g. bodysuit for baby designs), not catalog order.
+    const primaryProduct =
+      matchedProducts.find(
+        (product) => product.type === design.productTypes[0],
+      ) ?? matchedProducts[0];
 
-    for (const product of matchedProducts) {
-      const previewColor = resolveDesignPreviewColor(design, product);
+    const previewColor = resolveDesignPreviewColor(design, primaryProduct);
 
-      results.push({
-        id: `${design.id}:${product.id}`,
-        kind: 'product-design',
-        href: buildCustomizerUrl(product.id, product.type, {
-          design: design.id,
-          color: previewColor,
-        }),
-        title: labels.productDesignName(design),
-        subtitle: labels.productType(product.type),
-        searchText: buildProductDesignSearchText(
-          { design, products: [product] },
-          labels,
-        ),
-        productId: product.id,
-        premadeDesignId: design.id,
-        productType: product.type,
-        productDesignCategory: design.category,
-        image:
-          getProductDesignThumbnail(design, previewColor) ?? product.image,
-      });
-    }
+    results.push({
+      id: design.id,
+      kind: 'product-design',
+      href: buildDesignDetailUrl(design.id),
+      title: labels.productDesignName(design),
+      subtitle: labels.productType(primaryProduct.type),
+      searchText: buildProductDesignSearchText(
+        { design, products: matchedProducts },
+        labels,
+      ),
+      productId: primaryProduct.id,
+      premadeDesignId: design.id,
+      productType: primaryProduct.type,
+      productDesignCategory: design.category,
+      image:
+        getProductDesignThumbnail(design, previewColor) ?? primaryProduct.image,
+    });
   }
 
   return results;
@@ -409,6 +411,45 @@ export function searchGlobalCatalog(
   );
 
   return [...matchedCollections, ...matchedItems];
+}
+
+/** Featured picks shown when search opens with an empty query. */
+export function getFeaturedCatalogResults(
+  labels: CatalogSearchLabels,
+  extraDesigns: SearchableDesign[] = [],
+  limit = 8,
+): GlobalSearchResult[] {
+  const { items } = getCatalogSearchIndex(labels, extraDesigns);
+  const byId = new Map(items.map((item) => [item.id, item]));
+
+  const featuredIds = [
+    ...DEFAULT_TRENDING_PRODUCT_DESIGN_IDS,
+    'tshirt-basic-white',
+    'mug-classic',
+    'hoodie-basic',
+    'bag-tote',
+  ];
+
+  const featured: GlobalSearchResult[] = [];
+  const seen = new Set<string>();
+
+  for (const id of featuredIds) {
+    const item = byId.get(id);
+    if (!item || seen.has(item.id)) continue;
+    seen.add(item.id);
+    featured.push(item);
+    if (featured.length >= limit) return featured;
+  }
+
+  for (const item of items) {
+    if (item.kind !== 'product' && item.kind !== 'product-design') continue;
+    if (seen.has(item.id)) continue;
+    seen.add(item.id);
+    featured.push(item);
+    if (featured.length >= limit) break;
+  }
+
+  return featured;
 }
 
 export function createCatalogSearchLabels(hooks: {

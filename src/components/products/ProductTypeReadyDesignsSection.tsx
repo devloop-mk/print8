@@ -1,20 +1,25 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { ArrowRight, Sparkles } from 'lucide-react';
-import type { ProductSide, ProductType } from '@/lib/data/catalog';
+import type { ProductType } from '@/lib/data/catalog';
 import {
   filterDesignCatalogEntries,
   getCatalogColors,
   type ProductDesignCatalogEntry,
 } from '@/lib/products/design-catalog';
+import {
+  sortDesignCatalogEntries,
+  type DesignCatalogSort,
+} from '@/lib/products/design-catalog-sort';
 import { PRODUCT_OFFERING_PATHS } from '@/lib/products/paths';
 import {
   CatalogFilterLayout,
   type CatalogFilterGroup,
 } from '@/components/catalog/CatalogFilterLayout';
+import { CatalogSortSelect } from '@/components/catalog/CatalogSortSelect';
 import { ProductDesignCatalogCard } from '@/components/products/ProductDesignCatalogCard';
 import { filterProductDesignEntriesBySearchQuery } from '@/lib/catalog/catalog-search';
 import { useCatalogSearchLabels } from '@/hooks/useCatalogSearchLabels';
@@ -22,8 +27,6 @@ import { CatalogGridLayout } from '@/components/catalog/CatalogGrid';
 import { CatalogPagination } from '@/components/catalog/CatalogPagination';
 import { useCatalogPagination } from '@/hooks/useCatalogPagination';
 import { Reveal } from '@/components/motion/Reveal';
-
-type SideFilter = ProductSide | 'all';
 
 type ProductTypeReadyDesignsSectionProps = {
   type: ProductType;
@@ -38,10 +41,11 @@ export function ProductTypeReadyDesignsSection({
   const tt = useTranslations('products.typePages');
   const tc = useTranslations('products.catalog');
   const ts = useTranslations('search');
+  const locale = useLocale() as 'mk' | 'en';
   const searchLabels = useCatalogSearchLabels();
 
   const [colorFilter, setColorFilter] = useState<string | 'all'>('all');
-  const [sideFilter, setSideFilter] = useState<SideFilter>('all');
+  const [sort, setSort] = useState<DesignCatalogSort>('featured');
   const [searchQuery, setSearchQuery] = useState('');
 
   const availableColors = useMemo(() => getCatalogColors(entries), [entries]);
@@ -51,24 +55,34 @@ export function ProductTypeReadyDesignsSection({
       filterDesignCatalogEntries(entries, {
         type,
         color: colorFilter,
-        side: sideFilter,
       }),
-    [entries, type, colorFilter, sideFilter],
+    [entries, type, colorFilter],
   );
 
-  const filtered = useMemo(
-    () =>
-      filterProductDesignEntriesBySearchQuery(
-        filteredByAttributes,
-        searchQuery,
-        searchLabels,
-      ),
-    [filteredByAttributes, searchQuery, searchLabels],
-  );
+  const filtered = useMemo(() => {
+    const searched = filterProductDesignEntriesBySearchQuery(
+      filteredByAttributes,
+      searchQuery,
+      searchLabels,
+    );
+    return sortDesignCatalogEntries(searched, sort, {
+      locale,
+      colorFilter,
+      translateName: (key) => t(key),
+    });
+  }, [
+    colorFilter,
+    filteredByAttributes,
+    locale,
+    searchLabels,
+    searchQuery,
+    sort,
+    t,
+  ]);
 
   const filterSignature = useMemo(
-    () => [colorFilter, sideFilter, searchQuery.trim()].join('|'),
-    [colorFilter, searchQuery, sideFilter],
+    () => [colorFilter, searchQuery.trim(), sort].join('|'),
+    [colorFilter, searchQuery, sort],
   );
 
   const { page, setPage, resetPage, paginate } = useCatalogPagination({
@@ -102,23 +116,8 @@ export function ProductTypeReadyDesignsSection({
       });
     }
 
-    groups.push({
-      kind: 'pills',
-      id: 'side',
-      title: tc('filterSide'),
-      options: [
-        { value: 'all' as const, label: tc('allSides') },
-        { value: 'front' as const, label: tc('sideFront') },
-        { value: 'back' as const, label: tc('sideBack') },
-        { value: 'left' as const, label: tc('sideLeft') },
-        { value: 'right' as const, label: tc('sideRight') },
-      ],
-      value: sideFilter,
-      onChange: (value) => setSideFilter(value as SideFilter),
-    });
-
     return groups;
-  }, [availableColors, colorFilter, sideFilter, tc]);
+  }, [availableColors, colorFilter, tc]);
 
   if (entries.length === 0) {
     return null;
@@ -168,7 +167,11 @@ export function ProductTypeReadyDesignsSection({
             </p>
           ) : (
             <>
-              <CatalogGridLayout>
+              <CatalogGridLayout
+                toolbarStart={
+                  <CatalogSortSelect value={sort} onChange={setSort} />
+                }
+              >
                 {visibleEntries.map((entry) => (
                   <ProductDesignCatalogCard
                     key={entry.design.id}

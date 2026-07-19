@@ -3,6 +3,24 @@ import type { NextRequest } from 'next/server';
 type Bucket = { count: number; resetAt: number };
 
 const buckets = new Map<string, Bucket>();
+const MAX_BUCKETS = 5_000;
+
+function pruneExpiredBuckets(now: number) {
+  if (buckets.size < MAX_BUCKETS) return;
+  for (const [key, entry] of buckets) {
+    if (now > entry.resetAt) buckets.delete(key);
+  }
+  // Hard cap under extreme churn so memory cannot grow without bound.
+  if (buckets.size > MAX_BUCKETS) {
+    const overflow = buckets.size - MAX_BUCKETS;
+    let removed = 0;
+    for (const key of buckets.keys()) {
+      buckets.delete(key);
+      removed += 1;
+      if (removed >= overflow) break;
+    }
+  }
+}
 
 export function getClientIp(request: NextRequest | Request): string {
   // Prefer platform-set headers that clients cannot forge.
@@ -28,6 +46,7 @@ export function checkRateLimit(
   windowMs: number,
 ): { allowed: boolean; retryAfterSec?: number } {
   const now = Date.now();
+  pruneExpiredBuckets(now);
   const bucketKey = `${key}:${Math.floor(now / windowMs)}`;
   const entry = buckets.get(bucketKey);
 

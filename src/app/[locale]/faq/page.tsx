@@ -5,7 +5,14 @@ import { PageIntro } from "@/components/brand/PageIntro";
 import { buildSectionMetadata } from "@/lib/seo/page-metadata";
 import type { Locale } from "@/i18n/routing";
 
-const faqKeys = ["payment", "formats", "delivery", "custom", "minimum"] as const;
+const faqKeys = [
+  "payment",
+  "formats",
+  "delivery",
+  "production",
+  "custom",
+  "minimum",
+] as const;
 
 export async function generateMetadata({
   params,

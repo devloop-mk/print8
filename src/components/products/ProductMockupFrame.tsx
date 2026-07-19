@@ -4,6 +4,7 @@ import {
   type ProductMockupLayout,
 } from "@/lib/products/product-mockup-layout";
 import type { Product, ProductType } from "@/lib/data/catalog";
+import { cn } from "@/lib/utils";
 
 export {
   getProductMockupLayout,
@@ -12,7 +13,7 @@ export {
 
 export function ProductMockupFrame({
   children,
-  className = "",
+  className,
   layout,
   productType,
   variant = "customizer",
@@ -38,7 +39,10 @@ export function ProductMockupFrame({
   return (
     <div
       data-mockup-frame
-      className={`relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border border-ink-100 bg-white ${className}`}
+      className={cn(
+        "relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border border-ink-100 bg-white",
+        className,
+      )}
     >
       <div className={innerClass}>
         <div className="relative h-full w-full" style={innerStyle}>

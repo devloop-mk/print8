@@ -198,6 +198,62 @@ export const couplePackTemplates: CouplePackTemplate[] = [
       },
     ],
   },
+  {
+    id: 'couple-fox-mouse',
+    nameKey: 'coupleFoxMouse',
+    titleEn: 'Fox & Mouse',
+    titleMk: 'Лисица и глушец',
+    productTypes: ['t-shirt'],
+    recommendedColor: '#ffffff',
+    applicableColors: ['#ffffff', '#000000', '#c5ccd6'],
+    collection: 'couple-packs',
+    partnerDesigns: [
+      {
+        role: 'partner1',
+        designId: 'couple-fox-mouse-fox',
+        labelEn: 'Fox',
+        labelMk: 'Лисица',
+        overlayImage: '/NEW_DESIGNS/couples-generated/couple-fox-partner.png',
+        ...OVERLAY_DEFAULTS,
+      },
+      {
+        role: 'partner2',
+        designId: 'couple-fox-mouse-mouse',
+        labelEn: 'Mouse',
+        labelMk: 'Глушец',
+        overlayImage: '/NEW_DESIGNS/couples-generated/couple-mouse-partner.png',
+        ...OVERLAY_DEFAULTS,
+      },
+    ],
+  },
+  {
+    id: 'couple-soulmates',
+    nameKey: 'coupleSoulmates',
+    titleEn: 'Soulmates',
+    titleMk: 'Сродници на душата',
+    productTypes: ['t-shirt'],
+    recommendedColor: '#ffffff',
+    applicableColors: ['#ffffff', '#000000', '#c5ccd6'],
+    collection: 'couple-packs',
+    partnerDesigns: [
+      {
+        role: 'partner1',
+        designId: 'couple-soulmates-him',
+        labelEn: 'Soulmates',
+        labelMk: 'Сродници',
+        overlayImage: '/NEW_DESIGNS/couples-generated/couple-soulmates.png',
+        ...OVERLAY_DEFAULTS,
+      },
+      {
+        role: 'partner2',
+        designId: 'couple-soulmates-her',
+        labelEn: 'Soulmates',
+        labelMk: 'Сродници',
+        overlayImage: '/NEW_DESIGNS/couples-generated/couple-soulmates.png',
+        ...OVERLAY_DEFAULTS,
+      },
+    ],
+  },
 ];
 
 export function getCouplePackTemplates(): CouplePackTemplate[] {

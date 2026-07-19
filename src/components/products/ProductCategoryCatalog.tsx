@@ -7,11 +7,12 @@ import { ArrowLeft } from 'lucide-react';
 import type { ProductType } from '@/lib/data/catalog';
 import {
   getProductNavCategory,
-  getProductsForCategory,
   productCategoryHref,
   productNavCategories,
   type ProductNavCategoryId,
 } from '@/lib/products/product-nav';
+import { getProductsForCategory } from '@/lib/products/product-nav-catalog';
+import { sortByDisplayOrder } from '@/lib/products/sort-by-display-order';
 import { getProductTypeIcon } from '@/lib/products/product-type-icons';
 import { ProductCardGrid } from '@/components/products/ProductCardGrid';
 import {
@@ -34,9 +35,11 @@ type ProductCategoryCatalogVariant = 'browse' | 'landing';
 export function ProductCategoryCatalog({
   categoryId,
   variant = 'browse',
+  displayOrder,
 }: {
   categoryId: ProductNavCategoryId;
   variant?: ProductCategoryCatalogVariant;
+  displayOrder?: Record<string, number>;
 }) {
   const t = useTranslations('products');
   const tcat = useTranslations('products.catalog');
@@ -45,7 +48,10 @@ export function ProductCategoryCatalog({
   const ts = useTranslations('search');
   const searchLabels = useCatalogSearchLabels();
   const category = getProductNavCategory(categoryId);
-  const categoryProducts = getProductsForCategory(categoryId);
+  const categoryProducts = useMemo(
+    () => sortByDisplayOrder(getProductsForCategory(categoryId), displayOrder),
+    [categoryId, displayOrder],
+  );
   const [typeFilter, setTypeFilter] = useState<CategoryTypeFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
 

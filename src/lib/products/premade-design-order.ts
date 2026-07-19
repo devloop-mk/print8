@@ -5,7 +5,7 @@ import {
   type ProductDesignTemplate,
   type ProductSide,
 } from '@/lib/data/catalog';
-import type { CartItem } from '@/components/cart/CartProvider';
+import type { CartItem } from '@/lib/cart/types';
 import {
   sideDesignsFromTemplate,
   type SideDesign,

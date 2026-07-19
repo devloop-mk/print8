@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { ProductCategoryCatalog } from '@/components/products/ProductCategoryCatalog';
 import { ProductCategoryPathChooser } from '@/components/products/ProductCategoryPathChooser';
 import { SectionLoading } from '@/components/ui/SectionLoading';
+import { getProductDisplayOrderRecord } from '@/lib/cms/display-order';
 import {
   categoryHasPremadeDesigns,
   getCategoryOffering,
@@ -44,6 +45,9 @@ export default async function ProductCategoryPage({
 
   const offering = getCategoryOffering(category);
   const showPremadeCatalog = categoryHasPremadeDesigns(offering);
+  const displayOrder = showPremadeCatalog
+    ? undefined
+    : await getProductDisplayOrderRecord();
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -51,7 +55,11 @@ export default async function ProductCategoryPage({
         {showPremadeCatalog ? (
           <ProductCategoryPathChooser categoryId={category} />
         ) : (
-          <ProductCategoryCatalog categoryId={category} variant="landing" />
+          <ProductCategoryCatalog
+            categoryId={category}
+            variant="landing"
+            displayOrder={displayOrder}
+          />
         )}
       </Suspense>
     </div>

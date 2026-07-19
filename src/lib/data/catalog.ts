@@ -1,5 +1,12 @@
 import { drinkwarePackTemplates } from '@/lib/data/drinkware-pack';
 import { babyPackTemplates } from '@/lib/data/baby-pack';
+import { trendingMkPackTemplates } from '@/lib/data/trending-mk-pack';
+import { familyPackTemplates } from '@/lib/data/family-pack';
+import { kidsBirthdayPackTemplates } from '@/lib/data/kids-birthday-pack';
+import { kidsGeneratedPackTemplates } from '@/lib/data/kids-generated-pack';
+import { dualSideGeneratedPackTemplates } from '@/lib/data/dual-side-generated-pack';
+import { localMkDrinkwarePackTemplates } from '@/lib/data/local-mk-drinkware-pack';
+import { capPackTemplates } from '@/lib/data/cap-pack';
 import { streetwearPackTemplates } from '@/lib/data/streetwear-pack';
 import { getCouplePackDesignTemplates } from '@/lib/data/couple-pack';
 import {
@@ -1209,7 +1216,14 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
   },
   ...streetwearPackTemplates,
   ...drinkwarePackTemplates,
+  ...localMkDrinkwarePackTemplates,
+  ...capPackTemplates,
   ...babyPackTemplates,
+  ...trendingMkPackTemplates,
+  ...familyPackTemplates,
+  ...kidsBirthdayPackTemplates,
+  ...kidsGeneratedPackTemplates,
+  ...dualSideGeneratedPackTemplates,
   ...getCouplePackDesignTemplates(),
 ];
 
@@ -1466,7 +1480,7 @@ export const products: Product[] = [
     nameKey: 'mugClassic',
     image: '/mugs/mug-milkyblue.jpg',
     colorsImages: {
-      '#ffffff': '/mugs/mug-white-classic.jpg',
+      '#ffffff': '/mugs/mug-white-classic-v2.jpg',
       '#ADD8E6': '/mugs/mug-milkyblue.jpg',
       '#000000': '/mugs/mug-black.jpg',
     },

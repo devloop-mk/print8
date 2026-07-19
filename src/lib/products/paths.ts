@@ -5,11 +5,19 @@ export const PRODUCT_OFFERING_PATHS = {
   custom: '/products/custom',
   brandingPack: '/products/branding-pack',
   readyDesigns: '/products/ready-designs',
+  kidsReadyDesigns: '/products/ready-designs/kids',
+  couplesReadyDesigns: '/products/ready-designs/couples',
   textTemplates: '/products/text-templates',
   category: (categoryId: string) => `/products/category/${categoryId}`,
   categoryBrowse: (categoryId: string) => `/products/category/${categoryId}/browse`,
   type: (type: string) => `/products/type/${type}`,
 } as const;
+
+/** Collection id used by kids birthday + generated animal tee packs. */
+export const KIDS_DESIGN_COLLECTION = 'kids-birthday';
+
+/** Collection id used by matching couple-pack designs. */
+export const COUPLES_DESIGN_COLLECTION = 'couple-packs';
 
 export type CustomizerUrlOptions = {
   design?: string;

@@ -2,6 +2,7 @@ export type CheckoutFormFields = {
   fullName: string;
   phone: string;
   email: string;
+  fulfillmentMethod: 'cargo' | 'pickup';
   city: string;
   address: string;
   notes?: string;
@@ -36,13 +37,15 @@ export function validateCheckoutFields(
   if (!email) errors.email = messages.required;
   else if (!EMAIL_PATTERN.test(email)) errors.email = messages.invalidEmail;
 
-  const city = form.city.trim();
-  if (!city) errors.city = messages.required;
-  else if (city.length < 2) errors.city = messages.cityTooShort;
+  if (form.fulfillmentMethod === 'cargo') {
+    const city = form.city.trim();
+    if (!city) errors.city = messages.required;
+    else if (city.length < 2) errors.city = messages.cityTooShort;
 
-  const address = form.address.trim();
-  if (!address) errors.address = messages.required;
-  else if (address.length < 5) errors.address = messages.addressTooShort;
+    const address = form.address.trim();
+    if (!address) errors.address = messages.required;
+    else if (address.length < 5) errors.address = messages.addressTooShort;
+  }
 
   return errors;
 }

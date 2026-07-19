@@ -5,12 +5,18 @@ import {
   type ProductDesignCategory,
   type ProductType,
 } from '@/lib/data/catalog';
+import { getProductDisplayOrderRecord } from '@/lib/cms/display-order';
 import {
   buildProductDesignCatalogEntries,
   filterDesignCatalogEntries,
   type ProductDesignCatalogEntry,
 } from '@/lib/products/design-catalog';
 import { getMergedProductDesignTemplates } from '@/lib/products/merged-product-designs';
+import {
+  resolveCategoryMockupPreviews,
+  type CategoryMockupPreview,
+} from '@/lib/products/product-type-design-categories';
+import { sortByDisplayOrder } from '@/lib/products/sort-by-display-order';
 
 /** Shared TTL for pages that still use route-level revalidate. */
 export const CATALOG_CACHE_SECONDS = 3600;
@@ -20,9 +26,16 @@ export const CATALOG_CACHE_TAGS = {
   readyDesigns: 'catalog-ready-designs',
 } as const;
 
-/** Per-request memoization for synchronous catalog reads. */
+/** Per-request memoization for synchronous catalog reads (catalog array order). */
 export const getProductsByType = cache((type: ProductType): Product[] =>
   products.filter((product) => product.type === type),
+);
+
+export const getOrderedProductsByType = cache(
+  async (type: ProductType): Promise<Product[]> => {
+    const orderMap = await getProductDisplayOrderRecord();
+    return sortByDisplayOrder(getProductsByType(type), orderMap);
+  },
 );
 
 /**
@@ -58,18 +71,21 @@ export const getCachedProductDesignCatalogEntries = cache(
 export type ProductTypeCatalogData = {
   products: Product[];
   readyDesignEntries: ProductDesignCatalogEntry[];
+  categoryPreviews: Record<string, CategoryMockupPreview>;
 };
 
 export async function getProductTypeCatalogData(
   type: ProductType,
 ): Promise<ProductTypeCatalogData> {
-  const readyDesignEntries = await getCachedReadyDesignEntriesForType(
-    type,
-    'image-designs',
-  );
+  const [readyDesignEntries, products, categoryPreviews] = await Promise.all([
+    getCachedReadyDesignEntriesForType(type, 'image-designs'),
+    getOrderedProductsByType(type),
+    resolveCategoryMockupPreviews(type),
+  ]);
 
   return {
-    products: getProductsByType(type),
+    products,
     readyDesignEntries,
+    categoryPreviews,
   };
 }

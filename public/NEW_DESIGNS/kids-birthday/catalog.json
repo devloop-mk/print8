@@ -1,0 +1,95 @@
+{
+  "generatedAt": "2026-07-17T23:22:19.660Z",
+  "items": [
+    {
+      "id": "rodendensko-dete",
+      "titleMk": "Роденденско дете",
+      "titleEn": "Birthday kid",
+      "file": "/NEW_DESIGNS/kids-birthday/rodendensko-dete.png"
+    },
+    {
+      "id": "rodendensko-momche",
+      "titleMk": "Роденденско момче",
+      "titleEn": "Birthday boy",
+      "file": "/NEW_DESIGNS/kids-birthday/rodendensko-momche.png"
+    },
+    {
+      "id": "rodendensko-devojche",
+      "titleMk": "Роденденско девојче",
+      "titleEn": "Birthday girl",
+      "file": "/NEW_DESIGNS/kids-birthday/rodendensko-devojche.png"
+    },
+    {
+      "id": "mama-na-rodendenskoto",
+      "titleMk": "Мама на роденденското дете",
+      "titleEn": "Mom of the birthday kid",
+      "file": "/NEW_DESIGNS/kids-birthday/mama-na-rodendenskoto.png"
+    },
+    {
+      "id": "tato-na-rodendenskoto",
+      "titleMk": "Тато на роденденското дете",
+      "titleEn": "Dad of the birthday kid",
+      "file": "/NEW_DESIGNS/kids-birthday/tato-na-rodendenskoto.png"
+    },
+    {
+      "id": "dino-rodenden",
+      "titleMk": "Дино роденден",
+      "titleEn": "Dino birthday",
+      "file": "/NEW_DESIGNS/kids-birthday/dino-rodenden.png"
+    },
+    {
+      "id": "svemirski-rodenden",
+      "titleMk": "Свемирски роденден",
+      "titleEn": "Space birthday",
+      "file": "/NEW_DESIGNS/kids-birthday/svemirski-rodenden.png"
+    },
+    {
+      "id": "ednorog-rodenden",
+      "titleMk": "Еднорог роденден",
+      "titleEn": "Unicorn birthday",
+      "file": "/NEW_DESIGNS/kids-birthday/ednorog-rodenden.png"
+    },
+    {
+      "id": "super-heroj",
+      "titleMk": "Супер херој",
+      "titleEn": "Super hero",
+      "file": "/NEW_DESIGNS/kids-birthday/super-heroj.png"
+    },
+    {
+      "id": "golem-brat",
+      "titleMk": "Голем брат",
+      "titleEn": "Big brother",
+      "file": "/NEW_DESIGNS/kids-birthday/golem-brat.png"
+    },
+    {
+      "id": "golema-sestra",
+      "titleMk": "Голема сестра",
+      "titleEn": "Big sister",
+      "file": "/NEW_DESIGNS/kids-birthday/golema-sestra.png"
+    },
+    {
+      "id": "malo-chudo",
+      "titleMk": "Мало чудо",
+      "titleEn": "Little miracle",
+      "file": "/NEW_DESIGNS/kids-birthday/malo-chudo.png"
+    },
+    {
+      "id": "igrach",
+      "titleMk": "Играч",
+      "titleEn": "Player",
+      "file": "/NEW_DESIGNS/kids-birthday/igrach.png"
+    },
+    {
+      "id": "shumsko-dete",
+      "titleMk": "Шумско дете",
+      "titleEn": "Forest kid",
+      "file": "/NEW_DESIGNS/kids-birthday/shumsko-dete.png"
+    },
+    {
+      "id": "denes-e-moj-den",
+      "titleMk": "Денес е мој ден",
+      "titleEn": "Today is my day",
+      "file": "/NEW_DESIGNS/kids-birthday/denes-e-moj-den.png"
+    }
+  ]
+}

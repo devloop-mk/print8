@@ -43,6 +43,10 @@ create table if not exists public.orders (
   items jsonb not null default '[]'::jsonb,
   file_ids jsonb not null default '[]'::jsonb,
   total_amount numeric not null,
+  fulfillment_method text not null default 'cargo',
+  coupon_code text,
+  discount_amount numeric not null default 0,
+  subtotal_amount numeric,
   created_at timestamptz not null default now()
 );
 
@@ -59,6 +63,50 @@ create table if not exists public.page_views (
 create index if not exists page_views_created_at_idx on public.page_views (created_at desc);
 create index if not exists page_views_path_idx on public.page_views (path);
 create index if not exists page_views_visitor_id_idx on public.page_views (visitor_id);
+
+-- Contact messages from the public contact form (admin inbox)
+create table if not exists public.contact_messages (
+  id text primary key,
+  name text not null,
+  email text not null,
+  message text not null,
+  locale text,
+  status text not null default 'new',
+  ip_hash text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists contact_messages_created_at_idx
+  on public.contact_messages (created_at desc);
+
+create index if not exists contact_messages_status_idx
+  on public.contact_messages (status);
+
+grant all on table public.contact_messages to postgres, service_role;
+grant select, insert, update, delete on table public.contact_messages to service_role;
+
+-- Newsletter subscribers (opt-in list for admin broadcasts)
+create table if not exists public.newsletter_subscribers (
+  id text primary key,
+  email text not null,
+  locale text,
+  status text not null default 'active',
+  unsubscribe_token text not null unique,
+  created_at timestamptz not null default now(),
+  unsubscribed_at timestamptz
+);
+
+create unique index if not exists newsletter_subscribers_email_idx
+  on public.newsletter_subscribers (lower(email));
+
+create index if not exists newsletter_subscribers_status_idx
+  on public.newsletter_subscribers (status);
+
+create index if not exists newsletter_subscribers_created_at_idx
+  on public.newsletter_subscribers (created_at desc);
+
+grant all on table public.newsletter_subscribers to postgres, service_role;
+grant select, insert, update, delete on table public.newsletter_subscribers to service_role;
 
 -- Admin-managed merch / product designs (overrides static catalog + new designs)
 create table if not exists public.managed_product_designs (
@@ -78,6 +126,78 @@ create index if not exists managed_product_designs_sort_idx
 
 grant all on table public.managed_product_designs to postgres, service_role;
 grant select, insert, update, delete on table public.managed_product_designs to service_role;
+
+-- Coupons (public codes + reward codes) — see migrations/add-coupons.sql for full seed
+create table if not exists public.coupons (
+  id text primary key,
+  code text not null,
+  kind text not null default 'public',
+  discount_amount numeric not null check (discount_amount > 0),
+  min_order_amount numeric not null default 0 check (min_order_amount >= 0),
+  starts_at timestamptz,
+  ends_at timestamptz,
+  max_redemptions_per_day integer,
+  max_redemptions_total integer,
+  active boolean not null default true,
+  issued_to_email text,
+  issued_from_order_id text,
+  note text,
+  created_at timestamptz not null default now()
+);
+
+create unique index if not exists coupons_code_unique_idx on public.coupons (lower(code));
+
+create table if not exists public.coupon_redemptions (
+  id text primary key,
+  coupon_id text not null references public.coupons (id),
+  order_id text not null references public.orders (id) on delete cascade,
+  order_number text not null,
+  discount_amount numeric not null,
+  customer_email text,
+  customer_phone text,
+  created_at timestamptz not null default now()
+);
+
+create unique index if not exists coupon_redemptions_order_id_idx
+  on public.coupon_redemptions (order_id);
+
+create table if not exists public.coupon_reward_tiers (
+  id text primary key,
+  min_spend numeric not null,
+  reward_amount numeric not null,
+  reward_min_order_amount numeric not null default 0,
+  reward_valid_days integer not null default 30,
+  active boolean not null default true,
+  sort_order integer not null default 0,
+  created_at timestamptz not null default now()
+);
+
+grant all on table public.coupons to postgres, service_role;
+grant all on table public.coupon_redemptions to postgres, service_role;
+grant all on table public.coupon_reward_tiers to postgres, service_role;
+
+-- Spin wheel plays — see migrations/add-spin-wheel.sql
+create table if not exists public.spin_plays (
+  id text primary key,
+  email text not null,
+  email_normalized text not null,
+  prize_key text not null,
+  discount_amount integer not null default 0,
+  coupon_id text references public.coupons (id) on delete set null,
+  coupon_code text,
+  ip_hash text,
+  user_agent_hash text,
+  locale text,
+  created_at timestamptz not null default now()
+);
+
+create unique index if not exists spin_plays_email_normalized_uidx
+  on public.spin_plays (email_normalized);
+
+create index if not exists spin_plays_created_at_idx
+  on public.spin_plays (created_at desc);
+
+grant all on table public.spin_plays to postgres, service_role;
 
 -- Storage bucket (create in Dashboard → Storage → New bucket)
 -- Name: uploads

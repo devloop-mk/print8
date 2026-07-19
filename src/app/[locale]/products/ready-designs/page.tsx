@@ -4,7 +4,14 @@ import { getTranslations } from 'next-intl/server';
 import { ProductDesignsCatalog } from '@/components/products/ProductDesignsCatalog';
 import { SectionLoading } from '@/components/ui/SectionLoading';
 import { getCachedProductDesignCatalogEntries } from '@/lib/cache/catalog-cache';
+import { resolveCouplePackDesignTemplatesMap } from '@/lib/products/couple-pack-resolved';
 import { buildPageMetadata, buildOgImageUrl } from '@/lib/seo/metadata';
+import { redirect } from '@/i18n/navigation';
+import {
+  COUPLES_DESIGN_COLLECTION,
+  KIDS_DESIGN_COLLECTION,
+  PRODUCT_OFFERING_PATHS,
+} from '@/lib/products/paths';
 import type { Locale } from '@/i18n/routing';
 
 export const revalidate = 3600;
@@ -32,9 +39,37 @@ export async function generateMetadata({
   });
 }
 
-export default async function ProductReadyDesignsPage() {
-  const initialEntries =
-    await getCachedProductDesignCatalogEntries('image-designs');
+export default async function ProductReadyDesignsPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ collection?: string | string[] }>;
+}) {
+  const { locale } = await params;
+  const query = await searchParams;
+  const collection = Array.isArray(query.collection)
+    ? query.collection[0]
+    : query.collection;
+
+  if (collection === KIDS_DESIGN_COLLECTION) {
+    redirect({
+      href: PRODUCT_OFFERING_PATHS.kidsReadyDesigns,
+      locale: locale as Locale,
+    });
+  }
+
+  if (collection === COUPLES_DESIGN_COLLECTION) {
+    redirect({
+      href: PRODUCT_OFFERING_PATHS.couplesReadyDesigns,
+      locale: locale as Locale,
+    });
+  }
+
+  const [initialEntries, initialCoupleDesigns] = await Promise.all([
+    getCachedProductDesignCatalogEntries('image-designs'),
+    resolveCouplePackDesignTemplatesMap(),
+  ]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -42,6 +77,7 @@ export default async function ProductReadyDesignsPage() {
         <ProductDesignsCatalog
           category="image-designs"
           initialEntries={initialEntries}
+          initialCoupleDesigns={initialCoupleDesigns}
         />
       </Suspense>
     </div>

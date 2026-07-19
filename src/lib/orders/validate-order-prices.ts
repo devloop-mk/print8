@@ -24,8 +24,10 @@ function unitPricesMatch(client: number, expected: number): boolean {
   return Math.abs(client - expected) <= PRICE_EPSILON;
 }
 
-async function getServiceUnitPrice(serviceId: string): Promise<number | null> {
-  const cmsServices = await cmsDb.services.list();
+function getServiceUnitPrice(
+  serviceId: string,
+  cmsServices: Awaited<ReturnType<typeof cmsDb.services.list>>,
+): number | null {
   const cmsService = cmsServices.find((service) => service.id === serviceId);
   if (cmsService?.active) {
     return cmsService.startingPrice;
@@ -115,6 +117,8 @@ export async function validateOrderPrices(
   | { ok: false; code: 'invalid_price'; itemIndex: number }
 > {
   let totalAmount = 0;
+  const hasServiceItems = data.items.some((item) => item.type === 'service');
+  const cmsServices = hasServiceItems ? await cmsDb.services.list() : [];
 
   for (let index = 0; index < data.items.length; index += 1) {
     const item = data.items[index];
@@ -129,7 +133,7 @@ export async function validateOrderPrices(
         if (!serviceId) {
           return { ok: false, code: 'invalid_price', itemIndex: index };
         }
-        expectedUnitPrice = await getServiceUnitPrice(serviceId);
+        expectedUnitPrice = getServiceUnitPrice(serviceId, cmsServices);
         break;
       }
       case 'design':

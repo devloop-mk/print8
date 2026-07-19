@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import {
   SEARCH_RESULTS_PREVIEW_LIMIT,
+  getFeaturedCatalogResults,
   searchGlobalCatalog,
 } from '@/lib/catalog/catalog-search';
 import { useCatalogSearchLabels } from '@/hooks/useCatalogSearchLabels';
@@ -34,6 +35,11 @@ export function SearchResults() {
     [labels, managedDesigns, query],
   );
 
+  const featuredResults = useMemo(
+    () => getFeaturedCatalogResults(labels, managedDesigns, 12),
+    [labels, managedDesigns],
+  );
+
   const visibleResults = useMemo(
     () =>
       expanded ? results : results.slice(0, SEARCH_RESULTS_PREVIEW_LIMIT),
@@ -52,14 +58,32 @@ export function SearchResults() {
     [visibleResults],
   );
 
+  const featuredGrouped = useMemo(
+    () => ({
+      collection: featuredResults.filter((item) => item.kind === 'collection'),
+      design: featuredResults.filter((item) => item.kind === 'design'),
+      product: featuredResults.filter((item) => item.kind === 'product'),
+      productDesign: featuredResults.filter(
+        (item) => item.kind === 'product-design',
+      ),
+    }),
+    [featuredResults],
+  );
+
   const hasMore = results.length > SEARCH_RESULTS_PREVIEW_LIMIT && !expanded;
   const hiddenCount = results.length - SEARCH_RESULTS_PREVIEW_LIMIT;
 
   if (!query) {
     return (
-      <p className="rounded-xl border border-dashed border-ink-200 bg-ink-50 px-4 py-12 text-center text-sm text-ink-500">
-        {t('emptyQuery')}
-      </p>
+      <div className="space-y-8">
+        <p className="text-sm font-semibold uppercase tracking-wider text-brand-600">
+          {t('featuredHeading')}
+        </p>
+        <SearchProductDesignsSection items={featuredGrouped.productDesign} />
+        <SearchProductsSection items={featuredGrouped.product} />
+        <SearchDesignsSection items={featuredGrouped.design} />
+        <SearchCollectionsSection items={featuredGrouped.collection} />
+      </div>
     );
   }
 

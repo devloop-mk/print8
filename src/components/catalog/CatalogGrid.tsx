@@ -33,6 +33,50 @@ function useCatalogGrid() {
   return context;
 }
 
+/** Safe outside CatalogGridProvider (returns null). */
+export function useOptionalCatalogGrid() {
+  return useContext(CatalogGridContext);
+}
+
+/**
+ * Standard catalog card span.
+ * Desktop 3-col mode uses a 6-track grid so items span 2 tracks (= 3 per row).
+ */
+export function getCatalogItemClassName(
+  grid: CatalogGridContextValue | null,
+): string {
+  if (!grid) {
+    return 'lg:col-span-2';
+  }
+
+  // 3-col mode → 6 tracks; 4-col mode → 4 tracks (span 1)
+  return grid.desktopColumns === 3 ? 'lg:col-span-2' : 'lg:col-span-1';
+}
+
+/**
+ * Dual-mockup cards (couple packs): keep readable size without only 1 per desktop row.
+ * - Mobile 2-col → full row (span 2)
+ * - Desktop 3-col (6 tracks) → span 3 → **2 per row**
+ * - Desktop 4-col → span 2 → 2 per row
+ */
+export function getCatalogWideItemClassName(
+  grid: CatalogGridContextValue | null,
+): string {
+  if (!grid) {
+    return cn(
+      'sm:col-span-2',
+      'lg:col-span-3', // default 3-col / 6-track mode
+    );
+  }
+
+  return cn(
+    grid.desktopColumns === 3 ? 'lg:col-span-3' : 'lg:col-span-2',
+    grid.mobileColumnToggle
+      ? grid.mobileColumns === 2 && 'col-span-2'
+      : 'sm:col-span-2',
+  );
+}
+
 export function getCatalogGridClassName({
   mobileColumns,
   desktopColumns,
@@ -52,11 +96,12 @@ export function getCatalogGridClassName({
     mobileColumnToggle
       ? cn(
           mobileColumns === 1 ? 'grid-cols-1' : 'grid-cols-2',
-          desktopColumns === 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3',
+          // 6 tracks when "3 columns" so wide cards can sit 2-across (span 3)
+          desktopColumns === 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-6',
         )
       : cn(
           'sm:grid-cols-2',
-          desktopColumns === 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3',
+          desktopColumns === 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-6',
         ),
     className,
   );
@@ -121,7 +166,7 @@ export function CatalogGridToggle({
 
   return (
     <div
-      className={cn('flex justify-end', className)}
+      className={cn('flex', className)}
       role="group"
       aria-label={t('view')}
     >
@@ -230,6 +275,7 @@ export function CatalogGridLayout({
   defaultMobileColumns = 2,
   toggleClassName,
   gapClassName,
+  toolbarStart,
 }: {
   children: ReactNode;
   className?: string;
@@ -240,6 +286,8 @@ export function CatalogGridLayout({
   defaultMobileColumns?: MobileColumns;
   toggleClassName?: string;
   gapClassName?: string;
+  /** Extra controls on the same row as the columns toggle (e.g. sort). */
+  toolbarStart?: ReactNode;
 }) {
   return (
     <CatalogGridProvider
@@ -249,7 +297,15 @@ export function CatalogGridLayout({
       defaultMobileColumns={defaultMobileColumns}
     >
       <div className={className}>
-        <CatalogGridToggle className={cn('mb-4', toggleClassName)} />
+        <div
+          className={cn(
+            'mb-4 flex flex-wrap items-center justify-end gap-2',
+            toggleClassName,
+          )}
+        >
+          {toolbarStart}
+          <CatalogGridToggle />
+        </div>
         <CatalogGrid gapClassName={gapClassName} className={gridClassName}>
           {children}
         </CatalogGrid>

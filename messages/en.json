@@ -11,12 +11,14 @@
       "design": "Design",
       "customize": "Customize",
       "services": "Services",
-      "designs": "Designs",
+      "designs": "Print designs",
       "products": "Products",
       "about": "About us",
       "contact": "Contact",
       "faq": "FAQ",
-      "studio": "Studio",
+      "orderStatus": "Order status",
+      "howToOrder": "How to order",
+      "newsletter": "Newsletter",
       "legal": "Legal"
     }
   },
@@ -34,6 +36,7 @@
     "close": "Close search",
     "clear": "Clear search",
     "startTyping": "Start typing to search designs and products.",
+    "featuredHeading": "Featured",
     "noResults": "No results for \"{query}\".",
     "emptyQuery": "Enter a search term above to find designs and products.",
     "sectionCollections": "Browse pages",
@@ -42,9 +45,9 @@
     "browseDesignSubfilter": "{subfilter} — {category}",
     "badgeReadyDesign": "Ready design",
     "badgeTextTemplate": "Text template",
-    "sectionDesigns": "Designs",
+    "sectionDesigns": "Print designs",
     "sectionProducts": "Products",
-    "sectionProductDesigns": "Ready designs & templates",
+    "sectionProductDesigns": "Ready photo designs & text templates",
     "viewAll": "View all results",
     "seeMore": "See more ({count} more)",
     "resultsCountPreview": "Showing {shown} of {total} results",
@@ -56,14 +59,15 @@
   "nav": {
     "home": "Home",
     "services": "Services",
-    "designs": "Designs",
+    "designs": "Print designs",
     "products": "Products",
     "about": "About",
     "contact": "Contact",
     "faq": "FAQ",
+    "orderStatus": "Order status",
+    "howToOrder": "How to order",
     "order": "Order",
     "cart": "Cart",
-    "studio": "Studio",
     "language": "Language",
     "menu": "Menu",
     "openMenu": "Open menu",
@@ -73,13 +77,14 @@
       "eyebrow": "Contact & support",
       "contactDesc": "Message us or find our details",
       "faqDesc": "Answers to common questions",
+      "howToOrderDesc": "A short step-by-step ordering guide",
+      "orderStatusDesc": "Check where your order is",
       "hint": "We usually reply within one business day"
     },
     "ongoingDesigns": {
       "title": "Designs in progress",
       "subtitle": "Saved on this device — not ordered yet",
       "open": "Open saved designs ({count})",
-      "sourceStudio": "Studio",
       "sourceProduct": "Product",
       "sourceTemplate": "Template",
       "delete": "Delete {name}",
@@ -114,16 +119,14 @@
       }
     },
     "designsMenu": {
-      "eyebrow": "Designs",
+      "eyebrow": "Print designs",
       "subtitle": "Browse by category or start from a template.",
       "viewAll": "View all",
       "browseByCategory": "Browse by category",
       "createAndOrder": "Create & order",
       "links": {
-        "allDesigns": "All designs",
+        "allDesigns": "All templates",
         "allDesignsDesc": "Full catalog with category filters",
-        "designStudio": "Design studio",
-        "designStudioDesc": "Build a layout from scratch with photos and text",
         "customDesignOrder": "Custom design request",
         "customDesignOrderDesc": "Describe your idea — we design it for you",
         "customizable": "Customizable templates",
@@ -136,11 +139,31 @@
     "heroTitle": "Professional printing for your business and events",
     "heroSubtitle": "T-shirts, hoodies, caps, bags, cups, thermoses, invitations, menus, binding, thesis printing, and much more — personalize products online and pick them up in store. Nationwide cargo delivery.",
     "heroCta": "Browse products",
-    "heroSecondary": "Ready-made designs",
+    "heroSecondary": "Ready photo designs",
     "heroStatProducts": "Custom products",
-    "heroStatDesigns": "Ready designs",
+    "heroStatDesigns": "Print designs",
     "heroStatServices": "Print services",
     "heroStatDelivery": "Cargo delivery",
+    "categoryStrip": {
+      "label": "Browse by category",
+      "items": {
+        "apparel": "Apparel",
+        "drinkware": "Drinkware",
+        "bags": "Bags",
+        "gifts": "Gifts",
+        "ready": "Ready designs",
+        "custom": "Custom design"
+      }
+    },
+    "productShowcase": {
+      "eyebrow": "Catalog",
+      "title": "Products from every category",
+      "subtitle": "Tees, mugs, bags, magnets, and more — filter by category or browse them all.",
+      "viewAll": "All products",
+      "filterLabel": "Filter by category",
+      "all": "All",
+      "seeCategory": "See {category}"
+    },
     "heroCarousel": {
       "ariaLabel": "Featured offers",
       "prev": "Previous slide",
@@ -152,11 +175,11 @@
           "cta": "Personalize apparel"
         },
         "readyDesigns": {
-          "title": "Ready designs for business cards, invitations & more",
-          "cta": "Browse designs"
+          "title": "Print designs for business cards, invitations & more",
+          "cta": "Browse templates"
         },
         "photoDesigns": {
-          "title": "Ready designs on black tees and mugs",
+          "title": "Ready photo designs on black tees and mugs",
           "cta": "Pick a design"
         },
         "yourBrand": {
@@ -169,9 +192,57 @@
         }
       }
     },
+    "promoBanners": {
+      "ariaLabel": "Promotional banners",
+      "prev": "Previous banner",
+      "next": "Next banner",
+      "goToSlide": "Show: {title}",
+      "slides": {
+        "apparel": {
+          "title": "Print your style",
+          "subtitle": "T-shirts, hoodies, and caps — your design, professional print.",
+          "cta": "View the offer"
+        },
+        "branding": {
+          "title": "Your brand on products",
+          "subtitle": "Upload your logo and build a pack — tee, hoodie, mug, cap, and more.",
+          "cta": "Start branding pack"
+        },
+        "ready": {
+          "title": "Ready designs, print today",
+          "subtitle": "Hundreds of templates for tees, mugs, and caps — pick and order.",
+          "cta": "Choose a design"
+        },
+        "couples": {
+          "title": "Made for two",
+          "subtitle": "Matching couple tees — a perfect gift or shared look.",
+          "cta": "See couple packs"
+        },
+        "kids": {
+          "title": "Birthday mode: on",
+          "subtitle": "Playful designs for kids and parents — birthdays and everyday fun.",
+          "cta": "Browse kids designs"
+        },
+        "local": {
+          "title": "Štip & Macedonia on a mug",
+          "subtitle": "Local motifs on mugs and caps — from Štip across MK.",
+          "cta": "See local designs"
+        },
+        "coupons": {
+          "title": "Spend more, save more",
+          "subtitle": "Orders over 3,000 MKD get 500 MKD off. More tiers at checkout.",
+          "cta": "Start shopping"
+        },
+        "cod": {
+          "title": "Cash on delivery",
+          "subtitle": "Order online, pay in cash when your package arrives — nationwide.",
+          "cta": "How to order"
+        }
+      }
+    },
     "featuredServices": "Popular services",
     "featuredServicesDesc": "From custom merch and promo gifts to photocopying, plastification, and binding — everything in one place.",
-    "featuredDesigns": "Ready-made designs",
+    "featuredDesigns": "Print designs",
     "featuredDesignsDesc": "Business cards, invitations, menus, and more — pick a template, send your details, or customize online.",
     "designFilterLabel": "Filter by category",
     "seeAllDesigns": "See all",
@@ -195,7 +266,7 @@
     "whyDeliveryDesc": "We ship all products via cargo across the country. Order online — we deliver to your address.",
     "viewAll": "View all",
     "viewAllProducts": "View all products",
-    "viewAllDesigns": "View all designs",
+    "viewAllDesigns": "View all print designs",
     "trending": {
       "eyebrow": "Trending now",
       "title": "T-shirt designs everyone loves",
@@ -226,15 +297,17 @@
     "highlights": {
       "eyebrow": "Why Print 8",
       "title": "Why choose Print 8",
+      "prev": "Previous benefit",
+      "next": "Next benefit",
       "upload": {
         "title": "Personalize online",
         "description": "Pick a product, add photos, text, and stickers — order from home and pick up in store or request delivery.",
         "cta": "Start designing"
       },
-      "cargo": {
-        "title": "Cargo delivery",
-        "description": "We ship all products via cargo nationwide — secure packaging and reliable delivery.",
-        "cta": "Delivery questions"
+      "cod": {
+        "title": "Pay with zero risk",
+        "description": "No online payment. Pay on delivery or at store pickup — you see the product first, then you pay.",
+        "cta": "How payment works"
       },
       "range": {
         "title": "Full range of services",
@@ -242,10 +315,86 @@
         "cta": "Browse all services"
       }
     },
+    "howItWorks": {
+      "eyebrow": "How it works",
+      "title": "Easy — even if you’re not a designer",
+      "subtitle": "Pick what you want to order. We’ll show the steps with pictures — no complicated tools.",
+      "teaserTitle": "How to order — in a few steps",
+      "teaserSubtitle": "Ready design, your own artwork, or a print template — the full guide is on a dedicated page.",
+      "teaserCta": "See how ordering works",
+      "reassure": "No Photoshop or Canva needed — everything happens in your browser.",
+      "pathsLabel": "Choose how you want to order",
+      "faqLink": "More questions",
+      "paths": {
+        "ready": {
+          "label": "Ready photo design",
+          "hint": "Fastest — pick and order",
+          "cta": "Browse photo designs",
+          "step1": {
+            "title": "Choose a design",
+            "desc": "Browse ready looks for tees and mugs. Tap the one you like."
+          },
+          "step2": {
+            "title": "Pick color and size",
+            "desc": "Choose the product color and size. The design is already placed correctly."
+          },
+          "step3": {
+            "title": "Complete your order",
+            "desc": "Choose cargo delivery or store pickup. You pay on delivery or at pickup."
+          },
+          "step4": {
+            "title": "Get your product",
+            "desc": "We print and pack. Cargo usually takes 2–3 business days. In Shtip — pick up in store."
+          }
+        },
+        "custom": {
+          "label": "Your own design",
+          "hint": "Your photo, text, or logo",
+          "cta": "Start your own design",
+          "step1": {
+            "title": "Choose a product",
+            "desc": "T-shirt, hoodie, mug, bag… Open the product and start creating a design."
+          },
+          "step2": {
+            "title": "Add photo and text",
+            "desc": "Upload a photo from your phone, type text, and move them on the preview — what you see is what we print."
+          },
+          "step3": {
+            "title": "Add to cart",
+            "desc": "When you like the preview, add it to the cart and fill in your order details."
+          },
+          "step4": {
+            "title": "We print — you pay later",
+            "desc": "No online payment. You pay when cargo arrives or when you pick up in store."
+          }
+        },
+        "print": {
+          "label": "Invite / card / menu",
+          "hint": "Print designs",
+          "cta": "Browse print designs",
+          "step1": {
+            "title": "Choose a template",
+            "desc": "Wedding invites, business cards, menus, and more — pick a style you like."
+          },
+          "step2": {
+            "title": "Enter your details",
+            "desc": "Names, date, phone, text… Fill a simple form. The preview updates right away."
+          },
+          "step3": {
+            "title": "Confirm and order",
+            "desc": "Check the preview, add to cart, and submit your order online."
+          },
+          "step4": {
+            "title": "Ready for your event or business",
+            "desc": "We print the materials. Pick up in store or get cargo delivery."
+          }
+        }
+      }
+    },
     "showcase": {
       "eyebrow": "What we offer",
       "title": "Everything in one place",
-      "subtitle": "Services, ready-made designs, and ways to personalize — all in one place.",
+      "subtitle": "Apparel, mugs, gifts, invitations, and print services — browse the real products.",
       "explore": "Explore",
       "scrollPrev": "Previous card",
       "scrollNext": "Next card",
@@ -276,13 +425,13 @@
           "description": "Business cards, menus, invitations, laminating, and documents — pro quality."
         },
         "readyDesigns": {
-          "badge": "Ready-made",
-          "title": "Ready-made print designs",
+          "badge": "Print designs",
+          "title": "Print designs for cards & invites",
           "description": "Business cards, wedding invites, menus, and more — enter your details and order."
         },
         "photoDesigns": {
           "badge": "Photo designs",
-          "title": "Ready designs on products",
+          "title": "Ready photo designs on products",
           "description": "Full photo designs on t-shirts and mugs — order as shown or tweak."
         },
         "textTemplates": {
@@ -324,10 +473,10 @@
     "productsSectionDesc": "Pick a product and add your design, or order as shown.",
     "orderHint": "You can also place a general order for this service. Upload your files at checkout if needed.",
     "ctaTitle": "Keep exploring",
-    "ctaDesc": "Browse products, pick a ready-made design, or build something from scratch in our design studio.",
+    "ctaDesc": "Browse products, pick a ready-made design, or request a custom design from our team.",
     "ctaProducts": "Browse products",
     "ctaDesigns": "Browse designs",
-    "ctaStudio": "Make your own design",
+    "ctaCustomDesign": "Request a custom design",
     "categories": {
       "merch": {
         "title": "Merch & apparel",
@@ -484,9 +633,9 @@
     }
   },
   "designs": {
-    "title": "Designs",
-    "subtitle": "Choose a ready-made design and send your details, or personalize a template online with live preview.",
-    "createOwn": "Advanced: design studio",
+    "title": "Print designs",
+    "subtitle": "Choose a template for business cards, invitations, menus, and more — send your details or personalize online with live preview.",
+    "createOwn": "Request a custom design",
     "categoriesOverview": {
       "eyebrow": "Categories",
       "title": "Choose a category",
@@ -498,7 +647,7 @@
       "backToCategories": "Back to categories"
     },
     "allPage": {
-      "title": "All designs",
+      "title": "All print designs",
       "subtitle": "Full catalog with category filters, subfilters, and search."
     },
     "categoryDescriptions": {
@@ -1044,45 +1193,6 @@
       }
     }
   },
-  "studio": {
-    "title": "Design studio",
-    "subtitle": "Create your design — add text, images, shapes, and save it for ordering.",
-    "addText": "Add text",
-    "addShapes": "Add shapes",
-    "shapesHint": "All shapes use the primary color. Change it anytime to update every shape on the canvas.",
-    "shapeAdded": "{shape} added to your design",
-    "shapeCircle": "Circle",
-    "shapeRectangle": "Rectangle",
-    "shapeTriangle": "Triangle",
-    "colors": "Colors",
-    "primaryColor": "Primary color",
-    "backgroundColor": "Background color",
-    "editText": "Edit text",
-    "addImage": "Add image",
-    "textPlaceholder": "Enter text...",
-    "fontSize": "Size",
-    "textColor": "Color",
-    "sizeLabel": "Design size",
-    "presetSize": "Preset size",
-    "customSize": "Custom size",
-    "width": "Width",
-    "height": "Height",
-    "cm": "cm",
-    "canvasPreview": "Preview your design using the chosen dimensions.",
-    "clear": "Clear",
-    "saveDesign": "Save design",
-    "addToCart": "Add to cart",
-    "uploadHint": "We accept JPG, PNG, and PDF (max 10MB)",
-    "saved": "Design saved!",
-    "productType": "Product type",
-    "selectTemplate": "Select template",
-    "tabCreate": "Create",
-    "tabSaved": "Saved designs",
-    "savedDesignDefaultName": "Design {number}",
-    "continueEditing": "Continue editing",
-    "deleteDesign": "Delete",
-    "savedDesignsHint": "Your saved designs are stored on this device. Continue editing or add one to your cart."
-  },
   "products": {
     "title": "Products",
     "subtitle": "Pick a product, personalize it online, and order — pick up in store or delivery.",
@@ -1138,7 +1248,7 @@
       "readyDesignsTitle": "Ready photo designs",
       "readyDesignsSubtitle": "Complete designs on products across all categories — order as shown or customize.",
       "textTemplatesTitle": "Text templates",
-      "textTemplatesSubtitle": "Popular phrases with a spot for your photo — filter by product, color, and side.",
+      "textTemplatesSubtitle": "Popular phrases with a spot for your photo — filter by product and color.",
       "backToProducts": "Back to products",
       "filterColor": "Product color",
       "filterSide": "Side",
@@ -1149,8 +1259,18 @@
       "sideFront": "Front",
       "sideBack": "Back",
       "sideBoth": "Front & back",
+      "dualSidedBadge": "Front & back",
+      "dualSidedToggle": "Show back design",
       "sideLeft": "Left",
       "sideRight": "Right",
+      "sort": {
+        "label": "Sort",
+        "featured": "Featured",
+        "name-asc": "Name A–Z",
+        "name-desc": "Name Z–A",
+        "price-asc": "Price: low to high",
+        "price-desc": "Price: high to low"
+      },
       "resultsDesigns": "{count, plural, one {# design} other {# designs}}",
       "noDesigns": "No designs match the selected filters.",
       "paginationPrevious": "Previous",
@@ -1158,6 +1278,33 @@
       "paginationPage": "Page {current} of {total}",
       "viewProduct": "View product"
     },
+    "kidsArchive": {
+      "eyebrow": "Kids & birthday",
+      "title": "Designs made for little stars",
+      "subtitle": "Cute party animals and birthday tees — pick a design, print on a kids shirt, and make the day brighter.",
+      "ctaBrowse": "See the designs",
+      "gridTitle": "Kids designs",
+      "resultsCount": "{count, plural, one {# design ready to print} other {# designs ready to print}}",
+      "searchPlaceholder": "Search dino, panda, unicorn…",
+      "noDesigns": "No kids designs match your search.",
+      "back": "Back",
+      "footerHint": "Looking for more styles?",
+      "footerLink": "Browse all ready designs"
+    },
+    "couplesArchive": {
+      "eyebrow": "Couple packs",
+      "title": "Matching designs for two",
+      "subtitle": "Complementary prints for him and her — pick a pack, choose sizes, and order both shirts together.",
+      "ctaBrowse": "See the packs",
+      "gridTitle": "Couple packs",
+      "resultsCount": "{count, plural, one {# pack ready to print} other {# packs ready to print}}",
+      "searchPlaceholder": "Search king, puzzle, magnet…",
+      "noDesigns": "No couple packs match your search.",
+      "back": "Back",
+      "footerHint": "Looking for more styles?",
+      "footerLink": "Browse all ready designs"
+    },
+
     "brandingPack": {
       "title": "Branding pack",
       "subtitle": "Upload your logo, choose products, colors and quantities, customize each design, and order the full pack in one go.",
@@ -1294,6 +1441,38 @@
       "gridView": "Grid view",
       "oneColumn": "1 column",
       "twoColumns": "2 columns",
+      "designCategories": {
+        "title": "Themed collections",
+        "subtitle": "Browse ready designs and product groups by theme.",
+        "kidsTee": {
+          "title": "Kids t-shirts",
+          "description": "Blank kids tee — pick a color and size."
+        },
+        "kidsBirthday": {
+          "title": "Kids birthday designs",
+          "description": "Cute animals and birthday motifs for little stars."
+        },
+        "couples": {
+          "title": "Couple designs",
+          "description": "Matching t-shirt packs for two."
+        },
+        "family": {
+          "title": "Family designs",
+          "description": "Designs for mom, dad, and the whole family."
+        },
+        "streetwear": {
+          "title": "Streetwear",
+          "description": "Urban and graphic motifs for everyday style."
+        },
+        "trendingMk": {
+          "title": "Trending MK",
+          "description": "Popular Macedonian motifs and phrases."
+        },
+        "babyMilestones": {
+          "title": "Baby milestones",
+          "description": "Sweet designs for bodysuits and first moments."
+        }
+      },
       "t-shirt": {
         "subtitle": "Custom t-shirts with your design — pick color, size, and print options."
       },
@@ -1404,7 +1583,24 @@
       "couplePuzzleHearts": "Puzzle Hearts",
       "coupleMagnet": "Magnet Attraction",
       "coupleMiaMio": "Mía / Mío",
-      "couplePacman": "Pac-Man & Ghost"
+      "couplePacman": "Pac-Man & Ghost",
+      "coupleFoxMouse": "Fox & Mouse",
+      "coupleSoulmates": "Soulmates",
+      "dualRogueEyes": "Rogue — Eyes",
+      "dualStormHero": "Storm — Hero",
+      "dualBladeWarrior": "Blade — Warrior",
+      "teeKidsGenDinoParty": "Dino party",
+      "teeKidsGenPandaCake": "Panda cake",
+      "teeKidsGenLionGift": "Lion gift",
+      "teeKidsGenBearCake": "Bear cake",
+      "teeKidsGenFoxBalloon": "Fox balloon",
+      "teeKidsGenUnicornParty": "Unicorn party",
+      "teeKidsGenBunnyParty": "Bunny party",
+      "teeKidsGenKittenGift": "Kitten gift",
+      "teeKidsGenPuppyBalloon": "Puppy balloon",
+      "teeKidsGenOwlParty": "Owl party",
+      "teeKidsGenGiraffeParty": "Giraffe party",
+      "teeKidsGenElephantParty": "Elephant party"
     },
     "designPdp": {
       "backToReadyDesigns": "Back to ready designs",
@@ -1444,7 +1640,8 @@
       "badge": "Couple pack",
       "packPrice": "2 shirts — {price}",
       "packIncludes": "Includes 2 matching t-shirts — one design for each partner.",
-      "sharedColorHint": "Both shirts will use the same color.",
+      "independentColorHint": "Choose a color for each shirt independently.",
+      "partnerColor": "{partner} color",
       "sameSize": "Same size for both shirts",
       "partner1Size": "Partner 1 size",
       "partner2Size": "Partner 2 size",
@@ -1747,7 +1944,14 @@
       "deleteElement": "Delete element",
       "resizeHint": "Drag to move text, photos, and stickers. Use corner handles to resize",
       "copyDesignToBack": "Copy this design to the back",
-      "copyDesignToFront": "Copy this design to the front"
+      "copyDesignToFront": "Copy this design to the front",
+      "previewAllSides": "Preview",
+      "sidesPreviewTitle": "Preview all sides",
+      "sidesPreviewHint": "Review how your design looks on every side before adding to cart.",
+      "sidesPreviewLoading": "Preparing preview…",
+      "sidesPreviewContinue": "Keep editing",
+      "sidesPreviewHasDesign": "Designed",
+      "sidesPreviewBlank": "Blank"
     }
   },
   "about": {
@@ -1773,13 +1977,15 @@
     "hours": "Working hours",
     "hoursValue": "Mon–Fri: 09:00–17:00, Sat: 09:00–13:00",
     "addressValue": "Shtip, North Macedonia",
-    "phoneValue": "+389 XX XXX XXX",
+    "phoneValue": "+389 74 609 906",
     "emailValue": "info@print8.mk",
     "formTitle": "Send a message",
     "name": "Full name",
     "message": "Message",
     "send": "Send",
-    "sent": "Message sent!"
+    "sent": "Message sent!",
+    "errorRateLimit": "Too many messages from your device. Please try again in about an hour.",
+    "errorGeneric": "We couldn't send your message. Please try again or call us."
   },
   "faq": {
     "title": "Frequently asked questions",
@@ -1787,7 +1993,7 @@
     "items": {
       "payment": {
         "q": "How does payment work?",
-        "a": "We work exclusively with payment on delivery. You order online and pay when you receive the product."
+        "a": "You pay on cargo delivery or when you pick up in store. Order online — pay when you receive or collect your product."
       },
       "formats": {
         "q": "What file formats do you accept?",
@@ -1795,7 +2001,11 @@
       },
       "delivery": {
         "q": "How long does delivery take?",
-        "a": "Standard delivery is 3–5 business days. For urgent orders, contact us."
+        "a": "Standard cargo delivery is 2–3 business days. For urgent orders, contact us."
+      },
+      "production": {
+        "q": "Is there extra production time?",
+        "a": "For standard orders, printing is fast and fits within the delivery window. Longer production time applies only to very large orders — we will let you know in advance."
       },
       "custom": {
         "q": "Can I create my own design?",
@@ -1838,8 +2048,14 @@
   },
   "checkout": {
     "title": "Checkout",
-    "subtitle": "Fill in your details. Payment is made on delivery.",
-    "customerInfo": "Delivery details",
+    "subtitle": "Fill in your details. Pay on delivery or at store pickup.",
+    "customerInfo": "Your details",
+    "fulfillmentTitle": "Fulfillment method",
+    "fulfillmentCargo": "Cargo delivery",
+    "fulfillmentCargoDesc": "Delivery to your address nationwide (2–3 business days).",
+    "fulfillmentPickup": "Store pickup",
+    "fulfillmentPickupDesc": "Pick up your order at Print 8 in Shtip.",
+    "fulfillmentPickupHint": "We will notify you when your order is ready for pickup at the store (Shtip).",
     "fullName": "Full name",
     "phone": "Phone",
     "email": "Email",
@@ -1848,10 +2064,12 @@
     "city": "City",
     "address": "Address",
     "notes": "Notes",
-    "notesPlaceholder": "Additional delivery or print instructions...",
+    "notesPlaceholder": "Additional delivery, pickup, or print instructions...",
     "paymentMethod": "Payment method",
     "cod": "Payment on delivery",
     "codDesc": "Pay for your products when they arrive.",
+    "codPickup": "Payment on pickup",
+    "codPickupDesc": "Pay when you collect your order at the store.",
     "uploadFiles": "Upload files",
     "uploadHint": "Upload your designs (JPG, PNG, PDF — max 10MB)",
     "placeOrder": "Place order",
@@ -1867,6 +2085,14 @@
     "acceptTermsBeforeTerms": "I agree to the",
     "acceptTermsBeforePrivacy": "and have read the",
     "acceptTermsRequired": "You must accept the terms before placing an order.",
+    "newsletterOptIn": "I want to receive news and offers by email (you can unsubscribe from any email).",
+    "couponCode": "Coupon code",
+    "couponPlaceholder": "e.g. SUMMER500",
+    "couponApply": "Apply",
+    "couponApplied": "Coupon applied (−{amount}).",
+    "couponInvalid": "This coupon is invalid or cannot be applied.",
+    "couponMinOrder": "Minimum order for this coupon: {amount}.",
+    "discount": "Discount",
     "orderStickerLimit": "This order can include at most {max} stickers in total. Remove stickers from your cart items.",
     "orderPhotoLimit": "This order can include at most {max} uploaded photos in total. Remove photos from your cart items.",
     "designUnavailable": "One or more exclusive designs are no longer available. Remove them from your cart and choose another design.",
@@ -1925,6 +2151,121 @@
     "quickLinks": "Quick links",
     "contact": "Contact",
     "legal": "Legal",
+    "newsletterTitle": "Newsletter",
     "rights": "All rights reserved."
+  },
+  "orderStatus": {
+    "title": "Order status",
+    "subtitle": "Enter your order number and the phone number you used at checkout.",
+    "orderNumber": "Order number",
+    "orderNumberPlaceholder": "e.g. P8-2026-123456",
+    "phone": "Phone",
+    "phonePlaceholder": "07X XXX XXX",
+    "phoneHint": "The same number you entered when ordering.",
+    "submit": "Check status",
+    "notFound": "We couldn't find an order with those details. Check the number and phone.",
+    "rateLimited": "Too many attempts. Please try again later.",
+    "error": "Lookup failed. Please try again.",
+    "resultTitle": "Your order",
+    "status": "Status",
+    "fulfillment": "Fulfillment",
+    "fulfillmentCargo": "Cargo delivery",
+    "fulfillmentPickup": "Store pickup",
+    "total": "Total",
+    "city": "City",
+    "items": "Items",
+    "resultHint": "Questions? Contact us with your order number.",
+    "statuses": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "printing": "Printing",
+      "ready": "Ready",
+      "delivered": "Delivered / picked up",
+      "cancelled": "Cancelled"
+    }
+  },
+  "howToOrder": {
+    "title": "How to order",
+    "subtitle": "A short guide — no complicated tools. Everything happens online.",
+    "stepLabel": "Step {number}",
+    "steps": {
+      "choose": {
+        "title": "Choose what you want",
+        "body": "Open Products for tees and mugs, Print designs for invites and cards, or Services for laminating, binding, and more."
+      },
+      "personalize": {
+        "title": "Personalize or pick a ready design",
+        "body": "Order a ready photo design, upload your own photo and text, or fill a template with your details. The preview shows what we print."
+      },
+      "checkout": {
+        "title": "Complete checkout",
+        "body": "Add to cart, choose cargo delivery or store pickup, and confirm. You don't pay online."
+      },
+      "receive": {
+        "title": "Get your product",
+        "body": "We'll contact you to confirm. Cargo usually takes 2–3 business days. In Shtip you can pick up in store. Pay on delivery or pickup."
+      }
+    },
+    "tipsTitle": "Good to know",
+    "tips": {
+      "cod": "Payment is on delivery or pickup — no online card payment.",
+      "pickup": "For store pickup you don't need a delivery address.",
+      "files": "For print services, upload PDF/JPG/PNG at checkout.",
+      "help": "Stuck? Open Order status or contact us."
+    },
+    "ctaProducts": "Browse products",
+    "ctaContact": "Contact"
+  },
+  "newsletter": {
+    "title": "Newsletter",
+    "subtitle": "News, offers, and new designs — only if you want them.",
+    "emailPlaceholder": "you@email.com",
+    "subscribe": "Subscribe",
+    "success": "You're subscribed. You can unsubscribe from any email.",
+    "error": "Subscription failed. Please try again.",
+    "rateLimited": "Too many attempts. Try again later.",
+    "unsubscribeTitle": "Unsubscribe",
+    "unsubscribeLoading": "Processing…",
+    "unsubscribeSuccess": "You have been unsubscribed from the newsletter.",
+    "unsubscribeError": "This link is invalid or already used.",
+    "unsubscribeRetry": "Try again"
+  },
+  "spinWheel": {
+    "metaTitle": "Rewards wheel",
+    "metaDescription": "Spin the wheel, enter your email, and win a unique one-time Print 8 coupon.",
+    "eyebrow": "Game · rewards",
+    "title": "Spin to win a discount",
+    "subtitle": "One play per email. You always win a unique code by email — single use only.",
+    "wheelAria": "Rewards prize wheel",
+    "emailLabel": "Email for your coupon",
+    "emailPlaceholder": "you@email.com",
+    "spinCta": "Spin",
+    "spinning": "Spinning…",
+    "rules": "One play per email. Coupons are single-use and locked to your email. Every spin wins a discount.",
+    "winTitle": "You won −{amount} MKD!",
+    "winBody": "Minimum order {min} MKD · Valid {days} days · enter the code at checkout.",
+    "emailSent": "We also sent the code to your email.",
+    "emailFallback": "Save the code below (email may be delayed).",
+    "copyCode": "Copy code",
+    "useNowCta": "Use now",
+    "tryAgainTitle": "Better luck next time",
+    "tryAgainBody": "This email has already used its spin. Watch our offers for other discounts.",
+    "alreadyTitle": "Already played",
+    "alreadyBody": "This email already spun the wheel. Check your inbox if you won a code.",
+    "shopCta": "Browse products",
+    "checkoutCta": "Go to checkout",
+    "errors": {
+      "invalidEmail": "Enter a valid email.",
+      "generic": "Something went wrong. Please try again."
+    },
+    "promo": {
+      "eyebrow": "Discount game",
+      "title": "Spin the wheel for a coupon",
+      "body": "Quick game — enter your email and win a one-time discount.",
+      "cta": "Play now",
+      "later": "Later",
+      "dismiss": "Close"
+    },
+    "footerLink": "Rewards wheel"
   }
 }

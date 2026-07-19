@@ -1,28 +1,22 @@
 'use client';
 
 import { Download } from 'lucide-react';
-import { getSvgPrintFilesFromMetadata } from '@/lib/designs/svg-order-assets';
+import { listSvgPrintFileRefsFromMetadata } from '@/lib/designs/svg-order-assets';
 import { adminStrings } from '@/lib/admin/strings';
 
 export function OrderSvgPrintFiles({
+  orderId,
+  itemIndex,
   itemName,
   metadata,
 }: {
+  orderId: string;
+  itemIndex: number;
   itemName: string;
   metadata: Record<string, string | number | boolean>;
 }) {
-  const files = getSvgPrintFilesFromMetadata(metadata, itemName);
+  const files = listSvgPrintFileRefsFromMetadata(metadata, itemName);
   if (files.length === 0) return null;
-
-  function downloadFile(svg: string, filename: string) {
-    const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.click();
-    URL.revokeObjectURL(url);
-  }
 
   return (
     <div className="mt-4 rounded-lg border border-brand-200 bg-brand-50/70 p-3">
@@ -34,17 +28,16 @@ export function OrderSvgPrintFiles({
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         {files.map((file) => (
-          <button
+          <a
             key={file.filename}
-            type="button"
-            onClick={() => downloadFile(file.svg, file.filename)}
+            href={`/api/admin/orders/${orderId}/print/${itemIndex}/${file.side}`}
             className="inline-flex items-center gap-2 rounded-lg border border-brand-300 bg-white px-3 py-2 text-sm font-medium text-brand-800 transition hover:bg-brand-50"
           >
             <Download className="h-4 w-4" aria-hidden="true" />
             {file.side === 'front'
               ? adminStrings.orderDetail.downloadFrontSvg
               : adminStrings.orderDetail.downloadBackSvg}
-          </button>
+          </a>
         ))}
       </div>
     </div>

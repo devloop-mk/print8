@@ -1,4 +1,4 @@
-import type { CartItem } from '@/components/cart/CartProvider';
+import type { CartItem } from '@/lib/cart/types';
 import type { DesignOrderFieldId } from '@/lib/data/design-order-fields';
 import type { DesignColorTheme } from '@/lib/data/design-layouts';
 import type { SvgTemplateState } from '@/lib/data/svg-design-templates';

@@ -10,7 +10,7 @@ import {
   type Product,
   type ProductDesignTemplate,
 } from '@/lib/data/catalog';
-import { buildCustomizerUrl } from '@/lib/products/paths';
+import { buildDesignDetailUrl } from '@/lib/products/paths';
 import { resolveAssetUrl } from '@/lib/storage/asset-url';
 import {
   getDesignApplicableColors,
@@ -221,13 +221,7 @@ function DesignCard({
                 displayName={displayName}
               />
             ) : (
-              <Link
-                href={buildCustomizerUrl(product.id, product.type, {
-                  design: design.id,
-                  color: previewColor,
-                  size,
-                })}
-              >
+              <Link href={buildDesignDetailUrl(design.id)}>
                 <Button
                   size="sm"
                   className="w-full normal-case tracking-normal shadow-none hover:translate-y-0 active:translate-y-0 active:shadow-none"
@@ -240,11 +234,7 @@ function DesignCard({
             )}
             {canQuickOrder ? (
               <Link
-                href={buildCustomizerUrl(product.id, product.type, {
-                  design: design.id,
-                  color: previewColor,
-                  size,
-                })}
+                href={buildDesignDetailUrl(design.id)}
                 className="block text-center text-sm font-medium text-ink-600 transition-colors hover:text-brand-700"
               >
                 {isTextDesignTemplate(design)

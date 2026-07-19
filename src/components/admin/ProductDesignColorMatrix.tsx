@@ -1,8 +1,14 @@
 'use client';
 
-import { useMemo } from 'react';
-import type { ProductDesignTemplate } from '@/lib/data/catalog';
-import { getAdminDesignColorOptions } from '@/lib/admin/product-designs-shared';
+import { useEffect, useMemo, useState } from 'react';
+import type {
+  ProductDesignTemplate,
+  ProductType,
+} from '@/lib/data/catalog';
+import {
+  getAdminDesignColorOptions,
+  PRODUCT_TYPE_LABELS_MK,
+} from '@/lib/admin/product-designs-shared';
 import {
   AdminDesignColorPreview,
   resolveAdminPreviewProduct,
@@ -66,14 +72,30 @@ export function ProductDesignColorMatrix({
   onVariantsChange,
   uploadFolder,
 }: ProductDesignColorMatrixProps) {
+  const previewTypesKey = template.productTypes.join('|') || 't-shirt';
+  const previewTypes = useMemo(
+    () =>
+      template.productTypes.length
+        ? template.productTypes
+        : (['t-shirt'] as ProductType[]),
+    [previewTypesKey],
+  );
+  const [previewType, setPreviewType] = useState<ProductType>(
+    () => previewTypes[0],
+  );
+
+  useEffect(() => {
+    setPreviewType(previewTypes[0]);
+  }, [previewTypesKey, previewTypes]);
+
   const colorOptions = useMemo(
-    () => getAdminDesignColorOptions(template),
-    [template],
+    () => getAdminDesignColorOptions(template, previewType),
+    [template, previewType],
   );
 
   const previewProduct = useMemo(
-    () => resolveAdminPreviewProduct(template),
-    [template],
+    () => resolveAdminPreviewProduct(template, previewType),
+    [template, previewType],
   );
 
   const allHexes = useMemo(
@@ -140,17 +162,42 @@ export function ProductDesignColorMatrix({
   if (colorOptions.length === 0) {
     return (
       <p className="rounded-lg border border-dashed border-ink-200 bg-ink-50 px-3 py-4 text-sm text-ink-500">
-        Нема бои за прикажување — додајте тип производ (на пр. t-shirt).
+        Нема бои за прикажување — додајте тип производ (на пр. боди или маица).
       </p>
     );
   }
 
   return (
     <div className="space-y-4">
+      {previewTypes.length > 1 ? (
+        <div className="flex flex-wrap gap-1 rounded-lg border border-ink-200 p-1">
+          {previewTypes.map((type) => (
+            <button
+              key={type}
+              type="button"
+              onClick={() => setPreviewType(type)}
+              className={cn(
+                'rounded-md px-2.5 py-1.5 text-xs font-medium',
+                previewType === type
+                  ? 'bg-brand-700 text-white'
+                  : 'text-ink-600 hover:bg-ink-50',
+              )}
+            >
+              {PRODUCT_TYPE_LABELS_MK[type] ?? type}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-ink-600">
           Кликнете на боја за да ја вклучите/исклучите. Празен избор = сите
           бои се достапни на страницата.
+          {previewProduct ? (
+            <span className="ml-1 text-ink-400">
+              (преглед: {PRODUCT_TYPE_LABELS_MK[previewType] ?? previewType})
+            </span>
+          ) : null}
         </p>
         <div className="flex items-center gap-2">
           <span className="text-xs font-medium text-ink-500">

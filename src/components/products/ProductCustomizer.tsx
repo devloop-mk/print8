@@ -112,6 +112,7 @@ import {
   ArrowDown,
   X,
   Save,
+  Eye,
 } from 'lucide-react';
 
 import {
@@ -127,6 +128,7 @@ import type {
 } from '@/components/products/customizer/types';
 import { CustomizerShell } from '@/components/products/customizer/CustomizerShell';
 import { CustomizerContextBar } from '@/components/products/customizer/CustomizerContextBar';
+import { CustomizerSidesPreviewModal } from '@/components/products/customizer/CustomizerSidesPreviewModal';
 import { PrintAreaGuideSwitch } from '@/components/products/customizer/PrintAreaGuideSwitch';
 import { DrinkwareWrapHint } from '@/components/products/customizer/DrinkwarePrintAreaGuide';
 import {
@@ -738,9 +740,10 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   const [sideDesigns, setSideDesigns] = useState<Record<ProductSide, SideDesign>>(
     () => createSideDesignsForSides(sides),
   );
-  const [activePanel, setActivePanel] = useState<EditorPanel>('text');
+  const [activePanel, setActivePanel] = useState<EditorPanel>('product');
   const [selectedElement, setSelectedElement] = useState<SelectedElement>(null);
   const [canvasZoom, setCanvasZoom] = useState(100);
+  const [sidesPreviewOpen, setSidesPreviewOpen] = useState(false);
 
   const previewRef = useRef<HTMLDivElement | null>(null);
   const designInitializedRef = useRef<string | null>(null);
@@ -921,6 +924,15 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   );
 
   useEffect(() => {
+    // Keep authored premade overlay placement — do not shrink to print-area max
+    // (catalog / PDP / admin use the template scale as-is).
+    const isPremadeOverlay = Boolean(
+      currentDesign.premadeDesignId ||
+        currentDesign.overlayRaster ||
+        currentDesign.overlaySvg ||
+        currentDesign.isRecolorableOverlay,
+    );
+    if (isPremadeOverlay) return;
     if (currentDesign.uploadedImageScale <= imageMaxScale) return;
     updateCurrentSide({
       uploadedImageScale: clampPhotoScale(
@@ -928,7 +940,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         imageMaxScale,
       ),
     });
-  }, [imageMaxScale, currentDesign.uploadedImageScale, updateCurrentSide]);
+  }, [imageMaxScale, currentDesign.uploadedImageScale, currentDesign.premadeDesignId, currentDesign.overlayRaster, currentDesign.overlaySvg, currentDesign.isRecolorableOverlay, updateCurrentSide]);
 
   const addSticker = useCallback(
     (stickerId: string) => {
@@ -1529,7 +1541,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
 
   const panelNode = (
     <EditorPanelContent
-      panel={activePanel ?? 'text'}
+      panel={activePanel ?? 'product'}
       currentDesign={currentDesign}
       designTemplate={activeDesignTemplate}
       shirtColor={color}
@@ -1601,6 +1613,16 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
               type="button"
               size="sm"
               variant="outline"
+              onClick={() => setSidesPreviewOpen(true)}
+              disabled={isCapturing}
+            >
+              <Eye className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+              {t('previewAllSides')}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
               onClick={() => void handleSaveDesign()}
               loading={saveState === 'saving'}
               disabled={isCapturing || saveState === 'saving'}
@@ -1656,6 +1678,17 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
             </p>
           ) : null}
           <div className="mx-auto mb-2.5 flex max-w-lg gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="md"
+              onClick={() => setSidesPreviewOpen(true)}
+              disabled={isCapturing}
+              className="min-h-11 shrink-0 px-3 normal-case tracking-normal"
+              aria-label={t('previewAllSides')}
+            >
+              <Eye className="h-4 w-4" aria-hidden />
+            </Button>
             <Button
               type="button"
               variant="outline"
@@ -1751,6 +1784,55 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         ) : null
       }
     />
+      <CustomizerSidesPreviewModal
+        open={sidesPreviewOpen}
+        sides={sides}
+        sideLabel={sideLabel}
+        sideHasContent={sideHasContent}
+        onClose={() => setSidesPreviewOpen(false)}
+        onAddToCart={() => {
+          setSidesPreviewOpen(false);
+          void handleAddToCart();
+        }}
+        addToCartDisabled={isCapturing}
+        addToCartLabel={isCapturing ? t('capturing') : t('addToCart')}
+        renderSide={(side) => {
+          const design = sideDesigns[side] ?? createDefaultSideDesign();
+          const sideMockup = getProductMockup(product, color, side) ?? '';
+          const printOverride = isTshirt
+            ? getTshirtPrintAreaInsets(printPackage, side, product)
+            : undefined;
+
+          return (
+            <InteractivePreview
+              mockupImage={sideMockup}
+              sideDesign={design}
+              designTemplate={activeDesignTemplate}
+              shirtColor={color}
+              typeLabel={tp(type)}
+              productType={type}
+              product={product}
+              isCapturing
+              compact
+              photoGuideLabel={t('photoGuide')}
+              selectedElement={null}
+              onSelectElement={() => {}}
+              imageMaxScale={imageMaxScale}
+              textLayers={design.textLayers}
+              onTextLayerPositionChange={() => {}}
+              onTextLayerSizeChange={() => {}}
+              onRemoveTextLayer={() => {}}
+              onImagePositionChange={() => {}}
+              onImageScaleChange={() => {}}
+              stickers={design.stickers}
+              onStickerPositionChange={() => {}}
+              onStickerScaleChange={() => {}}
+              onRemoveSticker={() => {}}
+              printAreaOverride={printOverride}
+            />
+          );
+        }}
+      />
       <UnsavedWorkDialog
         open={unsavedWorkGuard.dialogOpen}
         saving={unsavedWorkGuard.saving}
@@ -1989,6 +2071,7 @@ function InteractivePreview({
   onSelectElement,
   imageMaxScale,
   printAreaOverride,
+  compact = false,
 }: {
   mockupImage: string;
   sideDesign: SideDesign;
@@ -1997,8 +2080,9 @@ function InteractivePreview({
   typeLabel: string;
   productType: ProductType;
   product: Product;
-  containerRef: RefObject<HTMLDivElement | null>;
+  containerRef?: RefObject<HTMLDivElement | null>;
   isCapturing?: boolean;
+  compact?: boolean;
   photoGuideLabel: string;
   textLayers: PlacedTextLayer[];
   onTextLayerPositionChange: (
@@ -2062,11 +2146,9 @@ function InteractivePreview({
         overlayMaxScale: getPrintAreaMaxScale(printAreaOverride),
       }
     : baseMockupLayout;
-  const shirtMockupStyle = getMockupImageDisplayStyle(
-    product,
-    shirtImage,
-    'customizer',
-  );
+  const shirtMockupStyle = compact
+    ? undefined
+    : getMockupImageDisplayStyle(product, shirtImage, 'customizer');
   const overlayPrintBounds = getOverlayPrintBounds(mockupLayout);
   const isDrinkware = isCylindricalDrinkwareType(productType);
   const [previewMode, setPreviewMode] = useState<DrinkwarePreviewMode>('flat');
@@ -2128,14 +2210,19 @@ function InteractivePreview({
     <div
       ref={containerRef}
       className={cn(
-        'relative flex w-[min(18rem,78vw)] items-center justify-center rounded-sm bg-white shadow-[0_8px_40px_rgba(15,23,42,0.12)] touch-pan-y md:w-[min(28rem,46vh)] lg:w-[min(32rem,52vh)] xl:w-[min(36rem,58vh)]',
+        'relative flex items-center justify-center rounded-sm touch-pan-y',
+        compact
+          ? 'w-full max-w-[16rem] overflow-hidden bg-transparent shadow-none sm:max-w-[18rem]'
+          : cn(
+              'w-[min(18rem,78vw)] bg-white shadow-[0_8px_40px_rgba(15,23,42,0.12)] md:w-[min(28rem,46vh)] lg:w-[min(32rem,52vh)] xl:w-[min(36rem,58vh)]',
+              // Editor keeps overflow visible so zoomed mockups aren't clipped.
+              productType === 't-shirt' ? 'overflow-visible' : 'overflow-hidden',
+            ),
         // Landscape unisex mockups fit a square canvas; portrait fits keep 3:4.
         productType === 't-shirt' && product.fit === 'unisex'
           ? 'aspect-square'
           : 'aspect-[3/4]',
-        // Don't clip scaled shirt mockups — keep the full garment visible.
-        productType === 't-shirt' ? 'overflow-visible' : 'overflow-hidden',
-        isCapturing && 'opacity-90',
+        isCapturing && !compact && 'opacity-90',
         show3dPreview && 'hidden',
       )}
       onPointerDown={() => onSelectElement(null)}
@@ -2151,7 +2238,9 @@ function InteractivePreview({
         className={cn(
           mockupLayout.innerClass,
           'pointer-events-none',
-          productType === 't-shirt' ? 'overflow-visible' : 'overflow-hidden',
+          compact || productType !== 't-shirt'
+            ? 'overflow-hidden'
+            : 'overflow-visible',
         )}
       >
         <div className="relative h-full w-full" style={shirtMockupStyle}>

@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/Button';
-import { LayoutGrid, Palette, Shirt } from 'lucide-react';
+import { LayoutGrid, Shirt, Wand2 } from 'lucide-react';
 
 export async function ServicesExploreCta() {
   const t = await getTranslations('services');
@@ -29,10 +29,10 @@ export async function ServicesExploreCta() {
                 {t('ctaDesigns')}
               </Button>
             </Link>
-            <Link href="/designs/create">
+            <Link href="/designs/custom">
               <Button size="lg" variant="outline" className="h-full w-full gap-2 whitespace-nowrap px-5">
-                <Palette className="h-4 w-4 shrink-0" aria-hidden="true" />
-                {t('ctaStudio')}
+                <Wand2 className="h-4 w-4 shrink-0" aria-hidden="true" />
+                {t('ctaCustomDesign')}
               </Button>
             </Link>
           </div>

@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 import Image from 'next/image';
 import { useTranslations, useLocale } from 'next-intl';
-import { Link } from '@/i18n/navigation';
+import { Link, useRouter } from '@/i18n/navigation';
 import {
   resolveDesignProduct,
   type ProductDesignCatalogEntry,
@@ -19,6 +19,7 @@ import { resolveAssetUrl } from '@/lib/storage/asset-url';
 import { resolveProductDesignDisplayName } from '@/lib/products/design-display-name';
 import {
   getDesignApplicableColors,
+  pickVariedDesignPreviewColor,
   resolveDesignPreviewColor,
 } from '@/lib/products/design-applicable-colors';
 import {
@@ -32,13 +33,20 @@ import { buildCustomizerUrl, buildDesignDetailUrl } from '@/lib/products/paths';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { useCart } from '@/components/cart/CartProvider';
-import { useRouter } from '@/i18n/navigation';
 import { DesignTemplatePreview } from '@/components/products/DesignTemplatePreview';
 import { DesignColorPicker } from '@/components/products/DesignColorPicker';
+import {
+  getCatalogItemClassName,
+  useOptionalCatalogGrid,
+} from '@/components/catalog/CatalogGrid';
+import { cn } from '@/lib/utils';
+import { RefreshCw } from 'lucide-react';
 
 type ProductDesignCatalogCardProps = {
   entry: ProductDesignCatalogEntry;
   colorFilter: string | 'all';
+  /** Hash design id across applicable colors so grids aren't all the same tee. */
+  varyInitialColor?: boolean;
 };
 
 function resolvePreviewColorForFilter(
@@ -46,6 +54,7 @@ function resolvePreviewColorForFilter(
   product: Product,
   applicableColors: string[],
   colorFilter: string | 'all',
+  varyInitialColor = false,
 ): string {
   if (colorFilter !== 'all') {
     const matched = applicableColors.find(
@@ -53,12 +62,16 @@ function resolvePreviewColorForFilter(
     );
     if (matched) return matched;
   }
+  if (varyInitialColor) {
+    return pickVariedDesignPreviewColor(design, product);
+  }
   return resolveDesignPreviewColor(design, product);
 }
 
 export function ProductDesignCatalogCard({
   entry,
   colorFilter,
+  varyInitialColor = false,
 }: ProductDesignCatalogCardProps) {
   const t = useTranslations('products');
   const locale = useLocale() as 'mk' | 'en';
@@ -68,14 +81,18 @@ export function ProductDesignCatalogCard({
   const tCustomizer = useTranslations('products.customizer');
   const { addItem } = useCart();
   const router = useRouter();
+  const grid = useOptionalCatalogGrid();
   const previewRef = useRef<HTMLDivElement>(null);
   const [ordering, setOrdering] = useState(false);
+  const [revealBack, setRevealBack] = useState(false);
+  const [touchPinned, setTouchPinned] = useState(false);
 
   const { product } = resolveDesignProduct(entry, colorFilter);
   const { design } = entry;
   const displayName = resolveProductDesignDisplayName(design, locale, (key) =>
     t(key),
   );
+  const isDualSided = isDualSidedDesign(design);
 
   const applicableColors = useMemo(
     () => getDesignApplicableColors(design, product),
@@ -83,7 +100,13 @@ export function ProductDesignCatalogCard({
   );
 
   const [color, setColor] = useState(() =>
-    resolvePreviewColorForFilter(design, product, applicableColors, colorFilter),
+    resolvePreviewColorForFilter(
+      design,
+      product,
+      applicableColors,
+      colorFilter,
+      varyInitialColor,
+    ),
   );
 
   useEffect(() => {
@@ -93,9 +116,15 @@ export function ProductDesignCatalogCard({
         product,
         applicableColors,
         colorFilter,
+        varyInitialColor,
       ),
     );
-  }, [applicableColors, colorFilter, design, product]);
+  }, [applicableColors, colorFilter, design, product, varyInitialColor]);
+
+  useEffect(() => {
+    setRevealBack(false);
+    setTouchPinned(false);
+  }, [design.id]);
 
   const previewColor = resolveDesignPreviewColor(design, product, color);
   const canQuickOrder =
@@ -131,64 +160,149 @@ export function ProductDesignCatalogCard({
   });
   const detailHref = buildDesignDetailUrl(design.id);
 
+  function setHoverReveal(next: boolean) {
+    if (!isDualSided || touchPinned) return;
+    setRevealBack(next);
+  }
+
+  function toggleTouchReveal(event: MouseEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!isDualSided) return;
+    setTouchPinned((prev) => {
+      const next = !prev;
+      setRevealBack(next);
+      return next;
+    });
+  }
+
   return (
-    <Card className="group flex h-full flex-col overflow-hidden p-0 transition hover:border-brand-200 hover:shadow-md">
-      <Link
-        href={detailHref}
-        className="flex flex-1 flex-col outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500"
-      >
-        <div ref={previewRef}>
-          {isTextDesignTemplate(design) || isOverlayDesignTemplate(design) ? (
-            <DesignTemplatePreview
-              product={product}
-              color={color}
-              design={design}
-              typeLabel={tp(product.type)}
-            />
-          ) : isImageDesignTemplate(design) ? (
-            <div className="relative aspect-square overflow-hidden bg-white">
-              <Image
-                src={resolveAssetUrl(design.image!)}
-                alt={displayName}
-                fill
-                sizes="(max-width: 768px) 50vw, 320px"
-                className="object-contain p-4 transition group-hover:scale-[1.02]"
-              />
-            </div>
+    <Card
+      className={cn(
+        'group flex h-full flex-col overflow-hidden p-0 transition hover:border-brand-200 hover:shadow-md',
+        getCatalogItemClassName(grid),
+      )}
+    >
+      <div className="relative flex flex-1 flex-col">
+        <div
+          className="relative"
+          onMouseEnter={() => setHoverReveal(true)}
+          onMouseLeave={() => setHoverReveal(false)}
+        >
+          <Link
+            href={detailHref}
+            className="block outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500"
+            onFocus={() => setHoverReveal(true)}
+            onBlur={() => {
+              if (!touchPinned) setRevealBack(false);
+            }}
+          >
+            {isTextDesignTemplate(design) || isOverlayDesignTemplate(design) ? (
+              <>
+                <div
+                  ref={previewRef}
+                  className={cn(
+                    'transition-opacity duration-200',
+                    isDualSided && revealBack && 'opacity-0',
+                  )}
+                  aria-hidden={isDualSided && revealBack ? true : undefined}
+                >
+                  <DesignTemplatePreview
+                    product={product}
+                    color={color}
+                    design={design}
+                    typeLabel={tp(product.type)}
+                    side={isDualSided ? 'front' : undefined}
+                  />
+                </div>
+                {isDualSided ? (
+                  <div
+                    className={cn(
+                      'pointer-events-none absolute inset-0 transition-opacity duration-200',
+                      revealBack ? 'opacity-100' : 'opacity-0',
+                    )}
+                    aria-hidden={!revealBack}
+                  >
+                    <DesignTemplatePreview
+                      product={product}
+                      color={color}
+                      design={design}
+                      typeLabel={tp(product.type)}
+                      side="back"
+                    />
+                  </div>
+                ) : null}
+              </>
+            ) : isImageDesignTemplate(design) ? (
+              <div
+                ref={previewRef}
+                className="relative aspect-square overflow-hidden bg-white"
+              >
+                <Image
+                  src={resolveAssetUrl(design.image!)}
+                  alt={displayName}
+                  fill
+                  sizes="(max-width: 768px) 50vw, 320px"
+                  className="object-contain p-4 transition group-hover:scale-[1.02]"
+                />
+              </div>
+            ) : null}
+          </Link>
+
+          {isDualSided ? (
+            <button
+              type="button"
+              onClick={toggleTouchReveal}
+              aria-pressed={revealBack}
+              aria-label={tc('dualSidedToggle')}
+              className={cn(
+                'absolute left-2 top-2 z-10 inline-flex items-center gap-1 rounded-md bg-white/95 px-2 py-1 text-[11px] font-semibold text-ink-800 shadow-sm ring-1 ring-ink-200/80 backdrop-blur-sm transition',
+                'hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
+                revealBack && 'bg-brand-50 text-brand-800 ring-brand-200',
+              )}
+            >
+              <RefreshCw className="h-3 w-3" aria-hidden />
+              <span>{tc('dualSidedBadge')}</span>
+            </button>
           ) : null}
         </div>
 
-        <div className="flex flex-1 flex-col gap-3 p-4 pb-3">
-          <div className="flex flex-wrap gap-1.5">
-            {design.productTypes.map((type) => (
-              <span
-                key={type}
-                className="rounded-full bg-ink-100 px-2 py-0.5 text-[11px] font-medium text-ink-700"
-              >
-                {tp(type)}
-              </span>
-            ))}
-            <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-medium text-brand-700">
-              {isDualSidedDesign(design)
-                ? tc('sideBoth')
-                : getDesignSideMode(design) === 'back'
-                  ? tc('sideBack')
-                  : tc('sideFront')}
-            </span>
-          </div>
+        <Link
+          href={detailHref}
+          className="flex flex-1 flex-col outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500"
+        >
+          <div className="flex flex-1 flex-col gap-3 p-4 pb-3">
+            <div className="flex flex-wrap gap-1.5">
+              {design.productTypes.map((type) => (
+                <span
+                  key={type}
+                  className="rounded-full bg-ink-100 px-2 py-0.5 text-[11px] font-medium text-ink-700"
+                >
+                  {tp(type)}
+                </span>
+              ))}
+              {!isDualSided ? (
+                <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-medium text-brand-700">
+                  {getDesignSideMode(design) === 'back'
+                    ? tc('sideBack')
+                    : tc('sideFront')}
+                </span>
+              ) : null}
+            </div>
 
-          <div>
-            <p className="font-medium text-ink-900 group-hover:text-brand-700">
-              {displayName}
-            </p>
-            {isTextDesignTemplate(design) && design.textStyle ? (
-              <p className="mt-1 line-clamp-2 whitespace-pre-line text-sm text-ink-500">
-                {design.textStyle.text}
+            <div>
+              <p className="font-medium text-ink-900 group-hover:text-brand-700">
+                {displayName}
               </p>
-            ) : null}
+              {isTextDesignTemplate(design) && design.textStyle ? (
+                <p className="mt-1 line-clamp-2 whitespace-pre-line text-sm text-ink-500">
+                  {design.textStyle.text}
+                </p>
+              ) : null}
+            </div>
           </div>
-        </div>
-      </Link>
+        </Link>
+      </div>
 
       <div className="flex flex-col gap-2 px-4 pb-4">
         <DesignColorPicker

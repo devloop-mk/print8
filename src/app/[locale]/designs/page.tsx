@@ -52,7 +52,7 @@ export default async function DesignsPage({
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <PageIntro title={t('title')} subtitle={t('subtitle')}>
         <div className="mt-6 flex flex-wrap gap-3">
-          <Link href="/designs/create">
+          <Link href="/designs/custom">
             <Button size="lg" variant="outline">
               {t('createOwn')}
             </Button>

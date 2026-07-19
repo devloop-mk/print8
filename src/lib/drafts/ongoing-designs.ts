@@ -1,4 +1,3 @@
-import { readSavedDesigns, deleteSavedDesign, type SavedDesign } from '@/lib/designs/saved-designs';
 import { buildCustomizerUrl } from '@/lib/products/paths';
 import {
   getDesignCustomizeHref,
@@ -15,7 +14,7 @@ import {
 
 import { DRAFTS_CHANGED_EVENT } from '@/lib/drafts/draft-events';
 
-export type OngoingDesignSource = 'studio' | 'product' | 'template';
+export type OngoingDesignSource = 'product' | 'template';
 
 export type OngoingDesignItem = {
   id: string;
@@ -25,17 +24,6 @@ export type OngoingDesignItem = {
   updatedAt: string;
   previewDataUrl?: string;
 };
-
-function studioItem(design: SavedDesign): OngoingDesignItem {
-  return {
-    id: `studio:${design.id}`,
-    source: 'studio',
-    name: design.name,
-    href: `/designs/create?draft=${encodeURIComponent(design.id)}`,
-    updatedAt: design.updatedAt,
-    previewDataUrl: design.previewDataUrl,
-  };
-}
 
 function productItem(draft: ProductCustomizerDraft): OngoingDesignItem {
   return {
@@ -69,7 +57,6 @@ function templateItem(draft: DesignEditorDraft): OngoingDesignItem {
 
 export function collectOngoingDesigns(): OngoingDesignItem[] {
   const items = [
-    ...readSavedDesigns().map(studioItem),
     ...readProductCustomizerDrafts().map(productItem),
     ...readDesignEditorDrafts().map(templateItem),
   ];
@@ -93,10 +80,6 @@ export function findDesignEditorDraft(templateId: string) {
   );
 }
 
-export function findStudioDraft(draftId: string) {
-  return readSavedDesigns().find((design) => design.id === draftId);
-}
-
 export function deleteOngoingDesign(compositeId: string) {
   const separatorIndex = compositeId.indexOf(':');
   if (separatorIndex === -1) return;
@@ -105,10 +88,6 @@ export function deleteOngoingDesign(compositeId: string) {
   const id = compositeId.slice(separatorIndex + 1);
   if (!id) return;
 
-  if (source === 'studio') {
-    deleteSavedDesign(id);
-    return;
-  }
   if (source === 'product') {
     deleteProductCustomizerDraft(id);
     return;

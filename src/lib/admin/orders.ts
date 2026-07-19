@@ -88,7 +88,7 @@ export async function updateAdminOrderStatus(id: string, status: OrderStatus) {
 }
 
 export async function getAdminMetrics(): Promise<AdminMetrics> {
-  const orders = await listAdminOrders();
+  const orders = await db.orders.listForMetrics();
   const now = new Date();
   const todayStart = startOfDay(now);
   const weekStart = daysAgo(7);

@@ -13,11 +13,17 @@
   },
   "consent": {
     "title": "We use cookies",
-    "description": "We use essential cookies for cart and order functionality, and optional analytics cookies to understand how the website is used. You can accept or reject analytics cookies.",
+    "description": "We use essential cookies for cart and order functionality, and optional analytics cookies to understand how the website is used.",
     "learnMore": "Cookie Policy",
     "privacyLink": "Privacy Policy",
-    "accept": "Accept analytics",
-    "reject": "Reject non-essential"
+    "accept": "Accept",
+    "reject": "Decline",
+    "configure": "Settings",
+    "necessaryTitle": "Necessary",
+    "necessaryHelp": "Always on — cart, checkout, and security.",
+    "analyticsTitle": "Analytics",
+    "analyticsHelp": "Optional — helps us improve the site.",
+    "savePreferences": "Save choice"
   },
   "privacy": {
     "title": "Privacy Policy",
@@ -28,7 +34,7 @@
     "sections": [
       {
         "title": "1. Data controller",
-        "body": "The data controller responsible for your personal data is:\n\nPrint 8\nShtip, North Macedonia\nEmail: info@print8.mk\nPhone: +389 XX XXX XXX\n\nIf we appoint a data protection contact person, their details will be published on this page."
+        "body": "The data controller responsible for your personal data is:\n\nPrint 8\nShtip, North Macedonia\nEmail: info@print8.mk\nPhone: +389 74 609 906\n\nIf we appoint a data protection contact person, their details will be published on this page."
       },
       {
         "title": "2. What data we collect",
@@ -239,7 +245,7 @@
     "sections": [
       {
         "title": "1. Website operator",
-        "body": "Website: https://print8.mk\nOperator: Print 8\nAddress: Shtip, North Macedonia\nEmail: info@print8.mk\nPhone: +389 XX XXX XXX"
+        "body": "Website: https://print8.mk\nOperator: Print 8\nAddress: Shtip, North Macedonia\nEmail: info@print8.mk\nPhone: +389 74 609 906"
       },
       {
         "title": "2. Company registration",

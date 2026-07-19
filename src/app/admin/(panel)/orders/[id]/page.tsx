@@ -77,6 +77,7 @@ export default async function AdminOrderDetailPage({
                   </div>
 
                   <OrderItemDesignAssets
+                    orderId={order.id}
                     item={item}
                     itemIndex={index}
                     itemCount={order.items.length}
@@ -147,6 +148,14 @@ export default async function AdminOrderDetailPage({
                   </dd>
                 </div>
               ) : null}
+              <div>
+                <dt className="text-ink-500">{t.fulfillment}</dt>
+                <dd className="font-medium text-ink-900">
+                  {order.fulfillmentMethod === 'pickup'
+                    ? t.fulfillmentPickup
+                    : t.fulfillmentCargo}
+                </dd>
+              </div>
               <div>
                 <dt className="text-ink-500">{t.city}</dt>
                 <dd className="font-medium text-ink-900">{order.customerCity}</dd>

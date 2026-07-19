@@ -4,7 +4,12 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { Search, X } from 'lucide-react';
-import { searchGlobalCatalog, SEARCH_RESULTS_PREVIEW_LIMIT } from '@/lib/catalog/catalog-search';
+import {
+  SEARCH_RESULTS_PREVIEW_LIMIT,
+  getFeaturedCatalogResults,
+  searchGlobalCatalog,
+  type GlobalSearchResult,
+} from '@/lib/catalog/catalog-search';
 import { useCatalogSearchLabels } from '@/hooks/useCatalogSearchLabels';
 import { useManagedDesignSearchEntries } from '@/hooks/useManagedDesignSearchEntries';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
@@ -14,12 +19,20 @@ import {
   SearchProductDesignsSection,
   SearchProductsSection,
 } from '@/components/search/search-result-ui';
-import { cn } from '@/lib/utils';
 
 type GlobalSearchProps = {
   open: boolean;
   onClose: () => void;
 };
+
+function groupResults(results: GlobalSearchResult[]) {
+  return {
+    collection: results.filter((item) => item.kind === 'collection'),
+    design: results.filter((item) => item.kind === 'design'),
+    product: results.filter((item) => item.kind === 'product'),
+    productDesign: results.filter((item) => item.kind === 'product-design'),
+  };
+}
 
 export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
   const t = useTranslations('search');
@@ -48,9 +61,23 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [open, onClose]);
 
+  const trimmedQuery = query.trim();
+  const showFeatured = trimmedQuery.length === 0;
+
   const allResults = useMemo(
-    () => searchGlobalCatalog(debouncedQuery, labels, managedDesigns),
-    [debouncedQuery, labels, managedDesigns],
+    () =>
+      showFeatured
+        ? []
+        : searchGlobalCatalog(debouncedQuery, labels, managedDesigns),
+    [showFeatured, debouncedQuery, labels, managedDesigns],
+  );
+
+  const featuredResults = useMemo(
+    () =>
+      showFeatured
+        ? getFeaturedCatalogResults(labels, managedDesigns, 8)
+        : [],
+    [showFeatured, labels, managedDesigns],
   );
 
   const results = useMemo(
@@ -59,17 +86,13 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
   );
 
   const hasMoreResults = allResults.length > SEARCH_RESULTS_PREVIEW_LIMIT;
+  const grouped = useMemo(() => groupResults(results), [results]);
+  const featuredGrouped = useMemo(
+    () => groupResults(featuredResults),
+    [featuredResults],
+  );
 
-  const grouped = useMemo(() => {
-    return {
-      collection: results.filter((item) => item.kind === 'collection'),
-      design: results.filter((item) => item.kind === 'design'),
-      product: results.filter((item) => item.kind === 'product'),
-      productDesign: results.filter((item) => item.kind === 'product-design'),
-    };
-  }, [results]);
-
-  const isSettled = query.trim() === debouncedQuery.trim();
+  const isSettled = trimmedQuery === debouncedQuery.trim();
 
   if (!open) return null;
 
@@ -117,8 +140,32 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
         </form>
 
         <div className="max-h-[min(50vh,420px)] overflow-y-auto p-2">
-          {!query.trim() ? (
-            <p className="px-3 py-8 text-center text-sm text-ink-500">{t('startTyping')}</p>
+          {showFeatured ? (
+            <div className="space-y-4 p-2">
+              <p className="px-1 text-xs font-semibold uppercase tracking-wider text-brand-600">
+                {t('featuredHeading')}
+              </p>
+              <SearchCollectionsSection
+                items={featuredGrouped.collection}
+                compact
+                onSelect={onClose}
+              />
+              <SearchProductDesignsSection
+                items={featuredGrouped.productDesign}
+                compact
+                onSelect={onClose}
+              />
+              <SearchProductsSection
+                items={featuredGrouped.product}
+                compact
+                onSelect={onClose}
+              />
+              <SearchDesignsSection
+                items={featuredGrouped.design}
+                compact
+                onSelect={onClose}
+              />
+            </div>
           ) : !isSettled && results.length === 0 ? (
             <div className="py-8" aria-hidden />
           ) : isSettled && results.length === 0 ? (
@@ -151,13 +198,13 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
           )}
         </div>
 
-        {query.trim() && hasMoreResults ? (
+        {trimmedQuery && hasMoreResults ? (
           <div className="border-t border-ink-100 p-3">
             <button
               type="button"
               onClick={() => {
                 onClose();
-                router.push(`/search?q=${encodeURIComponent(query.trim())}`);
+                router.push(`/search?q=${encodeURIComponent(trimmedQuery)}`);
               }}
               className="w-full rounded-lg px-3 py-2 text-sm font-semibold text-brand-700 transition hover:bg-brand-50"
             >
@@ -169,30 +216,5 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
         ) : null}
       </div>
     </div>
-  );
-}
-
-export function GlobalSearchButton({
-  className,
-  onClick,
-}: {
-  className?: string;
-  onClick: () => void;
-}) {
-  const t = useTranslations('search');
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'inline-flex items-center gap-2 border-2 border-transparent p-2 text-ink-600 transition hover:border-ink-200 hover:bg-ink-50',
-        className,
-      )}
-      aria-label={t('open')}
-    >
-      <Search className="h-5 w-5" aria-hidden="true" />
-      <span className="hidden xl:inline text-sm font-medium">{t('open')}</span>
-    </button>
   );
 }

@@ -178,7 +178,7 @@ export function TrendingDesignsSection({
           </div>
 
           <Link
-            href="/products/ready-designs?type=t-shirt"
+            href="/products/ready-designs"
             className="inline-flex shrink-0 items-center gap-2 border border-white/25 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:border-white/40 hover:bg-white/10"
           >
             <Sparkles className="h-4 w-4 text-brand-300" aria-hidden />
@@ -212,7 +212,7 @@ export function TrendingDesignsSection({
 
         <div className="mt-10 flex justify-center sm:mt-12">
           <Link
-            href="/products/ready-designs?type=t-shirt"
+            href="/products/ready-designs"
             className="inline-flex items-center gap-2 border border-white/25 bg-white/5 px-6 py-3 text-sm font-semibold text-white backdrop-blur-sm transition hover:border-white/40 hover:bg-white/10"
           >
             <Sparkles className="h-4 w-4 text-brand-300" aria-hidden />

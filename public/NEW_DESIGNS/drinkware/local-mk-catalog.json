@@ -1,0 +1,59 @@
+{
+  "generatedAt": "2026-07-17T23:33:21.799Z",
+  "items": [
+    {
+      "id": "mug-stip-isar",
+      "titleMk": "Штип — Исар",
+      "titleEn": "Štip — Isar",
+      "file": "/NEW_DESIGNS/drinkware/mug-stip-isar.png"
+    },
+    {
+      "id": "mug-stip-stamp",
+      "titleMk": "Штип печат",
+      "titleEn": "Štip stamp",
+      "file": "/NEW_DESIGNS/drinkware/mug-stip-stamp.png"
+    },
+    {
+      "id": "mug-stip-pastrmajlija",
+      "titleMk": "Штипска пастрмајлија",
+      "titleEn": "Štip pastrmajlija",
+      "file": "/NEW_DESIGNS/drinkware/mug-stip-pastrmajlija.png"
+    },
+    {
+      "id": "mug-stip-karakter",
+      "titleMk": "Штип — од исток со карактер",
+      "titleEn": "Štip — east with character",
+      "file": "/NEW_DESIGNS/drinkware/mug-stip-karakter.png"
+    },
+    {
+      "id": "mug-od-stip-ljubov",
+      "titleMk": "Од Штип со љубов",
+      "titleEn": "From Štip with love",
+      "file": "/NEW_DESIGNS/drinkware/mug-od-stip-ljubov.png"
+    },
+    {
+      "id": "mug-makedonija-srce",
+      "titleMk": "Македонија од срце",
+      "titleEn": "Macedonia from the heart",
+      "file": "/NEW_DESIGNS/drinkware/mug-makedonija-srce.png"
+    },
+    {
+      "id": "mug-skopje",
+      "titleMk": "Скопје",
+      "titleEn": "Skopje",
+      "file": "/NEW_DESIGNS/drinkware/mug-skopje.png"
+    },
+    {
+      "id": "mug-ohrid",
+      "titleMk": "Охрид",
+      "titleEn": "Ohrid",
+      "file": "/NEW_DESIGNS/drinkware/mug-ohrid.png"
+    },
+    {
+      "id": "mug-kafe-od-stip",
+      "titleMk": "Кафе од Штип",
+      "titleEn": "Coffee from Štip",
+      "file": "/NEW_DESIGNS/drinkware/mug-kafe-od-stip.png"
+    }
+  ]
+}

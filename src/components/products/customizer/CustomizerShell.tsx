@@ -93,7 +93,7 @@ export function CustomizerShell({
 
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <aside className="hidden shrink-0 md:flex">
-          <nav className="flex w-[4.25rem] flex-col items-center gap-1 border-r border-ink-100 bg-white py-3">
+          <nav className="flex w-[5.25rem] flex-col items-center gap-1.5 border-r border-ink-200 bg-ink-50/80 py-3">
             {items.map((item) => (
               <button
                 key={item.id}
@@ -103,10 +103,10 @@ export function CustomizerShell({
                   onPanelChange(activePanel === item.id ? null : item.id)
                 }
                 className={cn(
-                  'flex w-14 flex-col items-center gap-1 rounded-lg px-1 py-2 text-[10px] font-medium leading-tight transition',
+                  'flex w-[4.5rem] flex-col items-center gap-1 rounded-xl px-1.5 py-2.5 text-[11px] font-semibold leading-tight transition',
                   activePanel === item.id
-                    ? 'bg-brand-50 text-brand-700'
-                    : 'text-ink-500 hover:bg-ink-50 hover:text-ink-800',
+                    ? 'bg-white text-brand-700 shadow-sm ring-1 ring-brand-200'
+                    : 'text-ink-600 hover:bg-white hover:text-ink-900',
                 )}
               >
                 {item.icon}
@@ -116,13 +116,13 @@ export function CustomizerShell({
           </nav>
 
           {activePanel ? (
-            <div className="flex w-[min(20rem,30vw)] flex-col border-r border-ink-100 bg-white">
-              <div className="border-b border-ink-100 px-4 py-3">
+            <div className="flex w-[22rem] flex-col border-r border-ink-200 bg-white lg:w-96">
+              <div className="border-b border-ink-100 px-5 py-3.5">
                 <h2 className="text-sm font-semibold text-ink-900">
                   {items.find((item) => item.id === activePanel)?.label}
                 </h2>
               </div>
-              <div className="min-h-0 flex-1 overflow-y-auto p-4">{panel}</div>
+              <div className="min-h-0 flex-1 overflow-y-auto p-5">{panel}</div>
             </div>
           ) : null}
         </aside>

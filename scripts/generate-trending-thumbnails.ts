@@ -86,19 +86,29 @@ async function renderThumbnail(design: ProductDesignTemplate) {
     .resize(Math.round(SIZE * 0.92), Math.round(SIZE * 0.92), { fit: 'inside' })
     .toBuffer();
   const mockupMeta = await sharp(mockupResized).metadata();
-  const mockupLeft = Math.round((SIZE - (mockupMeta.width ?? SIZE)) / 2);
-  const mockupTop = Math.round((SIZE - (mockupMeta.height ?? SIZE)) / 2);
+  const mockupWidth = mockupMeta.width ?? SIZE;
+  const mockupHeight = mockupMeta.height ?? SIZE;
+  const mockupLeft = Math.round((SIZE - mockupWidth) / 2);
+  const mockupTop = Math.round((SIZE - mockupHeight) / 2);
 
-  const overlayWidth = Math.round((SIZE * placement.scale) / 100);
+  // Position overlay relative to the mockup box (same % model as CSS previews).
+  const overlayWidth = Math.max(
+    1,
+    Math.round((mockupWidth * placement.scale) / 100),
+  );
   const overlayResized = await sharp(overlayPath)
     .resize(overlayWidth)
     .toBuffer();
   const overlayMeta = await sharp(overlayResized).metadata();
   const overlayLeft = Math.round(
-    (SIZE * placement.position.x) / 100 - (overlayMeta.width ?? 0) / 2,
+    mockupLeft +
+      (mockupWidth * placement.position.x) / 100 -
+      (overlayMeta.width ?? 0) / 2,
   );
   const overlayTop = Math.round(
-    (SIZE * placement.position.y) / 100 - (overlayMeta.height ?? 0) / 2,
+    mockupTop +
+      (mockupHeight * placement.position.y) / 100 -
+      (overlayMeta.height ?? 0) / 2,
   );
 
   await sharp({

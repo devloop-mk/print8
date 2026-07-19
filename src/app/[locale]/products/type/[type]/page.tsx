@@ -40,7 +40,8 @@ export default async function ProductTypePage({
     notFound();
   }
 
-  const { products, readyDesignEntries } = await getProductTypeCatalogData(type);
+  const { products, readyDesignEntries, categoryPreviews } =
+    await getProductTypeCatalogData(type);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -49,6 +50,7 @@ export default async function ProductTypePage({
           type={type}
           products={products}
           readyDesignEntries={readyDesignEntries}
+          categoryPreviews={categoryPreviews}
         />
       </Suspense>
     </div>

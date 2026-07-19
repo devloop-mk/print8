@@ -19,12 +19,15 @@ export function DesignColorPicker({
   onChange,
   className,
   variant = 'default',
+  label,
 }: {
   colors: string[];
   value: string;
   onChange: (color: string) => void;
   className?: string;
   variant?: 'default' | 'compact';
+  /** Overrides the default “select color” heading (default variant only). */
+  label?: string;
 }) {
   const t = useTranslations('products');
   const tColors = useTranslations('products.productColors');
@@ -44,7 +47,7 @@ export function DesignColorPicker({
     >
       {!compact ? (
         <p className="mb-2 text-xs font-medium text-ink-600">
-          {t('customizer.selectColor')}
+          {label ?? t('customizer.selectColor')}
         </p>
       ) : null}
       <div className={cn('flex flex-wrap', compact ? 'gap-1.5' : 'gap-3')}>

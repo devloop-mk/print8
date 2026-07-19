@@ -31,6 +31,7 @@ import {
   PRODUCT_PHOTO_MIN_SCALE,
 } from '@/lib/products/customizer-constants';
 import { resolveAssetUrl } from '@/lib/storage/asset-url';
+import { getDesignCompositeOverlayUrl } from '@/lib/products/design-overlay';
 import {
   useDraggableOverlayPosition,
   useOverlayScaleResize,
@@ -149,11 +150,17 @@ export function ProductDesignOverlayPlacementEditor({
   );
 
   const printBounds = getOverlayPrintBounds(mockupLayout);
-  const overlaySrc = sideOverlay.overlayImage
-    ? resolveAssetUrl(sideOverlay.overlayImage)
-    : sideOverlay.overlaySvg
-      ? resolveAssetUrl(sideOverlay.overlaySvg)
-      : null;
+  const overlaySrc =
+    getDesignCompositeOverlayUrl({
+      printMasterImage: template.printMasterImage,
+      overlayImage: sideOverlay.overlayImage,
+      overlaySvg: sideOverlay.overlaySvg,
+    }) ??
+    (sideOverlay.overlayImage
+      ? resolveAssetUrl(sideOverlay.overlayImage)
+      : sideOverlay.overlaySvg
+        ? resolveAssetUrl(sideOverlay.overlaySvg)
+        : null);
 
   const commitPlacement = (next: PlacementValue) => {
     onPlacementChange(previewType, next);

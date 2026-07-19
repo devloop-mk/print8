@@ -7,6 +7,7 @@ import {
   type Product,
   type ProductDesignTemplate,
   type ProductDesignTextStyle,
+  type ProductSide,
 } from '@/lib/data/catalog';
 import { ProductMockupFrame } from '@/components/products/ProductMockupFrame';
 import {
@@ -15,10 +16,13 @@ import {
 } from '@/lib/products/product-mockup-layout';
 import { resolveDesignPreviewColor } from '@/lib/products/design-applicable-colors';
 import {
-  resolveOverlayPlacement,
-  type OverlayPlacement,
+  DESIGN_OVERLAY_LAYER_CLASS,
   getDesignCompositeOverlayUrl,
+  getDesignOverlayLayerStyle,
+  resolveOverlayPlacementForSide,
+  type OverlayPlacement,
 } from '@/lib/products/design-overlay';
+import { resolveSideOverlayConfig } from '@/lib/products/design-sides';
 import { useOverlayAssetUrl } from '@/hooks/useOverlayAssetUrl';
 import { Shirt } from 'lucide-react';
 
@@ -57,28 +61,41 @@ function CatalogOverlayPreview({
   design,
   shirtColor,
   placement,
+  side,
 }: {
   design: ProductDesignTemplate;
   shirtColor: string;
   placement: OverlayPlacement;
+  side: ProductSide;
 }) {
+  const sideConfig = resolveSideOverlayConfig(design, side);
+  const overlaySvg = sideConfig?.overlaySvg ?? null;
+  const overlayRecolor = sideConfig?.overlayRecolor;
   const overlayDesign = {
-    overlaySvg: design.overlaySvg ?? null,
-    overlaySvgColors: design.overlayRecolor
+    overlaySvg,
+    overlaySvgColors: overlayRecolor
       ? {
-          primary: design.overlayRecolor.primary,
-          secondary: design.overlayRecolor.secondary,
+          primary: overlayRecolor.primary,
+          secondary: overlayRecolor.secondary,
         }
       : null,
-    overlayColorVariants: design.overlayColorVariants ?? null,
-    overlayRaster: getDesignCompositeOverlayUrl(design),
+    overlayColorVariants: sideConfig?.overlayColorVariants ?? null,
+    overlayRaster: getDesignCompositeOverlayUrl({
+      printMasterImage:
+        side === (design.defaultSide ?? 'front')
+          ? design.printMasterImage
+          : undefined,
+      overlayImage: sideConfig?.overlayImage,
+      overlaySvg: sideConfig?.overlaySvg,
+    }),
     premadeDesignId: design.id,
     uploadedImageScale: placement.scale,
     uploadedImagePosition: placement.position,
   };
   const src = useOverlayAssetUrl({
     design: overlayDesign,
-    template: design,
+    // Avoid falling back to front-side template art when previewing another side.
+    template: side === (design.defaultSide ?? 'front') ? design : null,
     shirtColor,
   });
 
@@ -90,13 +107,8 @@ function CatalogOverlayPreview({
       src={src}
       alt=""
       draggable={false}
-      className="pointer-events-none absolute max-h-[70%] max-w-[70%] object-contain"
-      style={{
-        left: `${overlayDesign.uploadedImagePosition.x}%`,
-        top: `${overlayDesign.uploadedImagePosition.y}%`,
-        width: `${overlayDesign.uploadedImageScale}%`,
-        transform: 'translate(-50%, -50%)',
-      }}
+      className={DESIGN_OVERLAY_LAYER_CLASS}
+      style={getDesignOverlayLayerStyle(placement)}
     />
   );
 }
@@ -107,29 +119,65 @@ export function DesignTemplatePreview({
   design,
   typeLabel,
   showPhotoGuide = false,
+  className,
+  side,
 }: {
   product: Product;
   color: string;
   design: ProductDesignTemplate;
   typeLabel: string;
   showPhotoGuide?: boolean;
+  /** Merged onto ProductMockupFrame (e.g. borderless couple-pack halves). */
+  className?: string;
+  /** Which garment side to show. Defaults to design.defaultSide. */
+  side?: ProductSide;
 }) {
   const textStyle = design.textStyle;
   const photoGuide = textStyle?.photoPosition;
   const previewColor = resolveDesignPreviewColor(design, product, color);
-  const placement = resolveOverlayPlacement(design, product);
-  const mockupSide = design.defaultSide ?? 'front';
+  const mockupSide = side ?? design.defaultSide ?? 'front';
+  const sideConfig = resolveSideOverlayConfig(design, mockupSide);
+  const placement = resolveOverlayPlacementForSide(design, mockupSide, product);
   const shirtMockup = getProductMockup(product, previewColor, mockupSide);
-  const compositeOverlay = getDesignCompositeOverlayUrl(design);
+  const compositeOverlay = getDesignCompositeOverlayUrl({
+    printMasterImage:
+      mockupSide === (design.defaultSide ?? 'front')
+        ? design.printMasterImage
+        : undefined,
+    overlayImage: sideConfig?.overlayImage ?? design.overlayImage,
+    overlaySvg: sideConfig?.overlaySvg ?? design.overlaySvg,
+  });
   const mockupLayout = getProductMockupLayout(product);
+  // Use the same mockup zoom as the customizer so overlay % matches 1:1.
   const mockupStyle = getMockupImageDisplayStyle(
     product,
     shirtMockup,
-    'catalog-design',
+    'customizer',
   );
 
+  const sideHasRecolorableOverlay = Boolean(
+    sideConfig?.overlaySvg && sideConfig.overlayRecolor,
+  );
+  const sideHasColorVariants = Boolean(
+    sideConfig?.overlayColorVariants &&
+      Object.keys(sideConfig.overlayColorVariants).length > 0,
+  );
+  // Fall back to template-level recolor/variants only for the default side.
+  const useDynamicOverlay =
+    isOverlayDesignTemplate(design) &&
+    (sideHasRecolorableOverlay ||
+      sideHasColorVariants ||
+      (mockupSide === (design.defaultSide ?? 'front') &&
+        (isRecolorableOverlayTemplate(design) ||
+          Boolean(design.overlayColorVariants))));
+
   return (
-    <ProductMockupFrame variant="catalog" layout={mockupLayout} innerStyle={mockupStyle}>
+    <ProductMockupFrame
+      variant="catalog"
+      layout={mockupLayout}
+      innerStyle={mockupStyle}
+      className={className}
+    >
       {shirtMockup ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -145,12 +193,12 @@ export function DesignTemplatePreview({
         </div>
       )}
 
-      {isOverlayDesignTemplate(design) &&
-      (isRecolorableOverlayTemplate(design) || design.overlayColorVariants) ? (
+      {useDynamicOverlay ? (
         <CatalogOverlayPreview
           design={design}
           shirtColor={previewColor}
           placement={placement}
+          side={mockupSide}
         />
       ) : compositeOverlay ? (
         // eslint-disable-next-line @next/next/no-img-element
@@ -159,17 +207,14 @@ export function DesignTemplatePreview({
           src={compositeOverlay}
           alt=""
           draggable={false}
-          className="pointer-events-none absolute max-h-[70%] max-w-[70%] object-contain"
-          style={{
-            left: `${placement.position.x}%`,
-            top: `${placement.position.y}%`,
-            width: `${placement.scale}%`,
-            transform: 'translate(-50%, -50%)',
-          }}
+          className={DESIGN_OVERLAY_LAYER_CLASS}
+          style={getDesignOverlayLayerStyle(placement)}
         />
       ) : null}
 
-      {textStyle && <StyledDesignText style={textStyle} />}
+      {textStyle && mockupSide === (design.defaultSide ?? 'front') ? (
+        <StyledDesignText style={textStyle} />
+      ) : null}
 
       {showPhotoGuide && photoGuide && (
         <div

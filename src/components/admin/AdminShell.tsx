@@ -10,6 +10,10 @@ import {
   Palette,
   FileText,
   Shirt,
+  Mail,
+  Megaphone,
+  TicketPercent,
+  ListOrdered,
 } from 'lucide-react';
 import { adminStrings } from '@/lib/admin/strings';
 import { cn } from '@/lib/utils';
@@ -30,6 +34,24 @@ const NAV_ITEMS = [
     exact: false,
   },
   {
+    href: '/admin/messages',
+    label: adminStrings.messages,
+    icon: Mail,
+    exact: false,
+  },
+  {
+    href: '/admin/newsletter',
+    label: adminStrings.newsletter.nav,
+    icon: Megaphone,
+    exact: false,
+  },
+  {
+    href: '/admin/coupons',
+    label: adminStrings.coupons.nav,
+    icon: TicketPercent,
+    exact: false,
+  },
+  {
     href: '/admin/designs',
     label: adminStrings.designs,
     icon: Palette,
@@ -39,6 +61,12 @@ const NAV_ITEMS = [
     href: '/admin/product-designs',
     label: adminStrings.productDesigns,
     icon: Shirt,
+    exact: false,
+  },
+  {
+    href: '/admin/ordering',
+    label: adminStrings.ordering.nav,
+    icon: ListOrdered,
     exact: false,
   },
   {
@@ -135,7 +163,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </main>
 
           <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-ink-200 bg-white/95 backdrop-blur lg:hidden">
-            <div className="mx-auto flex max-w-7xl items-stretch justify-around px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2">
+            <div className="mx-auto flex max-w-7xl items-stretch gap-1 overflow-x-auto px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2">
               {NAV_ITEMS.map((item) => {
                 const active = item.exact
                   ? pathname === item.href
@@ -147,12 +175,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      'flex min-w-0 flex-1 flex-col items-center gap-1 rounded-lg px-2 py-2 text-xs font-medium transition',
+                      'flex w-16 shrink-0 flex-col items-center gap-1 rounded-lg px-1 py-2 text-[10px] font-medium transition',
                       active ? 'text-brand-700' : 'text-ink-500',
                     )}
                   >
                     <Icon className="h-5 w-5" />
-                    <span className="truncate">{item.label}</span>
+                    <span className="w-full truncate text-center">{item.label}</span>
                   </Link>
                 );
               })}
@@ -160,10 +188,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 href="/mk"
                 target="_blank"
                 rel="noreferrer"
-                className="flex min-w-0 flex-1 flex-col items-center gap-1 rounded-lg px-2 py-2 text-xs font-medium text-ink-500"
+                className="flex w-16 shrink-0 flex-col items-center gap-1 rounded-lg px-1 py-2 text-[10px] font-medium text-ink-500"
               >
                 <ExternalLink className="h-5 w-5" />
-                <span className="truncate">Сајт</span>
+                <span className="w-full truncate text-center">Сајт</span>
               </a>
             </div>
           </nav>

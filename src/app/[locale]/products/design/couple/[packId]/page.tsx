@@ -1,9 +1,12 @@
 import { CouplePackDetail } from '@/components/products/CouplePackDetail';
 import { getCouplePackTemplate } from '@/lib/data/couple-pack';
+import { resolveCouplePackPartnerDesigns } from '@/lib/products/couple-pack-resolved';
 import { buildCouplePackMetadata } from '@/lib/seo/page-metadata';
 import type { Locale } from '@/i18n/routing';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({
   params,
@@ -27,9 +30,18 @@ export default async function CouplePackPage({
     notFound();
   }
 
+  const partnerDesigns = await resolveCouplePackPartnerDesigns(packId);
+  if (!partnerDesigns) {
+    notFound();
+  }
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-      <CouplePackDetail packId={packId} />
+      <CouplePackDetail
+        packId={packId}
+        initialDesign1={partnerDesigns.design1}
+        initialDesign2={partnerDesigns.design2}
+      />
     </div>
   );
 }

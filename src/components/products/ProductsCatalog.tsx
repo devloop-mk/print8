@@ -7,6 +7,7 @@ import { useRouter } from '@/i18n/navigation';
 import { getBrowsableProducts, productTypes, type ProductType } from '@/lib/data/catalog';
 import { parseProductTypeFilter } from '@/lib/data/service-routes';
 import { productTypeHref } from '@/lib/products/product-nav';
+import { sortByDisplayOrder } from '@/lib/products/sort-by-display-order';
 import { buildProductTypeFilterOptions } from '@/lib/products/product-type-icons';
 import { ProductCardGrid } from '@/components/products/ProductCardGrid';
 import { FilterChipBar } from '@/components/catalog/FilterChipBar';
@@ -19,7 +20,11 @@ function isProductType(value: string): value is ProductType {
   return (productTypes as readonly string[]).includes(value);
 }
 
-export function ProductsCatalog() {
+export function ProductsCatalog({
+  displayOrder,
+}: {
+  displayOrder?: Record<string, number>;
+} = {}) {
   const t = useTranslations('products');
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -44,10 +49,12 @@ export function ProductsCatalog() {
     [t],
   );
 
-  const filtered =
-    typeFilter === 'all'
-      ? getBrowsableProducts()
-      : getBrowsableProducts().filter((p) => p.type === typeFilter);
+  const filtered = useMemo(() => {
+    const browsable = sortByDisplayOrder(getBrowsableProducts(), displayOrder);
+    return typeFilter === 'all'
+      ? browsable
+      : browsable.filter((p) => p.type === typeFilter);
+  }, [displayOrder, typeFilter]);
 
   return (
     <>

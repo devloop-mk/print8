@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import type {
   Product,
   ProductDesignSideOverlay,
@@ -22,6 +23,24 @@ export type OverlayPlacement = {
 const DEFAULT_OVERLAY_POSITION = { x: 50, y: 54 };
 /** Default width % — kept under t-shirt print-area width (~47%). */
 const DEFAULT_OVERLAY_SCALE = 40;
+
+/**
+ * Shared overlay layer look — cards, PDP, customizer, admin, and captures
+ * must use the same positioning model (width % of mockup, no max-size caps).
+ */
+export const DESIGN_OVERLAY_LAYER_CLASS =
+  'pointer-events-none absolute z-[2] object-contain';
+
+export function getDesignOverlayLayerStyle(
+  placement: OverlayPlacement,
+): CSSProperties {
+  return {
+    left: `${placement.position.x}%`,
+    top: `${placement.position.y}%`,
+    width: `${placement.scale}%`,
+    transform: 'translate(-50%, -50%)',
+  };
+}
 
 export function resolveOverlayPlacement(
   template: Pick<

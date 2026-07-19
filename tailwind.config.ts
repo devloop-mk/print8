@@ -81,11 +81,28 @@ const config: Config = {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-8px)' },
         },
+        'spin-rim-pulse': {
+          '0%, 100%': { opacity: '0.55', transform: 'scale(1)' },
+          '50%': { opacity: '0.95', transform: 'scale(1.04)' },
+        },
+        'spin-win-pop': {
+          '0%': { transform: 'scale(0.94)', opacity: '0' },
+          '55%': { transform: 'scale(1.03)', opacity: '1' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+        'spin-spark': {
+          '0%': { opacity: '0', transform: 'scale(0.4)' },
+          '35%': { opacity: '1', transform: 'scale(1)' },
+          '100%': { opacity: '0', transform: 'scale(1.35)' },
+        },
       },
       animation: {
         'gradient-shift': 'gradient-shift 14s ease infinite',
         shimmer: 'shimmer 2.8s linear infinite',
         float: 'float 5s ease-in-out infinite',
+        'spin-rim-pulse': 'spin-rim-pulse 2.8s ease-in-out infinite',
+        'spin-win-pop': 'spin-win-pop 0.55s cubic-bezier(0.22, 1, 0.36, 1) both',
+        'spin-spark': 'spin-spark 0.9s ease-out both',
       },
     },
   },

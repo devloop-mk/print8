@@ -3,10 +3,8 @@ import {
   getProductDesignTemplatesByCategory,
   type Product,
 } from '@/lib/data/catalog';
-import {
-  getProductsForCategory,
-  type ProductNavCategoryId,
-} from '@/lib/products/product-nav';
+import type { ProductNavCategoryId } from '@/lib/products/product-nav';
+import { getProductsForCategory } from '@/lib/products/product-nav-catalog';
 
 export type ProductOffering = {
   imageDesignCount: number;

@@ -104,7 +104,10 @@ import { TSHIRT_UNISEX_COLORS } from '@/lib/products/tshirt-unisex-colors';
 import { TSHIRT_WOMEN_COLORS } from '@/lib/products/tshirt-women-colors';
 import { TSHIRT_KIDS_COLORS } from '@/lib/products/tshirt-kids-colors';
 import { normalizeHex } from '@/lib/products/design-overlay';
-import { getDesignApplicableFits } from '@/lib/products/garment-fit';
+import {
+  getDesignApplicableFits,
+  getDesignPrimaryProductType,
+} from '@/lib/products/garment-fit';
 
 export type AdminDesignColorOption = {
   hex: string;
@@ -141,10 +144,22 @@ export function getAdminKidsTshirtColorOptions(
   }));
 }
 
+/**
+ * Color swatches for the admin matrix.
+ * Uses the design's primary product type (productTypes[0]), or an explicit
+ * preview type — baby designs list bodysuit first and must not fall through
+ * to adult/kids tee palettes just because t-shirt is also linked.
+ */
 export function getAdminDesignColorOptions(
   template: ProductDesignTemplate,
+  productType?: ProductType,
 ): AdminDesignColorOption[] {
-  if (template.productTypes.includes('t-shirt')) {
+  const type =
+    productType && template.productTypes.includes(productType)
+      ? productType
+      : (getDesignPrimaryProductType(template) ?? 't-shirt');
+
+  if (type === 't-shirt') {
     const fits = getDesignApplicableFits(template);
 
     if (fits.includes('unisex')) {
@@ -160,11 +175,16 @@ export function getAdminDesignColorOptions(
     return getAdminUnisexTshirtColorOptions('tshirt-basic-white');
   }
 
-  return getDesignColorOptions(template);
+  return getDesignColorOptions(template, type);
 }
 
-export function getDesignColorOptions(template: ProductDesignTemplate) {
-  const linkedProducts = getLinkedProducts(template);
+export function getDesignColorOptions(
+  template: ProductDesignTemplate,
+  productType?: ProductType,
+) {
+  const linkedProducts = getLinkedProducts(template).filter(
+    (product) => !productType || product.type === productType,
+  );
   const colors = new Map<string, AdminDesignColorOption>();
 
   for (const product of linkedProducts) {

@@ -10,14 +10,20 @@ const STATIC_PATHS = [
   '',
   '/products',
   '/products/ready-designs',
+  '/products/ready-designs/kids',
+  '/products/ready-designs/couples',
   '/products/custom',
   '/designs',
   '/designs/all',
-  '/designs/create',
+  '/designs/custom',
   '/services',
   '/search',
   '/contact',
   '/about',
+  '/faq',
+  '/how-to-order',
+  '/order-status',
+  '/rewards',
 ] as const;
 
 function entry(

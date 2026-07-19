@@ -1,4 +1,4 @@
-import type { CartItem } from '@/components/cart/CartProvider';
+import type { CartItem } from '@/lib/cart/types';
 import { idbDelete, idbGet, idbSet } from '@/lib/storage/indexed-db';
 
 const STORAGE_KEY = 'print8-cart';

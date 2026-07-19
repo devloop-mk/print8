@@ -20,10 +20,14 @@ export interface OrderRecord {
   customerEmail: string | null;
   customerCity: string;
   customerAddress: string;
+  fulfillmentMethod: 'cargo' | 'pickup';
   notes: string | null;
   itemsJson: string;
   fileIdsJson: string | null;
   totalAmount: number;
+  subtotalAmount?: number | null;
+  discountAmount?: number | null;
+  couponCode?: string | null;
   createdAt: string;
 }
 
@@ -105,10 +109,14 @@ type OrderRow = {
   customer_email: string | null;
   customer_city: string;
   customer_address: string;
+  fulfillment_method?: 'cargo' | 'pickup' | null;
   notes: string | null;
   items: unknown;
   file_ids: unknown;
   total_amount: number;
+  subtotal_amount?: number | string | null;
+  discount_amount?: number | string | null;
+  coupon_code?: string | null;
   created_at: string;
 };
 
@@ -124,11 +132,63 @@ function mapOrderRow(row: OrderRow): OrderRecord {
     customerEmail: row.customer_email,
     customerCity: row.customer_city,
     customerAddress: row.customer_address,
+    fulfillmentMethod:
+      row.fulfillment_method === 'pickup' ? 'pickup' : 'cargo',
     notes: row.notes,
     itemsJson: JSON.stringify(row.items ?? []),
     fileIdsJson: row.file_ids ? JSON.stringify(row.file_ids) : null,
     totalAmount: Number(row.total_amount),
+    subtotalAmount:
+      row.subtotal_amount == null ? null : Number(row.subtotal_amount),
+    discountAmount:
+      row.discount_amount == null ? null : Number(row.discount_amount),
+    couponCode: row.coupon_code ?? null,
     createdAt: row.created_at,
+  };
+}
+
+/** Lean row shape for admin dashboard metrics (avoids customer fields + stringify round-trip). */
+export type OrderMetricsRow = {
+  status: OrderStatus;
+  locale: 'mk' | 'en';
+  totalAmount: number;
+  createdAt: string;
+  /** Parsed once from DB jsonb; only `type` + `quantity` are used by metrics. */
+  items: Array<{ type: 'service' | 'design' | 'product'; quantity: number }>;
+};
+
+type OrderMetricsDbRow = {
+  status: OrderStatus;
+  locale: 'mk' | 'en';
+  total_amount: number;
+  created_at: string;
+  items: unknown;
+};
+
+function mapOrderMetricsRow(row: OrderMetricsDbRow): OrderMetricsRow {
+  const rawItems = Array.isArray(row.items) ? row.items : [];
+  const items: OrderMetricsRow['items'] = [];
+
+  for (const entry of rawItems) {
+    if (!entry || typeof entry !== 'object') continue;
+    const record = entry as Record<string, unknown>;
+    const type = record.type;
+    const quantity = Number(record.quantity);
+    if (
+      (type === 'service' || type === 'design' || type === 'product') &&
+      Number.isFinite(quantity) &&
+      quantity > 0
+    ) {
+      items.push({ type, quantity });
+    }
+  }
+
+  return {
+    status: row.status,
+    locale: row.locale,
+    totalAmount: Number(row.total_amount),
+    createdAt: row.created_at,
+    items,
   };
 }
 
@@ -141,10 +201,27 @@ function isMissingOriginalStoredNameColumn(message: string) {
   );
 }
 
+/** Compare phones loosely (ignore spaces, dashes, leading +389 / 0). */
+export function phonesMatch(stored: string, input: string): boolean {
+  const normalize = (value: string) => {
+    let digits = value.replace(/\D/g, '');
+    if (digits.startsWith('389')) digits = digits.slice(3);
+    if (digits.startsWith('0')) digits = digits.slice(1);
+    return digits;
+  };
+
+  const a = normalize(stored);
+  const b = normalize(input);
+  if (!a || !b) return false;
+  if (a === b) return true;
+  const len = Math.min(8, a.length, b.length);
+  return len >= 8 && a.slice(-len) === b.slice(-len);
+}
+
 export const db = {
   orders: {
     async insert(value: OrderRecord) {
-      const { error } = await getSupabaseAdmin().from('orders').insert({
+      const payload: Record<string, unknown> = {
         id: value.id,
         order_number: value.orderNumber,
         status: value.status,
@@ -155,13 +232,43 @@ export const db = {
         customer_email: value.customerEmail,
         customer_city: value.customerCity,
         customer_address: value.customerAddress,
+        fulfillment_method: value.fulfillmentMethod,
         notes: value.notes,
         items: JSON.parse(value.itemsJson),
         file_ids: value.fileIdsJson ? JSON.parse(value.fileIdsJson) : [],
         total_amount: value.totalAmount,
         created_at: value.createdAt,
-      });
-      if (error) throw new Error(error.message);
+      };
+
+      if (value.subtotalAmount != null) payload.subtotal_amount = value.subtotalAmount;
+      if (value.discountAmount != null) payload.discount_amount = value.discountAmount;
+      if (value.couponCode) payload.coupon_code = value.couponCode;
+
+      const { error } = await getSupabaseAdmin().from('orders').insert(payload);
+      if (!error) return;
+
+      const message = error.message.toLowerCase();
+      // Migration not applied yet — strip newer columns and retry.
+      if (
+        message.includes('fulfillment_method') ||
+        message.includes('coupon_code') ||
+        message.includes('discount_amount') ||
+        message.includes('subtotal_amount') ||
+        message.includes('schema cache')
+      ) {
+        const {
+          fulfillment_method: _f,
+          coupon_code: _c,
+          discount_amount: _d,
+          subtotal_amount: _s,
+          ...legacy
+        } = payload;
+        const retry = await getSupabaseAdmin().from('orders').insert(legacy);
+        if (retry.error) throw new Error(retry.error.message);
+        return;
+      }
+
+      throw new Error(error.message);
     },
 
     async findByOrderNumber(orderNumber: string) {
@@ -175,6 +282,13 @@ export const db = {
         throw new Error(error.message);
       }
       return data ? mapOrderRow(data as OrderRow) : null;
+    },
+
+    async findByOrderNumberAndPhone(orderNumber: string, phone: string) {
+      const order = await this.findByOrderNumber(orderNumber.trim());
+      if (!order) return null;
+      if (!phonesMatch(order.customerPhone, phone)) return null;
+      return order;
     },
 
     async findById(id: string) {
@@ -249,6 +363,17 @@ export const db = {
       }
 
       return rows;
+    },
+
+    async listForMetrics(): Promise<OrderMetricsRow[]> {
+      const { data, error } = await getSupabaseAdmin()
+        .from('orders')
+        .select('status, locale, total_amount, created_at, items')
+        .order('created_at', { ascending: false });
+
+      if (error) throw new Error(error.message);
+
+      return ((data ?? []) as OrderMetricsDbRow[]).map(mapOrderMetricsRow);
     },
   },
 

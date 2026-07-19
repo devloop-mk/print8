@@ -14,22 +14,9 @@ import {
   loadCartFromStorage,
   saveCartToStorage,
 } from "@/lib/storage/cart-storage";
+import type { CartItem } from "@/lib/cart/types";
 
-export type CartItemType = "service" | "design" | "product";
-
-export interface CartItem {
-  id: string;
-  type: CartItemType;
-  name: string;
-  price: number;
-  quantity: number;
-  metadata?: Record<string, string | number | boolean>;
-  designPreview?: string;
-  backDesignPreview?: string;
-  leftDesignPreview?: string;
-  rightDesignPreview?: string;
-  fileIds?: string[];
-}
+export type { CartItem, CartItemType } from "@/lib/cart/types";
 
 interface CartContextValue {
   items: CartItem[];

@@ -73,7 +73,8 @@ export function getCatalogColors(entries: ProductDesignCatalogEntry[]): string[]
 export type DesignCatalogFilters = {
   type: ProductType | 'all';
   color: string | 'all';
-  side: ProductSide | 'all';
+  /** @deprecated Side filter removed from catalog UI; kept optional for callers. */
+  side?: ProductSide | 'all';
 };
 
 function designSupportsColor(
@@ -121,9 +122,10 @@ export function filterDesignCatalogEntries(
   entries: ProductDesignCatalogEntry[],
   filters: DesignCatalogFilters,
 ): ProductDesignCatalogEntry[] {
+  const sideFilter = filters.side ?? 'all';
   return entries
     .filter(({ design, products: matchedProducts }) => {
-      if (!designMatchesSideFilter(design, filters.side)) {
+      if (!designMatchesSideFilter(design, sideFilter)) {
         return false;
       }
 
@@ -166,11 +168,13 @@ export function resolveDesignProduct(
   entry: ProductDesignCatalogEntry,
   colorFilter: string | 'all',
 ): { product: Product; color: string } {
+  const primaryType = entry.design.productTypes[0];
   const product =
-    entry.design.productTypes.includes('t-shirt') &&
+    primaryType === 't-shirt' &&
     entry.products.some((item) => item.type === 't-shirt')
       ? resolveDesignProductByFit(entry.design)
-      : entry.products[0];
+      : (entry.products.find((item) => item.type === primaryType) ??
+        entry.products[0]);
   const applicable = getDesignApplicableColors(entry.design, product);
   const defaultColor = applicable[0] ?? product.colors?.[0] ?? '#ffffff';
   const color =

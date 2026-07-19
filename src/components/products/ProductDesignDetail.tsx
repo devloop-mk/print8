@@ -18,6 +18,7 @@ import {
 } from '@/lib/products/design-applicable-colors';
 import {
   getDesignApplicableFits,
+  getDesignPrimaryProductType,
   resolveDesignProduct,
   type GarmentFit,
 } from '@/lib/products/garment-fit';
@@ -62,7 +63,12 @@ export function ProductDesignDetail({
     const effectiveDesign = mergedDesign ?? coupleMatch?.design ?? null;
     if (!effectiveDesign) return null;
 
-    const applicableFits = getDesignApplicableFits(effectiveDesign);
+    const primaryType = getDesignPrimaryProductType(effectiveDesign);
+    // Fit variants only apply when the primary product is a t-shirt.
+    const applicableFits =
+      primaryType === 't-shirt'
+        ? getDesignApplicableFits(effectiveDesign)
+        : [];
     const initialFit = applicableFits[0] ?? 'unisex';
     const product = resolveDesignProduct(effectiveDesign, initialFit);
     return {

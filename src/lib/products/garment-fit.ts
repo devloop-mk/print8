@@ -64,23 +64,55 @@ export function resolveTshirtProductForDesign(
   return product;
 }
 
+/**
+ * Primary catalog/PDP product type for a design — first entry in
+ * `productTypes` (e.g. bodysuit before t-shirt for baby milestones).
+ */
+export function getDesignPrimaryProductType(
+  design: ProductDesignTemplate,
+): Product['type'] {
+  return design.productTypes[0];
+}
+
 export function resolveDesignProduct(
   design: ProductDesignTemplate,
   fit?: GarmentFit,
 ): Product {
-  if (design.productTypes.includes('t-shirt')) {
+  const primaryType = getDesignPrimaryProductType(design);
+
+  // T-shirt fit variants only when the design's primary product is a tee.
+  // Baby/bodysuit designs list bodysuit first — do not force a kids tee.
+  if (primaryType === 't-shirt') {
     const applicable = getDesignApplicableFits(design);
     const initialFit =
       fit && applicable.includes(fit) ? fit : applicable[0] ?? 'unisex';
     return resolveTshirtProductForDesign(design, initialFit);
   }
 
+  if (design.productIds?.length) {
+    const primaryById = design.productIds
+      .map((id) => products.find((product) => product.id === id))
+      .find((product) => product?.type === primaryType);
+    if (primaryById) return primaryById;
+
+    const firstListed = design.productIds
+      .map((id) => products.find((product) => product.id === id))
+      .find((product): product is Product => Boolean(product));
+    if (firstListed) return firstListed;
+  }
+
   const matched =
+    products.find(
+      (product) =>
+        product.type === primaryType &&
+        (!design.productIds || design.productIds.includes(product.id)),
+    ) ??
     products.find(
       (product) =>
         design.productTypes.includes(product.type) &&
         (!design.productIds || design.productIds.includes(product.id)),
-    ) ?? products.find((item) => item.id === 'tshirt-basic-white');
+    ) ??
+    products.find((item) => item.id === 'tshirt-basic-white');
 
   if (!matched) {
     throw new Error(`No product found for design ${design.id}`);

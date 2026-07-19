@@ -1,7 +1,7 @@
 import type { Product, ProductDesignTemplate } from '@/lib/data/catalog';
 import type { CouplePackTemplate } from '@/lib/data/couple-pack';
 import { partnerDesignToTemplate } from '@/lib/data/couple-pack';
-import type { CartItem } from '@/components/cart/CartProvider';
+import type { CartItem } from '@/lib/cart/types';
 import { buildPremadeDesignCartPayload } from '@/lib/products/premade-design-order';
 
 export function getCouplePackPrice(product: Product): number {
@@ -11,7 +11,8 @@ export function getCouplePackPrice(product: Product): number {
 export function buildCouplePackCartItems({
   pack,
   product,
-  color,
+  partner1Color,
+  partner2Color,
   partner1Size,
   partner2Size,
   name,
@@ -20,7 +21,8 @@ export function buildCouplePackCartItems({
 }: {
   pack: CouplePackTemplate;
   product: Product;
-  color: string;
+  partner1Color: string;
+  partner2Color: string;
   partner1Size: string;
   partner2Size: string;
   name: string;
@@ -36,7 +38,7 @@ export function buildCouplePackCartItems({
     buildPremadeDesignCartPayload({
       product,
       design: design1,
-      color,
+      color: partner1Color,
       size: partner1Size,
       name: `${name} — ${partner1.labelEn}`,
       price: product.basePrice,
@@ -46,7 +48,7 @@ export function buildCouplePackCartItems({
     buildPremadeDesignCartPayload({
       product,
       design: design2,
-      color,
+      color: partner2Color,
       size: partner2Size,
       name: `${name} — ${partner2.labelEn}`,
       price: product.basePrice,

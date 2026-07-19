@@ -27,7 +27,6 @@ function sourceLabel(
   source: OngoingDesignSource,
   t: ReturnType<typeof useTranslations<'nav.ongoingDesigns'>>,
 ) {
-  if (source === 'studio') return t('sourceStudio');
   if (source === 'product') return t('sourceProduct');
   return t('sourceTemplate');
 }

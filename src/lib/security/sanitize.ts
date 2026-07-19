@@ -13,3 +13,9 @@ export function contentDispositionInline(filename: string) {
   const encoded = encodeURIComponent(safe);
   return `inline; filename="${safe}"; filename*=UTF-8''${encoded}`;
 }
+
+export function contentDispositionAttachment(filename: string) {
+  const safe = sanitizeDownloadFilename(filename);
+  const encoded = encodeURIComponent(safe);
+  return `attachment; filename="${safe}"; filename*=UTF-8''${encoded}`;
+}

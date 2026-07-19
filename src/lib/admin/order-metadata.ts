@@ -14,6 +14,8 @@ const ADVANCED_KEY_PATTERNS = [
   /^svgState$/i,
   /^svgFrontContent$/i,
   /^svgBackContent$/i,
+  /^svgFrontStoredName$/i,
+  /^svgBackStoredName$/i,
 ];
 
 const KEY_LABELS: Record<string, string> = {
@@ -69,6 +71,8 @@ export function isAdvancedMetadataKey(key: string) {
 const HIDDEN_METADATA_KEYS = new Set([
   'svgFrontContent',
   'svgBackContent',
+  'svgFrontStoredName',
+  'svgBackStoredName',
   'svgState',
 ]);
 
