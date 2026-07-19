@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { promoBannerSlides } from '@/lib/home/promo-banner-slides';
 
 const AUTO_ADVANCE_MS = 6500;
+const PROGRAMMATIC_SCROLL_MS = 350;
 
 function SlideCopy({
   slideId,
@@ -50,11 +51,24 @@ function SlideCopy({
 export function HomePromoBannerCarousel({ className = '' }: { className?: string }) {
   const t = useTranslations('home.promoBanners');
   const mobileScrollRef = useRef<HTMLDivElement>(null);
+  const ignoreScrollSyncRef = useRef(false);
+  const scrollSyncTimeoutRef = useRef<number | null>(null);
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
 
   const total = promoBannerSlides.length;
   const activeSlide = promoBannerSlides[index] ?? promoBannerSlides[0];
+
+  const beginProgrammaticScroll = useCallback(() => {
+    ignoreScrollSyncRef.current = true;
+    if (scrollSyncTimeoutRef.current !== null) {
+      window.clearTimeout(scrollSyncTimeoutRef.current);
+    }
+    scrollSyncTimeoutRef.current = window.setTimeout(() => {
+      ignoreScrollSyncRef.current = false;
+      scrollSyncTimeoutRef.current = null;
+    }, PROGRAMMATIC_SCROLL_MS);
+  }, []);
 
   const scrollMobileTo = useCallback((nextIndex: number) => {
     const container = mobileScrollRef.current;
@@ -72,9 +86,10 @@ export function HomePromoBannerCarousel({ className = '' }: { className?: string
     (nextIndex: number) => {
       const clamped = ((nextIndex % total) + total) % total;
       setIndex(clamped);
+      beginProgrammaticScroll();
       scrollMobileTo(clamped);
     },
-    [scrollMobileTo, total],
+    [beginProgrammaticScroll, scrollMobileTo, total],
   );
 
   const goNext = useCallback(() => goTo(index + 1), [goTo, index]);
@@ -84,7 +99,7 @@ export function HomePromoBannerCarousel({ className = '' }: { className?: string
     const container = mobileScrollRef.current;
     if (!container) return;
 
-    const onScroll = () => {
+    const syncIndexFromScroll = () => {
       if (window.matchMedia('(min-width: 640px)').matches) return;
 
       const slides = container.querySelectorAll<HTMLElement>('[data-promo-slide]');
@@ -104,13 +119,36 @@ export function HomePromoBannerCarousel({ className = '' }: { className?: string
       setIndex(best);
     };
 
+    const endProgrammaticScroll = () => {
+      if (scrollSyncTimeoutRef.current !== null) {
+        window.clearTimeout(scrollSyncTimeoutRef.current);
+        scrollSyncTimeoutRef.current = null;
+      }
+      ignoreScrollSyncRef.current = false;
+      syncIndexFromScroll();
+    };
+
+    const onScroll = () => {
+      if (ignoreScrollSyncRef.current) return;
+      syncIndexFromScroll();
+    };
+
     container.addEventListener('scroll', onScroll, { passive: true });
-    return () => container.removeEventListener('scroll', onScroll);
+    container.addEventListener('scrollend', endProgrammaticScroll, { passive: true });
+
+    return () => {
+      container.removeEventListener('scroll', onScroll);
+      container.removeEventListener('scrollend', endProgrammaticScroll);
+      if (scrollSyncTimeoutRef.current !== null) {
+        window.clearTimeout(scrollSyncTimeoutRef.current);
+      }
+    };
   }, []);
 
   useEffect(() => {
     if (paused) return;
     const timer = window.setInterval(() => {
+      if (ignoreScrollSyncRef.current) return;
       goTo(index + 1);
     }, AUTO_ADVANCE_MS);
     return () => window.clearInterval(timer);
@@ -161,7 +199,7 @@ export function HomePromoBannerCarousel({ className = '' }: { className?: string
   );
 
   const renderMobileImage = (slide: (typeof promoBannerSlides)[number], slideIndex: number) => (
-    <div className="relative min-h-0 overflow-hidden sm:hidden">
+    <div className="absolute inset-0 overflow-hidden sm:hidden">
       <Link
         href={slide.href}
         tabIndex={slideIndex === index ? 0 : -1}
@@ -195,23 +233,6 @@ export function HomePromoBannerCarousel({ className = '' }: { className?: string
         className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent via-brand-800/55 to-brand-800"
         aria-hidden
       />
-    </div>
-  );
-
-  const renderMobileCopyBand = (
-    slide: (typeof promoBannerSlides)[number],
-    slideIndex: number,
-    className?: string,
-  ) => (
-    <div
-      className={cn(
-        'relative z-10 -mt-14 bg-gradient-to-b from-brand-800 via-brand-800 to-brand-900 px-5 pb-5 pt-5 sm:hidden',
-        'before:pointer-events-none before:absolute before:inset-x-0 before:-top-14 before:h-14 before:bg-gradient-to-b before:from-transparent before:via-brand-800/45 before:to-brand-800',
-        className,
-      )}
-    >
-      <SlideCopy slideId={slide.id} href={slide.href} active={slideIndex === index} />
-      <div className="mt-4">{renderPagination()}</div>
     </div>
   );
 
@@ -295,11 +316,11 @@ export function HomePromoBannerCarousel({ className = '' }: { className?: string
         </div>
       </div>
 
-      {/* Mobile: scroll-snap carousel — image + copy + dots per slide. */}
+      {/* Mobile: horizontal image track + fixed copy/dots overlay (stable svh shell). */}
       <div
         className={cn(
-          'relative flex flex-col sm:hidden',
-          'h-[75dvh] max-h-[680px] min-h-[520px]',
+          'relative sm:hidden',
+          'h-[75svh] max-h-[680px] min-h-[520px]',
         )}
         role="region"
         aria-roledescription="carousel"
@@ -308,8 +329,8 @@ export function HomePromoBannerCarousel({ className = '' }: { className?: string
         <div
           ref={mobileScrollRef}
           className={cn(
-            'relative min-h-0 flex-1 overflow-x-auto overflow-y-hidden',
-            'flex snap-x snap-mandatory scroll-smooth',
+            'absolute inset-0 overflow-x-auto overflow-y-hidden',
+            'flex h-full snap-x snap-mandatory',
             '[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
           )}
         >
@@ -317,34 +338,43 @@ export function HomePromoBannerCarousel({ className = '' }: { className?: string
             <div
               key={slide.id}
               data-promo-slide
-              className={cn(
-                'relative grid h-full w-full shrink-0 snap-center',
-                'grid-rows-[minmax(0,1fr)_auto] overflow-hidden bg-brand-800',
-              )}
+              className="relative h-full min-w-full shrink-0 snap-center snap-always self-stretch overflow-hidden bg-brand-800"
               aria-hidden={slideIndex !== index}
             >
               {renderMobileImage(slide, slideIndex)}
-              {renderMobileCopyBand(slide, slideIndex)}
             </div>
           ))}
-
-          <button
-            type="button"
-            onClick={goPrev}
-            className="absolute left-2 top-[42%] z-20 -translate-y-1/2 border border-white/25 bg-ink-950/55 p-2 text-white backdrop-blur-sm transition hover:bg-ink-950/80"
-            aria-label={t('prev')}
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-          <button
-            type="button"
-            onClick={goNext}
-            className="absolute right-2 top-[42%] z-20 -translate-y-1/2 border border-white/25 bg-ink-950/55 p-2 text-white backdrop-blur-sm transition hover:bg-ink-950/80"
-            aria-label={t('next')}
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
         </div>
+
+        <div
+          className={cn(
+            'pointer-events-none absolute inset-x-0 bottom-0 z-10',
+            'bg-gradient-to-b from-brand-800 via-brand-800 to-brand-900 px-5 pb-5 pt-5',
+            'before:pointer-events-none before:absolute before:inset-x-0 before:-top-14 before:h-14 before:bg-gradient-to-b before:from-transparent before:via-brand-800/45 before:to-brand-800',
+          )}
+        >
+          <div className="pointer-events-auto">
+            <SlideCopy slideId={activeSlide.id} href={activeSlide.href} active />
+            <div className="mt-4">{renderPagination()}</div>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={goPrev}
+          className="absolute left-2 top-[38%] z-20 -translate-y-1/2 border border-white/25 bg-ink-950/55 p-2 text-white backdrop-blur-sm transition hover:bg-ink-950/80"
+          aria-label={t('prev')}
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <button
+          type="button"
+          onClick={goNext}
+          className="absolute right-2 top-[38%] z-20 -translate-y-1/2 border border-white/25 bg-ink-950/55 p-2 text-white backdrop-blur-sm transition hover:bg-ink-950/80"
+          aria-label={t('next')}
+        >
+          <ChevronRight className="h-5 w-5" />
+        </button>
       </div>
     </div>
   );
