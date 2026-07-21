@@ -74,15 +74,26 @@ export function getDesignPrimaryProductType(
   return design.productTypes[0];
 }
 
+export function resolveDesignProductType(
+  design: ProductDesignTemplate,
+  preferredType?: Product['type'],
+): Product['type'] {
+  if (preferredType && design.productTypes.includes(preferredType)) {
+    return preferredType;
+  }
+  return getDesignPrimaryProductType(design);
+}
+
 export function resolveDesignProduct(
   design: ProductDesignTemplate,
   fit?: GarmentFit,
+  preferredType?: Product['type'],
 ): Product {
-  const primaryType = getDesignPrimaryProductType(design);
+  const productType = resolveDesignProductType(design, preferredType);
 
-  // T-shirt fit variants only when the design's primary product is a tee.
+  // T-shirt fit variants only when the resolved product is a tee.
   // Baby/bodysuit designs list bodysuit first — do not force a kids tee.
-  if (primaryType === 't-shirt') {
+  if (productType === 't-shirt') {
     const applicable = getDesignApplicableFits(design);
     const initialFit =
       fit && applicable.includes(fit) ? fit : applicable[0] ?? 'unisex';
@@ -92,8 +103,17 @@ export function resolveDesignProduct(
   if (design.productIds?.length) {
     const primaryById = design.productIds
       .map((id) => products.find((product) => product.id === id))
-      .find((product) => product?.type === primaryType);
+      .find((product) => product?.type === productType);
     if (primaryById) return primaryById;
+
+    // productIds may lock to a tee while productTypes still lists hoodie/etc.
+    // Prefer a catalog product of the resolved type over the locked tee id.
+    const typedCatalog = products.find(
+      (product) =>
+        product.type === productType &&
+        design.productTypes.includes(product.type),
+    );
+    if (typedCatalog) return typedCatalog;
 
     const firstListed = design.productIds
       .map((id) => products.find((product) => product.id === id))
@@ -104,8 +124,13 @@ export function resolveDesignProduct(
   const matched =
     products.find(
       (product) =>
-        product.type === primaryType &&
+        product.type === productType &&
         (!design.productIds || design.productIds.includes(product.id)),
+    ) ??
+    products.find(
+      (product) =>
+        product.type === productType &&
+        design.productTypes.includes(product.type),
     ) ??
     products.find(
       (product) =>

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { buildPageMetadata, buildOgImageUrl } from '@/lib/seo/metadata';
+import { buildPageMetadata } from '@/lib/seo/metadata';
+import { absoluteUrl } from '@/lib/seo/site';
 import type { Locale } from '@/i18n/routing';
 import { SpinWheelGame } from '@/components/rewards/SpinWheelGame';
 
@@ -17,12 +18,8 @@ export async function generateMetadata({
     title: `${t('metaTitle')} | Print 8`,
     description: t('metaDescription'),
     path: '/rewards',
-    image: buildOgImageUrl({
-      locale: locale as Locale,
-      title: t('metaTitle'),
-      description: t('metaDescription'),
-      badge: 'Print 8',
-    }),
+    // Static, spin-wheel-themed OG image — never the dynamic /api/og route.
+    image: absoluteUrl('/og/rewards.jpg'),
   });
 }
 

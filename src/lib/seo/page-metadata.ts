@@ -17,7 +17,8 @@ import {
   resolveDesignTemplate,
 } from '@/lib/catalog/design-catalog';
 import type { ProductNavCategoryId } from '@/lib/products/product-nav';
-import { buildOgImageUrl, buildPageMetadata } from '@/lib/seo/metadata';
+import { buildDesignOgImageUrl, buildOgImageUrl, buildPageMetadata } from '@/lib/seo/metadata';
+import { toAbsoluteAssetUrl } from '@/lib/seo/site';
 import { resolveAssetUrl } from '@/lib/storage/asset-url';
 import { getDesignGalleryImage } from '@/lib/designs/design-thumb';
 import { getCouplePackTemplate, getCouplePackPartnerDesign } from '@/lib/data/couple-pack';
@@ -357,21 +358,48 @@ export async function buildDesignProductMetadata(
   );
   const title = `${designName} | Print 8`;
   const description = tdp('metaDescription', { name: designName });
-  const previewImage =
-    design.overlayImage ?? design.image ?? products[0]?.image;
+  const frontImage = design.overlayImage ?? design.image;
+  const backImage = design.backOverlay?.overlayImage;
+
+  let image: string | undefined;
+  if (coupleMatch) {
+    // Couple partner design: og:image shows BOTH partner designs together.
+    const partnerImages = coupleMatch.pack.partnerDesigns.map((partner) =>
+      resolveAssetUrl(partner.overlayImage),
+    );
+    image = buildDesignOgImageUrl(partnerImages);
+  } else if (backImage) {
+    // Dual-sided design: og:image shows front + back side by side.
+    image = buildDesignOgImageUrl(
+      [frontImage, backImage]
+        .filter((value): value is string => Boolean(value))
+        .map((value) => resolveAssetUrl(value)),
+    );
+  } else if (frontImage) {
+    // Single-side design: link the raster mockup/artwork directly — social
+    // crawlers handle a plain jpg/png/webp far more reliably than a
+    // dynamically rendered `/api/og` URL.
+    image = toAbsoluteAssetUrl(resolveAssetUrl(frontImage));
+  }
+
+  const fallbackImage = products[0]?.image
+    ? resolveAssetUrl(products[0].image)
+    : undefined;
 
   return buildPageMetadata({
     locale,
     title,
     description,
     path: `/products/design/${designId}`,
-    image: buildOgImageUrl({
-      locale,
-      title: designName,
-      description,
-      badge: tm('badges.product'),
-      image: previewImage ? resolveAssetUrl(previewImage) : undefined,
-    }),
+    image:
+      image ??
+      buildOgImageUrl({
+        locale,
+        title: designName,
+        description,
+        badge: tm('badges.product'),
+        image: fallbackImage,
+      }),
   });
 }
 
@@ -380,7 +408,6 @@ export async function buildCouplePackMetadata(locale: Locale, packId: string) {
   if (!pack) return null;
 
   const tc = await getTranslations({ locale, namespace: 'products.couplePacks' });
-  const tm = await getTranslations({ locale, namespace: 'metadata' });
 
   const title =
     locale === 'mk' ? `${pack.titleMk} | Print 8` : `${pack.titleEn} | Print 8`;
@@ -388,17 +415,16 @@ export async function buildCouplePackMetadata(locale: Locale, packId: string) {
     name: locale === 'mk' ? pack.titleMk : pack.titleEn,
   });
 
+  // Couple pack: og:image shows BOTH partner designs side by side.
+  const partnerImages = pack.partnerDesigns.map((partner) =>
+    resolveAssetUrl(partner.overlayImage),
+  );
+
   return buildPageMetadata({
     locale,
     title,
     description,
     path: `/products/design/couple/${packId}`,
-    image: buildOgImageUrl({
-      locale,
-      title: locale === 'mk' ? pack.titleMk : pack.titleEn,
-      description,
-      badge: tc('badge'),
-      image: resolveAssetUrl(pack.partnerDesigns[0].overlayImage),
-    }),
+    image: buildDesignOgImageUrl(partnerImages),
   });
 }

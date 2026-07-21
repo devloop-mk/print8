@@ -10,11 +10,13 @@ export async function GET(
   if (!template) {
     return NextResponse.json({ error: 'Design not found' }, { status: 404 });
   }
+  // no-store: customizer must see admin placement updates immediately.
+  // Server-side data is already cached via PRODUCT_DESIGNS_CACHE_TAG.
   return NextResponse.json(
     { template },
     {
       headers: {
-        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+        'Cache-Control': 'private, no-store',
       },
     },
   );

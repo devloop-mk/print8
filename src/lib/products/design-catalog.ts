@@ -167,13 +167,17 @@ function matchesProductFilters(
 export function resolveDesignProduct(
   entry: ProductDesignCatalogEntry,
   colorFilter: string | 'all',
+  preferredType?: ProductType,
 ): { product: Product; color: string } {
-  const primaryType = entry.design.productTypes[0];
+  const resolvedType =
+    preferredType && entry.design.productTypes.includes(preferredType)
+      ? preferredType
+      : entry.design.productTypes[0];
   const product =
-    primaryType === 't-shirt' &&
+    resolvedType === 't-shirt' &&
     entry.products.some((item) => item.type === 't-shirt')
-      ? resolveDesignProductByFit(entry.design)
-      : (entry.products.find((item) => item.type === primaryType) ??
+      ? resolveDesignProductByFit(entry.design, undefined, resolvedType)
+      : (entry.products.find((item) => item.type === resolvedType) ??
         entry.products[0]);
   const applicable = getDesignApplicableColors(entry.design, product);
   const defaultColor = applicable[0] ?? product.colors?.[0] ?? '#ffffff';

@@ -55,9 +55,9 @@ export const WOMEN_TSHIRT_SMALL_PRINT_AREA_INSETS: PrintAreaInsets = {
 /** Chest print zone for hoodies. */
 export const HOODIE_PRINT_AREA_INSETS: PrintAreaInsets = {
   top: 30,
-  right: 18,
-  bottom: 33,
-  left: 18,
+  right: 24,
+  bottom: 10,
+  left: 24,
 };
 
 /** Bodysuit front print zone. */
@@ -235,7 +235,8 @@ export function isElementFullyOutsidePrintArea(
   position: { x: number; y: number },
   fallbackSizePercent = { width: 8, height: 8 },
 ): boolean {
-  const size = measureElementSizePercent(element, parent) ?? fallbackSizePercent;
+  const size =
+    measureElementSizePercent(element, parent) ?? fallbackSizePercent;
   const halfW = size.width / 2;
   const halfH = size.height / 2;
 
@@ -270,6 +271,48 @@ export function measureElementSizePercent(
   return {
     width: (elementRect.width / parentRect.width) * 100,
     height: (elementRect.height / parentRect.height) * 100,
+  };
+}
+
+/**
+ * Union bounding box of all rendered design layers (image/text/sticker
+ * overlays tagged with `data-customizer-content-layer`) inside `container`,
+ * as a percent of `container`'s own size. Used to auto-detect whether a
+ * design's actual footprint is small or large instead of asking the user
+ * to pick a placement mode.
+ */
+export function measureContentLayersBoundsPercent(
+  container: HTMLElement | null,
+): { width: number; height: number } | null {
+  if (!container) return null;
+
+  const layers = container.querySelectorAll<HTMLElement>(
+    '[data-customizer-content-layer]',
+  );
+  if (layers.length === 0) return null;
+
+  const containerRect = container.getBoundingClientRect();
+  if (!containerRect.width || !containerRect.height) return null;
+
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+
+  layers.forEach((layer) => {
+    const rect = layer.getBoundingClientRect();
+    if (!rect.width && !rect.height) return;
+    minX = Math.min(minX, rect.left);
+    minY = Math.min(minY, rect.top);
+    maxX = Math.max(maxX, rect.right);
+    maxY = Math.max(maxY, rect.bottom);
+  });
+
+  if (!Number.isFinite(minX) || !Number.isFinite(minY)) return null;
+
+  return {
+    width: ((maxX - minX) / containerRect.width) * 100,
+    height: ((maxY - minY) / containerRect.height) * 100,
   };
 }
 

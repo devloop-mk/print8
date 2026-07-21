@@ -2,13 +2,16 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
 import { Link, useRouter } from '@/i18n/navigation';
 import {
   isImageDesignTemplate,
   isOverlayDesignTemplate,
   isTextDesignTemplate,
+  productTypes,
   type ProductDesignTemplate,
   type ProductSide,
+  type ProductType,
 } from '@/lib/data/catalog';
 import { getCouplePackPartnerDesign } from '@/lib/data/couple-pack';
 import { getDesignSides, isDualSidedDesign } from '@/lib/products/design-sides';
@@ -20,8 +23,8 @@ import {
 } from '@/lib/products/design-applicable-colors';
 import {
   getDesignApplicableFits,
-  getDesignPrimaryProductType,
   resolveDesignProduct,
+  resolveDesignProductType,
   type GarmentFit,
 } from '@/lib/products/garment-fit';
 import { buildPremadeDesignCartPayload } from '@/lib/products/premade-design-order';
@@ -53,11 +56,19 @@ export function ProductDesignDetail({
   const tCustomizer = useTranslations('products.customizer');
   const locale = useLocale();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { addItem } = useCart();
   const previewRef = useRef<HTMLDivElement>(null);
   const [ordering, setOrdering] = useState(false);
 
   const mergedDesign = useMergedProductDesignTemplate(designId, initialDesign);
+
+  const preferredProductType = useMemo((): ProductType | undefined => {
+    const raw = searchParams.get('type');
+    if (!raw) return undefined;
+    if (!(productTypes as readonly string[]).includes(raw)) return undefined;
+    return raw as ProductType;
+  }, [searchParams]);
 
   const resolved = useMemo(() => {
     const coupleMatch = getCouplePackPartnerDesign(designId);
@@ -65,29 +76,41 @@ export function ProductDesignDetail({
     const effectiveDesign = mergedDesign ?? coupleMatch?.design ?? null;
     if (!effectiveDesign) return null;
 
-    const primaryType = getDesignPrimaryProductType(effectiveDesign);
-    // Fit variants only apply when the primary product is a t-shirt.
+    const productType = resolveDesignProductType(
+      effectiveDesign,
+      preferredProductType,
+    );
+    // Fit variants only apply when the resolved product is a t-shirt.
     const applicableFits =
-      primaryType === 't-shirt'
+      productType === 't-shirt'
         ? getDesignApplicableFits(effectiveDesign)
         : [];
     const initialFit = applicableFits[0] ?? 'unisex';
-    const product = resolveDesignProduct(effectiveDesign, initialFit);
+    const product = resolveDesignProduct(
+      effectiveDesign,
+      initialFit,
+      preferredProductType,
+    );
     return {
       design: effectiveDesign,
       product,
       couplePack: coupleMatch?.pack ?? null,
       applicableFits,
       initialFit,
+      preferredProductType,
     };
-  }, [designId, mergedDesign]);
+  }, [designId, mergedDesign, preferredProductType]);
 
   const [garmentFit, setGarmentFit] = useState<GarmentFit>(
     () => resolved?.initialFit ?? 'unisex',
   );
   const product = useMemo(() => {
     if (!resolved) return null;
-    return resolveDesignProduct(resolved.design, garmentFit);
+    return resolveDesignProduct(
+      resolved.design,
+      garmentFit,
+      resolved.preferredProductType,
+    );
   }, [resolved, garmentFit]);
 
   const [color, setColor] = useState(() => {
@@ -97,6 +120,14 @@ export function ProductDesignDetail({
   const [size, setSize] = useState(
     () => product?.sizes?.[0] ?? resolved?.product.sizes?.[0] ?? '',
   );
+
+  // Keep fit/color/size aligned when landing with ?type=hoodie (or switching types).
+  useEffect(() => {
+    if (!resolved) return;
+    setGarmentFit(resolved.initialFit);
+    setColor(resolveDesignPreviewColor(resolved.design, resolved.product));
+    setSize(resolved.product.sizes?.[0] ?? '');
+  }, [resolved]);
 
   const [previewSide, setPreviewSide] = useState<ProductSide>(
     () => resolved?.design.defaultSide ?? 'front',
@@ -130,7 +161,11 @@ export function ProductDesignDetail({
 
   function handleGarmentFitChange(nextFit: GarmentFit) {
     setGarmentFit(nextFit);
-    const nextProduct = resolveDesignProduct(design, nextFit);
+    const nextProduct = resolveDesignProduct(
+      design,
+      nextFit,
+      preferredProductType,
+    );
     const nextColors = getDesignApplicableColors(design, nextProduct);
     setColor(
       resolveDesignPreviewColor(

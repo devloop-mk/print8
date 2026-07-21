@@ -90,6 +90,26 @@ export function createDefaultSideDesign(): SideDesign {
   };
 }
 
+/** Clear uploaded / premade / overlay artwork while keeping text & stickers. */
+export function clearSideDesignArtwork(): Partial<SideDesign> {
+  const defaults = createDefaultSideDesign();
+  return {
+    uploadedFile: null,
+    premadeDesignImage: null,
+    premadeDesignId: null,
+    overlaySvg: null,
+    overlaySvgColors: null,
+    overlayColorVariants: null,
+    overlayRaster: null,
+    isRecolorableOverlay: false,
+    bakedMockupUrl: null,
+    isTextTemplate: false,
+    showPhotoGuide: false,
+    uploadedImageScale: defaults.uploadedImageScale,
+    uploadedImagePosition: defaults.uploadedImagePosition,
+  };
+}
+
 export function sideDesignFromTextStyle(
   textStyle: ProductDesignTextStyle,
   templateId: string,

@@ -179,6 +179,7 @@ export function ProductTypeReadyDesignsSection({
                     key={entry.design.id}
                     entry={entry}
                     colorFilter={colorFilter}
+                    preferredProductType={type}
                   />
                 ))}
               </CatalogGridLayout>

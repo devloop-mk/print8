@@ -229,6 +229,9 @@ export function ProductCategoryPremadeCatalog({
                     key={entry.design.id}
                     entry={entry}
                     colorFilter={colorFilter}
+                    preferredProductType={
+                      typeFilter === 'all' ? undefined : typeFilter
+                    }
                   />
                 ))}
               </CatalogGridLayout>

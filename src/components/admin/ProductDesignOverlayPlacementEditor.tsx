@@ -1,6 +1,14 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type RefObject,
+} from 'react';
 import {
   getProductMockup,
   products,
@@ -15,6 +23,7 @@ import { ProductMockupFrame } from '@/components/products/ProductMockupFrame';
 import { PrintAreaGuide } from '@/components/products/customizer/PrintAreaGuide';
 import { resolveDesignPreviewColor } from '@/lib/products/design-applicable-colors';
 import {
+  getDesignCompositeOverlayUrl,
   resolveOverlayPlacement,
   resolveSideOverlayPlacement,
 } from '@/lib/products/design-overlay';
@@ -25,18 +34,19 @@ import {
 } from '@/lib/products/product-mockup-layout';
 import {
   clampElementCenterToPrintArea,
+  getPrintAreaCenter,
 } from '@/lib/products/print-area';
 import { clampPhotoScale } from '@/lib/products/crop-image';
-import {
-  PRODUCT_PHOTO_MIN_SCALE,
-} from '@/lib/products/customizer-constants';
+import { PRODUCT_PHOTO_MIN_SCALE } from '@/lib/products/customizer-constants';
 import { resolveAssetUrl } from '@/lib/storage/asset-url';
-import { getDesignCompositeOverlayUrl } from '@/lib/products/design-overlay';
 import {
   useDraggableOverlayPosition,
   useOverlayScaleResize,
 } from '@/hooks/useOverlayPlacementControls';
+import { usePrintAreaMaxScale } from '@/lib/products/use-print-area-max-scale';
 import { cn } from '@/lib/utils';
+
+const DEFAULT_ADMIN_OVERLAY_SCALE = 40;
 
 const PREVIEW_PRODUCT_BY_TYPE: Partial<Record<ProductType, string>> = {
   cup: 'cup-glass-beer',
@@ -49,12 +59,62 @@ const PREVIEW_PRODUCT_BY_TYPE: Partial<Record<ProductType, string>> = {
   bodysuit: 'bodysuit-basic',
 };
 
+const HANDLE_PAD_PX = 14;
+
 function previewProductForType(type: ProductType): Product | null {
   const preferredId = PREVIEW_PRODUCT_BY_TYPE[type];
   if (preferredId) {
     return products.find((product) => product.id === preferredId) ?? null;
   }
   return products.find((product) => product.type === type) ?? null;
+}
+
+/**
+ * Keep the SE resize handle inside the visible mockup frame even when the
+ * overlay bbox overflows (overflow-hidden clips corner-mounted handles).
+ */
+function useViewportClampedHandlePosition(
+  overlayRef: RefObject<HTMLElement | null>,
+  frameRef: RefObject<HTMLElement | null>,
+  deps: unknown[],
+) {
+  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
+
+  useLayoutEffect(() => {
+    const overlay = overlayRef.current;
+    const frame = frameRef.current;
+    if (!overlay || !frame) {
+      setPos(null);
+      return;
+    }
+
+    const update = () => {
+      const o = overlay.getBoundingClientRect();
+      const f = frame.getBoundingClientRect();
+      if (!f.width || !f.height) return;
+
+      // True SE corner of the overlay, relative to the frame.
+      let x = o.right - f.left;
+      let y = o.bottom - f.top;
+
+      x = Math.min(Math.max(x, HANDLE_PAD_PX), f.width - HANDLE_PAD_PX);
+      y = Math.min(Math.max(y, HANDLE_PAD_PX), f.height - HANDLE_PAD_PX);
+      setPos({ left: x, top: y });
+    };
+
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(overlay);
+    observer.observe(frame);
+    window.addEventListener('resize', update);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', update);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- caller passes explicit deps
+  }, deps);
+
+  return pos;
 }
 
 type PlacementValue = {
@@ -96,6 +156,7 @@ export function ProductDesignOverlayPlacementEditor({
     : (['t-shirt'] as ProductType[]);
   const [previewType, setPreviewType] = useState<ProductType>(previewTypes[0]);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const frameRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!previewTypes.includes(previewType)) {
@@ -117,11 +178,7 @@ export function ProductDesignOverlayPlacementEditor({
       return resolveSideOverlayPlacement(overlayConfig, previewType);
     }
     return resolveOverlayPlacement(template, previewType);
-  }, [
-    overlayConfig,
-    previewType,
-    template,
-  ]);
+  }, [overlayConfig, previewType, template]);
 
   const hasTypeOverride = Boolean(
     (overlayConfig ?? template).overlayByProductType?.[previewType],
@@ -162,22 +219,23 @@ export function ProductDesignOverlayPlacementEditor({
         ? resolveAssetUrl(sideOverlay.overlaySvg)
         : null);
 
-  const commitPlacement = (next: PlacementValue) => {
-    onPlacementChange(previewType, next);
-  };
-
-  const drag = useDraggableOverlayPosition(
-    placement.position,
-    (nextPosition) =>
-      commitPlacement({ scale: placement.scale, position: nextPosition }),
+  const aspectMaxScale = usePrintAreaMaxScale(
+    frameRef,
     printBounds,
-    containerRef,
+    overlaySrc ?? undefined,
+    mockupLayout.overlayMaxScale,
   );
 
-  const resize = useOverlayScaleResize(
-    placement.scale,
-    (nextScale) => {
-      const clamped = clampPhotoScale(nextScale, mockupLayout.overlayMaxScale);
+  const commitPlacement = useCallback(
+    (next: PlacementValue) => {
+      onPlacementChange(previewType, next);
+    },
+    [onPlacementChange, previewType],
+  );
+
+  const applyScale = useCallback(
+    (nextScale: number) => {
+      const clamped = clampPhotoScale(nextScale, aspectMaxScale);
       if (!containerRef.current?.parentElement) {
         commitPlacement({ scale: clamped, position: placement.position });
         return;
@@ -191,9 +249,48 @@ export function ProductDesignOverlayPlacementEditor({
       );
       commitPlacement({ scale: clamped, position: reclamped });
     },
-    PRODUCT_PHOTO_MIN_SCALE,
-    mockupLayout.overlayMaxScale,
+    [aspectMaxScale, commitPlacement, placement.position, printBounds],
   );
+
+  const fitToPrintArea = useCallback(() => {
+    const scale = clampPhotoScale(aspectMaxScale, aspectMaxScale);
+    const center = getPrintAreaCenter(printBounds);
+    if (!containerRef.current?.parentElement) {
+      commitPlacement({ scale, position: center });
+      return;
+    }
+    const reclamped = clampElementCenterToPrintArea(
+      containerRef.current,
+      containerRef.current.parentElement,
+      printBounds,
+      center,
+      { width: scale, height: scale },
+    );
+    commitPlacement({ scale, position: reclamped });
+  }, [aspectMaxScale, commitPlacement, printBounds]);
+
+  const drag = useDraggableOverlayPosition(
+    placement.position,
+    (nextPosition) =>
+      commitPlacement({ scale: placement.scale, position: nextPosition }),
+    printBounds,
+    containerRef,
+  );
+
+  const resize = useOverlayScaleResize(
+    placement.scale,
+    applyScale,
+    PRODUCT_PHOTO_MIN_SCALE,
+    aspectMaxScale,
+  );
+
+  const handlePos = useViewportClampedHandlePosition(containerRef, frameRef, [
+    placement.scale,
+    placement.position.x,
+    placement.position.y,
+    previewType,
+    overlaySrc,
+  ]);
 
   if (!overlaySrc || !previewProduct) {
     return (
@@ -211,6 +308,9 @@ export function ProductDesignOverlayPlacementEditor({
     mockup ?? undefined,
     'customizer',
   );
+
+  const isOversized = placement.scale > aspectMaxScale;
+  const sliderValue = Math.min(placement.scale, aspectMaxScale);
 
   return (
     <section className="space-y-3 rounded-xl border border-ink-200 bg-white p-4">
@@ -265,73 +365,141 @@ export function ProductDesignOverlayPlacementEditor({
         })}
       </div>
 
-      <div className="mx-auto max-w-md">
-        <ProductMockupFrame
-          variant="customizer"
-          layout={mockupLayout}
-          innerStyle={mockupStyle}
-        >
-          {mockup ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={mockup}
-              alt=""
-              draggable={false}
-              className={mockupLayout.imageClass}
-            />
-          ) : null}
-
-          <PrintAreaGuide insets={printBounds} label="Print area" />
-
-          <div
-            ref={(node) => {
-              containerRef.current = node;
-              drag.ref.current = node;
-            }}
-            className="absolute z-[5] cursor-grab active:cursor-grabbing"
-            style={{
-              left: `${placement.position.x}%`,
-              top: `${placement.position.y}%`,
-              width: `${placement.scale}%`,
-              transform: 'translate(-50%, -50%)',
-              touchAction: 'none',
-            }}
-            onPointerDown={drag.onPointerDown}
-            onPointerMove={drag.onPointerMove}
-            onPointerUp={drag.onPointerUp}
-            onPointerCancel={drag.onPointerCancel}
+      <div className="mx-auto max-w-md space-y-3">
+        <div ref={frameRef} className="relative">
+          <ProductMockupFrame
+            variant="customizer"
+            layout={mockupLayout}
+            innerStyle={mockupStyle}
           >
-            <div className="relative rounded ring-2 ring-brand-500 ring-offset-2">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
+            {mockup ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={overlaySrc}
+                src={mockup}
                 alt=""
                 draggable={false}
-                className="pointer-events-none block w-full object-contain"
+                className={mockupLayout.imageClass}
               />
-              <div
-                role="button"
-                tabIndex={0}
-                aria-label="Resize overlay"
-                className="absolute -bottom-2 -right-2 flex h-6 w-6 cursor-se-resize items-center justify-center rounded-full border-2 border-white bg-brand-600 shadow-md"
-                style={{ touchAction: 'none' }}
-                onPointerDown={resize.onPointerDown}
-                onPointerMove={resize.onPointerMove}
-                onPointerUp={resize.onPointerUp}
-                onPointerCancel={resize.onPointerCancel}
-              >
-                <svg viewBox="0 0 10 10" className="h-3 w-3 text-white" aria-hidden>
-                  <path
-                    d="M9 1v8H1"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                  />
-                </svg>
+            ) : null}
+
+            <PrintAreaGuide insets={printBounds} label="Print area" />
+
+            <div
+              ref={(node) => {
+                containerRef.current = node;
+                drag.ref.current = node;
+              }}
+              className="absolute z-[5] cursor-grab active:cursor-grabbing"
+              style={{
+                left: `${placement.position.x}%`,
+                top: `${placement.position.y}%`,
+                width: `${placement.scale}%`,
+                transform: 'translate(-50%, -50%)',
+                touchAction: 'none',
+              }}
+              onPointerDown={drag.onPointerDown}
+              onPointerMove={drag.onPointerMove}
+              onPointerUp={drag.onPointerUp}
+              onPointerCancel={drag.onPointerCancel}
+            >
+              <div className="relative rounded ring-2 ring-brand-500 ring-offset-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={overlaySrc}
+                  alt=""
+                  draggable={false}
+                  className="pointer-events-none block w-full object-contain"
+                />
               </div>
             </div>
+          </ProductMockupFrame>
+
+          {/* Viewport-clamped SE handle — stays reachable when overlay overflows */}
+          {handlePos ? (
+            <div
+              role="button"
+              tabIndex={0}
+              aria-label="Resize overlay"
+              className="absolute z-20 flex h-7 w-7 -translate-x-1/2 -translate-y-1/2 cursor-se-resize items-center justify-center rounded-full border-2 border-white bg-brand-600 shadow-md"
+              style={{
+                left: handlePos.left,
+                top: handlePos.top,
+                touchAction: 'none',
+              }}
+              onPointerDown={resize.onPointerDown}
+              onPointerMove={resize.onPointerMove}
+              onPointerUp={resize.onPointerUp}
+              onPointerCancel={resize.onPointerCancel}
+            >
+              <svg viewBox="0 0 10 10" className="h-3 w-3 text-white" aria-hidden>
+                <path
+                  d="M9 1v8H1"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                />
+              </svg>
+            </div>
+          ) : null}
+        </div>
+
+        <div className="space-y-2 rounded-lg border border-ink-200 bg-ink-50/60 p-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <label className="text-xs font-medium text-ink-700" htmlFor="overlay-scale-slider">
+              Скала
+              {isOversized ? (
+                <span className="ml-1 font-normal text-amber-700">
+                  (преголема — намалете или сместете)
+                </span>
+              ) : null}
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min={PRODUCT_PHOTO_MIN_SCALE}
+                max={aspectMaxScale}
+                step={1}
+                value={placement.scale}
+                aria-label="Scale percent"
+                onChange={(event) => {
+                  const raw = Number(event.target.value);
+                  if (!Number.isFinite(raw)) return;
+                  applyScale(raw);
+                }}
+                className="w-16 rounded-md border border-ink-200 bg-white px-2 py-1 text-xs tabular-nums"
+              />
+              <span className="text-xs text-ink-500">%</span>
+            </div>
           </div>
-        </ProductMockupFrame>
+
+          <input
+            id="overlay-scale-slider"
+            type="range"
+            min={PRODUCT_PHOTO_MIN_SCALE}
+            max={aspectMaxScale}
+            step={1}
+            value={sliderValue}
+            onChange={(event) => applyScale(Number(event.target.value))}
+            className="w-full accent-brand-700"
+          />
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={fitToPrintArea}
+              className="rounded-md border border-ink-200 bg-white px-2.5 py-1.5 text-xs font-medium text-ink-700 hover:bg-ink-50"
+            >
+              Смести во print area
+            </button>
+            <button
+              type="button"
+              onClick={() => applyScale(DEFAULT_ADMIN_OVERLAY_SCALE)}
+              className="rounded-md border border-ink-200 bg-white px-2.5 py-1.5 text-xs font-medium text-ink-700 hover:bg-ink-50"
+            >
+              Reset scale
+            </button>
+          </div>
+        </div>
       </div>
     </section>
   );

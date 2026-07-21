@@ -1,4 +1,6 @@
+import { Suspense } from 'react';
 import { ProductDesignDetail } from '@/components/products/ProductDesignDetail';
+import { SectionLoading } from '@/components/ui/SectionLoading';
 import { buildDesignProductMetadata } from '@/lib/seo/page-metadata';
 import { resolveProductDesignTemplate } from '@/lib/products/resolve-product-design-template';
 import type { Locale } from '@/i18n/routing';
@@ -38,7 +40,9 @@ export default async function DesignProductPage({
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-      <ProductDesignDetail designId={designId} initialDesign={design} />
+      <Suspense fallback={<SectionLoading />}>
+        <ProductDesignDetail designId={designId} initialDesign={design} />
+      </Suspense>
     </div>
   );
 }

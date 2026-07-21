@@ -1,5 +1,4 @@
 import {
-  products,
   type Product,
   type ProductDesignTemplate,
   type ProductType,
@@ -105,22 +104,10 @@ function resolveCategoryPreviewProduct(
   design: ProductDesignTemplate,
   preferredType: ProductType,
 ): Product {
-  if (
-    preferredType !== 't-shirt' &&
-    design.productTypes.includes(preferredType)
-  ) {
-    const matched = products.find(
-      (product) =>
-        product.type === preferredType &&
-        (!design.productIds || design.productIds.includes(product.id)),
-    );
-    if (matched) return matched;
-
-    // Kids designs often lock productIds to tshirt-kids while still listing
-    // hoodie in productTypes — fall through to the garment-fit resolver.
-  }
-
-  return resolveDesignProduct(design);
+  // Prefer the type-page garment (hoodie/bodysuit/…) over productTypes[0]
+  // (usually t-shirt). Kids designs may lock productIds to a tee while still
+  // listing hoodie — resolveDesignProduct handles that fallback.
+  return resolveDesignProduct(design, undefined, preferredType);
 }
 
 export type CategoryMockupPreview = {

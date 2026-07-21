@@ -231,16 +231,14 @@ export function CustomizerContextBar({
         </>
       ) : null}
 
-      {selected !== 'overlay' ? (
-        <button
-          type="button"
-          onClick={() => onRemove(selected)}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-ink-500 hover:bg-red-50 hover:text-red-600"
-          aria-label={t('deleteElement')}
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
-      ) : null}
+      <button
+        type="button"
+        onClick={() => onRemove(selected)}
+        className="flex h-8 w-8 items-center justify-center rounded-md text-ink-500 hover:bg-red-50 hover:text-red-600"
+        aria-label={t('deleteElement')}
+      >
+        <Trash2 className="h-4 w-4" />
+      </button>
     </div>
   );
 }

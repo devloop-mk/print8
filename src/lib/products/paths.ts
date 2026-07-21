@@ -49,8 +49,15 @@ export function buildCustomizerUrl(
   return `/products/customize/${productType}?${params.toString()}`;
 }
 
-export function buildDesignDetailUrl(designId: string) {
-  return `/products/design/${designId}`;
+export function buildDesignDetailUrl(
+  designId: string,
+  options?: { type?: string },
+) {
+  if (!options?.type) {
+    return `/products/design/${designId}`;
+  }
+  const params = new URLSearchParams({ type: options.type });
+  return `/products/design/${designId}?${params.toString()}`;
 }
 
 export function buildCouplePackDetailUrl(packId: string) {

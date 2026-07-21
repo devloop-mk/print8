@@ -35,17 +35,33 @@ export function buildOgImageUrl(params: {
   return absoluteUrl(`/api/og?${search.toString()}`);
 }
 
-export function defaultOgImageUrl(locale: Locale) {
-  return buildOgImageUrl({
-    locale,
-    title: 'Print 8',
-    description:
-      locale === 'mk'
-        ? 'Визит карти, покани, маици, чашки и персонализирани производи.'
-        : 'Business cards, invitations, apparel, mugs and personalized products.',
-    badge: locale === 'mk' ? 'Печатница' : 'Print shop',
-    subtitle: locale === 'mk' ? 'Професионално печатење' : 'Professional printing',
-  });
+/**
+ * OG image for design/product-design share pages that need to show *two*
+ * raster images side by side (dual-sided front+back designs, or couple-pack
+ * partner designs). Delegates to the sharp-based `/api/og/design` route,
+ * which ONLY composites raster (png/jpg/webp) images — never SVG — onto a
+ * static branded background. Inputs should already be resolved via
+ * `resolveAssetUrl` (site-relative path or absolute CDN URL); the route
+ * reads local `public/` assets straight off disk and only fetches over HTTP
+ * for already-absolute (CDN) URLs.
+ */
+export function buildDesignOgImageUrl(images: Array<string | undefined | null>) {
+  const [a, b] = images.filter((value): value is string => Boolean(value));
+  const search = new URLSearchParams();
+  if (a) search.set('a', a);
+  if (b) search.set('b', b);
+  return absoluteUrl(`/api/og/design?${search.toString()}`);
+}
+
+/**
+ * Site-wide default og:image. This is a static, pre-generated JPG committed
+ * to `public/og/` — never the dynamic `/api/og` route — so Facebook/Viber/
+ * Telegram/etc. crawlers always get a real `image/jpeg` with no server-side
+ * rendering, remote font/asset fetches, or preview-deployment dependency in
+ * the critical path.
+ */
+export function defaultOgImageUrl(_locale?: Locale) {
+  return absoluteUrl('/og/default.jpg');
 }
 
 export function buildPageMetadata({

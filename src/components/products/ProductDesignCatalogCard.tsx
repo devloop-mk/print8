@@ -14,6 +14,7 @@ import {
   isTextDesignTemplate,
   type Product,
   type ProductDesignTemplate,
+  type ProductType,
 } from '@/lib/data/catalog';
 import { resolveAssetUrl } from '@/lib/storage/asset-url';
 import { resolveProductDesignDisplayName } from '@/lib/products/design-display-name';
@@ -47,6 +48,11 @@ type ProductDesignCatalogCardProps = {
   colorFilter: string | 'all';
   /** Hash design id across applicable colors so grids aren't all the same tee. */
   varyInitialColor?: boolean;
+  /**
+   * When browsing a type-scoped catalog (e.g. /products/type/hoodie), prefer
+   * that garment for previews and design PDP links instead of productTypes[0].
+   */
+  preferredProductType?: ProductType;
 };
 
 function resolvePreviewColorForFilter(
@@ -72,6 +78,7 @@ export function ProductDesignCatalogCard({
   entry,
   colorFilter,
   varyInitialColor = false,
+  preferredProductType,
 }: ProductDesignCatalogCardProps) {
   const t = useTranslations('products');
   const locale = useLocale() as 'mk' | 'en';
@@ -87,7 +94,11 @@ export function ProductDesignCatalogCard({
   const [revealBack, setRevealBack] = useState(false);
   const [touchPinned, setTouchPinned] = useState(false);
 
-  const { product } = resolveDesignProduct(entry, colorFilter);
+  const { product } = resolveDesignProduct(
+    entry,
+    colorFilter,
+    preferredProductType,
+  );
   const { design } = entry;
   const displayName = resolveProductDesignDisplayName(design, locale, (key) =>
     t(key),
@@ -158,7 +169,7 @@ export function ProductDesignCatalogCard({
     design: design.id,
     color: previewColor,
   });
-  const detailHref = buildDesignDetailUrl(design.id);
+  const detailHref = buildDesignDetailUrl(design.id, { type: product.type });
 
   function setHoverReveal(next: boolean) {
     if (!isDualSided || touchPinned) return;

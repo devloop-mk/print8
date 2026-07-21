@@ -14,7 +14,7 @@ import { SpinWheelPromoPopupLazy } from "@/components/rewards/SpinWheelPromoPopu
 import { NavigationProgress } from "@/components/navigation/NavigationProgress";
 import { ScrollToTop } from "@/components/navigation/ScrollToTop";
 import { PageTransition } from "@/components/motion/PageTransition";
-import { buildPageMetadata, buildOgImageUrl } from "@/lib/seo/metadata";
+import { buildPageMetadata } from "@/lib/seo/metadata";
 import "@/app/globals.css";
 
 const inter = Inter({
@@ -44,13 +44,9 @@ export async function generateMetadata({
     locale: locale as Locale,
     title: t("title"),
     description: t("description"),
-    image: buildOgImageUrl({
-      locale: locale as Locale,
-      title: t("ogImageTitle"),
-      description: t("ogImageDescription"),
-      subtitle: t("ogImageSubtitle"),
-      badge: t("ogImageBadge"),
-    }),
+    // No `image` override here — this is the root, site-wide metadata that
+    // every page inherits unless it sets its own. `buildPageMetadata` falls
+    // back to the static, professionally generated `/og/default.jpg`.
   });
 }
 

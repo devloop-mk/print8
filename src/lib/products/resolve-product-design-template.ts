@@ -34,7 +34,15 @@ export async function resolveProductDesignTemplate(
     const { getMergedProductDesignTemplate } = await import(
       '@/lib/products/merged-product-designs'
     );
+    const { mergeProductDesignTemplate } = await import(
+      '@/lib/products/merge-product-designs'
+    );
     const merged = await getMergedProductDesignTemplate(id);
+    // Merge onto static base so couple-pack / streetwear defaults keep asset
+    // fields when admin rows only override placement (scale/position).
+    if (merged && staticDesign) {
+      return mergeProductDesignTemplate(staticDesign, merged);
+    }
     if (merged) return merged;
   } catch {
     // Supabase or cache unavailable — use static catalog.

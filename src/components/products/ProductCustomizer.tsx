@@ -28,7 +28,10 @@ import {
   type ProductSide,
   type ProductType,
 } from '@/lib/data/catalog';
-import { useMergedProductDesignTemplate } from '@/lib/products/use-merged-product-design-template';
+import {
+  useMergedProductDesignTemplate,
+  useMergedProductDesignTemplateQuery,
+} from '@/lib/products/use-merged-product-design-template';
 import { getDesignApplicableColors } from '@/lib/products/design-applicable-colors';
 import {
   getDesignApplicableFits,
@@ -71,6 +74,7 @@ import {
   isProductSide,
 } from '@/lib/products/product-sides';
 import {
+  clearSideDesignArtwork,
   createDefaultSideDesign,
   sideDesignFromRestored,
   sideDesignsFromTemplate,
@@ -163,15 +167,15 @@ import {
   getPrintAreaPositionPresets,
   getPrintAreaWidthPercent,
   isElementFullyOutsidePrintArea,
+  measureContentLayersBoundsPercent,
   type PrintAreaInsets,
 } from '@/lib/products/print-area';
 import { notifyMovedOutsidePrintArea } from '@/lib/products/print-area-events';
 import {
+  deriveTshirtPrintPackage,
   getTshirtPrintAreaInsets,
   getTshirtUnitPrice,
-  isTshirtPrintPackage,
   isTshirtProduct,
-  TSHIRT_PRINT_PACKAGES,
   type TshirtPrintPackage,
 } from '@/lib/products/tshirt-print-pricing';
 import { usePrintAreaMaxScale } from '@/lib/products/use-print-area-max-scale';
@@ -271,17 +275,41 @@ function useDraggablePosition(
 ) {
   const elementRef = useRef<HTMLDivElement | null>(null);
   const positionRef = useRef(position);
+  const dragOriginRef = useRef(position);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   const draggingRef = useRef(false);
+  const onChangeRef = useRef(onChange);
+  const gestureHandlersRef = useRef(gestureHandlers);
+  const printBoundsRef = useRef(printBounds);
+  const measureRefRef = useRef(measureRef);
 
-  positionRef.current = position;
+  onChangeRef.current = onChange;
+  gestureHandlersRef.current = gestureHandlers;
+  printBoundsRef.current = printBounds;
+  measureRefRef.current = measureRef;
+
+  // Commit design state only on pointer-up. While dragging, keep the live
+  // position in a ref + DOM styles so footprint / print-package effects do
+  // not re-run on every pointermove frame.
+  if (!draggingRef.current) {
+    positionRef.current = position;
+  }
+
+  const applyVisualPosition = (pos: { x: number; y: number }) => {
+    const el = elementRef.current;
+    if (!el) return;
+    el.style.left = `${pos.x}%`;
+    el.style.top = `${pos.y}%`;
+  };
 
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.stopPropagation();
     draggingRef.current = true;
     dragStartRef.current = { x: event.clientX, y: event.clientY };
-    gestureHandlers?.onGestureStart?.();
+    dragOriginRef.current = position;
+    positionRef.current = position;
+    gestureHandlersRef.current?.onGestureStart?.();
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
@@ -301,10 +329,12 @@ function useDraggablePosition(
     // recovery) once the drag ends, not on every frame.
     const nextX = Math.min(Math.max(currentX + deltaX, 0), parentRect.width);
     const nextY = Math.min(Math.max(currentY + deltaY, 0), parentRect.height);
-    onChange({
+    const next = {
       x: (nextX / parentRect.width) * 100,
       y: (nextY / parentRect.height) * 100,
-    });
+    };
+    positionRef.current = next;
+    applyVisualPosition(next);
   };
 
   const endDrag = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -314,14 +344,21 @@ function useDraggablePosition(
       if (event.currentTarget.hasPointerCapture(event.pointerId)) {
         event.currentTarget.releasePointerCapture(event.pointerId);
       }
+      const finalPos = positionRef.current;
+      const origin = dragOriginRef.current;
+      // Single React commit for the drag — triggers footprint remeasure once.
+      // Skip if the pointer was released without moving (click-to-select).
+      if (finalPos.x !== origin.x || finalPos.y !== origin.y) {
+        onChangeRef.current(finalPos);
+      }
       recenterIfFullyOutsidePrintArea({
-        element: measureRef?.current ?? elementRef.current,
+        element: measureRefRef.current?.current ?? elementRef.current,
         parent: elementRef.current?.parentElement ?? null,
-        printBounds,
-        position: positionRef.current,
-        onPositionChange: onChange,
+        printBounds: printBoundsRef.current,
+        position: finalPos,
+        onPositionChange: onChangeRef.current,
       });
-      gestureHandlers?.onGestureEnd?.();
+      gestureHandlersRef.current?.onGestureEnd?.();
     }
   };
 
@@ -421,8 +458,12 @@ function OverlayRemoveButton({
       }}
       className={
         placement === 'text'
-          ? 'absolute -top-2 left-[calc(100%+0.375rem)] z-10 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-ink-900/90 text-white shadow-md transition hover:bg-ink-900'
-          : 'absolute -left-2 -top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-ink-900/90 text-white shadow-md transition hover:bg-ink-900'
+          ? // Sit just outside the text box’s top-right edge.
+            'absolute -top-2 left-[calc(100%+0.375rem)] z-10 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-ink-900/90 text-white shadow-md transition hover:bg-ink-900'
+          : // Anchor to the design’s top-right corner; translate so the
+            // button center sits on the corner and most of it stays outside
+            // the artwork instead of covering it.
+            'absolute right-0 top-0 z-10 flex h-6 w-6 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white bg-ink-900/90 text-white shadow-md transition hover:bg-ink-900'
       }
       aria-label={label}
     >
@@ -553,6 +594,7 @@ function ResizableImageOverlay({
       }}
       className="absolute cursor-grab active:cursor-grabbing pointer-events-auto"
       data-customizer-selected-layer={selected ? '' : undefined}
+      data-customizer-content-layer=""
       style={{
         left: `${position.x}%`,
         top: `${position.y}%`,
@@ -677,6 +719,7 @@ function ResizableStickerOverlay({
       }}
       className="absolute cursor-grab active:cursor-grabbing pointer-events-auto"
       data-customizer-selected-layer={selected ? '' : undefined}
+      data-customizer-content-layer=""
       style={{
         left: `${sticker.position.x}%`,
         top: `${sticker.position.y}%`,
@@ -837,17 +880,13 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
 
   const isTshirt = product ? isTshirtProduct(product) : false;
 
-  const [printPackage, setPrintPackage] =
-    useState<TshirtPrintPackage>('front-large');
-
+  // T-shirts always expose every configured side (front + back) for
+  // editing — same as hoodies/other multi-side garments. There is no
+  // package picker: placement + price are derived from footprints below.
   const sides = useMemo(() => {
     if (!product) return ['front' as ProductSide];
-    const productSides = getProductSides(product);
-    if (isTshirtProduct(product) && printPackage !== 'front-back') {
-      return ['front' as ProductSide];
-    }
-    return productSides;
-  }, [product, printPackage]);
+    return getProductSides(product);
+  }, [product]);
   const hasMultipleSides = sides.length > 1;
   const sideLabel = useCallback(
     (side: ProductSide) => {
@@ -871,6 +910,13 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   const [sidesPreviewOpen, setSidesPreviewOpen] = useState(false);
 
   const previewRef = useRef<HTMLDivElement | null>(null);
+
+  // Measured on-canvas footprint (% of the mockup) of the currently active
+  // side's design layers — cached per side so switching tabs doesn't lose
+  // the last measurement of the side you're not currently looking at.
+  const [sideFootprints, setSideFootprints] = useState<
+    Partial<Record<ProductSide, { width: number; height: number }>>
+  >({});
   /** Fixed unwrap height — parent CSS zoom must not affect 2D↔3D text mapping. */
   const drinkwareCanvasHeightPx = DRINKWARE_FLAT_CANVAS_HEIGHT_PX;
   const designInitializedRef = useRef<string | null>(null);
@@ -889,10 +935,9 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         size,
         quantity,
         activeSide,
-        printPackage,
         sideDesigns: serializeSideDesigns(sideDesigns),
       }),
-    [color, size, quantity, activeSide, printPackage, sideDesigns],
+    [color, size, quantity, activeSide, sideDesigns],
   );
   const [baselineReady, setBaselineReady] = useState(false);
 
@@ -944,7 +989,6 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         size,
         quantity,
         activeSide,
-        printPackage: isTshirt ? printPackage : undefined,
         sideDesigns: serializeSideDesigns(sideDesigns),
         updatedAt: new Date().toISOString(),
       });
@@ -957,9 +1001,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     activeSide,
     color,
     designId,
-    isTshirt,
     markClean,
-    printPackage,
     product,
     quantity,
     sideDesigns,
@@ -999,7 +1041,10 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   );
 
   const activeDesignTemplateId = designId ?? currentDesign.premadeDesignId ?? null;
-  const activeDesignTemplate = useMergedProductDesignTemplate(activeDesignTemplateId);
+  const {
+    template: activeDesignTemplate,
+    isResolved: designTemplateResolved,
+  } = useMergedProductDesignTemplateQuery(activeDesignTemplateId);
 
   const overlayAssetUrl = useOverlayAssetUrl({
     design: currentDesign,
@@ -1007,33 +1052,87 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     shirtColor: color,
   });
 
+  // Re-measure the active side's on-canvas footprint whenever its geometry
+  // (position/scale/text/stickers) changes — drives the auto-derived print
+  // package below instead of a user-facing placement picker.
+  useLayoutEffect(() => {
+    if (!isTshirt) return;
+    const mockupInner = previewRef.current?.querySelector<HTMLElement>(
+      '[data-mockup-inner]',
+    );
+    const measured = measureContentLayersBoundsPercent(mockupInner ?? null);
+
+    setSideFootprints((prev) => {
+      const existing = prev[activeSide];
+      if (!existing && !measured) return prev;
+      if (
+        existing &&
+        measured &&
+        Math.abs(existing.width - measured.width) < 0.5 &&
+        Math.abs(existing.height - measured.height) < 0.5
+      ) {
+        return prev;
+      }
+      const next = { ...prev };
+      if (measured) {
+        next[activeSide] = measured;
+      } else {
+        delete next[activeSide];
+      }
+      return next;
+    });
+  }, [isTshirt, activeSide, currentDesign]);
+
+  const backHasContent = sideHasDesignContent(sideDesigns.back);
+
+  // Auto-derived print package: each side with content is classified
+  // small vs large from its measured footprint (dual → four price tiers).
+  const printPackage = useMemo<TshirtPrintPackage>(() => {
+    if (!isTshirt) return 'front-large';
+    return deriveTshirtPrintPackage({
+      hasBackContent: backHasContent,
+      frontFootprint: sideFootprints.front ?? null,
+      backFootprint: sideFootprints.back ?? null,
+      isWomen: product?.fit === 'women',
+    });
+  }, [
+    isTshirt,
+    backHasContent,
+    sideFootprints.front,
+    sideFootprints.back,
+    product,
+  ]);
+
   const unitPrice = useMemo(() => {
     if (!product) return 0;
     if (isTshirtProduct(product)) return getTshirtUnitPrice(printPackage);
     return product.basePrice;
   }, [product, printPackage]);
 
+  // Editing always uses the generous chest zone — the tighter "small
+  // print" zone (see tshirt-print-pricing.ts) only classifies price/back
+  // placement after the fact and never restricts where users can drag.
   const effectivePrintAreaInsets = useMemo((): PrintAreaInsets => {
     if (!product) {
       return { top: 12, right: 12, bottom: 12, left: 12 };
     }
     if (isTshirtProduct(product)) {
-      return getTshirtPrintAreaInsets(printPackage, activeSide, product);
+      return getTshirtPrintAreaInsets('front-large', activeSide, product);
     }
     return getProductMockupLayout(product).printArea;
-  }, [product, printPackage, activeSide]);
+  }, [product, activeSide]);
 
   const mockupLayout = useMemo(() => {
     if (!product) return null;
     const base = getProductMockupLayout(product);
     if (!isTshirtProduct(product)) return base;
-    const insets = getTshirtPrintAreaInsets(printPackage, activeSide, product);
+    const insets = getTshirtPrintAreaInsets('front-large', activeSide, product);
     return {
       ...base,
       printArea: insets,
       overlayMaxScale: getPrintAreaMaxScale(insets),
     };
-  }, [product, printPackage, activeSide]);
+  }, [product, activeSide]);
   const overlayPrintBounds = mockupLayout
     ? getOverlayPrintBounds(mockupLayout)
     : undefined;
@@ -1274,16 +1373,6 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   );
 
   useEffect(() => {
-    if (!product || !isTshirtProduct(product)) return;
-    if (printPackage === 'front-back') return;
-    setActiveSide('front');
-    setSideDesigns((prev) => ({
-      ...prev,
-      back: createDefaultSideDesign(),
-    }));
-  }, [printPackage, product?.id, product]);
-
-  useEffect(() => {
     if (editCartItemId) return;
     setSideDesigns((prev) => {
       let changed = false;
@@ -1328,6 +1417,9 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
 
   useEffect(() => {
     if (!designId || editCartItemId || !product || !activeDesignTemplate) return;
+    // Wait for catalog fetch so we seed from admin-merged placement, not
+    // static couple/catalog defaults (which made customizer overlays too large).
+    if (!designTemplateResolved) return;
     if (activeDesignTemplate.id !== designId) return;
     if (resumeParam && findProductCustomizerDraft(product.id, designId)) return;
     if (designInitializedRef.current === designId) return;
@@ -1369,6 +1461,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     color,
     colorParam,
     designId,
+    designTemplateResolved,
     editCartItemId,
     product,
     resumeParam,
@@ -1384,7 +1477,6 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     setSize(draft.size);
     setQuantity(draft.quantity);
     setActiveSide(draft.activeSide);
-    if (draft.printPackage) setPrintPackage(draft.printPackage);
 
     const productSides = getProductSides(product);
     const restored = createSideDesignsForSides(productSides);
@@ -1409,13 +1501,6 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     if (typeof meta.color === 'string') setColor(meta.color);
     if (typeof meta.size === 'string') setSize(meta.size);
     if (typeof cartItem.quantity === 'number') setQuantity(cartItem.quantity);
-    if (
-      isTshirt &&
-      typeof meta.printPackage === 'string' &&
-      isTshirtPrintPackage(meta.printPackage)
-    ) {
-      setPrintPackage(meta.printPackage);
-    }
 
     const restored = createSideDesignsForSides(sides);
 
@@ -1433,7 +1518,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     ) {
       setActiveSide(meta.activeSide);
     }
-  }, [editCartItemId, product, cartItems, sides, isTshirt]);
+  }, [editCartItemId, product, cartItems, sides]);
 
   const mockupImage = product
     ? getProductMockup(product, color, activeSide)
@@ -1443,6 +1528,14 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     (side: ProductSide) => sideHasDesignContent(sideDesigns[side]),
     [sideDesigns],
   );
+
+  // T-shirts always show a back tab for editing (see `sides` above), but a
+  // plain front-only tee shouldn't gain a blank "back" preview/metadata —
+  // only include sides that actually have content (front always counts).
+  const cartSides = useMemo(() => {
+    if (!isTshirt) return sides;
+    return sides.filter((side) => side === 'front' || sideHasContent(side));
+  }, [isTshirt, sides, sideHasContent]);
 
   const otherSide =
     sides.length === 2 ? sides.find((side) => side !== activeSide) : undefined;
@@ -1470,7 +1563,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     const results: Partial<Record<ProductSide, string>> = {};
     const originalSide = activeSide;
 
-    for (const side of sides) {
+    for (const side of cartSides) {
       flushSync(() => setActiveSide(side));
       await waitForPaint();
       if (!previewRef.current) continue;
@@ -1483,12 +1576,12 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   }
 
   async function handleAddToCart() {
-    const incomingStickers = sides.reduce(
+    const incomingStickers = cartSides.reduce(
       (total, side) => total + (sideDesigns[side]?.stickers.length ?? 0),
       0,
     );
     const incomingPhotos = new Set(
-      sides
+      cartSides
         .map((side) => sideDesigns[side]?.uploadedFile?.fileId)
         .filter((id): id is string => Boolean(id)),
     ).size;
@@ -1531,7 +1624,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
           const front = await capturePreview(previewRef);
           if (front) captured.front = front;
         }
-      } else if (hasMultipleSides) {
+      } else if (cartSides.length > 1) {
         captured = await captureAllSidePreviews();
       } else {
         const front = await capturePreview(previewRef);
@@ -1543,7 +1636,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
 
     // If html2canvas fails, still show the garment mockup in the cart.
     if (product) {
-      for (const side of sides) {
+      for (const side of cartSides) {
         if (captured[side]) continue;
         const mockup = getProductMockup(product, color, side);
         if (mockup) captured[side] = mockup;
@@ -1563,7 +1656,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       metadata.printPackage = printPackage;
     }
 
-    for (const side of sides) {
+    for (const side of cartSides) {
       const d = sideDesigns[side] ?? createDefaultSideDesign();
       const prefix = getSideMetadataPrefix(side);
       writeTextMetadata(metadata, prefix, d);
@@ -1609,7 +1702,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       metadata.designKind = activeDesignTemplate.kind;
     }
 
-    const fileIds = sides
+    const fileIds = cartSides
       .map((s) => sideDesigns[s].uploadedFile?.fileId)
       .filter((id): id is string => Boolean(id));
 
@@ -1679,12 +1772,22 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     if (!target) return;
     if (target.startsWith('text:')) {
       removeTextLayer(target.replace('text:', ''));
+      setSelectedElement(null);
       return;
     }
-    if (target === 'photo') updateCurrentSide({ uploadedFile: null });
+    if (target === 'photo' || target === 'overlay') {
+      updateCurrentSide(clearSideDesignArtwork());
+      setSelectedElement(null);
+      return;
+    }
     if (target.startsWith('sticker:')) {
       removeSticker(target.replace('sticker:', ''));
     }
+    setSelectedElement(null);
+  }
+
+  function handleRemoveImage() {
+    updateCurrentSide(clearSideDesignArtwork());
     setSelectedElement(null);
   }
 
@@ -1719,9 +1822,9 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
           uploadedImageScale: clampPhotoScale(scale, imageMaxScale),
         })
       }
-      onRemoveImage={() => updateCurrentSide({ uploadedFile: null })}
+      onRemoveImage={handleRemoveImage}
       removeTextLabel={t('removeText')}
-      removeImageLabel={t('removePhoto')}
+      removeImageLabel={t('removeImage')}
       stickers={currentDesign.stickers}
       onStickerPositionChange={(instanceId, pos) =>
         updateSticker(instanceId, { position: pos })
@@ -1800,7 +1903,6 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       imageMaxScale={imageMaxScale}
       isTshirt={isTshirt}
       printPackage={printPackage}
-      setPrintPackage={setPrintPackage}
       locale={locale}
       garmentFits={garmentFits}
       garmentFit={garmentFit}
@@ -2028,8 +2130,11 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         renderSide={(side) => {
           const design = sideDesigns[side] ?? createDefaultSideDesign();
           const sideMockup = getProductMockup(product, color, side) ?? '';
+          // Same generous chest zone used during editing (see
+          // effectivePrintAreaInsets above) — content was never clamped to
+          // the tighter small-print zone, so the preview must not clip it.
           const printOverride = isTshirt
-            ? getTshirtPrintAreaInsets(printPackage, side, product)
+            ? getTshirtPrintAreaInsets('front-large', side, product)
             : undefined;
 
           return (
@@ -2204,6 +2309,7 @@ function ResizableTextOverlay({
       }}
       className="absolute cursor-grab select-none text-center leading-tight active:cursor-grabbing pointer-events-auto"
       data-customizer-selected-layer={selected ? '' : undefined}
+      data-customizer-content-layer=""
       style={{
         color,
         left: `${position.x}%`,
@@ -2541,6 +2647,8 @@ function InteractivePreview({
             position={sideDesign.uploadedImagePosition}
             onScaleChange={onImageScaleChange}
             onPositionChange={onImagePositionChange}
+            onRemove={onRemoveImage}
+            removeLabel={removeImageLabel}
             hideControls={isCapturing}
             maxScale={imageMaxScale}
             printBounds={overlayPrintBounds}
@@ -2754,7 +2862,6 @@ function EditorPanelContent({
   imageMaxScale,
   isTshirt,
   printPackage,
-  setPrintPackage,
   locale,
   garmentFits,
   garmentFit,
@@ -2792,7 +2899,6 @@ function EditorPanelContent({
   imageMaxScale: number;
   isTshirt: boolean;
   printPackage: TshirtPrintPackage;
-  setPrintPackage: (pkg: TshirtPrintPackage) => void;
   locale: string;
   garmentFits: GarmentFit[];
   garmentFit: GarmentFit;
@@ -2821,7 +2927,6 @@ function EditorPanelContent({
           setQuantity={setQuantity}
           isTshirt={isTshirt}
           printPackage={printPackage}
-          setPrintPackage={setPrintPackage}
           locale={locale}
           garmentFits={garmentFits}
           garmentFit={garmentFit}
@@ -3133,6 +3238,22 @@ const TSHIRT_PRINT_PACKAGE_LABELS: Record<
     title: 'printPackageFrontLarge',
     description: 'printPackageFrontLargeDesc',
   },
+  'front-small-back-small': {
+    title: 'printPackageFrontSmallBackSmall',
+    description: 'printPackageFrontSmallBackSmallDesc',
+  },
+  'front-small-back-large': {
+    title: 'printPackageFrontSmallBackLarge',
+    description: 'printPackageFrontSmallBackLargeDesc',
+  },
+  'front-large-back-small': {
+    title: 'printPackageFrontLargeBackSmall',
+    description: 'printPackageFrontLargeBackSmallDesc',
+  },
+  'front-large-back-large': {
+    title: 'printPackageFrontLargeBackLarge',
+    description: 'printPackageFrontLargeBackLargeDesc',
+  },
   'front-back': {
     title: 'printPackageFrontBack',
     description: 'printPackageFrontBackDesc',
@@ -3149,7 +3270,6 @@ function ProductOptions({
   setQuantity,
   isTshirt,
   printPackage,
-  setPrintPackage,
   locale,
   garmentFits,
   garmentFit,
@@ -3165,7 +3285,6 @@ function ProductOptions({
   setQuantity: (q: number) => void;
   isTshirt?: boolean;
   printPackage?: TshirtPrintPackage;
-  setPrintPackage?: (pkg: TshirtPrintPackage) => void;
   locale?: string;
   garmentFits?: GarmentFit[];
   garmentFit?: GarmentFit;
@@ -3177,38 +3296,23 @@ function ProductOptions({
 
   return (
     <>
-      {isTshirt && printPackage && setPrintPackage ? (
+      {isTshirt && printPackage ? (
         <div>
           <label className="mb-2 block text-sm font-medium text-ink-700">
             {t('printPackage')}
           </label>
-          <div className="space-y-2">
-            {TSHIRT_PRINT_PACKAGES.map((pkg) => {
-              const labels = TSHIRT_PRINT_PACKAGE_LABELS[pkg];
-              return (
-                <button
-                  key={pkg}
-                  type="button"
-                  onClick={() => setPrintPackage(pkg)}
-                  className={cn(
-                    'flex w-full items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left transition',
-                    printPackage === pkg
-                      ? 'border-brand-500 bg-brand-50 ring-1 ring-brand-200'
-                      : 'border-ink-200 bg-white hover:border-brand-200',
-                  )}
-                >
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-ink-900">
-                      {t(labels.title)}
-                    </p>
-                    <p className="text-xs text-ink-500">{t(labels.description)}</p>
-                  </div>
-                  <span className="shrink-0 text-sm font-semibold text-brand-700">
-                    {formatPrice(getTshirtUnitPrice(pkg), locale ?? 'mk')}
-                  </span>
-                </button>
-              );
-            })}
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-ink-200 bg-ink-50 px-4 py-3">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-ink-900">
+                {t(TSHIRT_PRINT_PACKAGE_LABELS[printPackage].title)}
+              </p>
+              <p className="text-xs text-ink-500">
+                {t('printPackageAutoNote')}
+              </p>
+            </div>
+            <span className="shrink-0 text-sm font-semibold text-brand-700">
+              {formatPrice(getTshirtUnitPrice(printPackage), locale ?? 'mk')}
+            </span>
           </div>
         </div>
       ) : null}

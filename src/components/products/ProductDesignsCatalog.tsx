@@ -453,6 +453,9 @@ export function ProductDesignsCatalog({
                       key={item.entry.design.id}
                       entry={item.entry}
                       colorFilter={colorFilter}
+                      preferredProductType={
+                        typeFilter === 'all' ? undefined : typeFilter
+                      }
                     />
                   ),
                 )}

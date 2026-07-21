@@ -74,7 +74,9 @@ export function getPremadeTshirtPrintPackage(
   design: ProductDesignTemplate,
 ): TshirtPrintPackage {
   const sides = getDesignSides(design);
-  return sides.includes('back') ? 'front-back' : 'front-small';
+  // Premade dual designs have no measured footprint — keep the former
+  // flat dual price (700) via the large+large tier.
+  return sides.includes('back') ? 'front-large-back-large' : 'front-small';
 }
 
 export function getPremadeDesignUnitPrice(

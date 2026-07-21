@@ -221,7 +221,7 @@ function DesignCard({
                 displayName={displayName}
               />
             ) : (
-              <Link href={buildDesignDetailUrl(design.id)}>
+              <Link href={buildDesignDetailUrl(design.id, { type: product.type })}>
                 <Button
                   size="sm"
                   className="w-full normal-case tracking-normal shadow-none hover:translate-y-0 active:translate-y-0 active:shadow-none"
@@ -234,7 +234,7 @@ function DesignCard({
             )}
             {canQuickOrder ? (
               <Link
-                href={buildDesignDetailUrl(design.id)}
+                href={buildDesignDetailUrl(design.id, { type: product.type })}
                 className="block text-center text-sm font-medium text-ink-600 transition-colors hover:text-brand-700"
               >
                 {isTextDesignTemplate(design)
