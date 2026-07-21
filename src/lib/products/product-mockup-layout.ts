@@ -16,18 +16,15 @@ import {
 import {
   BAG_PRINT_AREA_INSETS,
   CAP_PRINT_AREA_INSETS,
-  DRINKWARE_PRINT_AREA_INSETS,
-  DRINKWARE_WRAP_PRINT_AREA_INSETS,
   getPrintAreaMaxScale,
   getUniformPrintAreaInsets,
   HOODIE_PRINT_AREA_INSETS,
   TSHIRT_PRINT_AREA_INSETS,
   WOMEN_TSHIRT_PRINT_AREA_INSETS,
   BODYSUIT_PRINT_AREA_INSETS,
-  THERMOS_PRINT_AREA_INSETS,
-  THERMOS_WRAP_PRINT_AREA_INSETS,
   type PrintAreaInsets,
 } from '@/lib/products/print-area';
+import { getDrinkwareUnwrapPrintInsets } from '@/lib/products/drinkware-3d-config';
 
 export function isCylindricalDrinkwareType(type: ProductType): boolean {
   return type === 'mug' || type === 'cup' || type === 'thermos';
@@ -114,16 +111,18 @@ const BODYSUIT_MOCKUP_LAYOUT = createMockupLayout({
   printArea: BODYSUIT_PRINT_AREA_INSETS,
 });
 
-const DRINKWARE_MOCKUP_LAYOUT = createMockupLayout({
-  printArea: DRINKWARE_PRINT_AREA_INSETS,
-  wrapPrintArea: DRINKWARE_WRAP_PRINT_AREA_INSETS,
-});
+function createDrinkwareUnwrapLayout(type: 'mug' | 'cup' | 'thermos') {
+  const unwrap = getDrinkwareUnwrapPrintInsets(type);
+  return createMockupLayout({
+    customizerInnerScale: 1,
+    printArea: unwrap,
+    wrapPrintArea: unwrap,
+  });
+}
 
-const THERMOS_MOCKUP_LAYOUT = createMockupLayout({
-  customizerInnerScale: 0.82,
-  printArea: THERMOS_PRINT_AREA_INSETS,
-  wrapPrintArea: THERMOS_WRAP_PRINT_AREA_INSETS,
-});
+const DRINKWARE_MOCKUP_LAYOUT = createDrinkwareUnwrapLayout('mug');
+const CUP_MOCKUP_LAYOUT = createDrinkwareUnwrapLayout('cup');
+const THERMOS_MOCKUP_LAYOUT = createDrinkwareUnwrapLayout('thermos');
 
 const CAP_MOCKUP_LAYOUT = createMockupLayout({
   printArea: CAP_PRINT_AREA_INSETS,
@@ -138,7 +137,7 @@ const layoutsByType: Partial<Record<ProductType, ProductMockupLayout>> = {
   hoodie: HOODIE_MOCKUP_LAYOUT,
   bodysuit: BODYSUIT_MOCKUP_LAYOUT,
   mug: DRINKWARE_MOCKUP_LAYOUT,
-  cup: DRINKWARE_MOCKUP_LAYOUT,
+  cup: CUP_MOCKUP_LAYOUT,
   thermos: THERMOS_MOCKUP_LAYOUT,
   cap: CAP_MOCKUP_LAYOUT,
   bag: BAG_MOCKUP_LAYOUT,
@@ -219,19 +218,24 @@ export function resolveMockupDisplayScale(
 ): number {
   const layout = getProductMockupLayout(product);
 
-  if (!mockupPath) {
-    return layout.catalogScale;
-  }
-
-  if (product.type === 't-shirt') {
+  if (product.type === 't-shirt' && mockupPath) {
     return getPerColorTshirtMockupScale(product, mockupPath, variant);
   }
 
-  if (isCylindricalDrinkwareType(product.type)) {
+  if (isCylindricalDrinkwareType(product.type) && mockupPath) {
     const drinkwareScale = getDrinkwareMockupScaleFromPath(mockupPath, variant);
     if (drinkwareScale !== undefined) {
       return drinkwareScale;
     }
+  }
+
+  // `catalogScale` compensates for padding baked into catalog/design-card
+  // mockup thumbnails (see per-type layout comments below). The interactive
+  // customizer must show the *full* garment so the user can place designs
+  // near any edge — applying the same zoom there clips the neckline/hem
+  // (e.g. bodysuit) once the scaled image overflows its clipped frame.
+  if (variant === 'customizer') {
+    return 1;
   }
 
   return layout.catalogScale;

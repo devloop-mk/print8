@@ -5,6 +5,7 @@ import { LoadingIndicator } from '@/components/ui/LoadingIndicator';
 
 export type {
   DrinkwarePreviewMode,
+  DrinkwarePreviewVariant,
 } from '@/components/products/customizer/Drinkware3DPreview';
 
 export { DrinkwarePreviewModeToggle } from '@/components/products/customizer/Drinkware3DPreview';

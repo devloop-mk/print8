@@ -13,6 +13,7 @@ import {
   getSidePreviewFromCartItem,
   SIDE_PREVIEW_CART_KEYS,
 } from "@/lib/products/product-sides";
+import { isCylindricalDrinkwareType } from "@/lib/products/product-mockup-layout";
 
 export function getProductById(id: string): Product | undefined {
   return products.find((p) => p.id === id);
@@ -99,6 +100,27 @@ export function getCartItemPreviewImages(
       images.push({ src: upload, label: labels.upload });
     }
     if (images.length > 0) return images;
+  }
+
+  // Drinkware 3D cart snapshots use left/right profile views (not front/back).
+  if (product && isCylindricalDrinkwareType(product.type)) {
+    const left = getSidePreviewFromCartItem(item, 'left');
+    const right = getSidePreviewFromCartItem(item, 'right');
+    if (left || right) {
+      const images: { src: string; label?: string }[] = [];
+      if (left) images.push({ src: left, label: labels.left });
+      if (right) images.push({ src: right, label: labels.right });
+      if (images.length > 0) return images;
+    }
+    // Legacy dual snapshots stored as front/back before the left/right switch.
+    const legacyFront = getSidePreviewFromCartItem(item, 'front');
+    const legacyBack = getSidePreviewFromCartItem(item, 'back');
+    if (legacyFront && legacyBack) {
+      return [
+        { src: legacyFront, label: labels.left },
+        { src: legacyBack, label: labels.right },
+      ];
+    }
   }
 
   const images: { src: string; label?: string }[] = [];

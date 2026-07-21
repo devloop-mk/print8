@@ -1,5 +1,6 @@
 'use client';
 
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import {
   ZoomIn,
@@ -14,6 +15,14 @@ import {
 import { useTranslations } from 'next-intl';
 import type { EditorPanel } from '@/components/products/customizer/types';
 import type { ProductSide } from '@/lib/data/catalog';
+
+const SPLIT_MIN = 32;
+const SPLIT_MAX = 72;
+const SPLIT_DEFAULT = 56;
+
+function clampSplit(value: number) {
+  return Math.min(SPLIT_MAX, Math.max(SPLIT_MIN, value));
+}
 
 export function CustomizerShell({
   topBar,
@@ -35,6 +44,7 @@ export function CustomizerShell({
   onZoomChange,
   mobileBottomBar,
   mobileSheet,
+  sidePreview,
 }: {
   topBar: React.ReactNode;
   contextBar: React.ReactNode;
@@ -55,8 +65,13 @@ export function CustomizerShell({
   onZoomChange: (zoom: number) => void;
   mobileBottomBar: React.ReactNode;
   mobileSheet: React.ReactNode;
+  /** Live 3D preview shown beside the canvas on wide desktop (drinkware). */
+  sidePreview?: React.ReactNode;
 }) {
   const t = useTranslations('products.customizer');
+  const splitRowRef = useRef<HTMLDivElement>(null);
+  const [splitPercent, setSplitPercent] = useState(SPLIT_DEFAULT);
+  const [isDraggingSplit, setIsDraggingSplit] = useState(false);
 
   const items = [
     {
@@ -86,6 +101,53 @@ export function CustomizerShell({
       show: showDesignPanel,
     },
   ].filter((item) => item.show !== false);
+
+  const updateSplitFromClientX = useCallback((clientX: number) => {
+    const row = splitRowRef.current;
+    if (!row) return;
+    const rect = row.getBoundingClientRect();
+    if (rect.width <= 0) return;
+    const next = ((clientX - rect.left) / rect.width) * 100;
+    setSplitPercent(clampSplit(next));
+  }, []);
+
+  useEffect(() => {
+    if (!isDraggingSplit) return;
+
+    const onMove = (event: PointerEvent) => {
+      updateSplitFromClientX(event.clientX);
+    };
+    const onUp = () => setIsDraggingSplit(false);
+
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isDraggingSplit, updateSplitFromClientX]);
+
+  const canvasColumn = (
+    <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+      <div className="pointer-events-none absolute inset-x-0 top-2 z-20 flex justify-center px-4">
+        <div className="pointer-events-auto">{contextBar}</div>
+      </div>
+
+      <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto p-2 md:p-3">
+        <div
+          className="origin-center transition-transform duration-150"
+          style={{ transform: `scale(${canvasZoom / 100})` }}
+        >
+          {canvas}
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white pb-[7.75rem] md:pb-0">
@@ -163,20 +225,67 @@ export function CustomizerShell({
             </div>
           ) : null}
 
-          <div className="relative flex min-h-0 flex-1 flex-col">
-            <div className="pointer-events-none absolute inset-x-0 top-2 z-20 flex justify-center px-4">
-              <div className="pointer-events-auto">{contextBar}</div>
-            </div>
-
-            <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto p-2 md:p-3">
+          {sidePreview ? (
+            <div ref={splitRowRef} className="flex min-h-0 flex-1">
               <div
-                className="origin-center transition-transform duration-150"
-                style={{ transform: `scale(${canvasZoom / 100})` }}
+                className="flex min-h-0 min-w-0 flex-col"
+                style={{ width: `${splitPercent}%` }}
               >
-                {canvas}
+                {canvasColumn}
+              </div>
+
+              <div
+                role="separator"
+                aria-orientation="vertical"
+                aria-valuenow={Math.round(splitPercent)}
+                aria-valuemin={SPLIT_MIN}
+                aria-valuemax={SPLIT_MAX}
+                aria-label={t('splitResizeHandle')}
+                tabIndex={0}
+                onPointerDown={(event) => {
+                  event.preventDefault();
+                  setIsDraggingSplit(true);
+                  updateSplitFromClientX(event.clientX);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'ArrowLeft') {
+                    event.preventDefault();
+                    setSplitPercent((prev) => clampSplit(prev - 2));
+                  } else if (event.key === 'ArrowRight') {
+                    event.preventDefault();
+                    setSplitPercent((prev) => clampSplit(prev + 2));
+                  }
+                }}
+                className={cn(
+                  'group relative z-10 flex w-3 shrink-0 cursor-col-resize items-center justify-center bg-transparent',
+                  isDraggingSplit && 'bg-brand-100/40',
+                )}
+              >
+                <span className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-ink-300 transition group-hover:bg-brand-400 group-focus-visible:bg-brand-500" />
+                <span
+                  className={cn(
+                    'relative z-10 flex h-8 w-8 items-center justify-center rounded-full border border-ink-200 bg-white shadow-sm transition',
+                    'group-hover:border-brand-300 group-focus-visible:border-brand-400',
+                    isDraggingSplit && 'border-brand-400 shadow-md',
+                  )}
+                >
+                  <span className="flex gap-0.5" aria-hidden>
+                    <span className="h-3 w-0.5 rounded-full bg-ink-400" />
+                    <span className="h-3 w-0.5 rounded-full bg-ink-400" />
+                  </span>
+                </span>
+              </div>
+
+              <div
+                className="flex min-h-0 min-w-0 flex-col border-l border-ink-200/60 bg-white"
+                style={{ width: `${100 - splitPercent}%` }}
+              >
+                {sidePreview}
               </div>
             </div>
-          </div>
+          ) : (
+            canvasColumn
+          )}
 
           <div className="flex h-12 shrink-0 items-center justify-center gap-3 border-t border-ink-200/70 bg-white px-4">
             <button

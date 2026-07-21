@@ -68,39 +68,44 @@ export const BODYSUIT_PRINT_AREA_INSETS: PrintAreaInsets = {
   left: 31,
 };
 
-/** Mug / cup — front-center slice shown on the flat mockup preview. */
+/**
+ * Mug / cup — flat unwrap editor print zone (no product photo).
+ * Horizontal insets = half handle gap (4% each) so art cannot enter the seam.
+ * Prefer getDrinkwareUnwrapPrintInsets() for live values from handleGapFraction.
+ * Vertical insets are zero so the printable band spans the full mug body height.
+ * Texture builder also clears the seam strips after drawing.
+ */
 export const DRINKWARE_PRINT_AREA_INSETS: PrintAreaInsets = {
-  top: 27,
-  right: 35,
-  bottom: 24,
-  left: 23,
+  top: 0,
+  right: 4,
+  bottom: 0,
+  left: 4,
 };
 
 /**
- * Mug / cup — full cylinder wrap bounds for placement & scaling.
- * Horizontal insets are minimal so wide art can span around the drinkware.
+ * Mug / cup — same as the unwrap print zone (canvas IS the cylinder unwrap).
  */
 export const DRINKWARE_WRAP_PRINT_AREA_INSETS: PrintAreaInsets = {
-  top: 27,
-  right: 6,
-  bottom: 24,
-  left: 6,
+  top: 0,
+  right: 4,
+  bottom: 0,
+  left: 4,
 };
 
-/** Thermos — front-center slice on the flat mockup preview. */
+/** Thermos — flat unwrap editor print zone. */
 export const THERMOS_PRINT_AREA_INSETS: PrintAreaInsets = {
-  top: 25,
-  right: 31,
-  bottom: 10,
-  left: 31,
+  top: 8,
+  right: 2,
+  bottom: 12,
+  left: 2,
 };
 
-/** Thermos — full cylinder wrap bounds for placement & scaling. */
+/** Thermos — same as unwrap print zone. */
 export const THERMOS_WRAP_PRINT_AREA_INSETS: PrintAreaInsets = {
-  top: 25,
-  right: 14,
-  bottom: 10,
-  left: 14,
+  top: 8,
+  right: 2,
+  bottom: 12,
+  left: 2,
 };
 
 /** Cap front panel. */
@@ -218,6 +223,40 @@ export function clampCenterToPrintArea(
   };
 }
 
+/**
+ * True when an element's bounding box has zero overlap with the print area —
+ * i.e. it was dragged/resized fully outside the printable region. Callers can
+ * use this to offer a recovery (recenter) instead of clamping every frame.
+ */
+export function isElementFullyOutsidePrintArea(
+  element: HTMLElement | null,
+  parent: HTMLElement | null,
+  insets: PrintAreaInsets,
+  position: { x: number; y: number },
+  fallbackSizePercent = { width: 8, height: 8 },
+): boolean {
+  const size = measureElementSizePercent(element, parent) ?? fallbackSizePercent;
+  const halfW = size.width / 2;
+  const halfH = size.height / 2;
+
+  const left = position.x - halfW;
+  const right = position.x + halfW;
+  const top = position.y - halfH;
+  const bottom = position.y + halfH;
+
+  const areaLeft = insets.left;
+  const areaRight = 100 - insets.right;
+  const areaTop = insets.top;
+  const areaBottom = 100 - insets.bottom;
+
+  return (
+    right <= areaLeft ||
+    left >= areaRight ||
+    bottom <= areaTop ||
+    top >= areaBottom
+  );
+}
+
 export function measureElementSizePercent(
   element: HTMLElement | null,
   parent: HTMLElement | null,
@@ -305,4 +344,14 @@ export function getPrintAreaFrameStyle(insets: PrintAreaInsets): {
     bottom: `${insets.bottom}%`,
     left: `${insets.left}%`,
   };
+}
+
+/**
+ * CSS `clip-path` value that hides anything rendered outside the print
+ * area rect. Apply to a wrapper that exactly overlaps the mockup frame
+ * (same coordinate space as the insets) so overlays crossing the dashed
+ * print-area border don't visibly spill onto the rest of the garment.
+ */
+export function getPrintAreaClipPath(insets: PrintAreaInsets): string {
+  return `inset(${insets.top}% ${insets.right}% ${insets.bottom}% ${insets.left}%)`;
 }

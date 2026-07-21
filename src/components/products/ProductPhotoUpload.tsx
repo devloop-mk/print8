@@ -5,7 +5,12 @@ import { buildUploadedFileUrl } from '@/lib/upload/file-url';
 import { useTranslations } from 'next-intl';
 import { Crop, Upload } from 'lucide-react';
 import { ImageCropModal } from '@/components/products/ImageCropModal';
+import { UploadTermsModal } from '@/components/products/UploadTermsModal';
 import { imageSrcToBlob } from '@/lib/products/crop-image';
+import {
+  hasAcceptedUploadTerms,
+  markUploadTermsAccepted,
+} from '@/lib/products/upload-terms-consent';
 import { Button } from '@/components/ui/Button';
 import { LoadingIndicator } from '@/components/ui/LoadingIndicator';
 
@@ -76,6 +81,7 @@ export function ProductPhotoUpload({
     text: string;
   } | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [pendingTermsFile, setPendingTermsFile] = useState<File | null>(null);
 
   const isDisabled = uploadLoading || uploading || Boolean(cropSource) || !token;
 
@@ -83,11 +89,7 @@ export function ProductPhotoUpload({
     if (!isDisabled) fileInputRef.current?.click();
   }
 
-  function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file || !file.type.startsWith('image/')) return;
-
+  function beginFileProcessing(file: File) {
     if (skipCrop && token) {
       void uploadFileDirect(file);
       return;
@@ -103,6 +105,30 @@ export function ProductPhotoUpload({
       }
     };
     reader.readAsDataURL(file);
+  }
+
+  function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !file.type.startsWith('image/')) return;
+
+    if (!hasAcceptedUploadTerms()) {
+      setPendingTermsFile(file);
+      return;
+    }
+
+    beginFileProcessing(file);
+  }
+
+  function handleAcceptUploadTerms() {
+    markUploadTermsAccepted();
+    const file = pendingTermsFile;
+    setPendingTermsFile(null);
+    if (file) beginFileProcessing(file);
+  }
+
+  function handleCancelUploadTerms() {
+    setPendingTermsFile(null);
   }
 
   async function uploadFileDirect(file: File) {
@@ -295,6 +321,12 @@ export function ProductPhotoUpload({
           onUseOriginal={handleUseOriginal}
         />
       ) : null}
+
+      <UploadTermsModal
+        open={Boolean(pendingTermsFile)}
+        onAccept={handleAcceptUploadTerms}
+        onCancel={handleCancelUploadTerms}
+      />
     </div>
   );
 }

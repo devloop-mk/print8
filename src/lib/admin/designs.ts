@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { revalidatePath, revalidateTag } from 'next/cache';
+import { revalidateTag } from 'next/cache';
 import {
   designTemplates,
   getDesignTemplate,
@@ -244,7 +244,6 @@ export async function saveAdminSvgTemplateDefaults(input: {
 
   try {
     revalidateTag(MANAGED_SVG_TEMPLATES_CACHE_TAG, 'max');
-    revalidatePath('/', 'layout');
   } catch (error) {
     console.warn(
       `[managed-svg] Cache revalidation failed for ${input.templateId}:`,
@@ -308,7 +307,6 @@ export async function deleteAdminSvgTemplateDefaults(templateId: string) {
 
   try {
     revalidateTag(MANAGED_SVG_TEMPLATES_CACHE_TAG, 'max');
-    revalidatePath('/', 'layout');
   } catch (error) {
     console.warn(
       `[managed-svg] Cache revalidation failed for ${templateId}:`,

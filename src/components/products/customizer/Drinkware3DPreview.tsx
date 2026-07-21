@@ -10,8 +10,13 @@ import { useDrinkwareWrapTexture } from '@/hooks/useDrinkwareWrapTexture';
 import type { DrinkwareImageLayer } from '@/lib/products/build-drinkware-wrap-texture';
 import type { PlacedTextLayer } from '@/lib/products/text-layers';
 import type { PrintAreaInsets } from '@/lib/products/print-area';
+import { DRINKWARE_FLAT_CANVAS_HEIGHT_PX } from '@/lib/products/drinkware-3d-config';
 
 export type DrinkwarePreviewMode = 'flat' | '3d';
+
+/** `floating` = fixed-size card used by the mobile/tablet flat↔3D toggle.
+ *  `pane` = fills its parent (the desktop side-by-side preview column). */
+export type DrinkwarePreviewVariant = 'floating' | 'pane';
 
 type Drinkware3DPreviewProps = {
   productType: ProductType;
@@ -19,7 +24,10 @@ type Drinkware3DPreviewProps = {
   printBounds: PrintAreaInsets;
   images: DrinkwareImageLayer[];
   textLayers?: PlacedTextLayer[];
+  variant?: DrinkwarePreviewVariant;
   className?: string;
+  /** Flat editor canvas height — keeps text scale matched in the wrap texture. */
+  canvasHeightPx?: number;
 };
 
 export function Drinkware3DPreview({
@@ -28,7 +36,9 @@ export function Drinkware3DPreview({
   printBounds,
   images,
   textLayers = [],
+  variant = 'floating',
   className,
+  canvasHeightPx,
 }: Drinkware3DPreviewProps) {
   const t = useTranslations('products.customizer');
   const { textureCanvas, loading } = useDrinkwareWrapTexture({
@@ -37,12 +47,16 @@ export function Drinkware3DPreview({
     printBounds,
     images,
     textLayers,
+    canvasHeightPx: canvasHeightPx ?? DRINKWARE_FLAT_CANVAS_HEIGHT_PX,
   });
 
   return (
     <div
       className={cn(
-        'relative aspect-[3/4] w-[min(18rem,78vw)] overflow-hidden rounded-sm bg-[#eef2f6] shadow-[0_8px_40px_rgba(15,23,42,0.12)] md:w-[min(28rem,46vh)] lg:w-[min(32rem,52vh)] xl:w-[min(36rem,58vh)]',
+        'relative overflow-hidden bg-[#eef2f6]',
+        variant === 'pane'
+          ? 'h-full w-full'
+          : 'aspect-[4/5] w-[min(18rem,78vw)] rounded-sm shadow-[0_8px_40px_rgba(15,23,42,0.12)] md:w-[min(28rem,46vh)] lg:w-[min(32rem,52vh)] xl:w-[min(36rem,58vh)]',
         className,
       )}
     >

@@ -164,6 +164,11 @@
       "all": "All",
       "seeCategory": "See {category}"
     },
+    "categoryGrid": {
+      "headline": "Make every product your own",
+      "subcopy": "Choose from {count}+ customizable products",
+      "cta": "Explore all products"
+    },
     "heroCarousel": {
       "ariaLabel": "Featured offers",
       "prev": "Previous slide",
@@ -1507,7 +1512,6 @@
     "paths": {
       "eyebrow": "Next step",
       "title": "How do you want to personalize?",
-      "subtitle": "Pick one path — you can always change later.",
       "customTitle": "Your own design",
       "customDesc": "Upload a photo, add text, and position everything yourself.",
       "customCta": "Open designer",
@@ -1771,15 +1775,19 @@
       "textLayerLabel": "Text {number}",
       "textLayerEmpty": "Add a text field to start typing on the product.",
       "printAreaGuide": "Print area",
-      "drinkwareWrapArea": "Full wrap",
-      "drinkwareFrontPreview": "Front preview",
-      "drinkwareWrapHint": "Your design can wrap around the full mug or thermos. The preview shows the front — scale your image wider to use the printable area around the cylinder.",
+      "drinkwareWrapArea": "Print area",
+      "drinkwareFrontPreview": "Front",
+      "drinkwareWrapHint": "Design on the flat print template — left and right edges meet at the handle. The 3D preview shows how your art wraps the mug body.",
       "previewModeLabel": "Preview mode",
       "previewModeFlat": "Flat",
       "previewMode3d": "3D",
       "preview3dLoading": "Building 3D preview…",
       "preview3dDragHint": "Drag to rotate · scroll to zoom",
       "preview3dEditHint": "Switch to Flat view to move and resize your design.",
+      "preview3dPaneTitle": "3D preview",
+      "drinkwareHandleHint": "Handle",
+      "drinkwareCenterOfMug": "Center of mug",
+      "splitResizeHandle": "Resize design and 3D preview",
       "imageSize": "Image size",
       "imagePosition": "Image position",
       "removePhoto": "Remove photo",
@@ -1951,7 +1959,14 @@
       "sidesPreviewLoading": "Preparing preview…",
       "sidesPreviewContinue": "Keep editing",
       "sidesPreviewHasDesign": "Designed",
-      "sidesPreviewBlank": "Blank"
+      "sidesPreviewBlank": "Blank",
+      "outOfPrintAreaNotice": "That layer was moved completely outside the print area, so we centered it back inside the print box.",
+      "uploadTermsTitle": "Before you upload",
+      "uploadTermsBody": "By uploading this design, you confirm that it complies with our Terms of Service and Intellectual Property Policy. You will indemnify and defend Print 8 against any claims related to alleged infringement of your design. All designs are subject to our review and may be removed at any time, without prior notice or liability to us.",
+      "uploadTermsLinkLabel": "Read our Terms of Service & Intellectual Property Policy",
+      "uploadTermsAccept": "I understand and accept these conditions.",
+      "uploadTermsCancel": "Cancel",
+      "uploadTermsContinue": "Accept & continue"
     }
   },
   "about": {

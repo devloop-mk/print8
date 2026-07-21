@@ -9,6 +9,7 @@ import {
 } from '@/lib/cms/public-content';
 import { getHomeTrendingProductDesigns } from '@/lib/cms/home-trending';
 import { getHomeShowcaseByCategory } from '@/lib/home/featured-home-products';
+import { getBrowsableProducts } from '@/lib/data/catalog';
 import { TrendingDesignsSection } from '@/components/home/TrendingDesignsSection';
 import { HomeShowcaseCarousel } from '@/components/home/HomeShowcaseCarousel';
 import { SectionHeader } from '@/components/ui/SectionHeader';
@@ -16,6 +17,7 @@ import { HomePromoBannerCarousel } from '@/components/home/HomePromoBannerCarous
 import { HeroFeatureBar } from '@/components/home/HeroFeatureBar';
 import { HomeHighlights } from '@/components/home/HomeHighlights';
 import { HomeHowItWorks } from '@/components/home/HomeHowItWorks';
+import { HomeCategoryGrid } from '@/components/home/HomeCategoryGrid';
 import { HomeProductShowcase } from '@/components/home/HomeProductShowcase';
 import { FeaturedDesignCards } from '@/components/home/FeaturedDesignCards';
 import { HomeCustomDesignCta } from '@/components/home/HomeCustomDesignCta';
@@ -68,6 +70,8 @@ export default async function HomePage({
       getHomeShowcaseByCategory(),
     ]);
 
+  const productCount = getBrowsableProducts().length;
+
   return (
     <>
       <section className="relative overflow-hidden border-b border-ink-200 bg-ink-950 text-white">
@@ -75,6 +79,10 @@ export default async function HomePage({
         <HomePromoBannerCarousel />
         <HeroFeatureBar />
       </section>
+
+      <Reveal delay={15}>
+        <HomeCategoryGrid productCount={productCount} />
+      </Reveal>
 
       <Reveal delay={20}>
         <HomeProductShowcase groups={productShowcase} />

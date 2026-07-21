@@ -7,6 +7,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
   type RefObject,
 } from 'react';
 import { flushSync } from 'react-dom';
@@ -56,6 +57,14 @@ import {
   getProductMockupLayout,
   isCylindricalDrinkwareType,
 } from '@/lib/products/product-mockup-layout';
+import {
+  DRINKWARE_FLAT_CANVAS_HEIGHT_PX,
+  getDrinkware3DConfig,
+  getDrinkwareFlatCanvasSize,
+} from '@/lib/products/drinkware-3d-config';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { DrinkwareDesignPreview3D } from '@/components/products/customizer/DrinkwareDesignPreview3D';
+import { captureDrinkware3DPreviews } from '@/components/products/customizer/Drinkware3DCapture';
 import {
   createSideDesignsForSides,
   getSideMetadataPrefix,
@@ -113,6 +122,7 @@ import {
   X,
   Save,
   Eye,
+  Rotate3d,
 } from 'lucide-react';
 
 import {
@@ -130,13 +140,12 @@ import { CustomizerShell } from '@/components/products/customizer/CustomizerShel
 import { CustomizerContextBar } from '@/components/products/customizer/CustomizerContextBar';
 import { CustomizerSidesPreviewModal } from '@/components/products/customizer/CustomizerSidesPreviewModal';
 import { PrintAreaGuideSwitch } from '@/components/products/customizer/PrintAreaGuideSwitch';
+import { OutOfPrintAreaToast } from '@/components/products/customizer/OutOfPrintAreaToast';
 import { DrinkwareWrapHint } from '@/components/products/customizer/DrinkwarePrintAreaGuide';
 import {
-  Drinkware3DPreviewLazy,
   DrinkwarePreviewModeToggle,
   type DrinkwarePreviewMode,
 } from '@/components/products/customizer/Drinkware3DPreviewLazy';
-import type { DrinkwareImageLayer } from '@/lib/products/build-drinkware-wrap-texture';
 import { UnsavedWorkDialog } from '@/components/shared/UnsavedWorkDialog';
 import { useDirtySnapshot } from '@/hooks/useDirtySnapshot';
 import { useUnsavedWorkGuard } from '@/hooks/useUnsavedWorkGuard';
@@ -147,13 +156,16 @@ import {
 import { dispatchDesignSaved } from '@/lib/drafts/draft-events';
 import { findProductCustomizerDraft } from '@/lib/drafts/ongoing-designs';
 import {
-  clampElementCenterToPrintArea,
   getMaxTextSizeForPrintArea,
+  getPrintAreaCenter,
+  getPrintAreaClipPath,
   getPrintAreaMaxScale,
   getPrintAreaPositionPresets,
   getPrintAreaWidthPercent,
+  isElementFullyOutsidePrintArea,
   type PrintAreaInsets,
 } from '@/lib/products/print-area';
+import { notifyMovedOutsidePrintArea } from '@/lib/products/print-area-events';
 import {
   getTshirtPrintAreaInsets,
   getTshirtUnitPrice,
@@ -163,6 +175,34 @@ import {
   type TshirtPrintPackage,
 } from '@/lib/products/tshirt-print-pricing';
 import { usePrintAreaMaxScale } from '@/lib/products/use-print-area-max-scale';
+
+/**
+ * If an element's bounding box has no overlap left with the print area,
+ * snap its center back to the print area center and let the user know.
+ * Called only at drag-end / resize-end — never mid-gesture — so users can
+ * freely move layers partially (or fully, temporarily) outside the dashed
+ * print box while dragging.
+ */
+function recenterIfFullyOutsidePrintArea({
+  element,
+  parent,
+  printBounds,
+  position,
+  onPositionChange,
+}: {
+  element: HTMLElement | null;
+  parent: HTMLElement | null;
+  printBounds?: PrintAreaInsets;
+  position: { x: number; y: number };
+  onPositionChange: (pos: { x: number; y: number }) => void;
+}) {
+  if (!printBounds) return;
+  if (!isElementFullyOutsidePrintArea(element, parent, printBounds, position)) {
+    return;
+  }
+  onPositionChange(getPrintAreaCenter(printBounds));
+  notifyMovedOutsidePrintArea();
+}
 
 function useDraggablePosition(
   position: { x: number; y: number },
@@ -197,23 +237,14 @@ function useDraggablePosition(
     const parentRect = parent.getBoundingClientRect();
     const currentX = (positionRef.current.x / 100) * parentRect.width;
     const currentY = (positionRef.current.y / 100) * parentRect.height;
+    // Only bounded by the canvas itself — the print area is enforced (with
+    // recovery) once the drag ends, not on every frame.
     const nextX = Math.min(Math.max(currentX + deltaX, 0), parentRect.width);
     const nextY = Math.min(Math.max(currentY + deltaY, 0), parentRect.height);
-    const nextPosition = printBounds
-      ? clampElementCenterToPrintArea(
-          measureRef?.current ?? elementRef.current,
-          parent,
-          printBounds,
-          {
-            x: (nextX / parentRect.width) * 100,
-            y: (nextY / parentRect.height) * 100,
-          },
-        )
-      : {
-          x: (nextX / parentRect.width) * 100,
-          y: (nextY / parentRect.height) * 100,
-        };
-    onChange(nextPosition);
+    onChange({
+      x: (nextX / parentRect.width) * 100,
+      y: (nextY / parentRect.height) * 100,
+    });
   };
 
   const endDrag = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -223,6 +254,13 @@ function useDraggablePosition(
       if (event.currentTarget.hasPointerCapture(event.pointerId)) {
         event.currentTarget.releasePointerCapture(event.pointerId);
       }
+      recenterIfFullyOutsidePrintArea({
+        element: measureRef?.current ?? elementRef.current,
+        parent: elementRef.current?.parentElement ?? null,
+        printBounds,
+        position: positionRef.current,
+        onPositionChange: onChange,
+      });
     }
   };
 
@@ -240,6 +278,7 @@ function useScaleResize(
   onScaleChange: (scale: number) => void,
   min = 15,
   max = 120,
+  onResizeEnd?: () => void,
 ) {
   const draggingRef = useRef(false);
   const startRef = useRef({ pointerX: 0, pointerY: 0, scale: 0 });
@@ -277,6 +316,7 @@ function useScaleResize(
       if (event.currentTarget.hasPointerCapture(event.pointerId)) {
         event.currentTarget.releasePointerCapture(event.pointerId);
       }
+      onResizeEnd?.();
     }
   };
 
@@ -407,28 +447,20 @@ function ResizableImageOverlay({
   const drag = useDraggablePosition(position, onPositionChange, printBounds);
   const resize = useScaleResize(
     scale,
-    (next) => {
-      const clamped = clampPhotoScale(next, maxScale);
-      onScaleChange(clamped);
-      if (!printBounds) return;
-      const parent = containerRef.current?.parentElement;
-      if (!parent) return;
-      const reclamped = clampElementCenterToPrintArea(
-        containerRef.current,
-        parent,
-        printBounds,
-        position,
-        { width: clamped, height: clamped },
-      );
-      if (
-        reclamped.x !== position.x ||
-        reclamped.y !== position.y
-      ) {
-        onPositionChange(reclamped);
-      }
-    },
+    (next) => onScaleChange(clampPhotoScale(next, maxScale)),
     PRODUCT_PHOTO_MIN_SCALE,
     maxScale ?? PRODUCT_PRINT_AREA_MAX_SCALE,
+    () => {
+      requestAnimationFrame(() => {
+        recenterIfFullyOutsidePrintArea({
+          element: containerRef.current,
+          parent: containerRef.current?.parentElement ?? null,
+          printBounds,
+          position,
+          onPositionChange,
+        });
+      });
+    },
   );
 
   return (
@@ -438,6 +470,7 @@ function ResizableImageOverlay({
         drag.ref.current = node;
       }}
       className="absolute cursor-grab active:cursor-grabbing pointer-events-auto"
+      data-customizer-selected-layer={selected ? '' : undefined}
       style={{
         left: `${position.x}%`,
         top: `${position.y}%`,
@@ -529,26 +562,23 @@ function ResizableStickerOverlay({
     onPositionChange,
     printBounds,
   );
-  const resize = useScaleResize(sticker.scale, (next) => {
-    const clamped = Math.min(52, Math.max(12, Math.round(next)));
-    onScaleChange(clamped);
-    if (!printBounds) return;
-    const parent = containerRef.current?.parentElement;
-    if (!parent) return;
-    const reclamped = clampElementCenterToPrintArea(
-      containerRef.current,
-      parent,
-      printBounds,
-      sticker.position,
-      { width: clamped, height: clamped },
-    );
-    if (
-      reclamped.x !== sticker.position.x ||
-      reclamped.y !== sticker.position.y
-    ) {
-      onPositionChange(reclamped);
-    }
-  }, 12, 52);
+  const resize = useScaleResize(
+    sticker.scale,
+    (next) => onScaleChange(Math.min(52, Math.max(12, Math.round(next)))),
+    12,
+    52,
+    () => {
+      requestAnimationFrame(() => {
+        recenterIfFullyOutsidePrintArea({
+          element: containerRef.current,
+          parent: containerRef.current?.parentElement ?? null,
+          printBounds,
+          position: sticker.position,
+          onPositionChange,
+        });
+      });
+    },
+  );
 
   if (!definition) return null;
 
@@ -559,6 +589,7 @@ function ResizableStickerOverlay({
         drag.ref.current = node;
       }}
       className="absolute cursor-grab active:cursor-grabbing pointer-events-auto"
+      data-customizer-selected-layer={selected ? '' : undefined}
       style={{
         left: `${sticker.position.x}%`,
         top: `${sticker.position.y}%`,
@@ -630,6 +661,8 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   const router = useRouter();
   const { addItem, updateItem, items: cartItems } = useCart();
   const { token, loading: uploadLoading, error: uploadError, refreshSession } = useUploadSession();
+  const isDrinkware = isCylindricalDrinkwareType(type);
+  const isDesktopSplitPreview = useMediaQuery('(min-width: 1280px)') && isDrinkware;
 
   const productId = searchParams.get('id');
   const designId = searchParams.get('design');
@@ -742,10 +775,13 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   );
   const [activePanel, setActivePanel] = useState<EditorPanel>('product');
   const [selectedElement, setSelectedElement] = useState<SelectedElement>(null);
+  const contextBarRef = useRef<HTMLDivElement>(null);
   const [canvasZoom, setCanvasZoom] = useState(100);
   const [sidesPreviewOpen, setSidesPreviewOpen] = useState(false);
 
   const previewRef = useRef<HTMLDivElement | null>(null);
+  /** Fixed unwrap height — parent CSS zoom must not affect 2D↔3D text mapping. */
+  const drinkwareCanvasHeightPx = DRINKWARE_FLAT_CANVAS_HEIGHT_PX;
   const designInitializedRef = useRef<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [cartLimitError, setCartLimitError] = useState<
@@ -776,6 +812,32 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   }, [product?.id, designId, editCartItemId, product]);
 
   const { isDirty, markClean } = useDirtySnapshot(serializedDraft, baselineReady);
+
+  useEffect(() => {
+    if (!selectedElement) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (contextBarRef.current?.contains(target)) return;
+
+      const selectedLayer = document.querySelector(
+        '[data-customizer-selected-layer]',
+      );
+      if (selectedLayer?.contains(target)) return;
+
+      setSelectedElement(null);
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown, {
+      capture: true,
+    });
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown, {
+        capture: true,
+      });
+    };
+  }, [selectedElement]);
 
   const saveDraft = useCallback(async () => {
     if (!product) return false;
@@ -1335,7 +1397,27 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     let captured: Partial<Record<ProductSide, string>> = {};
 
     try {
-      if (hasMultipleSides) {
+      if (isDrinkware) {
+        // Drinkware cart thumbnails show two 3D profile snapshots (left +
+        // right, ±90° Y from front) instead of the flat unwrap — closer to
+        // what the buyer will actually receive.
+        const drinkware3D = await captureDrinkware3DPreviews({
+          productType: type,
+          productColor: color,
+          sideDesign: currentDesign,
+          designTemplate: activeDesignTemplate,
+          textLayers: currentDesign.textLayers,
+          canvasHeightPx: drinkwareCanvasHeightPx,
+          printBounds: overlayPrintBounds ?? effectivePrintAreaInsets,
+        });
+        if (drinkware3D) {
+          captured.left = drinkware3D.left;
+          captured.right = drinkware3D.right;
+        } else {
+          const front = await capturePreview(previewRef);
+          if (front) captured.front = front;
+        }
+      } else if (hasMultipleSides) {
         captured = await captureAllSidePreviews();
       } else {
         const front = await capturePreview(previewRef);
@@ -1536,8 +1618,34 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       onRemoveSticker={removeSticker}
       removeStickerLabel={t('removeSticker')}
       printAreaOverride={isTshirt ? effectivePrintAreaInsets : undefined}
+      desktopSplitPreview={isDesktopSplitPreview}
+      drinkwareCanvasHeightPx={drinkwareCanvasHeightPx}
     />
   );
+
+  const drinkwareSidePreviewNode =
+    isDrinkware && isDesktopSplitPreview && !isCapturing ? (
+      <div className="flex h-full min-h-0 flex-col">
+        <div className="flex shrink-0 items-center gap-2 border-b border-ink-100 px-4 py-3">
+          <Rotate3d className="h-4 w-4 text-brand-600" aria-hidden />
+          <h2 className="text-sm font-semibold text-ink-900">
+            {t('preview3dPaneTitle')}
+          </h2>
+        </div>
+        <div className="relative min-h-0 flex-1 bg-[#f4f6f8]">
+          <DrinkwareDesignPreview3D
+            productType={type}
+            shirtColor={color}
+            sideDesign={currentDesign}
+            designTemplate={activeDesignTemplate}
+            printBounds={overlayPrintBounds ?? effectivePrintAreaInsets}
+            textLayers={currentDesign.textLayers}
+            variant="pane"
+            canvasHeightPx={drinkwareCanvasHeightPx}
+          />
+        </div>
+      </div>
+    ) : null;
 
   const panelNode = (
     <EditorPanelContent
@@ -1586,6 +1694,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
 
   return (
     <>
+      <OutOfPrintAreaToast />
       <CustomizerShell
       topBar={
         <div className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-ink-100 bg-white px-3 md:px-5">
@@ -1641,17 +1750,19 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         </div>
       }
       contextBar={
-        <CustomizerContextBar
-          selected={selectedElement}
-          currentDesign={currentDesign}
-          designTemplate={activeDesignTemplate}
-          shirtColor={color}
-          onUpdate={updateCurrentSide}
-          onUpdateTextLayer={updateTextLayer}
-          printTextSizeMax={printTextSizeMax}
-          onRemove={handleRemoveElement}
-          overlayMaxScale={imageMaxScale}
-        />
+        <div ref={contextBarRef}>
+          <CustomizerContextBar
+            selected={selectedElement}
+            currentDesign={currentDesign}
+            designTemplate={activeDesignTemplate}
+            shirtColor={color}
+            onUpdate={updateCurrentSide}
+            onUpdateTextLayer={updateTextLayer}
+            printTextSizeMax={printTextSizeMax}
+            onRemove={handleRemoveElement}
+            overlayMaxScale={imageMaxScale}
+          />
+        </div>
       }
       canvas={previewNode}
       panel={panelNode}
@@ -1668,6 +1779,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       onCopyDesign={canCopyDesignToOtherSide ? copyDesignToOtherSide : undefined}
       canvasZoom={canvasZoom}
       onZoomChange={setCanvasZoom}
+      sidePreview={drinkwareSidePreviewNode}
       mobileBottomBar={
         <div className="fixed inset-x-0 bottom-0 z-[55] border-t border-ink-200 bg-white/95 px-3 pt-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] shadow-[0_-4px_24px_rgba(15,23,42,0.08)] backdrop-blur md:hidden">
           {cartLimitError ? (
@@ -1910,19 +2022,15 @@ function ResizableTextOverlay({
     }
   }, [printBounds, size, text]);
 
-  const enforceInPrintArea = useCallback(
-    (nextPosition: { x: number; y: number }) => {
-      if (!printBounds) return nextPosition;
-      const parent = containerRef.current?.parentElement ?? null;
-      return clampElementCenterToPrintArea(
-        textContentRef.current ?? containerRef.current,
-        parent,
-        printBounds,
-        nextPosition,
-      );
-    },
-    [printBounds],
-  );
+  const recenterIfOutside = useCallback(() => {
+    recenterIfFullyOutsidePrintArea({
+      element: textContentRef.current ?? containerRef.current,
+      parent: containerRef.current?.parentElement ?? null,
+      printBounds,
+      position: positionRef.current,
+      onPositionChange: onPositionChangeRef.current,
+    });
+  }, [printBounds]);
 
   const drag = useDraggablePosition(
     position,
@@ -1931,15 +2039,12 @@ function ResizableTextOverlay({
     textContentRef,
   );
 
+  // Text reflow (typing, font/size changes) can push the box fully outside
+  // even without a drag — recover the same way, but never clamp partial
+  // overlap so the layer can still sit near/over the print area edge.
   useLayoutEffect(() => {
     if (!printBounds || !text.trim()) return;
-    const clamped = enforceInPrintArea(positionRef.current);
-    if (
-      Math.abs(clamped.x - positionRef.current.x) > 0.05 ||
-      Math.abs(clamped.y - positionRef.current.y) > 0.05
-    ) {
-      onPositionChangeRef.current(clamped);
-    }
+    recenterIfOutside();
   }, [
     text,
     size,
@@ -1949,7 +2054,7 @@ function ResizableTextOverlay({
     lineHeight,
     maxWidthPercent,
     printBounds,
-    enforceInPrintArea,
+    recenterIfOutside,
   ]);
 
   useLayoutEffect(() => {
@@ -1962,20 +2067,13 @@ function ResizableTextOverlay({
     (next: number) => {
       const clamped = Math.min(maxTextSize, Math.max(12, Math.round(next)));
       onSizeChangeRef.current(clamped);
-      requestAnimationFrame(() => {
-        const adjusted = enforceInPrintArea(positionRef.current);
-        if (
-          Math.abs(adjusted.x - positionRef.current.x) > 0.05 ||
-          Math.abs(adjusted.y - positionRef.current.y) > 0.05
-        ) {
-          onPositionChangeRef.current(adjusted);
-        }
-      });
     },
-    [enforceInPrintArea, maxTextSize],
+    [maxTextSize],
   );
 
-  const resize = useScaleResize(size, handleSizeChange, 12, maxTextSize);
+  const resize = useScaleResize(size, handleSizeChange, 12, maxTextSize, () => {
+    requestAnimationFrame(() => recenterIfOutside());
+  });
 
   return (
     <div
@@ -1984,6 +2082,7 @@ function ResizableTextOverlay({
         drag.ref.current = node;
       }}
       className="absolute cursor-grab select-none text-center leading-tight active:cursor-grabbing pointer-events-auto"
+      data-customizer-selected-layer={selected ? '' : undefined}
       style={{
         color,
         left: `${position.x}%`,
@@ -2072,6 +2171,8 @@ function InteractivePreview({
   imageMaxScale,
   printAreaOverride,
   compact = false,
+  desktopSplitPreview = false,
+  drinkwareCanvasHeightPx = DRINKWARE_FLAT_CANVAS_HEIGHT_PX,
 }: {
   mockupImage: string;
   sideDesign: SideDesign;
@@ -2108,6 +2209,9 @@ function InteractivePreview({
   onSelectElement: (element: SelectedElement) => void;
   imageMaxScale: number;
   printAreaOverride?: PrintAreaInsets;
+  /** Desktop viewport already shows a live 3D pane beside this canvas — keep the flat canvas active and skip the flat/3D toggle. */
+  desktopSplitPreview?: boolean;
+  drinkwareCanvasHeightPx?: number;
 }) {
   const t = useTranslations('products.customizer');
   const usesGarmentColorMockup =
@@ -2151,46 +2255,33 @@ function InteractivePreview({
     : getMockupImageDisplayStyle(product, shirtImage, 'customizer');
   const overlayPrintBounds = getOverlayPrintBounds(mockupLayout);
   const isDrinkware = isCylindricalDrinkwareType(productType);
+  const drinkwareHasHandle = isDrinkware && getDrinkware3DConfig(productType).hasHandle;
+  const drinkwareFlatSize = isDrinkware
+    ? getDrinkwareFlatCanvasSize(productType)
+    : null;
   const [previewMode, setPreviewMode] = useState<DrinkwarePreviewMode>('flat');
-  const overlayAssetUrl = useOverlayAssetUrl({
-    design: sideDesign,
-    template: designTemplate,
-    shirtColor,
-  });
-
-  const drinkwareImageLayers = useMemo((): DrinkwareImageLayer[] => {
-    const layers: DrinkwareImageLayer[] = [];
-    if (hasTemplateOverlay && overlayAssetUrl) {
-      layers.push({
-        src: overlayAssetUrl,
-        scale: sideDesign.uploadedImageScale,
-        position: sideDesign.uploadedImagePosition,
-      });
-    } else if (
-      sideDesign.uploadedFile?.isImage &&
-      sideDesign.uploadedFile.previewUrl
-    ) {
-      layers.push({
-        src: sideDesign.uploadedFile.previewUrl,
-        scale: sideDesign.uploadedImageScale,
-        position: sideDesign.uploadedImagePosition,
-      });
-    }
-    return layers;
-  }, [
-    hasTemplateOverlay,
-    overlayAssetUrl,
-    sideDesign.uploadedFile,
-    sideDesign.uploadedImageScale,
-    sideDesign.uploadedImagePosition,
-  ]);
 
   const show3dPreview =
-    isDrinkware && previewMode === '3d' && !isCapturing;
+    isDrinkware && previewMode === '3d' && !isCapturing && !desktopSplitPreview;
+  const showModeToggle = isDrinkware && !isCapturing && !desktopSplitPreview;
+  // Flat apparel mockups (t-shirt/hoodie/bodysuit/…) clip designs to the
+  // print-area rect so anything dragged/scaled past the dashed border
+  // doesn't render on the rest of the garment. Drinkware's flat unwrap has
+  // its own out-of-bounds rules (seam/handle gaps) and must stay unclipped.
+  const printAreaClipStyle: CSSProperties | undefined = isDrinkware
+    ? undefined
+    : { clipPath: getPrintAreaClipPath(mockupLayout.printArea) };
+
+  // Drinkware 2D editor is a flat unwrap template — never show the mug photo.
+  useEffect(() => {
+    if (isDrinkware) {
+      setMockupLoading(false);
+    }
+  }, [isDrinkware, shirtColor]);
 
   return (
     <div className="flex flex-col items-center gap-2">
-    {isDrinkware && !isCapturing ? (
+    {showModeToggle ? (
       <DrinkwarePreviewModeToggle
         mode={previewMode}
         onChange={setPreviewMode}
@@ -2198,13 +2289,20 @@ function InteractivePreview({
     ) : null}
 
     {show3dPreview ? (
-      <Drinkware3DPreviewLazy
-        productType={productType}
-        productColor={shirtColor}
-        printBounds={overlayPrintBounds}
-        images={drinkwareImageLayers}
-        textLayers={textLayers}
-      />
+      <div className="flex flex-col items-center gap-2">
+        <DrinkwareDesignPreview3D
+          productType={productType}
+          shirtColor={shirtColor}
+          sideDesign={sideDesign}
+          designTemplate={designTemplate}
+          printBounds={overlayPrintBounds}
+          textLayers={textLayers}
+          canvasHeightPx={drinkwareCanvasHeightPx}
+        />
+        <p className="max-w-[min(18rem,78vw)] text-center text-[11px] leading-snug text-ink-500 md:max-w-[min(28rem,46vh)]">
+          {t('preview3dEditHint')}
+        </p>
+      </div>
     ) : null}
 
     <div
@@ -2214,20 +2312,37 @@ function InteractivePreview({
         compact
           ? 'w-full max-w-[16rem] overflow-hidden bg-transparent shadow-none sm:max-w-[18rem]'
           : cn(
-              'w-[min(18rem,78vw)] bg-white shadow-[0_8px_40px_rgba(15,23,42,0.12)] md:w-[min(28rem,46vh)] lg:w-[min(32rem,52vh)] xl:w-[min(36rem,58vh)]',
+              isDrinkware
+                ? 'max-w-[min(48rem,94vw)] shadow-[0_8px_40px_rgba(15,23,42,0.08)]'
+                : 'w-[min(18rem,78vw)] bg-white shadow-[0_8px_40px_rgba(15,23,42,0.12)] md:w-[min(28rem,46vh)] lg:w-[min(32rem,52vh)] xl:w-[min(36rem,58vh)]',
               // Editor keeps overflow visible so zoomed mockups aren't clipped.
               productType === 't-shirt' ? 'overflow-visible' : 'overflow-hidden',
             ),
-        // Landscape unisex mockups fit a square canvas; portrait fits keep 3:4.
-        productType === 't-shirt' && product.fit === 'unisex'
-          ? 'aspect-square'
-          : 'aspect-[3/4]',
+        // Drinkware: fixed unwrap px size (1:1 with texture). Else aspect classes.
+        isDrinkware && drinkwareFlatSize
+          ? undefined
+          : productType === 't-shirt' && product.fit === 'unisex'
+            ? 'aspect-square'
+            : 'aspect-[3/4]',
         isCapturing && !compact && 'opacity-90',
         show3dPreview && 'hidden',
       )}
+      style={
+        isDrinkware && drinkwareFlatSize
+          ? {
+              // Visual size may shrink on narrow viewports; logical mapping
+              // always uses DRINKWARE_FLAT_CANVAS_HEIGHT_PX for 1:1 wrap sync.
+              width: compact
+                ? '100%'
+                : `min(${drinkwareFlatSize.width}px, 94vw)`,
+              aspectRatio: String(drinkwareFlatSize.aspect),
+              backgroundColor: shirtColor,
+            }
+          : undefined
+      }
       onPointerDown={() => onSelectElement(null)}
     >
-      {mockupLoading && !isCapturing ? (
+      {mockupLoading && !isCapturing && !isDrinkware ? (
         <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-white/75 backdrop-blur-sm">
           <LoadingIndicator label={t('previewLoading')} size="sm" />
         </div>
@@ -2236,15 +2351,24 @@ function InteractivePreview({
       <div
         data-mockup-inner
         className={cn(
-          mockupLayout.innerClass,
+          isDrinkware ? 'relative h-full w-full select-none' : mockupLayout.innerClass,
           'pointer-events-none',
           compact || productType !== 't-shirt'
             ? 'overflow-hidden'
             : 'overflow-visible',
         )}
       >
-        <div className="relative h-full w-full" style={shirtMockupStyle}>
-        {shirtImage ? (
+        <div
+          className="relative h-full w-full"
+          style={isDrinkware ? undefined : shirtMockupStyle}
+        >
+        {isDrinkware ? (
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{ backgroundColor: shirtColor }}
+            aria-hidden
+          />
+        ) : shirtImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             ref={mockupImgRef}
@@ -2269,9 +2393,13 @@ function InteractivePreview({
             label={t('printAreaGuide')}
             wrapLabel={t('drinkwareWrapArea')}
             frontLabel={t('drinkwareFrontPreview')}
+            showHandleHint={drinkwareHasHandle}
+            handleHintLabel={t('drinkwareHandleHint')}
+            centerLabel={t('drinkwareCenterOfMug')}
           />
         ) : null}
 
+        <div className="pointer-events-none absolute inset-0" style={printAreaClipStyle}>
         {hasTemplateOverlay ? (
           <ResizableDesignOverlay
             design={sideDesign}
@@ -2358,6 +2486,7 @@ function InteractivePreview({
             }
           />
         ))}
+        </div>
 
         {sideDesign.showPhotoGuide &&
           !sideDesign.uploadedFile?.previewUrl &&
@@ -2380,7 +2509,10 @@ function InteractivePreview({
         </div>
       </div>
     </div>
-    {!isCapturing && mockupLayout.wrapPrintArea && previewMode === 'flat' ? (
+    {!isCapturing &&
+    mockupLayout.wrapPrintArea &&
+    previewMode === 'flat' &&
+    !desktopSplitPreview ? (
       <DrinkwareWrapHint>{t('drinkwareWrapHint')}</DrinkwareWrapHint>
     ) : null}
     </div>

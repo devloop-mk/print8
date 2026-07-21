@@ -87,14 +87,6 @@ export function ProductPathChooser({
         >
           {t('title')}
         </h2>
-        <p
-          className={cn(
-            'mt-2 leading-relaxed text-ink-500',
-            isSidebar ? 'text-sm' : 'text-sm sm:text-base',
-          )}
-        >
-          {t('subtitle')}
-        </p>
       </div>
 
       <div

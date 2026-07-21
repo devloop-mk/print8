@@ -3,20 +3,18 @@
 import { useMemo, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import {
-  products,
-  getProductDesignTemplates,
-  isMagnetProduct,
-} from '@/lib/data/catalog';
+import { products, isMagnetProduct } from '@/lib/data/catalog';
 import { getProductOffering } from '@/lib/products/offering';
 import { getProductDisplayPrice } from '@/lib/products/tshirt-print-pricing';
 import { getColorSwatchDisplayHex } from '@/lib/products/product-color-labels';
-import { getProductPaths, PRODUCT_DESIGN_PREVIEW_LIMIT } from '@/lib/products/paths';
+import {
+  getProductPaths,
+  PRODUCT_OFFERING_PATHS,
+} from '@/lib/products/paths';
 import { formatPrice } from '@/lib/utils';
 import { Card } from '@/components/ui/Card';
 import { ProductImageCarousel } from '@/components/products/ProductImageCarousel';
 import { ProductPathChooser } from '@/components/products/ProductPathChooser';
-import { ProductDesignSection } from '@/components/products/ProductDesignSection';
 import { Reveal } from '@/components/motion/Reveal';
 import { ArrowLeft, Palette, Sparkles, Upload } from 'lucide-react';
 
@@ -40,32 +38,19 @@ export function ProductDetail({ productId }: { productId: string }) {
     [product],
   );
 
-  const premadeDesigns = useMemo(
-    () => (product ? getProductDesignTemplates(product) : []),
-    [product],
-  );
-
   if (!product || !offering) {
     return <p>{td('notFound')}</p>;
   }
 
   const paths = getProductPaths(product.id, product.type, { color, size });
+  const readyDesignsHref = `${PRODUCT_OFFERING_PATHS.readyDesigns}?type=${product.type}`;
   const productLabel = product.nameKey
     ? ti(product.nameKey)
     : tp(product.type);
   const isMagnet = isMagnetProduct(product);
 
-  function scrollToDesigns(sectionId: string) {
-    document.getElementById(sectionId)?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    });
-  }
-
-  const quickDesignSection = offering.hasPremade ? 'premade-designs' : null;
-
   return (
-    <div className="space-y-10 pb-24 lg:pb-0">
+    <div className="min-w-0 max-w-full space-y-10 pb-24 lg:pb-0">
       <Link
         href="/products"
         className="inline-flex items-center gap-2 text-sm font-medium text-ink-600 transition hover:text-brand-600"
@@ -74,9 +59,9 @@ export function ProductDetail({ productId }: { productId: string }) {
         {td('backToProducts')}
       </Link>
 
-      <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
-        <Reveal>
-          <Card className="flex flex-col items-center justify-center p-6">
+      <div className="grid min-w-0 gap-8 lg:grid-cols-2 lg:items-start">
+        <Reveal className="min-w-0">
+          <Card className="flex min-w-0 flex-col items-center justify-center overflow-x-clip p-6">
             <p className="mb-4 text-sm font-medium text-ink-500">
               {td('blankProduct')}
             </p>
@@ -91,7 +76,7 @@ export function ProductDetail({ productId }: { productId: string }) {
                 <label className="mb-2 block text-center text-sm font-medium text-ink-700">
                   {t('customizer.selectColor')}
                 </label>
-                <div className="flex justify-center gap-3">
+                <div className="flex flex-wrap justify-center gap-3">
                   {product.colors.map((c) => (
                     <button
                       key={c}
@@ -136,8 +121,8 @@ export function ProductDetail({ productId }: { productId: string }) {
           </Card>
         </Reveal>
 
-        <Reveal delay={100}>
-          <div className="flex flex-col gap-6 lg:min-h-full">
+        <Reveal delay={100} className="min-w-0">
+          <div className="flex min-w-0 flex-col gap-6 lg:min-h-full">
             <div>
               <h1 className="text-3xl font-bold text-ink-900">
                 {productLabel}
@@ -176,27 +161,6 @@ export function ProductDetail({ productId }: { productId: string }) {
         </Reveal>
       </div>
 
-      {!isMagnet && offering.hasPremade ? (
-        <Reveal>
-          <ProductDesignSection
-            id="premade-designs"
-            icon={<Sparkles className="h-6 w-6 text-brand-600" />}
-            title={td('premadeDesigns')}
-            hint={td('premadeDesignsHint')}
-            product={product}
-            size={size}
-            designs={premadeDesigns}
-            limit={PRODUCT_DESIGN_PREVIEW_LIMIT}
-            seeAllHref={
-              premadeDesigns.length > PRODUCT_DESIGN_PREVIEW_LIMIT
-                ? paths.premadeDesigns
-                : undefined
-            }
-            seeAllLabel={td('seeAllPremadeDesigns')}
-          />
-        </Reveal>
-      ) : null}
-
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-ink-200 bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
         <div className="mx-auto max-w-lg">
           {isMagnet ? (
@@ -207,16 +171,15 @@ export function ProductDetail({ productId }: { productId: string }) {
               <Upload className="h-5 w-5" aria-hidden />
               {td('magnetUploadCta')}
             </Link>
-          ) : offering.hasPremade && quickDesignSection ? (
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => scrollToDesigns(quickDesignSection)}
-                className="inline-flex min-h-[3rem] items-center justify-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2.5 text-sm font-medium text-white transition hover:bg-brand-700"
+          ) : offering.hasPremade ? (
+            <div className="grid min-w-0 grid-cols-2 gap-2">
+              <Link
+                href={readyDesignsHref}
+                className="inline-flex min-h-[3rem] min-w-0 items-center justify-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2.5 text-sm font-medium text-white transition hover:bg-brand-700"
               >
                 <Sparkles className="h-4 w-4 shrink-0" aria-hidden />
-                {td('mobileQuickOrder')}
-              </button>
+                <span className="truncate">{td('mobileQuickOrder')}</span>
+              </Link>
               <Link
                 href={paths.custom}
                 className="inline-flex min-h-[3rem] items-center justify-center gap-1.5 rounded-lg border border-ink-200 bg-white px-3 py-2.5 text-sm font-medium text-ink-800 transition hover:bg-ink-50"

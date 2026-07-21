@@ -15,12 +15,15 @@ export function useDrinkwareWrapTexture({
   printBounds,
   images,
   textLayers,
+  canvasHeightPx,
 }: {
   productType: ProductType;
   productColor: string;
   printBounds: PrintAreaInsets;
   images: DrinkwareImageLayer[];
   textLayers: PlacedTextLayer[];
+  /** Measured flat-editor height so text px maps 1:1 into the wrap texture. */
+  canvasHeightPx?: number;
 }) {
   const [textureCanvas, setTextureCanvas] = useState<HTMLCanvasElement | null>(
     null,
@@ -43,7 +46,7 @@ export function useDrinkwareWrapTexture({
       textLayers
         .map(
           (layer) =>
-            `${layer.instanceId}|${layer.text}|${layer.size}|${layer.color}|${layer.position.x}|${layer.position.y}`,
+            `${layer.instanceId}|${layer.text}|${layer.size}|${layer.color}|${layer.position.x}|${layer.position.y}|${layer.fontFamily}|${layer.fontWeight}`,
         )
         .join(';'),
     [textLayers],
@@ -59,6 +62,7 @@ export function useDrinkwareWrapTexture({
       printBounds,
       images,
       textLayers,
+      canvasHeightPx,
     })
       .then((canvas) => {
         if (!cancelled) {
@@ -76,7 +80,16 @@ export function useDrinkwareWrapTexture({
     return () => {
       cancelled = true;
     };
-  }, [productType, productColor, printBounds, imageKey, textKey, images, textLayers]);
+  }, [
+    productType,
+    productColor,
+    printBounds,
+    imageKey,
+    textKey,
+    images,
+    textLayers,
+    canvasHeightPx,
+  ]);
 
   return { textureCanvas, loading };
 }

@@ -66,44 +66,6 @@ type CatalogFilterLayoutProps = {
   children: ReactNode;
 };
 
-function DebouncedCatalogSearch({
-  searchQuery = '',
-  onSearchChange,
-  placeholder,
-  ariaLabel,
-  clearLabel,
-}: {
-  searchQuery?: string;
-  onSearchChange: (value: string) => void;
-  placeholder: string;
-  ariaLabel: string;
-  clearLabel: string;
-}) {
-  const [draft, setDraft] = useState(searchQuery);
-  const debouncedDraft = useDebouncedValue(draft, 300);
-  const onSearchChangeRef = useRef(onSearchChange);
-  onSearchChangeRef.current = onSearchChange;
-
-  useEffect(() => {
-    setDraft(searchQuery);
-  }, [searchQuery]);
-
-  useEffect(() => {
-    if (debouncedDraft === searchQuery) return;
-    onSearchChangeRef.current(debouncedDraft);
-  }, [debouncedDraft, searchQuery]);
-
-  return (
-    <CatalogSearchField
-      value={draft}
-      onChange={setDraft}
-      placeholder={placeholder}
-      ariaLabel={ariaLabel}
-      clearLabel={clearLabel}
-    />
-  );
-}
-
 function SidebarOptionButton({
   label,
   selected,
@@ -253,13 +215,24 @@ function MobileFilterPanel({
   hideFiltersLabel,
   resultsLabel,
   resultsCount,
-  searchQuery,
+  searchDraft,
   searchPlaceholder,
   searchAriaLabel,
   searchClearLabel,
-  onSearchChange,
+  onSearchDraftChange,
   onFilterSelect,
-}: Omit<CatalogFilterLayoutProps, 'children'> & {
+}: {
+  groups: CatalogFilterGroup[];
+  ariaLabel: string;
+  showFiltersLabel: string;
+  hideFiltersLabel: string;
+  resultsLabel?: (count: number) => string;
+  resultsCount?: number;
+  searchDraft?: string;
+  searchPlaceholder?: string;
+  searchAriaLabel?: string;
+  searchClearLabel?: string;
+  onSearchDraftChange?: (value: string) => void;
   onFilterSelect?: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -283,16 +256,16 @@ function MobileFilterPanel({
       : null;
 
   const showSearch = Boolean(
-    onSearchChange && searchPlaceholder && searchAriaLabel && searchClearLabel,
+    onSearchDraftChange && searchPlaceholder && searchAriaLabel && searchClearLabel,
   );
 
   return (
     <div className="w-full min-w-0 max-w-full overflow-hidden border border-ink-200 bg-white shadow-lift">
       {showSearch ? (
         <div className="border-b border-ink-100 px-4 py-3">
-          <DebouncedCatalogSearch
-            searchQuery={searchQuery}
-            onSearchChange={onSearchChange!}
+          <CatalogSearchField
+            value={searchDraft ?? ''}
+            onChange={onSearchDraftChange!}
             placeholder={searchPlaceholder!}
             ariaLabel={searchAriaLabel!}
             clearLabel={searchClearLabel!}
@@ -378,6 +351,27 @@ export function CatalogFilterLayout({
 }: CatalogFilterLayoutProps) {
   const resultsRef = useRef<HTMLDivElement>(null);
 
+  // Single owner of the search draft + debounce for both the desktop sidebar and the
+  // mobile panel fields below. They are both rendered as plain controlled inputs bound
+  // to this one piece of state — neither owns its own debounce effect — so there is
+  // exactly one effect anywhere that can ever call onSearchChange.
+  const [draft, setDraft] = useState(searchQuery ?? '');
+  const debouncedDraft = useDebouncedValue(draft, 300);
+  const onSearchChangeRef = useRef(onSearchChange);
+  onSearchChangeRef.current = onSearchChange;
+
+  // Sync external query changes (e.g. cleared elsewhere) without clobbering in-progress typing.
+  useEffect(() => {
+    const external = searchQuery ?? '';
+    setDraft((current) => (current === external ? current : external));
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const external = searchQuery ?? '';
+    if (debouncedDraft === external) return;
+    onSearchChangeRef.current?.(debouncedDraft);
+  }, [debouncedDraft, searchQuery]);
+
   const scrollToResults = useCallback(() => {
     resultsRef.current?.scrollIntoView({
       behavior: 'smooth',
@@ -408,9 +402,9 @@ export function CatalogFilterLayout({
           </div>
 
           {showSearch ? (
-            <DebouncedCatalogSearch
-              searchQuery={searchQuery}
-              onSearchChange={onSearchChange!}
+            <CatalogSearchField
+              value={draft}
+              onChange={setDraft}
               placeholder={searchPlaceholder!}
               ariaLabel={searchAriaLabel!}
               clearLabel={searchClearLabel!}
@@ -442,11 +436,11 @@ export function CatalogFilterLayout({
             hideFiltersLabel={hideFiltersLabel}
             resultsCount={resultsCount}
             resultsLabel={resultsLabel}
-            searchQuery={searchQuery}
+            searchDraft={draft}
             searchPlaceholder={searchPlaceholder}
             searchAriaLabel={searchAriaLabel}
             searchClearLabel={searchClearLabel}
-            onSearchChange={onSearchChange}
+            onSearchDraftChange={setDraft}
             onFilterSelect={scrollToResults}
           />
         </div>
