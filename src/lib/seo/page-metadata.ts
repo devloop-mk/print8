@@ -17,8 +17,12 @@ import {
   resolveDesignTemplate,
 } from '@/lib/catalog/design-catalog';
 import type { ProductNavCategoryId } from '@/lib/products/product-nav';
-import { buildDesignOgImageUrl, buildOgImageUrl, buildPageMetadata } from '@/lib/seo/metadata';
-import { toAbsoluteAssetUrl } from '@/lib/seo/site';
+import {
+  buildDesignOgImageUrl,
+  resolveCouplePackOgPanels,
+  resolveDesignOgPanels,
+} from '@/lib/seo/design-og';
+import { buildOgImageUrl, buildPageMetadata } from '@/lib/seo/metadata';
 import { resolveAssetUrl } from '@/lib/storage/asset-url';
 import { getDesignGalleryImage } from '@/lib/designs/design-thumb';
 import { getCouplePackTemplate, getCouplePackPartnerDesign } from '@/lib/data/couple-pack';
@@ -341,6 +345,7 @@ export async function buildDesignProductMetadata(
   locale: Locale,
   designId: string,
   designOverride?: ProductDesignTemplate | null,
+  preferredType?: ProductType,
 ) {
   const coupleMatch = getCouplePackPartnerDesign(designId);
   const design =
@@ -358,29 +363,17 @@ export async function buildDesignProductMetadata(
   );
   const title = `${designName} | Print 8`;
   const description = tdp('metaDescription', { name: designName });
-  const frontImage = design.overlayImage ?? design.image;
-  const backImage = design.backOverlay?.overlayImage;
 
-  let image: string | undefined;
-  if (coupleMatch) {
-    // Couple partner design: og:image shows BOTH partner designs together.
-    const partnerImages = coupleMatch.pack.partnerDesigns.map((partner) =>
-      resolveAssetUrl(partner.overlayImage),
-    );
-    image = buildDesignOgImageUrl(partnerImages);
-  } else if (backImage) {
-    // Dual-sided design: og:image shows front + back side by side.
-    image = buildDesignOgImageUrl(
-      [frontImage, backImage]
-        .filter((value): value is string => Boolean(value))
-        .map((value) => resolveAssetUrl(value)),
-    );
-  } else if (frontImage) {
-    // Single-side design: link the raster mockup/artwork directly — social
-    // crawlers handle a plain jpg/png/webp far more reliably than a
-    // dynamically rendered `/api/og` URL.
-    image = toAbsoluteAssetUrl(resolveAssetUrl(frontImage));
-  }
+  // Prefer garment/product + design composition (same idea as the PDP mockup),
+  // never bare overlay artwork alone. Respects `?type=` when valid for the design.
+  const panels = coupleMatch
+    ? resolveCouplePackOgPanels(coupleMatch.pack, preferredType)
+    : resolveDesignOgPanels(design, preferredType);
+
+  const image =
+    panels.length > 0
+      ? buildDesignOgImageUrl(panels)
+      : undefined;
 
   const fallbackImage = products[0]?.image
     ? resolveAssetUrl(products[0].image)
@@ -403,7 +396,11 @@ export async function buildDesignProductMetadata(
   });
 }
 
-export async function buildCouplePackMetadata(locale: Locale, packId: string) {
+export async function buildCouplePackMetadata(
+  locale: Locale,
+  packId: string,
+  preferredType?: ProductType,
+) {
   const pack = getCouplePackTemplate(packId);
   if (!pack) return null;
 
@@ -415,16 +412,16 @@ export async function buildCouplePackMetadata(locale: Locale, packId: string) {
     name: locale === 'mk' ? pack.titleMk : pack.titleEn,
   });
 
-  // Couple pack: og:image shows BOTH partner designs side by side.
-  const partnerImages = pack.partnerDesigns.map((partner) =>
-    resolveAssetUrl(partner.overlayImage),
-  );
+  const panels = resolveCouplePackOgPanels(pack, preferredType);
 
   return buildPageMetadata({
     locale,
     title,
     description,
     path: `/products/design/couple/${packId}`,
-    image: buildDesignOgImageUrl(partnerImages),
+    image:
+      panels.length > 0
+        ? buildDesignOgImageUrl(panels)
+        : undefined,
   });
 }

@@ -77,6 +77,7 @@ const COLLECTION_LABELS: Record<string, { en: string; mk: string }> = {
   'kids-birthday': { en: 'Kids & birthday', mk: 'Деца и роденден' },
   'local-mk': { en: 'Local designs', mk: 'Локални дизајни' },
   'caps-local': { en: 'Caps', mk: 'Капи' },
+  'bags-local': { en: 'Bags', mk: 'Торби' },
   drinkware: { en: 'Drinkware', mk: 'Шолји' },
   'family-gifts': { en: 'Family gifts', mk: 'Семејни подароци' },
 };
@@ -144,36 +145,6 @@ export function ProductDesignsCatalog({
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   }
 
-  const collectionOptions = useMemo(() => {
-    const collections = new Set<string>();
-    for (const entry of allEntries) {
-      if (entry.design.collection) collections.add(entry.design.collection);
-    }
-    return [...collections]
-      .map((value) => ({
-        value,
-        label:
-          locale === 'mk'
-            ? (COLLECTION_LABELS[value]?.mk ?? value)
-            : (COLLECTION_LABELS[value]?.en ?? value),
-      }))
-      .sort((a, b) => a.label.localeCompare(b.label));
-  }, [allEntries, locale]);
-
-  const { allOption, options: typeOptions } = useMemo(() => {
-    const built = buildProductTypeFilterOptions((type) =>
-      type === 'all' ? t('allTypes') : t(`typesPlural.${type}`),
-    );
-
-    if (categoryFilter === 'all') return built;
-
-    const allowed = new Set(getProductNavCategory(categoryFilter).types);
-    return {
-      allOption: built.allOption,
-      options: built.options.filter((option) => allowed.has(option.value)),
-    };
-  }, [categoryFilter, t]);
-
   const availableColors = useMemo(
     () => getCatalogColors(allEntries),
     [allEntries],
@@ -186,6 +157,148 @@ export function ProductDesignsCatalog({
       ),
     );
   }, []);
+
+  /** Designs matching the active product-type (+ search) — drives collection facet options. */
+  const entriesForCollectionOptions = useMemo(() => {
+    const byType = filterDesignCatalogEntries(allEntries, {
+      type: typeFilter,
+      color: 'all',
+    }).filter((entry) => !couplePackPartnerIds.has(entry.design.id));
+
+    if (!searchQuery.trim()) return byType;
+
+    return filterProductDesignEntriesBySearchQuery(
+      byType,
+      searchQuery,
+      searchLabels,
+    );
+  }, [
+    allEntries,
+    couplePackPartnerIds,
+    searchLabels,
+    searchQuery,
+    typeFilter,
+  ]);
+
+  const collectionOptions = useMemo(() => {
+    const collections = new Set<string>();
+    for (const entry of entriesForCollectionOptions) {
+      if (entry.design.collection) collections.add(entry.design.collection);
+    }
+
+    // Couple packs are listed separately — include their collection when any pack matches.
+    let packs = getCouplePackTemplates();
+    if (categoryFilter !== 'all') {
+      packs = packs.filter((pack) =>
+        pack.productTypes.some((type) =>
+          productBelongsToCategory({ type }, categoryFilter),
+        ),
+      );
+    }
+    if (typeFilter !== 'all') {
+      packs = packs.filter((pack) => pack.productTypes.includes(typeFilter));
+    }
+    const query = searchQuery.trim().toLowerCase();
+    if (query) {
+      packs = packs.filter((pack) => {
+        const haystack = `${pack.titleEn} ${pack.titleMk} ${pack.partnerDesigns
+          .map((partner) => `${partner.labelEn} ${partner.labelMk}`)
+          .join(' ')}`.toLowerCase();
+        return haystack.includes(query);
+      });
+    }
+    if (packs.length > 0) {
+      collections.add(COUPLES_DESIGN_COLLECTION);
+    }
+
+    return [...collections]
+      .map((value) => ({
+        value,
+        label:
+          locale === 'mk'
+            ? (COLLECTION_LABELS[value]?.mk ?? value)
+            : (COLLECTION_LABELS[value]?.en ?? value),
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [
+    categoryFilter,
+    entriesForCollectionOptions,
+    locale,
+    searchQuery,
+    typeFilter,
+  ]);
+
+  const { allOption, options: typeOptions } = useMemo(() => {
+    const built = buildProductTypeFilterOptions((type) =>
+      type === 'all' ? t('allTypes') : t(`typesPlural.${type}`),
+    );
+
+    let options = built.options;
+    if (categoryFilter !== 'all') {
+      const allowed = new Set(getProductNavCategory(categoryFilter).types);
+      options = options.filter((option) => allowed.has(option.value));
+    }
+
+    // Narrow product types to those present in the selected collection.
+    if (collectionFilter !== 'all') {
+      const typesInCollection = new Set<ProductType>();
+      for (const entry of allEntries) {
+        if (couplePackPartnerIds.has(entry.design.id)) continue;
+        if (entry.design.collection !== collectionFilter) continue;
+        for (const product of entry.products) {
+          typesInCollection.add(product.type);
+        }
+      }
+      if (collectionFilter === COUPLES_DESIGN_COLLECTION) {
+        for (const pack of getCouplePackTemplates()) {
+          if (
+            categoryFilter !== 'all' &&
+            !pack.productTypes.some((type) =>
+              productBelongsToCategory({ type }, categoryFilter),
+            )
+          ) {
+            continue;
+          }
+          for (const type of pack.productTypes) {
+            typesInCollection.add(type);
+          }
+        }
+      }
+      options = options.filter((option) => typesInCollection.has(option.value));
+    }
+
+    return {
+      allOption: built.allOption,
+      options,
+    };
+  }, [allEntries, categoryFilter, collectionFilter, couplePackPartnerIds, t]);
+
+  // Drop a collection that no longer has designs for the current type/search.
+  useEffect(() => {
+    if (collectionFilter === 'all') return;
+    if (collectionOptions.some((option) => option.value === collectionFilter)) {
+      return;
+    }
+    setCollectionFilter('all');
+    const params = new URLSearchParams(searchParams.toString());
+    if (!params.has('collection')) return;
+    params.delete('collection');
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [
+    collectionFilter,
+    collectionOptions,
+    pathname,
+    router,
+    searchParams,
+  ]);
+
+  // Drop a product type that is not present in the selected collection.
+  useEffect(() => {
+    if (typeFilter === 'all') return;
+    if (typeOptions.some((option) => option.value === typeFilter)) return;
+    setTypeFilter('all');
+  }, [typeFilter, typeOptions]);
 
   const filteredByAttributes = useMemo(
     () =>
@@ -218,6 +331,16 @@ export function ProductDesignsCatalog({
       return [] as CouplePackTemplate[];
     }
 
+    // Nav category (e.g. bags) must exclude tee couple packs — they only
+    // honor type/collection filters today, so category=bags leaked them in.
+    if (categoryFilter !== 'all') {
+      packs = packs.filter((pack) =>
+        pack.productTypes.some((type) =>
+          productBelongsToCategory({ type }, categoryFilter),
+        ),
+      );
+    }
+
     if (typeFilter !== 'all') {
       packs = packs.filter((pack) => pack.productTypes.includes(typeFilter));
     }
@@ -245,7 +368,7 @@ export function ProductDesignsCatalog({
         .join(' ')}`.toLowerCase();
       return haystack.includes(query);
     });
-  }, [collectionFilter, typeFilter, colorFilter, searchQuery]);
+  }, [categoryFilter, collectionFilter, typeFilter, colorFilter, searchQuery]);
 
   const filtered = useMemo(
     () =>

@@ -1,6 +1,11 @@
 import type { ProductNavCategoryId } from '@/lib/products/product-nav';
+import type { OverlayPlacement } from '@/lib/products/design-overlay';
 
 export type CategoryPathId = 'custom' | 'photo' | 'template';
+
+export type CategoryPathDesignOverlay = OverlayPlacement & {
+  src: string;
+};
 
 export type CategoryPathImage = {
   src: string;
@@ -10,6 +15,8 @@ export type CategoryPathImage = {
   accent: string;
   badgeClass: string;
   ringClass: string;
+  /** Optional artwork layered on the blank product (ready-designs card). */
+  designOverlay?: CategoryPathDesignOverlay;
 };
 
 const categoryPathImages: Record<
@@ -72,12 +79,19 @@ const categoryPathImages: Record<
       ringClass: 'border-brand-200 ring-brand-100',
     },
     photo: {
+      // Blank tote + design overlay (same pattern as HomeCategoryGrid bags tile).
       src: '/bags/bag-beige.jpg',
-      objectFit: 'cover',
+      objectFit: 'contain',
       objectPosition: 'center',
+      imageBg: 'bg-ink-50',
       accent: 'from-violet-800/85',
       badgeClass: 'bg-violet-700/90',
       ringClass: 'border-violet-200 ring-violet-100',
+      designOverlay: {
+        src: '/NEW_DESIGNS/bags/tote-skopje-line.png',
+        position: { x: 50, y: 54 },
+        scale: 26,
+      },
     },
   },
   gifts: {

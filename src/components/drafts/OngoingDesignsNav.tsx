@@ -282,7 +282,7 @@ export function OngoingDesignsNav({
         <>
           <div
             role="status"
-            className="fixed inset-x-3 top-[calc(3.25rem+2px)] z-[70] sm:inset-x-4 md:hidden"
+            className="fixed inset-x-3 top-[calc(3.25rem+2px)] z-[70] sm:inset-x-4 lg:hidden"
           >
             <SaveDesignHint
               message={t('saveHint')}
@@ -294,7 +294,7 @@ export function OngoingDesignsNav({
 
           <div
             role="status"
-            className="absolute left-1/2 top-full z-[70] mt-2.5 hidden w-[min(calc(100vw-2rem),17rem)] -translate-x-1/2 md:block"
+            className="absolute left-1/2 top-full z-[70] mt-2.5 hidden w-[min(calc(100vw-2rem),17rem)] -translate-x-1/2 lg:block"
           >
             <SaveDesignHint
               message={t('saveHint')}
@@ -311,8 +311,8 @@ export function OngoingDesignsNav({
           id={panelId}
           className={cn(
             'z-[60] mt-2 w-[min(100vw-2rem,22rem)]',
-            'max-md:fixed max-md:inset-x-4 max-md:top-[4.25rem] max-md:mt-0 max-md:w-auto',
-            'md:absolute md:right-0 md:top-full',
+            'max-lg:fixed max-lg:inset-x-4 max-lg:top-[4.25rem] max-lg:mt-0 max-lg:w-auto',
+            'lg:absolute lg:right-0 lg:top-full',
           )}
         >
           <div className="overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-xl">

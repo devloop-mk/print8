@@ -34,12 +34,13 @@ import { getProductSpecs } from '@/lib/products/product-specs';
 import { cn, formatPrice } from '@/lib/utils';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { ArchiveBackLink } from '@/components/products/ArchiveBackLink';
 import { DesignTemplatePreview } from '@/components/products/DesignTemplatePreview';
 import { DesignColorPicker } from '@/components/products/DesignColorPicker';
 import { GarmentFitSelector } from '@/components/products/GarmentFitSelector';
 import { useCart } from '@/components/cart/CartProvider';
 import { Reveal } from '@/components/motion/Reveal';
-import { ArrowLeft, Leaf, Palette, ShoppingCart, Sparkles } from 'lucide-react';
+import { Leaf, Palette, ShoppingCart, Sparkles } from 'lucide-react';
 
 export function ProductDesignDetail({
   designId,
@@ -211,15 +212,16 @@ export function ProductDesignDetail({
     }
   }
 
+  const backType = preferredProductType ?? product.type;
+  const readyDesignsBackHref = `${PRODUCT_OFFERING_PATHS.readyDesigns}?type=${backType}`;
+
   return (
     <div className="space-y-10 pb-24 lg:pb-0">
-      <Link
-        href={PRODUCT_OFFERING_PATHS.readyDesigns}
-        className="inline-flex items-center gap-2 text-sm font-medium text-ink-600 transition hover:text-brand-600"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {tdp('backToReadyDesigns')}
-      </Link>
+      <ArchiveBackLink
+        fallbackHref={readyDesignsBackHref}
+        label={tdp('backToReadyDesigns')}
+        className="hover:text-brand-600"
+      />
 
       <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
         <Reveal>

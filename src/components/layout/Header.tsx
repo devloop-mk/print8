@@ -63,7 +63,7 @@ export function Header() {
     <>
       <header className="sticky top-0 z-50 border-b-2 border-ink-200 bg-white/95 backdrop-blur-md">
         <div
-          className="hidden h-1 w-full bg-gradient-to-r from-brand-500 via-brand-700 to-ink-900 md:block"
+          className="hidden h-1 w-full bg-gradient-to-r from-brand-500 via-brand-700 to-ink-900 lg:block"
           aria-hidden
         />
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 md:py-3.5 lg:px-8">
@@ -71,7 +71,7 @@ export function Header() {
             <Logo priority className="h-7 md:h-10" />
           </Link>
 
-          <nav className="hidden items-stretch gap-0.5 md:flex">
+          <nav className="hidden items-stretch gap-0.5 lg:flex">
             {navItems.map((item) => {
               if (item.key === "products") {
                 return <ProductsNavDropdown key={item.key} />;
@@ -106,7 +106,7 @@ export function Header() {
           <div className="flex items-center gap-1 sm:gap-2">
             <GlobalSearchButton onClick={() => setSearchOpen(true)} />
 
-            <div className="hidden md:block">
+            <div className="hidden lg:block">
               <LanguageSwitcher />
             </div>
 
@@ -126,7 +126,7 @@ export function Header() {
 
             <button
               type="button"
-              className="border-2 border-transparent p-2 text-ink-600 transition hover:border-ink-200 hover:bg-ink-50 md:hidden"
+              className="border-2 border-transparent p-2 text-ink-600 transition hover:border-ink-200 hover:bg-ink-50 lg:hidden"
               onClick={openMenu}
               aria-label={t('openMenu')}
               aria-expanded={mobileOpen}

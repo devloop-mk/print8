@@ -50,8 +50,14 @@ export async function PATCH(
       return NextResponse.json({ error: 'Invalid update data' }, { status: 400 });
     }
 
+    // Editor always sends the full template. Empty strings intentionally clear
+    // fields (e.g. overlayImage) so managed overrides can blank static art.
     const template = parsed.data.template
-      ? ({ ...existing.template, ...parsed.data.template } as ProductDesignTemplate)
+      ? ({
+          ...existing.template,
+          ...parsed.data.template,
+          id,
+        } as ProductDesignTemplate)
       : existing.template;
 
     const design = await saveAdminProductDesign({
@@ -79,8 +85,27 @@ export async function DELETE(
   const { id } = await context.params;
 
   try {
+    const existing = await resolveAdminProductDesign(id);
+    if (!existing) {
+      return NextResponse.json({ error: 'Design not found' }, { status: 404 });
+    }
+
+    if (!existing.managed) {
+      return NextResponse.json(
+        {
+          error:
+            'Нема запис во база за бришење. Дизајните од кодот може само да се скријат (active=false).',
+          code: 'STATIC_ONLY',
+        },
+        { status: 400 },
+      );
+    }
+
     await deleteAdminProductDesign(id);
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({
+      ok: true,
+      mode: existing.staticTemplate ? 'reset-override' : 'hard-delete',
+    });
   } catch (err) {
     const message =
       err instanceof Error ? err.message : 'Failed to delete product design';

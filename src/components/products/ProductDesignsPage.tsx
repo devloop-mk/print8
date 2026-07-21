@@ -47,6 +47,7 @@ const COLLECTION_LABELS: Record<string, { en: string; mk: string }> = {
   'kids-birthday': { en: 'Kids & birthday', mk: 'Деца и роденден' },
   'local-mk': { en: 'Local designs', mk: 'Локални дизајни' },
   'caps-local': { en: 'Caps', mk: 'Капи' },
+  'bags-local': { en: 'Bags', mk: 'Торби' },
   drinkware: { en: 'Drinkware', mk: 'Шолји' },
   'family-gifts': { en: 'Family gifts', mk: 'Семејни подароци' },
 };

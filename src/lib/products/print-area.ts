@@ -110,7 +110,7 @@ export const THERMOS_WRAP_PRINT_AREA_INSETS: PrintAreaInsets = {
 
 /** Cap front panel. */
 export const CAP_PRINT_AREA_INSETS: PrintAreaInsets = {
-  top: 24,
+  top: 16,
   right: 24,
   bottom: 37,
   left: 24,

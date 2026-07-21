@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Link, useRouter } from '@/i18n/navigation';
+import { useRouter } from '@/i18n/navigation';
 import {
   getCouplePackTemplate,
   partnerDesignToTemplate,
@@ -23,11 +23,12 @@ import { useMergedProductDesignTemplate } from '@/lib/products/use-merged-produc
 import { formatPrice } from '@/lib/utils';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { ArchiveBackLink } from '@/components/products/ArchiveBackLink';
 import { DesignTemplatePreview } from '@/components/products/DesignTemplatePreview';
 import { DesignColorPicker } from '@/components/products/DesignColorPicker';
 import { useCart } from '@/components/cart/CartProvider';
 import { Reveal } from '@/components/motion/Reveal';
-import { ArrowLeft, Heart, Leaf, ShoppingCart } from 'lucide-react';
+import { Heart, Leaf, ShoppingCart } from 'lucide-react';
 
 export function CouplePackDetail({
   packId,
@@ -161,13 +162,11 @@ export function CouplePackDetail({
 
   return (
     <div className="space-y-10 pb-24 lg:pb-0">
-      <Link
-        href={PRODUCT_OFFERING_PATHS.readyDesigns}
-        className="inline-flex items-center gap-2 text-sm font-medium text-ink-600 transition hover:text-brand-600"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {tdp('backToReadyDesigns')}
-      </Link>
+      <ArchiveBackLink
+        fallbackHref={PRODUCT_OFFERING_PATHS.couplesReadyDesigns}
+        label={tdp('backToReadyDesigns')}
+        className="hover:text-brand-600"
+      />
 
       <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
         <Reveal>

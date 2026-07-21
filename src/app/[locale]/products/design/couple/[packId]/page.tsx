@@ -1,4 +1,5 @@
 import { CouplePackDetail } from '@/components/products/CouplePackDetail';
+import { productTypes, type ProductType } from '@/lib/data/catalog';
 import { getCouplePackTemplate } from '@/lib/data/couple-pack';
 import { resolveCouplePackPartnerDesigns } from '@/lib/products/couple-pack-resolved';
 import { buildCouplePackMetadata } from '@/lib/seo/page-metadata';
@@ -8,13 +9,30 @@ import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
 
+function parsePreferredProductType(
+  value: string | string[] | undefined,
+): ProductType | undefined {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (!raw) return undefined;
+  if (!(productTypes as readonly string[]).includes(raw)) return undefined;
+  return raw as ProductType;
+}
+
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; packId: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }): Promise<Metadata> {
   const { locale, packId } = await params;
-  const metadata = await buildCouplePackMetadata(locale as Locale, packId);
+  const query = await searchParams;
+  const preferredType = parsePreferredProductType(query.type);
+  const metadata = await buildCouplePackMetadata(
+    locale as Locale,
+    packId,
+    preferredType,
+  );
   if (!metadata) notFound();
   return metadata;
 }

@@ -35,23 +35,10 @@ export function buildOgImageUrl(params: {
   return absoluteUrl(`/api/og?${search.toString()}`);
 }
 
-/**
- * OG image for design/product-design share pages that need to show *two*
- * raster images side by side (dual-sided front+back designs, or couple-pack
- * partner designs). Delegates to the sharp-based `/api/og/design` route,
- * which ONLY composites raster (png/jpg/webp) images — never SVG — onto a
- * static branded background. Inputs should already be resolved via
- * `resolveAssetUrl` (site-relative path or absolute CDN URL); the route
- * reads local `public/` assets straight off disk and only fetches over HTTP
- * for already-absolute (CDN) URLs.
- */
-export function buildDesignOgImageUrl(images: Array<string | undefined | null>) {
-  const [a, b] = images.filter((value): value is string => Boolean(value));
-  const search = new URLSearchParams();
-  if (a) search.set('a', a);
-  if (b) search.set('b', b);
-  return absoluteUrl(`/api/og/design?${search.toString()}`);
-}
+export {
+  buildDesignOgImageUrl,
+  type DesignOgPanel,
+} from '@/lib/seo/design-og';
 
 /**
  * Site-wide default og:image. This is a static, pre-generated JPG committed

@@ -10,6 +10,18 @@ import {
   productTypeHref,
 } from '@/lib/products/product-nav';
 import type { ProductType } from '@/lib/data/catalog';
+import {
+  DESIGN_OVERLAY_LAYER_CLASS,
+  getDesignOverlayLayerStyle,
+} from '@/lib/products/design-overlay';
+
+type DesignOverlay = {
+  src: string;
+  position: { x: number; y: number };
+  scale: number;
+  /** Turn dark print art light for charcoal/blue blanks. */
+  invert?: boolean;
+};
 
 type CategoryTile =
   | {
@@ -17,6 +29,14 @@ type CategoryTile =
       kind: 'type';
       type: ProductType;
       image: string;
+      /**
+       * Full lifestyle / designed product photo (tee & hoodie only).
+       * Crossfades over the blank base — not a cropped hero flat-lay.
+       */
+      hoverImage?: string;
+      hoverImageClassName?: string;
+      /** Print-art PNG faded onto the same blank mockup (bag/mug/cup/cap/bodysuit). */
+      designOverlay?: DesignOverlay;
       imageClassName?: string;
     }
   | {
@@ -24,6 +44,9 @@ type CategoryTile =
       kind: 'category';
       categoryId: 'bags' | 'gifts';
       image: string;
+      hoverImage?: string;
+      hoverImageClassName?: string;
+      designOverlay?: DesignOverlay;
       imageClassName?: string;
     };
 
@@ -33,35 +56,69 @@ const categoryTiles: CategoryTile[] = [
     kind: 'type',
     type: 't-shirt',
     image: '/t-shirts/unisex/bela-front.jpg',
+    hoverImage: '/NEW_DESIGNS/family/mockups/family-mockup-dad.png',
+    hoverImageClassName: 'object-cover object-[center_28%] p-0',
   },
   {
     id: 'bag',
     kind: 'category',
     categoryId: 'bags',
     image: '/bags/bag-beige.jpg',
+    // Local hover-only scale (card padding + contain) — smaller than PDP print area.
+    designOverlay: {
+      src: '/NEW_DESIGNS/bags/tote-skopje-line.png',
+      position: { x: 50, y: 54 },
+      scale: 26,
+    },
   },
   {
     id: 'mug',
     kind: 'type',
     type: 'mug',
-    image: '/mugs/mug-milkyblue.jpg',
+    image: '/mugs/mug-white-classic-v2.jpg',
+    // Local hover-only: keep art on the cylinder face, clear of the handle.
+    designOverlay: {
+      src: '/NEW_DESIGNS/drinkware/mug-coffee-time.png',
+      position: { x: 45, y: 46 },
+      scale: 24,
+    },
+  },
+  {
+    id: 'cup',
+    kind: 'type',
+    type: 'cup',
+    image: '/cups/cup-glass-beer.jpg',
+    designOverlay: {
+      src: '/NEW_DESIGNS/drinkware/mug-cheers-beer.png',
+      position: { x: 45, y: 46 },
+      scale: 26,
+    },
   },
   {
     id: 'hoodie',
     kind: 'type',
     type: 'hoodie',
     image: '/hoodies/hoodie-charcoal.jpg',
+    hoverImage: '/NEW_DESIGNS/family/mockups/family-mockup-mama.png',
+    hoverImageClassName: 'object-cover object-[center_35%] p-0',
   },
   {
     id: 'cap',
     kind: 'type',
     type: 'cap',
     image: '/caps/cap-charcoal-front.jpg',
+    designOverlay: {
+      src: '/NEW_DESIGNS/caps/cap-skopje.png',
+      position: { x: 50, y: 40 },
+      scale: 32,
+      invert: true,
+    },
   },
   {
     id: 'gifts',
     kind: 'category',
     categoryId: 'gifts',
+    // Pre-hover showcase photo (ceramic heart with print) — better than plain glass.
     image: '/magnets/magnet-ceramic-heart.jpg',
   },
   {
@@ -75,6 +132,11 @@ const categoryTiles: CategoryTile[] = [
     kind: 'type',
     type: 'bodysuit',
     image: '/spikozni/mockup-bodysuit-white.png',
+    designOverlay: {
+      src: '/spikozni/dizajni/spikozna-dizajn-mamatato-1.png',
+      position: { x: 50, y: 48 },
+      scale: 28,
+    },
   },
 ];
 
@@ -141,6 +203,7 @@ export function HomeCategoryGrid({ productCount }: { productCount: number }) {
               tile.kind === 'type'
                 ? tp(tileLabelKey(tile) as ProductType)
                 : tNav(tileLabelKey(tile));
+            const hasLifestyleHover = Boolean(tile.hoverImage);
 
             return (
               <Link
@@ -152,17 +215,59 @@ export function HomeCategoryGrid({ productCount }: { productCount: number }) {
                   'hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-lift',
                 )}
               >
-                <Image
-                  src={tile.image}
-                  alt={label}
-                  fill
-                  sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 22vw"
-                  className={cn(
-                    'object-contain p-3 pb-10 transition duration-300 group-hover:scale-[1.03]',
-                    tile.imageClassName,
-                  )}
-                />
-                <span className="absolute bottom-3 left-3 rounded-md bg-white px-2.5 py-1 text-xs font-semibold text-ink-900 shadow-sm">
+                <div className="absolute inset-0">
+                  <Image
+                    src={tile.image}
+                    alt={label}
+                    fill
+                    sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 22vw"
+                    className={cn(
+                      'object-contain p-3 pb-10 transition duration-300 group-hover:scale-[1.03]',
+                      hasLifestyleHover &&
+                        'duration-300 group-hover:opacity-0',
+                      tile.imageClassName,
+                    )}
+                  />
+
+                  {tile.designOverlay ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={tile.designOverlay.src}
+                      alt=""
+                      aria-hidden
+                      draggable={false}
+                      className={cn(
+                        DESIGN_OVERLAY_LAYER_CLASS,
+                        'opacity-0 transition duration-300 group-hover:opacity-100',
+                      )}
+                      style={{
+                        ...getDesignOverlayLayerStyle({
+                          position: tile.designOverlay.position,
+                          scale: tile.designOverlay.scale,
+                        }),
+                        ...(tile.designOverlay.invert
+                          ? { filter: 'brightness(0) invert(1)' }
+                          : null),
+                      }}
+                    />
+                  ) : null}
+
+                  {tile.hoverImage ? (
+                    <Image
+                      src={tile.hoverImage}
+                      alt=""
+                      fill
+                      sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 22vw"
+                      aria-hidden
+                      className={cn(
+                        'object-contain p-3 pb-10 opacity-0 transition duration-300',
+                        'group-hover:scale-[1.03] group-hover:opacity-100',
+                        tile.hoverImageClassName,
+                      )}
+                    />
+                  ) : null}
+                </div>
+                <span className="absolute bottom-3 left-3 z-10 rounded-md bg-white px-2.5 py-1 text-xs font-semibold text-ink-900 shadow-sm">
                   {label}
                 </span>
               </Link>

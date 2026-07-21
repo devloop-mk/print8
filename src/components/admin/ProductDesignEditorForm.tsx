@@ -38,11 +38,15 @@ function AssetField({
   value,
   onChange,
   folder,
+  onClear,
+  clearLabel = 'Отстрани слика',
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   folder: string;
+  onClear?: () => void;
+  clearLabel?: string;
 }) {
   return (
     <label className="block text-sm">
@@ -54,7 +58,18 @@ function AssetField({
           onChange={(event) => onChange(event.target.value)}
           className="w-full rounded-lg border border-ink-200 px-3 py-2"
         />
-        <AdminAssetUploader folder={folder} onUploaded={onChange} />
+        <div className="flex flex-wrap gap-2">
+          <AdminAssetUploader folder={folder} onUploaded={onChange} />
+          {onClear && value ? (
+            <button
+              type="button"
+              onClick={onClear}
+              className="rounded-lg border border-red-200 px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-50"
+            >
+              {clearLabel}
+            </button>
+          ) : null}
+        </div>
       </div>
     </label>
   );
@@ -224,8 +239,70 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
     }
   }
 
+  function clearFrontOverlayImage() {
+    if (
+      !confirm(
+        'Да се отстрани overlay сликата од предната страна? Дизајнот останува; само сликата се брише.',
+      )
+    ) {
+      return;
+    }
+    // Empty string persists through JSON + merge so static catalog art can be blanked.
+    patchTemplate({ overlayImage: '' });
+    setMessage('Предната overlay слика е отстранета (зачувајте за да важи).');
+  }
+
+  function clearBackOverlayImage() {
+    if (
+      !confirm(
+        'Да се отстрани overlay сликата од задната страна? Дизајнот останува; само сликата се брише.',
+      )
+    ) {
+      return;
+    }
+    patchBackOverlay({ overlayImage: '' });
+    setMessage('Задната overlay слика е отстранета (зачувајте за да важи).');
+  }
+
+  function copyFrontImageToBack() {
+    const frontImage = template.overlayImage?.trim();
+    if (!frontImage) {
+      setError('Нема предна overlay слика за копирање.');
+      return;
+    }
+
+    const { defaultSide, designSides } = designSideModeToConfig('both');
+    setTemplate((current) => ({
+      ...current,
+      defaultSide,
+      designSides,
+      backOverlay: {
+        ...current.backOverlay,
+        overlayImage: current.overlayImage,
+        overlaySvg: current.overlaySvg ?? current.backOverlay?.overlaySvg,
+        overlayRecolor:
+          current.overlayRecolor ?? current.backOverlay?.overlayRecolor,
+        overlayColorVariants:
+          current.overlayColorVariants ??
+          current.backOverlay?.overlayColorVariants,
+        overlayScale:
+          current.overlayScale ?? current.backOverlay?.overlayScale ?? 50,
+        overlayPosition: current.overlayPosition
+          ? { ...current.overlayPosition }
+          : (current.backOverlay?.overlayPosition ?? { x: 50, y: 44 }),
+        overlayByProductType: current.overlayByProductType
+          ? { ...current.overlayByProductType }
+          : current.backOverlay?.overlayByProductType,
+      },
+    }));
+    setError(null);
+    setMessage(
+      'Предната слика (и поставување) се копирани на задната страна. Зачувајте за да важи.',
+    );
+  }
+
   async function handleResetOverride() {
-    if (!design.managed) return;
+    if (!design.managed || !design.staticTemplate) return;
     if (!confirm('Да се отстрани админ измената и да се врати на верзијата од код?')) {
       return;
     }
@@ -248,9 +325,76 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
     }
   }
 
+  async function handleDeleteOrHideDesign() {
+    const isStatic = Boolean(design.staticTemplate);
+
+    if (isStatic) {
+      if (
+        !confirm(
+          'Овој дизајн е дефиниран во кодот и не може целосно да се избрише.\n\n' +
+            'Да се скрие од каталог и продавница? (може повторно да се активира подоцна)',
+        )
+      ) {
+        return;
+      }
+
+      setSaving(true);
+      setError(null);
+      try {
+        const response = await fetch(`/api/admin/product-designs/${design.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            template,
+            active: false,
+            sortOrder: Number(sortOrder) || 0,
+          }),
+        });
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          throw new Error(data.error ?? 'Failed to hide design');
+        }
+        setActive(false);
+        setMessage('Дизајнот е скриен од каталог и продавница.');
+        router.refresh();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to hide');
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
+
+    if (
+      !confirm(
+        'Да се избрише дизајнот целосно од базата?\n\n' +
+          'Ќе исчезне од админ листата и од продавницата. Ова не може да се врати.',
+      )
+    ) {
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/admin/product-designs/${design.id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error ?? 'Failed to delete');
+      }
+      router.push('/admin/product-designs');
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete');
+      setSaving(false);
+    }
+  }
+
   const previewSrc =
-    template.overlayImage ??
-    template.image ??
+    template.overlayImage ||
+    template.image ||
     (template.overlayColorVariants
       ? Object.values(template.overlayColorVariants)[0]
       : undefined);
@@ -294,7 +438,7 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
           ) : null}
         </div>
 
-        {design.managed ? (
+        {design.managed && design.staticTemplate ? (
           <Button
             type="button"
             variant="outline"
@@ -305,6 +449,27 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
             Отстрани админ измена
           </Button>
         ) : null}
+
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full border-red-300 text-red-700 hover:border-red-400 hover:bg-red-50"
+          disabled={saving}
+          onClick={() => void handleDeleteOrHideDesign()}
+        >
+          {design.staticTemplate ? 'Скриј од каталог' : 'Избриши дизајн'}
+        </Button>
+        {design.staticTemplate ? (
+          <p className="text-xs text-ink-500">
+            Дизајните од кодот не може целосно да се избришат — скривањето ги
+            отстранува од продавницата.
+          </p>
+        ) : (
+          <p className="text-xs text-ink-500">
+            Целосно бришење од база — дизајнот исчезнува од админ листата и
+            продавницата.
+          </p>
+        )}
       </div>
 
       <div className="space-y-8">
@@ -536,9 +701,26 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
                 <AssetField
                   label="overlayImage — предна (PNG print art)"
                   value={template.overlayImage ?? ''}
-                  onChange={(value) => patchTemplate({ overlayImage: value || undefined })}
+                  onChange={(value) => patchTemplate({ overlayImage: value })}
                   folder={uploadFolder}
+                  onClear={clearFrontOverlayImage}
+                  clearLabel="Отстрани предна слика"
                 />
+                {template.overlayImage ? (
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={copyFrontImageToBack}
+                      className="rounded-lg border border-brand-300 bg-brand-50 px-3 py-2 text-xs font-semibold text-brand-900 hover:bg-brand-100"
+                    >
+                      Копирај предна → задна
+                    </button>
+                    <p className="self-center text-xs text-ink-500">
+                      Ја копира предната overlay слика и поставувањето на задната
+                      страна (вклучува Front & back).
+                    </p>
+                  </div>
+                ) : null}
               </>
             ) : (
               <>
@@ -551,8 +733,10 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
                 <AssetField
                   label="overlayImage — задна (PNG print art)"
                   value={template.overlayImage ?? ''}
-                  onChange={(value) => patchTemplate({ overlayImage: value || undefined })}
+                  onChange={(value) => patchTemplate({ overlayImage: value })}
                   folder={uploadFolder}
+                  onClear={clearFrontOverlayImage}
+                  clearLabel="Отстрани слика"
                 />
               </>
             )}
@@ -654,7 +838,18 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
 
             {template.kind === 'overlay' && designSideMode === 'both' ? (
               <div className="space-y-4 rounded-xl border border-dashed border-brand-200 bg-brand-50/40 p-4">
-                <h3 className="text-sm font-semibold text-ink-900">Задна страна</h3>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="text-sm font-semibold text-ink-900">Задна страна</h3>
+                  {template.overlayImage ? (
+                    <button
+                      type="button"
+                      onClick={copyFrontImageToBack}
+                      className="rounded-lg border border-brand-300 bg-white px-3 py-1.5 text-xs font-semibold text-brand-900 hover:bg-brand-50"
+                    >
+                      Копирај предна → задна
+                    </button>
+                  ) : null}
+                </div>
                 {backOverlay.overlayImage ? (
                   <ProductDesignOverlayPlacementEditor
                     template={template}
@@ -667,10 +862,10 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
                 <AssetField
                   label="backOverlayImage (PNG print art)"
                   value={backOverlay.overlayImage ?? ''}
-                  onChange={(value) =>
-                    patchBackOverlay({ overlayImage: value || undefined })
-                  }
+                  onChange={(value) => patchBackOverlay({ overlayImage: value })}
                   folder={uploadFolder}
+                  onClear={clearBackOverlayImage}
+                  clearLabel="Отстрани задна слика"
                 />
                 <div className="grid gap-4 sm:grid-cols-3">
                   <label className="text-sm">

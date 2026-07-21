@@ -18,6 +18,10 @@ import {
   getCategoryPathImage,
   type CategoryPathId,
 } from '@/lib/products/category-path-images';
+import {
+  DESIGN_OVERLAY_LAYER_CLASS,
+  getDesignOverlayLayerStyle,
+} from '@/lib/products/design-overlay';
 import { PRODUCT_OFFERING_PATHS } from '@/lib/products/paths';
 import { cn } from '@/lib/utils';
 
@@ -135,26 +139,41 @@ export function ProductCategoryPathChooser({
                       visual.imageBg ?? 'bg-ink-50',
                     )}
                   >
-                    <Image
-                      src={visual.src}
-                      alt={path.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                      className={cn(
-                        'transition duration-500 group-hover:scale-105',
-                        visual.objectFit === 'contain'
-                          ? 'object-contain p-4 pb-12'
-                          : 'object-cover',
-                      )}
-                      style={
-                        visual.objectPosition
-                          ? { objectPosition: visual.objectPosition }
-                          : undefined
-                      }
-                    />
+                    <div className="absolute inset-0 transition duration-500 group-hover:scale-105">
+                      <Image
+                        src={visual.src}
+                        alt={path.title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                        className={
+                          visual.objectFit === 'contain'
+                            ? 'object-contain p-4 pb-12'
+                            : 'object-cover'
+                        }
+                        style={
+                          visual.objectPosition
+                            ? { objectPosition: visual.objectPosition }
+                            : undefined
+                        }
+                      />
+                      {visual.designOverlay ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={visual.designOverlay.src}
+                          alt=""
+                          aria-hidden
+                          draggable={false}
+                          className={DESIGN_OVERLAY_LAYER_CLASS}
+                          style={getDesignOverlayLayerStyle({
+                            position: visual.designOverlay.position,
+                            scale: visual.designOverlay.scale,
+                          })}
+                        />
+                      ) : null}
+                    </div>
                     <div
                       className={cn(
-                        'pointer-events-none absolute inset-x-0 bottom-0 h-[42%] bg-gradient-to-t to-transparent',
+                        'pointer-events-none absolute inset-x-0 bottom-0 z-[3] h-[42%] bg-gradient-to-t to-transparent',
                         visual.accent,
                       )}
                       aria-hidden
