@@ -9,10 +9,13 @@ import {
   type Product,
   type ProductGallerySlide,
 } from '@/lib/data/catalog';
+import { MockupLoadingOverlay } from '@/components/products/MockupLoadingOverlay';
 import {
   getMockupImageDisplayStyle,
   getProductMockupLayout,
 } from '@/lib/products/product-mockup-layout';
+import { useStableImageSrc } from '@/hooks/useStableImageSrc';
+import { cn } from '@/lib/utils';
 
 export function ProductImageCarousel({
   product,
@@ -38,6 +41,7 @@ export function ProductImageCarousel({
 
   const slide = slides[index];
   const image = slide?.image;
+  const { src: stableImage, loading: imageLoading } = useStableImageSrc(image);
   const mockupLayout = getProductMockupLayout(product);
 
   function goTo(delta: number) {
@@ -61,23 +65,32 @@ export function ProductImageCarousel({
 
   return (
     <div className="relative flex aspect-square w-full max-w-sm items-center justify-center rounded-2xl border border-ink-100 bg-white">
-      {image ? (
+      {stableImage ? (
         <div className={mockupLayout.catalogInnerClass}>
           <Image
-            key={`${color}-${index}-${image}`}
-            src={image}
-            alt={imageAlt(slide, index)}
+            src={stableImage}
+            alt={slide ? imageAlt(slide, index) : typeLabel}
             fill
-            unoptimized={image.includes('/t-shirts/')}
+            unoptimized={stableImage.includes('/t-shirts/')}
             sizes="(max-width: 768px) 100vw, 400px"
-            className={mockupLayout.catalogImageClass}
-            style={getMockupImageDisplayStyle(product, image, 'catalog-card')}
+            className={cn(
+              mockupLayout.catalogImageClass,
+              'transition-opacity duration-200',
+              imageLoading ? 'opacity-80' : 'opacity-100',
+            )}
+            style={getMockupImageDisplayStyle(
+              product,
+              stableImage,
+              'catalog-card',
+            )}
             priority={index === 0}
           />
         </div>
       ) : (
         <Shirt className="h-32 w-32 text-ink-300" />
       )}
+
+      <MockupLoadingOverlay show={imageLoading} />
 
       {hasCarousel && (
         <>

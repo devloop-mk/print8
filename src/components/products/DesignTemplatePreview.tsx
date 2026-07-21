@@ -9,6 +9,7 @@ import {
   type ProductDesignTextStyle,
   type ProductSide,
 } from '@/lib/data/catalog';
+import { MockupLoadingOverlay } from '@/components/products/MockupLoadingOverlay';
 import { ProductMockupFrame } from '@/components/products/ProductMockupFrame';
 import {
   getMockupImageDisplayStyle,
@@ -24,7 +25,9 @@ import {
 } from '@/lib/products/design-overlay';
 import { resolveSideOverlayConfig } from '@/lib/products/design-sides';
 import { useOverlayAssetUrl } from '@/hooks/useOverlayAssetUrl';
+import { useStableImageSrc } from '@/hooks/useStableImageSrc';
 import { Shirt } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export function StyledDesignText({
   style,
@@ -148,12 +151,6 @@ export function DesignTemplatePreview({
     overlaySvg: sideConfig?.overlaySvg ?? design.overlaySvg,
   });
   const mockupLayout = getProductMockupLayout(product);
-  // Use the same mockup zoom as the customizer so overlay % matches 1:1.
-  const mockupStyle = getMockupImageDisplayStyle(
-    product,
-    shirtMockup,
-    'customizer',
-  );
 
   const sideHasRecolorableOverlay = Boolean(
     sideConfig?.overlaySvg && sideConfig.overlayRecolor,
@@ -171,6 +168,19 @@ export function DesignTemplatePreview({
         (isRecolorableOverlayTemplate(design) ||
           Boolean(design.overlayColorVariants))));
 
+  const { src: stableMockup, loading: mockupLoading } =
+    useStableImageSrc(shirtMockup);
+  const { src: stableOverlay, loading: overlayLoading } = useStableImageSrc(
+    useDynamicOverlay ? null : compositeOverlay,
+  );
+  const imageLoading = mockupLoading || overlayLoading;
+  // Keep zoom/crop aligned to the image currently on screen (not the pending one).
+  const mockupStyle = getMockupImageDisplayStyle(
+    product,
+    stableMockup ?? shirtMockup,
+    'customizer',
+  );
+
   return (
     <ProductMockupFrame
       variant="catalog"
@@ -178,14 +188,17 @@ export function DesignTemplatePreview({
       innerStyle={mockupStyle}
       className={className}
     >
-      {shirtMockup ? (
+      {stableMockup ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          key={`${previewColor}-${mockupSide}-${shirtMockup}`}
-          src={shirtMockup}
+          src={stableMockup}
           alt={typeLabel}
           draggable={false}
-          className={mockupLayout.catalogImageClass}
+          className={cn(
+            mockupLayout.catalogImageClass,
+            'transition-opacity duration-200',
+            imageLoading ? 'opacity-80' : 'opacity-100',
+          )}
         />
       ) : (
         <div className="flex h-full items-center justify-center">
@@ -200,14 +213,17 @@ export function DesignTemplatePreview({
           placement={placement}
           side={mockupSide}
         />
-      ) : compositeOverlay ? (
+      ) : stableOverlay ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          key={`${previewColor}-${mockupSide}-${compositeOverlay}`}
-          src={compositeOverlay}
+          src={stableOverlay}
           alt=""
           draggable={false}
-          className={DESIGN_OVERLAY_LAYER_CLASS}
+          className={cn(
+            DESIGN_OVERLAY_LAYER_CLASS,
+            'transition-opacity duration-200',
+            imageLoading ? 'opacity-80' : 'opacity-100',
+          )}
           style={getDesignOverlayLayerStyle(placement)}
         />
       ) : null}
@@ -228,6 +244,8 @@ export function DesignTemplatePreview({
           }}
         />
       )}
+
+      <MockupLoadingOverlay show={imageLoading} />
     </ProductMockupFrame>
   );
 }
