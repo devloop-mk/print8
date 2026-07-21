@@ -86,7 +86,7 @@ export const services: Service[] = [
     id: 't-shirt-printing',
     icon: 'Shirt',
     category: 'merch',
-    startingPrice: 450,
+    startingPrice: 400,
     featured: true,
     customization: 'products',
     productTypes: ['t-shirt'],

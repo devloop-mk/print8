@@ -9,8 +9,11 @@ import {
 } from '@/lib/products/print-area';
 
 export const TSHIRT_PRINT_PACKAGES = [
+  'blank',
   'front-small',
   'front-large',
+  'back-small',
+  'back-large',
   'front-small-back-small',
   'front-small-back-large',
   'front-large-back-small',
@@ -24,14 +27,18 @@ export type TshirtPrintPackage = (typeof TSHIRT_PRINT_PACKAGES)[number];
 /**
  * Unit prices in MKD.
  *
- * Front-only tiers unchanged. Dual-side splits the old flat `front-back` (700)
- * into size combinations. Small-back duals are inferred as +150 over the
- * matching front-only tier (large-back duals are +200, matching the specified
- * 650 / 700 big-back prices).
+ * Blank tee (no print) is the product-only base. Front/back single-side tiers
+ * share prices by size. Dual-side splits the old flat `front-back` (700) into
+ * size combinations. Small-back duals are +150 over the matching front-only
+ * tier (large-back duals are +200, matching the specified 650 / 700 big-back
+ * prices).
  */
 const TSHIRT_PACKAGE_PRICES: Record<TshirtPrintPackage, number> = {
+  blank: 400,
   'front-small': 450,
   'front-large': 500,
+  'back-small': 450,
+  'back-large': 500,
   'front-small-back-small': 600,
   'front-small-back-large': 650,
   'front-large-back-small': 650,
@@ -62,7 +69,7 @@ export function getTshirtUnitPrice(pkg: TshirtPrintPackage): number {
 }
 
 export function getTshirtStartingPrice(): number {
-  return TSHIRT_PACKAGE_PRICES['front-small'];
+  return TSHIRT_PACKAGE_PRICES.blank;
 }
 
 export function getProductDisplayPrice(product: Product): number {
@@ -105,7 +112,8 @@ export function getTshirtPrintAreaInsets(
 }
 
 export function tshirtPackageAllowsBack(pkg: TshirtPrintPackage): boolean {
-  return pkg.includes('back');
+  // Dual / legacy keys only — single-side back-* packages are back-only, not dual.
+  return pkg === 'front-back' || pkg.includes('-back');
 }
 
 export interface TshirtContentFootprint {
@@ -144,27 +152,43 @@ export function footprintFitsSmallZone(
 /**
  * Auto-detects the print package from what the user actually placed instead
  * of asking them to pick a package up front:
- * - no back content → front-small / front-large from the front footprint
- * - back content → dual package from front + back small/large classification
- * - missing footprint on a side defaults to large (safe / matches prior defaults)
+ * - no content on either side → blank (product-only base price)
+ * - front only → front-small / front-large from the front footprint
+ * - back only → back-small / back-large (same prices as the front tiers)
+ * - both sides → dual package from front + back small/large classification
+ * - missing footprint on a side that has content defaults to large
+ *   (safe / matches prior defaults)
  */
 export function deriveTshirtPrintPackage({
+  hasFrontContent = false,
   hasBackContent,
   frontFootprint,
   backFootprint,
   isWomen,
 }: {
+  hasFrontContent?: boolean;
   hasBackContent: boolean;
   frontFootprint: TshirtContentFootprint | null;
   backFootprint?: TshirtContentFootprint | null;
   isWomen?: boolean;
 }): TshirtPrintPackage {
-  const frontSmall = footprintFitsSmallZone(frontFootprint, isWomen);
-
-  if (!hasBackContent) {
-    return frontSmall ? 'front-small' : 'front-large';
+  if (!hasFrontContent && !hasBackContent) {
+    return 'blank';
   }
 
+  if (hasFrontContent && !hasBackContent) {
+    return footprintFitsSmallZone(frontFootprint, isWomen)
+      ? 'front-small'
+      : 'front-large';
+  }
+
+  if (!hasFrontContent && hasBackContent) {
+    return footprintFitsSmallZone(backFootprint, isWomen)
+      ? 'back-small'
+      : 'back-large';
+  }
+
+  const frontSmall = footprintFitsSmallZone(frontFootprint, isWomen);
   const backSmall = footprintFitsSmallZone(backFootprint, isWomen);
 
   if (frontSmall && backSmall) return 'front-small-back-small';

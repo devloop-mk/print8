@@ -1083,6 +1083,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     });
   }, [isTshirt, activeSide, currentDesign]);
 
+  const frontHasContent = sideHasDesignContent(sideDesigns.front);
   const backHasContent = sideHasDesignContent(sideDesigns.back);
 
   // Auto-derived print package: each side with content is classified
@@ -1090,6 +1091,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   const printPackage = useMemo<TshirtPrintPackage>(() => {
     if (!isTshirt) return 'front-large';
     return deriveTshirtPrintPackage({
+      hasFrontContent: frontHasContent,
       hasBackContent: backHasContent,
       frontFootprint: sideFootprints.front ?? null,
       backFootprint: sideFootprints.back ?? null,
@@ -1097,6 +1099,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     });
   }, [
     isTshirt,
+    frontHasContent,
     backHasContent,
     sideFootprints.front,
     sideFootprints.back,
@@ -3230,6 +3233,10 @@ const TSHIRT_PRINT_PACKAGE_LABELS: Record<
   TshirtPrintPackage,
   { title: string; description: string }
 > = {
+  blank: {
+    title: 'printPackageBlank',
+    description: 'printPackageBlankDesc',
+  },
   'front-small': {
     title: 'printPackageFrontSmall',
     description: 'printPackageFrontSmallDesc',
@@ -3237,6 +3244,14 @@ const TSHIRT_PRINT_PACKAGE_LABELS: Record<
   'front-large': {
     title: 'printPackageFrontLarge',
     description: 'printPackageFrontLargeDesc',
+  },
+  'back-small': {
+    title: 'printPackageBackSmall',
+    description: 'printPackageBackSmallDesc',
+  },
+  'back-large': {
+    title: 'printPackageBackLarge',
+    description: 'printPackageBackLargeDesc',
   },
   'front-small-back-small': {
     title: 'printPackageFrontSmallBackSmall',
