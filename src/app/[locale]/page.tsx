@@ -8,7 +8,6 @@ import {
   type CmsLocale,
 } from '@/lib/cms/public-content';
 import { getHomeTrendingProductDesigns } from '@/lib/cms/home-trending';
-import { getHomeShowcaseByCategory } from '@/lib/home/featured-home-products';
 import { getBrowsableProducts } from '@/lib/data/catalog';
 import { TrendingDesignsSection } from '@/components/home/TrendingDesignsSection';
 import { HomeShowcaseCarousel } from '@/components/home/HomeShowcaseCarousel';
@@ -18,7 +17,6 @@ import { HeroFeatureBar } from '@/components/home/HeroFeatureBar';
 import { HomeHighlights } from '@/components/home/HomeHighlights';
 import { HomeHowItWorks } from '@/components/home/HomeHowItWorks';
 import { HomeCategoryGrid } from '@/components/home/HomeCategoryGrid';
-import { HomeProductShowcase } from '@/components/home/HomeProductShowcase';
 import { FeaturedDesignCards } from '@/components/home/FeaturedDesignCards';
 import { HomeCustomDesignCta } from '@/components/home/HomeCustomDesignCta';
 import { HomeContactCta } from '@/components/home/HomeContactCta';
@@ -44,7 +42,6 @@ export default async function HomePage({
     featuredServices,
     featuredDesigns,
     trendingDesigns,
-    productShowcase,
   ] = await Promise.all([
       resolveCmsTexts(
         [
@@ -67,7 +64,6 @@ export default async function HomePage({
       })),
       getPublishedDesignTemplates(),
       getHomeTrendingProductDesigns(),
-      getHomeShowcaseByCategory(),
     ]);
 
   const productCount = getBrowsableProducts().length;
@@ -82,10 +78,6 @@ export default async function HomePage({
 
       <Reveal delay={15}>
         <HomeCategoryGrid productCount={productCount} />
-      </Reveal>
-
-      <Reveal delay={20}>
-        <HomeProductShowcase groups={productShowcase} />
       </Reveal>
 
       <Reveal delay={30}>

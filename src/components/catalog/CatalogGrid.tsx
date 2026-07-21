@@ -296,17 +296,20 @@ export function CatalogGridLayout({
       mobileColumnToggle={mobileColumnToggle}
       defaultMobileColumns={defaultMobileColumns}
     >
-      <div className={className}>
+      <div className={cn('min-w-0', className)}>
         <div
           className={cn(
-            'mb-4 flex flex-wrap items-center justify-end gap-2',
+            'mb-4 flex min-w-0 flex-wrap items-center justify-end gap-2',
             toggleClassName,
           )}
         >
           {toolbarStart}
           <CatalogGridToggle />
         </div>
-        <CatalogGrid gapClassName={gapClassName} className={gridClassName}>
+        <CatalogGrid
+          gapClassName={gapClassName}
+          className={cn('min-w-0', gridClassName)}
+        >
           {children}
         </CatalogGrid>
       </div>

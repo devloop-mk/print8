@@ -73,6 +73,9 @@ function drawTextLayer(
     canvasHeightPx,
   );
 
+  const lines = layer.text.split('\n');
+  const lineHeightPx = fontSize * layer.lineHeight;
+
   ctx.save();
   ctx.font = `${layer.fontWeight} ${fontSize}px ${getCustomizerCanvasFontFamily(layer.fontFamily)}`;
   ctx.fillStyle = layer.color;
@@ -81,7 +84,16 @@ function drawTextLayer(
   ctx.letterSpacing = layer.letterSpacing;
   ctx.shadowColor = 'rgba(0,0,0,0.15)';
   ctx.shadowBlur = Math.max(1, fontSize * 0.06);
-  ctx.fillText(layer.text, centerX, centerY);
+
+  if (lines.length === 1) {
+    ctx.fillText(layer.text, centerX, centerY);
+  } else {
+    lines.forEach((line, index) => {
+      const lineY = centerY + (index - (lines.length - 1) / 2) * lineHeightPx;
+      ctx.fillText(line, centerX, lineY);
+    });
+  }
+
   ctx.restore();
 }
 

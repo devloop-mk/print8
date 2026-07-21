@@ -12,6 +12,7 @@ import { SiteAnalytics } from "@/components/analytics/SiteAnalytics";
 import { CookieConsent } from "@/components/legal/CookieConsent";
 import { SpinWheelPromoPopupLazy } from "@/components/rewards/SpinWheelPromoPopupLazy";
 import { NavigationProgress } from "@/components/navigation/NavigationProgress";
+import { ScrollToTop } from "@/components/navigation/ScrollToTop";
 import { PageTransition } from "@/components/motion/PageTransition";
 import { buildPageMetadata, buildOgImageUrl } from "@/lib/seo/metadata";
 import "@/app/globals.css";
@@ -78,6 +79,7 @@ export default async function LocaleLayout({
         <NextIntlClientProvider locale={locale} messages={messages}>
           <CartProvider>
             <OngoingDesignsProvider>
+            <ScrollToTop />
             <NavigationProgress />
             <SiteAnalytics />
             <CookieConsent />

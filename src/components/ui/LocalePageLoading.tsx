@@ -7,7 +7,7 @@ export function LocalePageLoading() {
   const t = useTranslations('common');
 
   return (
-    <div className="flex min-h-[50vh] items-center justify-center px-4 py-20">
+    <div className="flex min-h-[100dvh] items-center justify-center px-4 py-20">
       <LoadingIndicator label={t('loading')} size="lg" />
     </div>
   );

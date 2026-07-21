@@ -204,11 +204,70 @@ function recenterIfFullyOutsidePrintArea({
   notifyMovedOutsidePrintArea();
 }
 
+type OverlayGestureHandlers = {
+  onGestureStart?: () => void;
+  onGestureEnd?: () => void;
+};
+
+/**
+ * While the user drags or resizes a flat overlay, keep the live 3D wrap texture
+ * on the last committed layout so `buildDrinkwareWrapTexture` is not rebuilt
+ * every pointermove. The 2D canvas still reads live design state.
+ */
+function useDrinkware3DPreviewFreeze(
+  sideDesign: SideDesign,
+  enabled: boolean,
+) {
+  const gestureCountRef = useRef(0);
+  const frozenRef = useRef<{
+    textLayers: PlacedTextLayer[];
+    sideDesign: SideDesign;
+  } | null>(null);
+  const [isFrozen, setIsFrozen] = useState(false);
+
+  const beginOverlayGesture = useCallback(() => {
+    if (!enabled) return;
+    if (gestureCountRef.current === 0) {
+      frozenRef.current = {
+        textLayers: sideDesign.textLayers,
+        sideDesign,
+      };
+      setIsFrozen(true);
+    }
+    gestureCountRef.current += 1;
+  }, [enabled, sideDesign]);
+
+  const endOverlayGesture = useCallback(() => {
+    if (!enabled) return;
+    gestureCountRef.current = Math.max(0, gestureCountRef.current - 1);
+    if (gestureCountRef.current === 0) {
+      setIsFrozen(false);
+      frozenRef.current = null;
+    }
+  }, [enabled]);
+
+  const preview3DTextLayers =
+    isFrozen && frozenRef.current
+      ? frozenRef.current.textLayers
+      : sideDesign.textLayers;
+
+  const preview3DSideDesign =
+    isFrozen && frozenRef.current ? frozenRef.current.sideDesign : sideDesign;
+
+  return {
+    preview3DTextLayers,
+    preview3DSideDesign,
+    beginOverlayGesture,
+    endOverlayGesture,
+  };
+}
+
 function useDraggablePosition(
   position: { x: number; y: number },
   onChange: (pos: { x: number; y: number }) => void,
   printBounds?: PrintAreaInsets,
   measureRef?: RefObject<HTMLElement | null>,
+  gestureHandlers?: OverlayGestureHandlers,
 ) {
   const elementRef = useRef<HTMLDivElement | null>(null);
   const positionRef = useRef(position);
@@ -222,6 +281,7 @@ function useDraggablePosition(
     event.stopPropagation();
     draggingRef.current = true;
     dragStartRef.current = { x: event.clientX, y: event.clientY };
+    gestureHandlers?.onGestureStart?.();
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
@@ -261,6 +321,7 @@ function useDraggablePosition(
         position: positionRef.current,
         onPositionChange: onChange,
       });
+      gestureHandlers?.onGestureEnd?.();
     }
   };
 
@@ -279,6 +340,7 @@ function useScaleResize(
   min = 15,
   max = 120,
   onResizeEnd?: () => void,
+  gestureHandlers?: OverlayGestureHandlers,
 ) {
   const draggingRef = useRef(false);
   const startRef = useRef({ pointerX: 0, pointerY: 0, scale: 0 });
@@ -294,6 +356,7 @@ function useScaleResize(
       pointerY: event.clientY,
       scale,
     };
+    gestureHandlers?.onGestureStart?.();
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
@@ -317,6 +380,7 @@ function useScaleResize(
         event.currentTarget.releasePointerCapture(event.pointerId);
       }
       onResizeEnd?.();
+      gestureHandlers?.onGestureEnd?.();
     }
   };
 
@@ -376,6 +440,7 @@ function ResizableDesignOverlay({
   printBounds,
   selected,
   onSelect,
+  overlayGestureHandlers,
 }: {
   design: SideDesign;
   template: ProductDesignTemplate | null | undefined;
@@ -391,6 +456,7 @@ function ResizableDesignOverlay({
   printBounds?: PrintAreaInsets;
   selected?: boolean;
   onSelect?: () => void;
+  overlayGestureHandlers?: OverlayGestureHandlers;
 }) {
   const src = useOverlayAssetUrl({ design, template, shirtColor });
   if (!src) return null;
@@ -410,6 +476,7 @@ function ResizableDesignOverlay({
       printBounds={printBounds}
       selected={selected}
       onSelect={onSelect}
+      overlayGestureHandlers={overlayGestureHandlers}
     />
   );
 }
@@ -428,6 +495,7 @@ function ResizableImageOverlay({
   printBounds,
   selected,
   onSelect,
+  overlayGestureHandlers,
 }: {
   src: string;
   alt: string;
@@ -442,9 +510,16 @@ function ResizableImageOverlay({
   printBounds?: PrintAreaInsets;
   selected?: boolean;
   onSelect?: () => void;
+  overlayGestureHandlers?: OverlayGestureHandlers;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const drag = useDraggablePosition(position, onPositionChange, printBounds);
+  const drag = useDraggablePosition(
+    position,
+    onPositionChange,
+    printBounds,
+    undefined,
+    overlayGestureHandlers,
+  );
   const resize = useScaleResize(
     scale,
     (next) => onScaleChange(clampPhotoScale(next, maxScale)),
@@ -461,6 +536,7 @@ function ResizableImageOverlay({
         });
       });
     },
+    overlayGestureHandlers,
   );
 
   return (
@@ -544,6 +620,7 @@ function ResizableStickerOverlay({
   printBounds,
   selected,
   onSelect,
+  overlayGestureHandlers,
 }: {
   sticker: PlacedSticker;
   onScaleChange: (scale: number) => void;
@@ -554,6 +631,7 @@ function ResizableStickerOverlay({
   printBounds?: PrintAreaInsets;
   selected?: boolean;
   onSelect?: () => void;
+  overlayGestureHandlers?: OverlayGestureHandlers;
 }) {
   const definition = getStickerById(sticker.stickerId);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -561,6 +639,8 @@ function ResizableStickerOverlay({
     sticker.position,
     onPositionChange,
     printBounds,
+    undefined,
+    overlayGestureHandlers,
   );
   const resize = useScaleResize(
     sticker.scale,
@@ -578,6 +658,7 @@ function ResizableStickerOverlay({
         });
       });
     },
+    overlayGestureHandlers,
   );
 
   if (!definition) return null;
@@ -971,6 +1052,21 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     }
     return currentDesign.textLayers[0]?.instanceId ?? null;
   }, [selectedElement, currentDesign.textLayers]);
+
+  const {
+    preview3DTextLayers,
+    preview3DSideDesign,
+    beginOverlayGesture,
+    endOverlayGesture,
+  } = useDrinkware3DPreviewFreeze(currentDesign, isDrinkware);
+
+  const overlayGestureHandlers = useMemo(
+    (): OverlayGestureHandlers => ({
+      onGestureStart: beginOverlayGesture,
+      onGestureEnd: endOverlayGesture,
+    }),
+    [beginOverlayGesture, endOverlayGesture],
+  );
 
   const updateCurrentSide = useCallback(
     (updates: Partial<SideDesign>) => {
@@ -1620,6 +1716,9 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       printAreaOverride={isTshirt ? effectivePrintAreaInsets : undefined}
       desktopSplitPreview={isDesktopSplitPreview}
       drinkwareCanvasHeightPx={drinkwareCanvasHeightPx}
+      preview3DTextLayers={preview3DTextLayers}
+      preview3DSideDesign={preview3DSideDesign}
+      overlayGestureHandlers={overlayGestureHandlers}
     />
   );
 
@@ -1636,10 +1735,10 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
           <DrinkwareDesignPreview3D
             productType={type}
             shirtColor={color}
-            sideDesign={currentDesign}
+            sideDesign={preview3DSideDesign}
             designTemplate={activeDesignTemplate}
             printBounds={overlayPrintBounds ?? effectivePrintAreaInsets}
-            textLayers={currentDesign.textLayers}
+            textLayers={preview3DTextLayers}
             variant="pane"
             canvasHeightPx={drinkwareCanvasHeightPx}
           />
@@ -1975,6 +2074,7 @@ function ResizableTextOverlay({
   printBounds,
   selected,
   onSelect,
+  overlayGestureHandlers,
 }: {
   text: string;
   color: string;
@@ -1993,6 +2093,7 @@ function ResizableTextOverlay({
   printBounds?: PrintAreaInsets;
   selected?: boolean;
   onSelect?: () => void;
+  overlayGestureHandlers?: OverlayGestureHandlers;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const textContentRef = useRef<HTMLSpanElement | null>(null);
@@ -2008,6 +2109,7 @@ function ResizableTextOverlay({
   const maxWidthPercent = printBounds
     ? getPrintAreaWidthPercent(printBounds)
     : 78;
+  const isMultiline = text.includes('\n');
 
   useLayoutEffect(() => {
     const parent = containerRef.current?.parentElement;
@@ -2037,6 +2139,7 @@ function ResizableTextOverlay({
     onPositionChange,
     printBounds,
     textContentRef,
+    overlayGestureHandlers,
   );
 
   // Text reflow (typing, font/size changes) can push the box fully outside
@@ -2073,7 +2176,7 @@ function ResizableTextOverlay({
 
   const resize = useScaleResize(size, handleSizeChange, 12, maxTextSize, () => {
     requestAnimationFrame(() => recenterIfOutside());
-  });
+  }, overlayGestureHandlers);
 
   return (
     <div
@@ -2095,10 +2198,12 @@ function ResizableTextOverlay({
         lineHeight,
         textShadow,
         touchAction: 'none',
+        // Explicit max-content: auto width on absolute + left uses shrink-to-fit
+        // (space from left edge to container right), so dragging right narrows the
+        // box and wrongly wraps single-line text.
+        width: 'max-content',
         maxWidth: `${maxWidthPercent}%`,
-        whiteSpace: 'pre-line',
-        overflowWrap: 'break-word',
-        wordBreak: 'break-word',
+        whiteSpace: isMultiline ? 'pre-line' : 'nowrap',
       }}
       onPointerDown={(event) => {
         event.stopPropagation();
@@ -2112,7 +2217,7 @@ function ResizableTextOverlay({
       <span
         ref={textContentRef}
         className={cn(
-          'relative inline-block w-full max-w-full rounded px-1',
+          'relative inline-block rounded px-1',
           selected && !hideControls && 'ring-2 ring-brand-500 ring-offset-2',
         )}
       >
@@ -2173,6 +2278,9 @@ function InteractivePreview({
   compact = false,
   desktopSplitPreview = false,
   drinkwareCanvasHeightPx = DRINKWARE_FLAT_CANVAS_HEIGHT_PX,
+  preview3DTextLayers,
+  preview3DSideDesign,
+  overlayGestureHandlers,
 }: {
   mockupImage: string;
   sideDesign: SideDesign;
@@ -2212,6 +2320,10 @@ function InteractivePreview({
   /** Desktop viewport already shows a live 3D pane beside this canvas — keep the flat canvas active and skip the flat/3D toggle. */
   desktopSplitPreview?: boolean;
   drinkwareCanvasHeightPx?: number;
+  /** Gated inputs for live 3D preview — frozen while overlays are dragged/resized. */
+  preview3DTextLayers?: PlacedTextLayer[];
+  preview3DSideDesign?: SideDesign;
+  overlayGestureHandlers?: OverlayGestureHandlers;
 }) {
   const t = useTranslations('products.customizer');
   const usesGarmentColorMockup =
@@ -2259,6 +2371,8 @@ function InteractivePreview({
   const drinkwareFlatSize = isDrinkware
     ? getDrinkwareFlatCanvasSize(productType)
     : null;
+  const live3DTextLayers = preview3DTextLayers ?? textLayers;
+  const live3DSideDesign = preview3DSideDesign ?? sideDesign;
   const [previewMode, setPreviewMode] = useState<DrinkwarePreviewMode>('flat');
 
   const show3dPreview =
@@ -2293,10 +2407,10 @@ function InteractivePreview({
         <DrinkwareDesignPreview3D
           productType={productType}
           shirtColor={shirtColor}
-          sideDesign={sideDesign}
+          sideDesign={live3DSideDesign}
           designTemplate={designTemplate}
           printBounds={overlayPrintBounds}
-          textLayers={textLayers}
+          textLayers={live3DTextLayers}
           canvasHeightPx={drinkwareCanvasHeightPx}
         />
         <p className="max-w-[min(18rem,78vw)] text-center text-[11px] leading-snug text-ink-500 md:max-w-[min(28rem,46vh)]">
@@ -2414,6 +2528,7 @@ function InteractivePreview({
             printBounds={overlayPrintBounds}
             selected={selectedElement === 'overlay'}
             onSelect={() => onSelectElement('overlay')}
+            overlayGestureHandlers={overlayGestureHandlers}
           />
         ) : null}
 
@@ -2434,6 +2549,7 @@ function InteractivePreview({
               printBounds={overlayPrintBounds}
               selected={selectedElement === 'photo'}
               onSelect={() => onSelectElement('photo')}
+              overlayGestureHandlers={overlayGestureHandlers}
             />
           ) : null}
 
@@ -2462,6 +2578,7 @@ function InteractivePreview({
               printBounds={overlayPrintBounds}
               selected={selectedElement === `text:${layer.instanceId}`}
               onSelect={() => onSelectElement(`text:${layer.instanceId}`)}
+              overlayGestureHandlers={overlayGestureHandlers}
             />
           ) : null,
         )}
@@ -2484,6 +2601,7 @@ function InteractivePreview({
             onSelect={() =>
               onSelectElement(`sticker:${sticker.instanceId}`)
             }
+            overlayGestureHandlers={overlayGestureHandlers}
           />
         ))}
         </div>

@@ -399,45 +399,40 @@
     "showcase": {
       "eyebrow": "What we offer",
       "title": "Everything in one place",
-      "subtitle": "Apparel, mugs, gifts, invitations, and print services — browse the real products.",
+      "subtitle": "Invitations, menus, print services, binding, and designs — browse what we actually offer.",
       "explore": "Explore",
       "scrollPrev": "Previous card",
       "scrollNext": "Next card",
       "slides": {
-        "merch": {
-          "badge": "Merch",
-          "title": "T-shirts, hoodies, caps & bags",
-          "description": "Custom apparel and accessories — pick a product, add your design, and order."
+        "printing": {
+          "badge": "Printing",
+          "title": "Business & event printing",
+          "description": "Business cards, flyers, documents, and laminating — pro quality for business and events."
         },
-        "mugs": {
-          "badge": "Drinkware",
-          "title": "Mugs, cups & thermoses",
-          "description": "With your logo or message — perfect for gifts, promos, and events."
+        "wedding": {
+          "badge": "Wedding",
+          "title": "Wedding invitations",
+          "description": "Elegant templates — enter names, date, and details, order online."
         },
-        "gifts": {
-          "badge": "Gifts",
-          "title": "Magnets, plaques & photo stone",
-          "description": "Promo gifts, thank-you cards, keychains, and personalized keepsakes."
+        "readyDesigns": {
+          "badge": "Print designs",
+          "title": "Print designs for cards & invites",
+          "description": "Business cards, invitations, menus, and more — enter your details and order."
+        },
+        "menus": {
+          "badge": "Menus",
+          "title": "Restaurant & café menus",
+          "description": "Laminated or plastified menus — pick a template and fill in your details."
         },
         "finishing": {
           "badge": "Finishing",
           "title": "Binding & thesis printing",
           "description": "Metal and plastic binding, hardcover thesis printing ready for submission."
         },
-        "printing": {
-          "badge": "Printing",
-          "title": "Business & event printing",
-          "description": "Business cards, menus, invitations, laminating, and documents — pro quality."
-        },
-        "readyDesigns": {
-          "badge": "Print designs",
-          "title": "Print designs for cards & invites",
-          "description": "Business cards, wedding invites, menus, and more — enter your details and order."
-        },
-        "photoDesigns": {
-          "badge": "Photo designs",
-          "title": "Ready photo designs on products",
-          "description": "Full photo designs on t-shirts and mugs — order as shown or tweak."
+        "customDesign": {
+          "badge": "Custom",
+          "title": "Design from your brief",
+          "description": "Describe your idea — our team creates a professional layout for print or products."
         },
         "textTemplates": {
           "badge": "Templates",

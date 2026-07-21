@@ -36,7 +36,7 @@ export function ProductTypeCatalog({
   const parentCategory = getCategoryForProductType(type);
 
   return (
-    <div className="space-y-8">
+    <div className="w-full min-w-0 max-w-full space-y-8">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
         <Link
           href={PRODUCT_OFFERING_PATHS.all}
@@ -90,7 +90,7 @@ export function ProductTypeCatalog({
           ) : null}
         </div>
 
-        <Reveal delay={80}>
+        <Reveal delay={80} className="min-w-0">
           <ProductCardGrid items={products} />
         </Reveal>
 

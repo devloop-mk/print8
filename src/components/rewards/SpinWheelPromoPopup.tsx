@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { X } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/Button';
+import { SpinWheelPreview } from '@/components/rewards/SpinWheelPreview';
 import {
   SPIN_CLAIMED_FLAG_KEY,
   SPIN_PROMO_DISMISS_KEY,
@@ -80,7 +81,7 @@ export function SpinWheelPromoPopup() {
   if (!visible || isRewardsPath(pathname)) return null;
 
   return (
-    <div className="fixed inset-0 z-[45] flex items-end justify-center bg-ink-950/40 p-3 sm:items-center sm:p-6">
+    <div className="fixed inset-0 z-[45] flex items-center justify-center bg-ink-950/40 p-3 sm:p-6">
       <div
         className="relative w-full max-w-md border border-brand-200 bg-white p-5 shadow-xl sm:p-6"
         role="dialog"
@@ -96,24 +97,37 @@ export function SpinWheelPromoPopup() {
           <X className="h-5 w-5" />
         </button>
 
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#e85d04]">
-          {t('eyebrow')}
-        </p>
-        <h2
-          id="spin-promo-title"
-          className="mt-2 pr-8 font-display text-2xl font-bold text-brand-950"
-        >
-          {t('title')}
-        </h2>
-        <p className="mt-2 text-sm leading-relaxed text-ink-600">{t('body')}</p>
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+          <div className="mx-auto flex justify-center pt-1 sm:mx-0 sm:w-[168px] sm:shrink-0">
+            <SpinWheelPreview size={168} />
+          </div>
 
-        <div className="mt-5 flex flex-wrap gap-3">
-          <Link href="/rewards" onClick={dismiss}>
-            <Button className="border-[#e85d04] bg-[#e85d04] hover:border-[#f48c06] hover:bg-[#f48c06]">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#e85d04]">
+              {t('eyebrow')}
+            </p>
+            <h2
+              id="spin-promo-title"
+              className="mt-2 pr-8 font-display text-2xl font-bold text-brand-950"
+            >
+              {t('title')}
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-ink-600">{t('body')}</p>
+          </div>
+        </div>
+
+        <div className="mt-5 flex items-center gap-3 max-sm:justify-between sm:flex-wrap sm:justify-start">
+          <Link href="/rewards" onClick={dismiss} className="max-sm:order-2">
+            <Button className="min-h-11 border-[#e85d04] bg-[#e85d04] px-5 hover:border-[#f48c06] hover:bg-[#f48c06]">
               {t('cta')}
             </Button>
           </Link>
-          <Button type="button" variant="ghost" onClick={dismiss}>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={dismiss}
+            className="max-sm:order-1"
+          >
             {t('later')}
           </Button>
         </div>

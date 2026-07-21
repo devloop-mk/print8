@@ -58,7 +58,7 @@ function SaveDesignHint({
     >
       {isDesktop ? (
         <div
-          className="absolute -right-[7px] top-1/2 h-3 w-3 -translate-y-1/2 rotate-45 border-r-2 border-t-2 border-brand-600 bg-white"
+          className="absolute left-1/2 top-0 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rotate-45 border-l-2 border-t-2 border-brand-600 bg-white"
           aria-hidden
         />
       ) : null}
@@ -255,35 +255,7 @@ export function OngoingDesignsNav({
   }
 
   return (
-    <div ref={containerRef} className="relative">
-      {saveHintVisible && !open ? (
-        <>
-          <div
-            role="status"
-            className="fixed inset-x-3 top-[calc(3.25rem+2px)] z-[70] sm:inset-x-4 md:hidden"
-          >
-            <SaveDesignHint
-              message={t('saveHint')}
-              dismissLabel={t('dismissHint')}
-              onDismiss={dismissSaveHint}
-              variant="mobile-banner"
-            />
-          </div>
-
-          <div
-            role="status"
-            className="absolute z-[70] hidden w-[min(100vw-8rem,22rem)] md:block md:right-full md:top-1/2 md:mr-4 md:-translate-y-1/2"
-          >
-            <SaveDesignHint
-              message={t('saveHint')}
-              dismissLabel={t('dismissHint')}
-              onDismiss={dismissSaveHint}
-              variant="desktop"
-            />
-          </div>
-        </>
-      ) : null}
-
+    <div ref={containerRef} className="relative flex flex-col items-center">
       <button
         type="button"
         onClick={() => {
@@ -305,6 +277,34 @@ export function OngoingDesignsNav({
           {count}
         </span>
       </button>
+
+      {saveHintVisible && !open ? (
+        <>
+          <div
+            role="status"
+            className="fixed inset-x-3 top-[calc(3.25rem+2px)] z-[70] sm:inset-x-4 md:hidden"
+          >
+            <SaveDesignHint
+              message={t('saveHint')}
+              dismissLabel={t('dismissHint')}
+              onDismiss={dismissSaveHint}
+              variant="mobile-banner"
+            />
+          </div>
+
+          <div
+            role="status"
+            className="absolute left-1/2 top-full z-[70] mt-2.5 hidden w-[min(calc(100vw-2rem),17rem)] -translate-x-1/2 md:block"
+          >
+            <SaveDesignHint
+              message={t('saveHint')}
+              dismissLabel={t('dismissHint')}
+              onDismiss={dismissSaveHint}
+              variant="desktop"
+            />
+          </div>
+        </>
+      ) : null}
 
       {open ? (
         <div

@@ -10,6 +10,7 @@ import {
 } from '@/lib/products/product-type-design-categories';
 import { DesignTemplatePreview } from '@/components/products/DesignTemplatePreview';
 import { Reveal } from '@/components/motion/Reveal';
+import { cn } from '@/lib/utils';
 
 type ProductTypeDesignCategoriesProps = {
   type: ProductType;
@@ -28,8 +29,8 @@ export function ProductTypeDesignCategories({
   if (categories.length === 0) return null;
 
   return (
-    <Reveal delay={40}>
-      <div className="space-y-3">
+    <Reveal delay={40} className="min-w-0">
+      <div className="min-w-0 space-y-3">
         <div>
           <h3 className="text-sm font-semibold text-ink-900 sm:text-base">
             {t('title')}
@@ -37,7 +38,15 @@ export function ProductTypeDesignCategories({
           <p className="mt-0.5 text-sm text-ink-600">{t('subtitle')}</p>
         </div>
 
-        <ul className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3 xl:grid-cols-5">
+        <div className="w-full min-w-0 max-w-full overflow-hidden sm:overflow-visible">
+          <ul
+            className={cn(
+              'flex w-full min-w-0 max-w-full gap-3 overflow-x-auto pb-1 [contain:inline-size]',
+              'snap-x snap-mandatory scroll-smooth',
+              '[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+              'sm:grid sm:grid-cols-2 sm:overflow-visible sm:pb-0 lg:grid-cols-3 xl:grid-cols-5',
+            )}
+          >
           {categories.map((category) => {
             const title = t(`${category.id}.title`);
             const preview =
@@ -77,7 +86,8 @@ export function ProductTypeDesignCategories({
               </li>
             );
           })}
-        </ul>
+          </ul>
+        </div>
       </div>
     </Reveal>
   );

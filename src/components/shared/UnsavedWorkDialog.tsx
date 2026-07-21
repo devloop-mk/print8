@@ -37,13 +37,14 @@ export function UnsavedWorkDialog({
   return (
     <dialog
       ref={dialogRef}
-      className="fixed left-1/2 top-1/2 w-[min(28rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-ink-200 bg-white p-0 shadow-2xl backdrop:bg-ink-900/50 open:flex open:flex-col"
+      className="fixed inset-0 z-[80] m-0 flex h-full max-h-none w-full max-w-none items-center justify-center border-0 bg-transparent p-4 backdrop:bg-ink-900/50 open:flex"
       onCancel={(event) => {
         event.preventDefault();
         onCancel();
       }}
     >
-      <div className="p-6">
+      <div className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-ink-200 bg-white p-0 shadow-2xl">
+        <div className="p-6">
         <div className="flex gap-4">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
             <AlertTriangle className="h-5 w-5" aria-hidden="true" />
@@ -76,6 +77,7 @@ export function UnsavedWorkDialog({
         >
           {t('leaveWithoutSaving')}
         </button>
+        </div>
       </div>
     </dialog>
   );

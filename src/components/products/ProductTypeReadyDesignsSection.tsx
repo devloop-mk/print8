@@ -26,6 +26,7 @@ import { useCatalogSearchLabels } from '@/hooks/useCatalogSearchLabels';
 import { CatalogGridLayout } from '@/components/catalog/CatalogGrid';
 import { CatalogPagination } from '@/components/catalog/CatalogPagination';
 import { useCatalogPagination } from '@/hooks/useCatalogPagination';
+import { PRODUCT_TYPE_READY_DESIGNS_PAGE_SIZE } from '@/lib/catalog/pagination';
 import { Reveal } from '@/components/motion/Reveal';
 
 type ProductTypeReadyDesignsSectionProps = {
@@ -87,6 +88,7 @@ export function ProductTypeReadyDesignsSection({
 
   const { page, setPage, resetPage, paginate } = useCatalogPagination({
     totalItems: filtered.length,
+    pageSize: PRODUCT_TYPE_READY_DESIGNS_PAGE_SIZE,
   });
 
   const prevFilterSignature = useRef(filterSignature);
@@ -147,7 +149,7 @@ export function ProductTypeReadyDesignsSection({
         </Link>
       </div>
 
-      <Reveal delay={60}>
+      <Reveal delay={60} className="min-w-0">
         <CatalogFilterLayout
           groups={filterGroups}
           ariaLabel={t('filterLabel')}
@@ -183,6 +185,7 @@ export function ProductTypeReadyDesignsSection({
               <CatalogPagination
                 page={page}
                 totalItems={filtered.length}
+                pageSize={PRODUCT_TYPE_READY_DESIGNS_PAGE_SIZE}
                 onPageChange={setPage}
                 previousLabel={tc('paginationPrevious')}
                 nextLabel={tc('paginationNext')}
