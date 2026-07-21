@@ -37,13 +37,21 @@ export function UnsavedWorkDialog({
   return (
     <dialog
       ref={dialogRef}
-      className="fixed inset-0 z-[80] m-0 flex h-full max-h-none w-full max-w-none items-center justify-center border-0 bg-transparent p-4 backdrop:bg-ink-900/50 open:flex"
+      className="z-[80] w-[calc(100vw-2rem)] max-w-md rounded-2xl border-0 bg-transparent p-0 backdrop:bg-ink-900/50"
       onCancel={(event) => {
         event.preventDefault();
         onCancel();
       }}
+      onClick={(event) => {
+        // Clicks on the native ::backdrop bubble up with the dialog itself
+        // as the target, so this only fires for backdrop clicks (not clicks
+        // on the panel content below).
+        if (event.target === dialogRef.current) {
+          onCancel();
+        }
+      }}
     >
-      <div className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-ink-200 bg-white p-0 shadow-2xl">
+      <div className="max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl border border-ink-200 bg-white shadow-2xl">
         <div className="p-6">
         <div className="flex gap-4">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">

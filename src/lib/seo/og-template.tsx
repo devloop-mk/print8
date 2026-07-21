@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { LOGO_MARK } from '@/lib/brand/logos';
+import { LOGO_HORIZONTAL_LIGHT } from '@/lib/brand/logos';
 
 export type OgImageContent = {
   title: string;
@@ -11,6 +11,16 @@ export type OgImageContent = {
   logoUrl?: string;
 };
 
+// Print 8 brand palette (matches tailwind.config.ts `brand`/`ink` scales).
+const BRAND = {
+  600: '#2f7cb2',
+  700: '#286694',
+  800: '#225376',
+  900: '#1c435f',
+  950: '#122b3d',
+};
+const INK_900 = '#0f172a';
+
 export function OgImageLayout({
   title,
   description,
@@ -21,7 +31,7 @@ export function OgImageLayout({
   logoUrl,
 }: OgImageContent) {
   const isMk = locale === 'mk';
-  const markUrl = logoUrl ?? LOGO_MARK;
+  const markUrl = logoUrl ?? LOGO_HORIZONTAL_LIGHT;
 
   return (
     <div
@@ -31,7 +41,7 @@ export function OgImageLayout({
         display: 'flex',
         position: 'relative',
         overflow: 'hidden',
-        background: 'linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 48%, #0f172a 100%)',
+        background: `linear-gradient(135deg, ${BRAND[700]} 0%, ${BRAND[900]} 48%, ${INK_900} 100%)`,
         fontFamily: 'system-ui, -apple-system, Segoe UI, sans-serif',
       }}
     >
@@ -43,7 +53,7 @@ export function OgImageLayout({
           width: 360,
           height: 360,
           borderRadius: '50%',
-          background: 'rgba(96, 165, 250, 0.18)',
+          background: 'rgba(139, 186, 217, 0.18)',
         }}
       />
       <div
@@ -81,23 +91,17 @@ export function OgImageLayout({
           maxWidth: previewImageUrl ? '720px' : '100%',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={markUrl}
             alt=""
-            style={{
-              width: 72,
-              height: 72,
-              objectFit: 'contain',
-              filter: 'brightness(0) invert(1)',
-            }}
+            width={216}
+            height={58}
+            style={{ objectFit: 'contain' }}
           />
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ fontSize: 40, fontWeight: 800, letterSpacing: -1 }}>Print 8</div>
-            <div style={{ fontSize: 18, color: 'rgba(255,255,255,0.78)' }}>
-              {subtitle || (isMk ? 'Професионално печатење' : 'Professional printing')}
-            </div>
+          <div style={{ fontSize: 18, color: 'rgba(255,255,255,0.78)' }}>
+            {subtitle || (isMk ? 'Професионално печатење' : 'Professional printing')}
           </div>
         </div>
 
@@ -191,9 +195,9 @@ export function OgImageLayout({
 function OgDecorPanel({ locale }: { locale: string }) {
   const isMk = locale === 'mk';
   const cards: Array<{ label: string; color: string; rotate: number; top: number; left: number }> = [
-    { label: isMk ? 'Карти' : 'Cards', color: '#dbeafe', rotate: -8, top: 90, left: 40 },
-    { label: isMk ? 'Печат' : 'Print', color: '#eff6ff', rotate: 10, top: 210, left: 120 },
-    { label: isMk ? 'Дизајн' : 'Design', color: '#bfdbfe', rotate: -4, top: 330, left: 60 },
+    { label: isMk ? 'Карти' : 'Cards', color: '#dceaf4', rotate: -8, top: 90, left: 40 },
+    { label: isMk ? 'Печат' : 'Print', color: '#f0f6fa', rotate: 10, top: 210, left: 120 },
+    { label: isMk ? 'Дизајн' : 'Design', color: '#b9d5e9', rotate: -4, top: 330, left: 60 },
   ];
 
   return (
@@ -223,7 +227,7 @@ function OgDecorPanel({ locale }: { locale: string }) {
             display: 'flex',
             alignItems: 'flex-end',
             padding: 18,
-            color: '#1e3a8a',
+            color: BRAND[900],
             fontSize: 22,
             fontWeight: 700,
           }}

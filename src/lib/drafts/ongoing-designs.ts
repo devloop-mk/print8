@@ -34,6 +34,7 @@ function productItem(draft: ProductCustomizerDraft): OngoingDesignItem {
       design: draft.designId ?? undefined,
       color: draft.color,
       size: draft.size,
+      resume: true,
     }),
     updatedAt: draft.updatedAt,
   };

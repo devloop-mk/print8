@@ -25,6 +25,13 @@ export type CustomizerUrlOptions = {
   color?: string;
   size?: string;
   fit?: string;
+  /**
+   * Set when the link should explicitly resume a previously saved draft
+   * (e.g. the pencil icon in the "ongoing designs" list). When omitted,
+   * the customizer starts a fresh session instead of silently restoring
+   * whatever was last saved for this product/design combination.
+   */
+  resume?: boolean;
 };
 
 export function buildCustomizerUrl(
@@ -38,6 +45,7 @@ export function buildCustomizerUrl(
   if (options?.color) params.set('color', options.color);
   if (options?.size) params.set('size', options.size);
   if (options?.fit) params.set('fit', options.fit);
+  if (options?.resume) params.set('resume', '1');
   return `/products/customize/${productType}?${params.toString()}`;
 }
 

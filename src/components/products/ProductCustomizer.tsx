@@ -751,6 +751,10 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   const colorParam = searchParams.get('color');
   const sizeParam = searchParams.get('size');
   const fitParam = searchParams.get('fit');
+  // Only restore a previously saved draft when the link explicitly asks for
+  // it (e.g. the pencil icon in "ongoing designs"). Plain "create design"
+  // entry points should always start a blank session.
+  const resumeParam = searchParams.get('resume') === '1';
 
   const designTemplateForFit = useMergedProductDesignTemplate(designId);
 
@@ -1319,7 +1323,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   useEffect(() => {
     if (!designId || editCartItemId || !product || !activeDesignTemplate) return;
     if (activeDesignTemplate.id !== designId) return;
-    if (findProductCustomizerDraft(product.id, designId)) return;
+    if (resumeParam && findProductCustomizerDraft(product.id, designId)) return;
     if (designInitializedRef.current === designId) return;
     designInitializedRef.current = designId;
 
@@ -1354,10 +1358,18 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     }
 
     setActiveSide(initialSide);
-  }, [activeDesignTemplate, color, colorParam, designId, editCartItemId, product]);
+  }, [
+    activeDesignTemplate,
+    color,
+    colorParam,
+    designId,
+    editCartItemId,
+    product,
+    resumeParam,
+  ]);
 
   useEffect(() => {
-    if (!product || editCartItemId) return;
+    if (!resumeParam || !product || editCartItemId) return;
 
     const draft = findProductCustomizerDraft(product.id, designId);
     if (!draft) return;
@@ -1380,7 +1392,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       }
     }
     setSideDesigns(restored);
-  }, [product, designId, editCartItemId]);
+  }, [product, designId, editCartItemId, resumeParam]);
 
   useEffect(() => {
     if (!editCartItemId || !product) return;
