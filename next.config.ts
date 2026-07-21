@@ -39,6 +39,12 @@ const nextConfig: NextConfig = {
       './supabase/**',
     ],
   },
+  // /api/og reads the brand logo off disk (fs) to inline it as a data URI —
+  // re-include just that one small asset for this route so it survives the
+  // blanket `./public/**` exclusion above instead of 404ing in production.
+  outputFileTracingIncludes: {
+    '/api/og': ['./public/logo/**'],
+  },
   turbopack: {
     root: projectRoot,
   },

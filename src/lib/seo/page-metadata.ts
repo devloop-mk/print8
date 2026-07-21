@@ -19,6 +19,7 @@ import {
 import type { ProductNavCategoryId } from '@/lib/products/product-nav';
 import { buildOgImageUrl, buildPageMetadata } from '@/lib/seo/metadata';
 import { resolveAssetUrl } from '@/lib/storage/asset-url';
+import { getDesignGalleryImage } from '@/lib/designs/design-thumb';
 import { getCouplePackTemplate, getCouplePackPartnerDesign } from '@/lib/data/couple-pack';
 import { resolveProductDesignDisplayName } from '@/lib/products/design-display-name';
 
@@ -137,6 +138,9 @@ export async function buildDesignMetadata(locale: Locale, id: string) {
   const categoryName = td(`categories.${template.category}`);
   const title = `${designName} | Print 8`;
   const description = td('subtitle');
+  // Live SVGs aren't safe for server-side rasterization (satori/resvg) — use
+  // the pre-rendered raster gallery thumb when available, same as the catalog UI.
+  const previewSource = getDesignGalleryImage(template);
 
   return buildPageMetadata({
     locale,
@@ -148,7 +152,7 @@ export async function buildDesignMetadata(locale: Locale, id: string) {
       title: designName,
       description: categoryName,
       badge: tm('badges.design'),
-      image: resolveAssetUrl(template.image),
+      image: previewSource ? resolveAssetUrl(previewSource) : undefined,
     }),
   });
 }
@@ -167,6 +171,9 @@ export async function buildDesignCustomizeMetadata(locale: Locale, id: string) {
       : td(`templates.${template.id}`);
   const title = `${designName} | Print 8`;
   const description = tc('pageSubtitle');
+  // Live SVGs aren't safe for server-side rasterization (satori/resvg) — use
+  // the pre-rendered raster gallery thumb when available, same as the catalog UI.
+  const previewSource = getDesignGalleryImage(template);
 
   return buildPageMetadata({
     locale,
@@ -178,7 +185,7 @@ export async function buildDesignCustomizeMetadata(locale: Locale, id: string) {
       title: designName,
       description: tc('badge'),
       badge: tm('badges.customize'),
-      image: resolveAssetUrl(template.image),
+      image: previewSource ? resolveAssetUrl(previewSource) : undefined,
     }),
   });
 }

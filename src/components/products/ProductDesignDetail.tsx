@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link, useRouter } from '@/i18n/navigation';
 import {
@@ -8,8 +8,10 @@ import {
   isOverlayDesignTemplate,
   isTextDesignTemplate,
   type ProductDesignTemplate,
+  type ProductSide,
 } from '@/lib/data/catalog';
 import { getCouplePackPartnerDesign } from '@/lib/data/couple-pack';
+import { getDesignSides, isDualSidedDesign } from '@/lib/products/design-sides';
 import { useMergedProductDesignTemplate } from '@/lib/products/use-merged-product-design-template';
 import { resolveProductDesignDisplayName } from '@/lib/products/design-display-name';
 import {
@@ -26,7 +28,7 @@ import { buildPremadeDesignCartPayload } from '@/lib/products/premade-design-ord
 import { capturePreviewElement } from '@/lib/products/capture-preview';
 import { buildCustomizerUrl, PRODUCT_OFFERING_PATHS } from '@/lib/products/paths';
 import { getProductSpecs } from '@/lib/products/product-specs';
-import { formatPrice } from '@/lib/utils';
+import { cn, formatPrice } from '@/lib/utils';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { DesignTemplatePreview } from '@/components/products/DesignTemplatePreview';
@@ -96,11 +98,21 @@ export function ProductDesignDetail({
     () => product?.sizes?.[0] ?? resolved?.product.sizes?.[0] ?? '',
   );
 
+  const [previewSide, setPreviewSide] = useState<ProductSide>(
+    () => resolved?.design.defaultSide ?? 'front',
+  );
+  useEffect(() => {
+    setPreviewSide(resolved?.design.defaultSide ?? 'front');
+  }, [resolved?.design.id]);
+
   if (!resolved || !product) {
     return <p>{td('notFound')}</p>;
   }
 
   const { design, applicableFits } = resolved;
+  const designSides = getDesignSides(design);
+  const isDualSided = isDualSidedDesign(design);
+  const activePreviewSide = isDualSided ? previewSide : design.defaultSide;
   const displayName = resolveProductDesignDisplayName(design, locale as 'mk' | 'en', (key) =>
     t(key),
   );
@@ -177,6 +189,35 @@ export function ProductDesignDetail({
       <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
         <Reveal>
           <Card className="overflow-hidden p-4 sm:p-6">
+            {isDualSided ? (
+              <div className="mb-4 flex justify-center">
+                <div
+                  role="tablist"
+                  aria-label={tdp('sideSwitcherLabel')}
+                  className="inline-flex rounded-lg bg-ink-100 p-1"
+                >
+                  {designSides.map((sideOption) => (
+                    <button
+                      key={sideOption}
+                      type="button"
+                      role="tab"
+                      aria-selected={activePreviewSide === sideOption}
+                      onClick={() => setPreviewSide(sideOption)}
+                      className={cn(
+                        'rounded-md px-4 py-1.5 text-sm font-semibold transition',
+                        activePreviewSide === sideOption
+                          ? 'bg-white text-brand-700 shadow-sm'
+                          : 'text-ink-600 hover:text-ink-900',
+                      )}
+                    >
+                      {sideOption === 'back'
+                        ? tCustomizer('back')
+                        : tCustomizer('front')}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
             <div ref={previewRef}>
               {isTextDesignTemplate(design) || isOverlayDesignTemplate(design) ? (
                 <DesignTemplatePreview
@@ -184,6 +225,7 @@ export function ProductDesignDetail({
                   color={color}
                   design={design}
                   typeLabel={tp(product.type)}
+                  side={activePreviewSide}
                 />
               ) : isImageDesignTemplate(design) && design.image ? (
                 <div className="relative aspect-square overflow-hidden bg-white">

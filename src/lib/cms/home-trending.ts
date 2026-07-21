@@ -16,7 +16,7 @@ const getTrendingRowsCached = unstable_cache(
   async () => cmsDb.homeTrending.list(),
   ['cms-home-trending-rows'],
   {
-    revalidate: 300,
+    revalidate: 1800,
     tags: [CMS_HOME_TRENDING_CACHE_TAG],
   },
 );

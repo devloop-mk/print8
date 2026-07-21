@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import type { SvgDesignTemplate } from '@/lib/data/svg-design-templates';
 import type { ManagedSvgTemplateDefaultsPayload } from '@/lib/db/managed-svg-templates';
 import { buildDefaultSvgTemplateState } from '@/lib/designs/svg-template-engine';
@@ -82,7 +81,6 @@ export function SvgTemplateDefaultsForm({
   initialDefaults,
   galleryThumbRegenEnabled = false,
 }: SvgTemplateDefaultsFormProps) {
-  const router = useRouter();
   const [defaults, setDefaults] = useState<ManagedSvgTemplateDefaultsPayload>(
     initialDefaults ?? emptyDefaults(),
   );
@@ -208,7 +206,6 @@ export function SvgTemplateDefaultsForm({
             ? 'Стандардните вредности се зачувани.'
             : 'Стандардните вредности се зачувани. За gallery WebP локално пуштете npm run regenerate:design-gallery-thumb.',
       );
-      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save defaults');
     } finally {
@@ -246,7 +243,6 @@ export function SvgTemplateDefaultsForm({
           ? `Галерискиот WebP преглед е обновен (${count}).`
           : 'Галерискиот WebP преглед е обновен.',
       );
-      router.refresh();
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Failed to regenerate gallery WebP',
@@ -280,7 +276,6 @@ export function SvgTemplateDefaultsForm({
       setDefaults(emptyDefaults());
       invalidateManagedSvgDefaultsMapCache();
       setMessage('Стандардните вредности се вратени на вредностите од кодот.');
-      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to reset defaults');
     } finally {

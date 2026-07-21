@@ -22,7 +22,7 @@ const getCachedManagedProductDesignRecords = unstable_cache(
     managedProductDesignsDb.list(),
   ['managed-product-design-records'],
   {
-    revalidate: 300,
+    revalidate: 1800,
     tags: [PRODUCT_DESIGNS_CACHE_TAG],
   },
 );

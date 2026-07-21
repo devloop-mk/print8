@@ -20,7 +20,7 @@ const getManagedSvgTemplatesCached = unstable_cache(
   async () => managedSvgTemplatesDb.list(),
   ['managed-svg-templates-v1'],
   {
-    revalidate: 300,
+    revalidate: 1800,
     tags: [MANAGED_SVG_TEMPLATES_CACHE_TAG],
   },
 );

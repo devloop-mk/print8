@@ -1,7 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type { CatalogDesignRecord } from '@/lib/db/catalog-designs';
 import {
@@ -17,7 +16,6 @@ type DesignEditorFormProps = {
 };
 
 export function DesignEditorForm({ design }: DesignEditorFormProps) {
-  const router = useRouter();
   const [form, setForm] = useState({
     category: design.category,
     kind: design.kind,
@@ -73,7 +71,6 @@ export function DesignEditorForm({ design }: DesignEditorFormProps) {
       }
 
       setMessage('Промените се зачувани.');
-      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save design');
     } finally {

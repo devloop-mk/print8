@@ -346,6 +346,8 @@ function useScaleResize(
   const startRef = useRef({ pointerX: 0, pointerY: 0, scale: 0 });
   const maxRef = useRef(max);
   maxRef.current = max;
+  const minRef = useRef(min);
+  minRef.current = min;
 
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -366,9 +368,13 @@ function useScaleResize(
     const delta =
       event.clientX - startRef.current.pointerX +
       (event.clientY - startRef.current.pointerY);
+    // Guard against an inverted range (effective min above max), which
+    // would otherwise pin `next` to a single overflowing value and make
+    // the resize handle appear frozen for very tall/narrow artwork.
+    const effectiveMin = Math.min(minRef.current, maxRef.current);
     const next = Math.min(
       maxRef.current,
-      Math.max(min, Math.round(startRef.current.scale + delta * 0.15)),
+      Math.max(effectiveMin, Math.round(startRef.current.scale + delta * 0.15)),
     );
     onScaleChange(next);
   };

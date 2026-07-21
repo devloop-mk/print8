@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { LOGO_HORIZONTAL_LIGHT } from '@/lib/brand/logos';
 
 export type OgImageContent = {
   title: string;
@@ -31,7 +30,6 @@ export function OgImageLayout({
   logoUrl,
 }: OgImageContent) {
   const isMk = locale === 'mk';
-  const markUrl = logoUrl ?? LOGO_HORIZONTAL_LIGHT;
 
   return (
     <div
@@ -92,14 +90,27 @@ export function OgImageLayout({
         }}
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={markUrl}
-            alt=""
-            width={216}
-            height={58}
-            style={{ objectFit: 'contain' }}
-          />
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={logoUrl}
+              alt=""
+              width={216}
+              height={58}
+              style={{ objectFit: 'contain' }}
+            />
+          ) : (
+            <div
+              style={{
+                fontSize: 34,
+                fontWeight: 800,
+                letterSpacing: -0.5,
+                color: '#ffffff',
+              }}
+            >
+              Print 8
+            </div>
+          )}
           <div style={{ fontSize: 18, color: 'rgba(255,255,255,0.78)' }}>
             {subtitle || (isMk ? 'Професионално печатење' : 'Professional printing')}
           </div>

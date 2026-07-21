@@ -70,6 +70,10 @@ export function usePrintAreaMaxScale(
         imageAspect,
         parentAspect,
       );
+      // Floor at PRODUCT_PHOTO_MIN_SCALE only to avoid a degenerate ~0%
+      // max; don't let this push max above the true aspect-correct fit
+      // size, or tall/narrow art gets locked at an overflowing scale
+      // (min === max) with no room to shrink to fit the print area.
       setMaxScale(
         Math.max(PRODUCT_PHOTO_MIN_SCALE, Math.floor(max)),
       );

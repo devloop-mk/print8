@@ -4,7 +4,6 @@ import { z } from 'zod';
 import { requireAdminApi } from '@/lib/admin/api-auth';
 import { displayOrderDb } from '@/lib/db/display-order';
 import { DESIGN_DISPLAY_ORDER_CACHE_TAG } from '@/lib/cms/display-order';
-import { PRODUCT_DESIGNS_CACHE_TAG } from '@/lib/products/merged-product-designs';
 
 const bodySchema = z.object({
   entries: z
@@ -37,9 +36,11 @@ export async function PUT(request: NextRequest) {
     }
 
     const entries = await displayOrderDb.designs.upsertMany(parsed.data.entries);
+    // Only the display-order Data Cache entry actually changed here — the
+    // managed product-design records (PRODUCT_DESIGNS_CACHE_TAG) are untouched,
+    // and 'catalog-ready-designs' does not tag any unstable_cache entry
+    // (getCachedReadyDesignEntriesForType is React-cache only, per-request).
     revalidateTag(DESIGN_DISPLAY_ORDER_CACHE_TAG, 'max');
-    revalidateTag(PRODUCT_DESIGNS_CACHE_TAG, 'max');
-    revalidateTag('catalog-ready-designs', 'max');
     return NextResponse.json({ entries });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to save design order';

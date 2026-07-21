@@ -29,8 +29,10 @@ export type {
 } from '@/lib/admin/product-designs-shared';
 
 function revalidateProductDesignCaches() {
+  // 'catalog-ready-designs' does not tag any unstable_cache entry (it's an
+  // unused constant in CATALOG_CACHE_TAGS) — only PRODUCT_DESIGNS_CACHE_TAG
+  // actually invalidates cached data here (managed product-design records).
   revalidateTag(PRODUCT_DESIGNS_CACHE_TAG, 'max');
-  revalidateTag('catalog-ready-designs', 'max');
 }
 
 function buildAdminProductDesignListItems(

@@ -12,6 +12,14 @@ export function getSiteUrl() {
     return `https://${process.env.VERCEL_URL.replace(/\/$/, '')}`;
   }
 
+  // In local dev, fall back to localhost instead of the production domain so
+  // OG/asset URLs built during `next dev` resolve to this machine instead of
+  // silently depending on network access to the live site.
+  if (process.env.NODE_ENV === 'development') {
+    const port = process.env.PORT?.trim() || '3000';
+    return `http://localhost:${port}`;
+  }
+
   return DEFAULT_SITE_URL;
 }
 

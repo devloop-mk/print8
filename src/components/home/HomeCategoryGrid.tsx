@@ -147,7 +147,7 @@ export function HomeCategoryGrid({ productCount }: { productCount: number }) {
                 key={tile.id}
                 href={tileHref(tile)}
                 className={cn(
-                  'group relative aspect-square overflow-hidden rounded-2xl bg-ink-50',
+                  'group relative aspect-square overflow-hidden rounded-2xl bg-white',
                   'border border-ink-200/80 transition',
                   'hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-lift',
                 )}
@@ -158,7 +158,7 @@ export function HomeCategoryGrid({ productCount }: { productCount: number }) {
                   fill
                   sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 22vw"
                   className={cn(
-                    'object-contain p-5 pb-12 transition duration-300 group-hover:scale-[1.03]',
+                    'object-contain p-3 pb-10 transition duration-300 group-hover:scale-[1.03]',
                     tile.imageClassName,
                   )}
                 />

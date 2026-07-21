@@ -12,7 +12,7 @@ const getProductDisplayOrderRowsCached = unstable_cache(
   async (): Promise<DisplayOrderRecord[]> => displayOrderDb.products.list(),
   ['cms-product-display-order-rows'],
   {
-    revalidate: 300,
+    revalidate: 1800,
     tags: [PRODUCT_DISPLAY_ORDER_CACHE_TAG],
   },
 );
@@ -21,7 +21,7 @@ const getDesignDisplayOrderRowsCached = unstable_cache(
   async (): Promise<DisplayOrderRecord[]> => displayOrderDb.designs.list(),
   ['cms-design-display-order-rows'],
   {
-    revalidate: 300,
+    revalidate: 1800,
     tags: [DESIGN_DISPLAY_ORDER_CACHE_TAG],
   },
 );
