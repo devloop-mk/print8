@@ -1,6 +1,12 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
+import { absoluteUrl } from '@/lib/seo/site';
+import {
+  resolveAssetUrl,
+  toCatalogStoragePath,
+  isRemoteAssetUrl,
+} from '@/lib/storage/asset-url';
 
 export const runtime = 'nodejs';
 
@@ -28,6 +34,10 @@ const TRANSPARENT_PNG = Buffer.from(
  * 3. Legacy raw artwork (`a` / `b`) side by side on white cards.
  *
  * Never touches satori/next-og or SVG — only raster png/jpg/webp via sharp.
+ *
+ * Production note: `public/**` is excluded from serverless file tracing
+ * (`next.config` outputFileTracingExcludes). Prefer HTTP fetch of CDN/site
+ * URLs; disk reads only work locally or for the few `og/` files we re-include.
  */
 function isSvgPath(value: string) {
   return /\.svg(\?.*)?$/i.test(value);
@@ -51,31 +61,76 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
   });
 }
 
+async function fetchRasterUrl(url: string): Promise<Buffer | null> {
+  try {
+    // encodeURI keeps already-encoded sequences but encodes spaces in paths.
+    const response = await withTimeout(
+      fetch(encodeURI(url)),
+      RENDER_TIMEOUT_MS,
+      'design og fetch',
+    );
+    if (!response.ok) return null;
+    return Buffer.from(await response.arrayBuffer());
+  } catch (error) {
+    console.error('[api/og/design] Failed to fetch image:', url, error);
+    return null;
+  }
+}
+
 /**
- * Query values are either a site-relative `public/` path (e.g.
- * `/NEW_DESIGNS/caps/cap-skopje.png`) or an already-absolute CDN URL from
- * `resolveAssetUrl`. Local paths are read straight off disk — no HTTP
- * round-trip into our own app.
+ * Load a raster for compositing. Query values may be:
+ * - absolute CDN URLs (`resolveAssetUrl` / `toOgAssetRef`)
+ * - site-absolute URLs
+ * - legacy site-relative `public/` paths
+ *
+ * Disk is attempted first for relative paths (local/dev). Production falls
+ * through to CDN then the site origin, because serverless has no `public/`.
  */
 async function loadRasterBuffer(value: string | null): Promise<Buffer | null> {
   if (!value) return null;
   if (isSvgPath(value) || !ALLOWED_RASTER_EXT.test(value)) return null;
 
-  try {
-    if (/^https?:/i.test(value)) {
-      const response = await withTimeout(fetch(value), RENDER_TIMEOUT_MS, 'design og fetch');
-      if (!response.ok) return null;
-      return Buffer.from(await response.arrayBuffer());
+  const withoutQuery = value.split('?')[0] ?? value;
+
+  if (/^https?:/i.test(withoutQuery)) {
+    const primary = await fetchRasterUrl(withoutQuery);
+    if (primary) return primary;
+
+    // CDN miss → try the same asset from the site static origin when the URL
+    // maps back to a catalog-relative path.
+    const local = toCatalogStoragePath(withoutQuery);
+    if (local.startsWith('/') && !isRemoteAssetUrl(local)) {
+      const siteUrl = absoluteUrl(local.split('?')[0] ?? local);
+      if (siteUrl !== withoutQuery) {
+        return fetchRasterUrl(siteUrl);
+      }
     }
-    // Strip cache-busting query strings (`?v=3`) before reading public/.
-    const withoutQuery = value.split('?')[0] ?? value;
-    const relative = withoutQuery.startsWith('/') ? withoutQuery.slice(1) : withoutQuery;
-    const filePath = path.join(process.cwd(), 'public', decodeURIComponent(relative));
-    return await readFile(filePath);
-  } catch (error) {
-    console.error('[api/og/design] Failed to load image:', value, error);
     return null;
   }
+
+  const normalized = withoutQuery.startsWith('/')
+    ? withoutQuery
+    : `/${withoutQuery}`;
+  const relative = normalized.slice(1);
+
+  try {
+    const filePath = path.join(
+      process.cwd(),
+      'public',
+      decodeURIComponent(relative),
+    );
+    return await readFile(filePath);
+  } catch {
+    // Expected in production serverless — fall through to HTTP.
+  }
+
+  const resolved = resolveAssetUrl(normalized);
+  if (/^https?:/i.test(resolved)) {
+    const fromCdn = await fetchRasterUrl(resolved.split('?')[0] ?? resolved);
+    if (fromCdn) return fromCdn;
+  }
+
+  return fetchRasterUrl(absoluteUrl(normalized));
 }
 
 let cachedBackground: Buffer | null | undefined;
@@ -86,9 +141,12 @@ async function getBackgroundBuffer(): Promise<Buffer> {
       cachedBackground = await readFile(
         path.join(process.cwd(), 'public', 'og', 'design-bg.jpg'),
       );
-    } catch (error) {
-      console.error('[api/og/design] Failed to read background asset:', error);
-      cachedBackground = null;
+    } catch {
+      cachedBackground =
+        (await fetchRasterUrl(absoluteUrl('/og/design-bg.jpg'))) ?? null;
+      if (!cachedBackground) {
+        console.error('[api/og/design] Failed to load background asset');
+      }
     }
   }
   if (cachedBackground) return cachedBackground;
@@ -296,13 +354,22 @@ function toBodyInit(buffer: Buffer): BodyInit {
 
 async function fallbackResponse(): Promise<Response> {
   try {
-    const fallback = await readFile(path.join(process.cwd(), 'public', 'og', 'default.jpg'));
+    const fallback = await readFile(
+      path.join(process.cwd(), 'public', 'og', 'default.jpg'),
+    );
     return new Response(toBodyInit(fallback), {
       status: 200,
       headers: { ...RESPONSE_HEADERS, 'Content-Type': 'image/jpeg' },
     });
-  } catch (error) {
-    console.error('[api/og/design] Fallback default.jpg unavailable:', error);
+  } catch {
+    const fetched = await fetchRasterUrl(absoluteUrl('/og/default.jpg'));
+    if (fetched) {
+      return new Response(toBodyInit(fetched), {
+        status: 200,
+        headers: { ...RESPONSE_HEADERS, 'Content-Type': 'image/jpeg' },
+      });
+    }
+    console.error('[api/og/design] Fallback default.jpg unavailable');
   }
   return new Response(toBodyInit(TRANSPARENT_PNG), {
     status: 200,

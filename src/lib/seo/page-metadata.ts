@@ -28,11 +28,22 @@ import { getDesignGalleryImage } from '@/lib/designs/design-thumb';
 import { getCouplePackTemplate, getCouplePackPartnerDesign } from '@/lib/data/couple-pack';
 import { resolveProductDesignDisplayName } from '@/lib/products/design-display-name';
 
+function isSvgAssetPath(value: string) {
+  return /\.svg(\?.*)?$/i.test(value);
+}
+
+/** Blank PDP og:image — product mockup photo (absolute), never fragile satori `/api/og`. */
+function buildBlankProductOgImage(productImage: string | undefined) {
+  if (!productImage || isSvgAssetPath(productImage)) return undefined;
+  // Prefer the design OG compositor card (same share look as design PDPs)
+  // with the blank mockup as a single image panel.
+  return buildDesignOgImageUrl([{ kind: 'image', src: productImage }]);
+}
+
 export async function buildProductMetadata(locale: Locale, id: string) {
   const product = products.find((item) => item.id === id);
   if (!product) return null;
 
-  const t = await getTranslations({ locale, namespace: 'products' });
   const tp = await getTranslations({ locale, namespace: 'products.types' });
   const ti = await getTranslations({ locale, namespace: 'products.items' });
   const td = await getTranslations({ locale, namespace: 'products.detail' });
@@ -41,19 +52,21 @@ export async function buildProductMetadata(locale: Locale, id: string) {
   const productName = product.nameKey ? ti(product.nameKey) : tp(product.type);
   const title = `${productName} | Print 8`;
   const description = td('description');
+  const image =
+    buildBlankProductOgImage(product.image) ??
+    buildOgImageUrl({
+      locale,
+      title: productName,
+      description,
+      badge: tm('badges.product'),
+    });
 
   return buildPageMetadata({
     locale,
     title,
     description,
     path: `/products/${id}`,
-    image: buildOgImageUrl({
-      locale,
-      title: productName,
-      description,
-      badge: tm('badges.product'),
-      image: product.image,
-    }),
+    image,
   });
 }
 
@@ -375,9 +388,9 @@ export async function buildDesignProductMetadata(
       ? buildDesignOgImageUrl(panels)
       : undefined;
 
-  const fallbackImage = products[0]?.image
-    ? resolveAssetUrl(products[0].image)
-    : undefined;
+  const fallbackProductImage = products.find(
+    (item) => item.image && !isSvgAssetPath(item.image),
+  )?.image;
 
   return buildPageMetadata({
     locale,
@@ -386,13 +399,14 @@ export async function buildDesignProductMetadata(
     path: `/products/design/${designId}`,
     image:
       image ??
-      buildOgImageUrl({
-        locale,
-        title: designName,
-        description,
-        badge: tm('badges.product'),
-        image: fallbackImage,
-      }),
+      (fallbackProductImage
+        ? buildDesignOgImageUrl([{ kind: 'image', src: fallbackProductImage }])
+        : buildOgImageUrl({
+            locale,
+            title: designName,
+            description,
+            badge: tm('badges.product'),
+          })),
   });
 }
 
@@ -405,14 +419,21 @@ export async function buildCouplePackMetadata(
   if (!pack) return null;
 
   const tc = await getTranslations({ locale, namespace: 'products.couplePacks' });
+  const tm = await getTranslations({ locale, namespace: 'metadata' });
 
-  const title =
-    locale === 'mk' ? `${pack.titleMk} | Print 8` : `${pack.titleEn} | Print 8`;
+  const packName = locale === 'mk' ? pack.titleMk : pack.titleEn;
+  const title = `${packName} | Print 8`;
   const description = tc('metaDescription', {
-    name: locale === 'mk' ? pack.titleMk : pack.titleEn,
+    name: packName,
   });
 
   const panels = resolveCouplePackOgPanels(pack, preferredType);
+  const image =
+    panels.length > 0
+      ? buildDesignOgImageUrl(panels)
+      : buildBlankProductOgImage(
+          products.find((item) => item.type === pack.productTypes[0])?.image,
+        );
 
   return buildPageMetadata({
     locale,
@@ -420,8 +441,12 @@ export async function buildCouplePackMetadata(
     description,
     path: `/products/design/couple/${packId}`,
     image:
-      panels.length > 0
-        ? buildDesignOgImageUrl(panels)
-        : undefined,
+      image ??
+      buildOgImageUrl({
+        locale,
+        title: packName,
+        description,
+        badge: tm('badges.product'),
+      }),
   });
 }

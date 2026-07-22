@@ -17,10 +17,7 @@ import {
 import { getDesignSides, resolveSideOverlayConfig } from '@/lib/products/design-sides';
 import { resolveDesignProduct } from '@/lib/products/garment-fit';
 import { absoluteUrl } from '@/lib/seo/site';
-import {
-  isRemoteAssetUrl,
-  toCatalogStoragePath,
-} from '@/lib/storage/asset-url';
+import { resolveAssetUrl } from '@/lib/storage/asset-url';
 
 /**
  * One panel in the design OG compositor (`/api/og/design`).
@@ -41,21 +38,27 @@ function isSvgPath(value: string) {
 }
 
 /**
- * Prefer site-relative `public/` paths so `/api/og/design` reads from disk.
- * Only keep absolute URLs for true remotes that are not our catalog CDN.
+ * OG compositor runs in a serverless function where `public/**` is excluded
+ * from the file trace — `readFile(public/...)` usually fails in production.
+ * Always emit an absolute, HTTP-fetchable URL:
+ * - CDN via `resolveAssetUrl` when configured (R2 catalog assets)
+ * - otherwise the site origin (Vercel still serves `public/` as static files)
  */
-function toOgAssetRef(url: string): string {
+export function toOgAssetRef(url: string): string {
   if (!url) return url;
-  // Drop cache-busting queries so the OG route can read public/ files.
+  // Drop cache-busting queries (`?v=3`) — not needed for OG fetches.
   const withoutQuery = url.split('?')[0] ?? url;
   if (/^https?:/i.test(withoutQuery)) {
-    const local = toCatalogStoragePath(withoutQuery);
-    if (local.startsWith('/') && !isRemoteAssetUrl(local)) {
-      return local.split('?')[0] ?? local;
-    }
     return withoutQuery;
   }
-  return withoutQuery.startsWith('/') ? withoutQuery : `/${withoutQuery}`;
+  const normalized = withoutQuery.startsWith('/')
+    ? withoutQuery
+    : `/${withoutQuery}`;
+  const resolved = resolveAssetUrl(normalized);
+  if (/^https?:/i.test(resolved)) {
+    return resolved.split('?')[0] ?? resolved;
+  }
+  return absoluteUrl(normalized);
 }
 
 function resolveRasterOverlayUrl(
@@ -169,18 +172,20 @@ export function resolveCouplePackOgPanels(
 /**
  * Build `/api/og/design?...` URL for one or two panels (mockup+overlay or
  * pre-composited image). Always absolute + production-safe via `absoluteUrl`.
+ * Panel asset paths are normalized to absolute CDN/site URLs so the route can
+ * fetch them (serverless has no reliable `public/` disk access).
  */
 export function buildDesignOgImageUrl(panels: DesignOgPanel[]) {
   const search = new URLSearchParams();
 
   panels.slice(0, 2).forEach((panel, index) => {
     if (panel.kind === 'image') {
-      search.set(`i${index}`, panel.src);
+      search.set(`i${index}`, toOgAssetRef(panel.src));
       return;
     }
 
-    search.set(`m${index}`, panel.mockup);
-    if (panel.overlay) search.set(`o${index}`, panel.overlay);
+    search.set(`m${index}`, toOgAssetRef(panel.mockup));
+    if (panel.overlay) search.set(`o${index}`, toOgAssetRef(panel.overlay));
     search.set(`x${index}`, String(panel.placement.position.x));
     search.set(`y${index}`, String(panel.placement.position.y));
     search.set(`s${index}`, String(panel.placement.scale));
