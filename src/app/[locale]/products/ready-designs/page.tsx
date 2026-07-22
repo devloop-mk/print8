@@ -18,7 +18,8 @@ import {
 } from '@/lib/products/paths';
 import type { Locale } from '@/i18n/routing';
 
-export const revalidate = 21600;
+/** Fat catalog payload — skip ISR writes; render on demand. */
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({
   params,

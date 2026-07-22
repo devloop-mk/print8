@@ -63,6 +63,7 @@ const DesignCard = memo(function DesignCard({
   return (
     <Link
       href={getDesignHref(design)}
+      prefetch={false}
       className={cn('group block', getCatalogItemClassName(grid))}
     >
       <Card className="overflow-hidden p-0 transition group-hover:shadow-md">

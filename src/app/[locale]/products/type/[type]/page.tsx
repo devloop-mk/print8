@@ -10,7 +10,8 @@ import { buildProductTypePageMetadata } from '@/lib/seo/page-metadata';
 import type { Locale } from '@/i18n/routing';
 import type { ProductType } from '@/lib/data/catalog';
 
-export const revalidate = 21600;
+/** Fat catalog payload — skip ISR writes; render on demand. */
+export const dynamic = 'force-dynamic';
 
 function isProductType(value: string): value is ProductType {
   return (productTypes as readonly string[]).includes(value);

@@ -1,5 +1,6 @@
 import {
   designTemplates,
+  type DesignCategory,
   type DesignTemplate,
 } from '@/lib/data/catalog';
 import {
@@ -17,6 +18,9 @@ import { unstable_cache } from 'next/cache';
 import { CATALOG_CACHE_SECONDS } from '@/lib/cache/catalog-cache';
 
 export const CATALOG_DESIGNS_CACHE_TAG = 'catalog-designs';
+/** Homepage featured strip only — not busted by exclusive order reservations. */
+export const HOME_FEATURED_DESIGNS_CACHE_TAG = 'home-featured-designs';
+const HOME_FEATURED_DESIGNS_COUNT = 3;
 
 export type ManagedDesignTemplate = DesignTemplate & {
   managed: true;
@@ -219,6 +223,60 @@ export const getPublishedDesignTemplates = unstable_cache(
     tags: [CATALOG_DESIGNS_CACHE_TAG],
   },
 );
+
+/**
+ * Slim homepage featured list. Uses its own tag (not `catalog-designs`) so
+ * exclusive-order `revalidateTag(catalog-designs)` does not rewrite homepage ISR.
+ * Admin design CRUD should invalidate `HOME_FEATURED_DESIGNS_CACHE_TAG`.
+ */
+const getHomeFeaturedDesignTemplatesCached = unstable_cache(
+  async (): Promise<ResolvedDesignTemplate[]> => {
+    // Bypass tagged catalog Data Cache — read DB directly for this shell.
+    const managedRecords = await catalogDesignsDb.list();
+    return buildPublishedDesignTemplates(managedRecords).slice(
+      0,
+      HOME_FEATURED_DESIGNS_COUNT,
+    );
+  },
+  ['home-featured-design-templates-v1'],
+  {
+    revalidate: 86400,
+    tags: [HOME_FEATURED_DESIGNS_CACHE_TAG],
+  },
+);
+
+export async function getHomeFeaturedDesignTemplates(): Promise<
+  ResolvedDesignTemplate[]
+> {
+  return getHomeFeaturedDesignTemplatesCached();
+}
+
+/**
+ * Designs hub category counts — separate from `catalog-designs` so exclusive
+ * order reservations do not rewrite the light `/designs` ISR shell.
+ */
+const getDesignCategoryCountsCached = unstable_cache(
+  async (): Promise<Partial<Record<DesignCategory, number>>> => {
+    const managedRecords = await catalogDesignsDb.list();
+    const designs = buildPublishedDesignTemplates(managedRecords);
+    const counts: Partial<Record<DesignCategory, number>> = {};
+    for (const design of designs) {
+      counts[design.category] = (counts[design.category] ?? 0) + 1;
+    }
+    return counts;
+  },
+  ['design-category-counts-v1'],
+  {
+    revalidate: 86400,
+    tags: [HOME_FEATURED_DESIGNS_CACHE_TAG],
+  },
+);
+
+export async function getDesignCategoryCounts(): Promise<
+  Partial<Record<DesignCategory, number>>
+> {
+  return getDesignCategoryCountsCached();
+}
 
 export async function getAllDesignTemplatesForAdmin(): Promise<{
   static: DesignTemplate[];

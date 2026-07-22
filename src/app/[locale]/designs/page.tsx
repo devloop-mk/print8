@@ -6,10 +6,9 @@ import { Button } from '@/components/ui/Button';
 import { PageIntro } from '@/components/brand/PageIntro';
 import { buildSectionMetadata } from '@/lib/seo/page-metadata';
 import type { Locale } from '@/i18n/routing';
-import { getPublishedDesignTemplates } from '@/lib/catalog/design-catalog';
-import type { DesignCategory } from '@/lib/data/catalog';
+import { getDesignCategoryCounts } from '@/lib/catalog/design-catalog';
 
-export const revalidate = 21600;
+export const revalidate = 86400;
 
 export async function generateMetadata({
   params,
@@ -47,12 +46,8 @@ export default async function DesignsPage({
   }
 
   const t = await getTranslations('designs');
-  const designs = await getPublishedDesignTemplates();
-  const categoryCounts: Partial<Record<DesignCategory, number>> = {};
-  for (const design of designs) {
-    categoryCounts[design.category] =
-      (categoryCounts[design.category] ?? 0) + 1;
-  }
+  // Separate cache tag from catalog-designs — exclusive orders must not rewrite this ISR shell.
+  const categoryCounts = await getDesignCategoryCounts();
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">

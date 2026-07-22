@@ -22,7 +22,10 @@ import {
   MANAGED_SVG_TEMPLATES_CACHE_TAG,
 } from '@/lib/designs/managed-svg-template-defaults';
 import { isGalleryThumbRegenAvailable } from '@/lib/designs/gallery-thumb-local';
-import { revalidateDesignCatalogCache } from '@/lib/catalog/revalidate-design-catalog';
+import {
+  revalidateDesignCatalogCache,
+  revalidateStorefrontDesignListingPaths,
+} from '@/lib/catalog/revalidate-design-catalog';
 import {
   ADMIN_DESIGNS_PAGE_SIZE,
   matchesAdminDesignSearch,
@@ -212,9 +215,14 @@ export async function getAdminDesign(id: string) {
   return catalogDesignsDb.findById(id);
 }
 
+function revalidateAdminDesignMutations() {
+  revalidateDesignCatalogCache();
+  revalidateStorefrontDesignListingPaths();
+}
+
 export async function saveAdminDesign(input: CatalogDesignInput) {
   const saved = await catalogDesignsDb.upsert(input);
-  revalidateDesignCatalogCache();
+  revalidateAdminDesignMutations();
   return saved;
 }
 
@@ -227,13 +235,13 @@ export async function updateAdminDesign(
   },
 ) {
   const saved = await catalogDesignsDb.update(id, patch);
-  revalidateDesignCatalogCache();
+  revalidateAdminDesignMutations();
   return saved;
 }
 
 export async function deleteAdminDesign(id: string) {
   await catalogDesignsDb.delete(id);
-  revalidateDesignCatalogCache();
+  revalidateAdminDesignMutations();
 }
 
 export async function saveAdminSvgTemplateDefaults(input: {

@@ -180,8 +180,15 @@ export async function POST(request: NextRequest) {
     });
 
     try {
-      await reserveExclusiveDesignsForOrder(orderId, itemsForStorage);
-      revalidateDesignCatalogCache();
+      const { reservedCount } = await reserveExclusiveDesignsForOrder(
+        orderId,
+        itemsForStorage,
+      );
+      // Only exclusive inventory changes need catalog-designs Data Cache bust.
+      // Do not rewrite homepage ISR (home uses a separate featured tag).
+      if (reservedCount > 0) {
+        revalidateDesignCatalogCache();
+      }
     } catch (reserveError) {
       await db.orders.updateStatus(orderId, 'cancelled');
       console.error('[orders] exclusive design reservation failed:', reserveError);
@@ -208,12 +215,14 @@ export async function POST(request: NextRequest) {
         await db.orders.updateStatus(orderId, 'cancelled');
         // Keep inventory consistent with admin cancel path.
         try {
-          await syncExclusiveDesignsForOrderStatus(
+          const { availabilityChanged } = await syncExclusiveDesignsForOrderStatus(
             orderId,
             'cancelled',
             itemsForStorage,
           );
-          revalidateDesignCatalogCache();
+          if (availabilityChanged) {
+            revalidateDesignCatalogCache();
+          }
         } catch (releaseError) {
           console.error(
             '[orders] exclusive release after coupon fail:',

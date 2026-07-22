@@ -16,7 +16,7 @@ import {
 import { buildProductCategoryMetadata } from '@/lib/seo/page-metadata';
 import type { Locale } from '@/i18n/routing';
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 export function generateStaticParams() {
   return productNavCategoryIds.map((category) => ({ category }));

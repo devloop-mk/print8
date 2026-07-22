@@ -202,6 +202,7 @@ export function ProductDesignCatalogCard({
         >
           <Link
             href={detailHref}
+            prefetch={false}
             className="block outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500"
             onFocus={() => setHoverReveal(true)}
             onBlur={() => {
@@ -280,6 +281,7 @@ export function ProductDesignCatalogCard({
 
         <Link
           href={detailHref}
+          prefetch={false}
           className="flex flex-1 flex-col outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500"
         >
           <div className="flex flex-1 flex-col gap-3 p-4 pb-3">
@@ -336,7 +338,7 @@ export function ProductDesignCatalogCard({
                 {ordering ? tCustomizer('capturing') : td('orderWithDesign')}
               </Button>
             ) : (
-              <Link href={customizeHref}>
+              <Link href={customizeHref} prefetch={false}>
                 <Button
                   size="sm"
                   className="w-full normal-case tracking-normal shadow-none hover:translate-y-0 active:translate-y-0 active:shadow-none"
@@ -351,6 +353,7 @@ export function ProductDesignCatalogCard({
             {canQuickOrder ? (
               <Link
                 href={customizeHref}
+                prefetch={false}
                 className="block text-center text-sm font-medium text-ink-600 transition-colors hover:text-brand-700"
               >
                 {isTextDesignTemplate(design)

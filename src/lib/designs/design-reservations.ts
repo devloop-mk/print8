@@ -79,7 +79,7 @@ export async function validateExclusiveDesignsAvailable(
 export async function reserveExclusiveDesignsForOrder(
   orderId: string,
   items: CheckoutInput['items'],
-) {
+): Promise<{ reservedCount: number }> {
   const exclusive = await getExclusiveDesignsInOrder(items);
   const reserved: string[] = [];
 
@@ -88,6 +88,7 @@ export async function reserveExclusiveDesignsForOrder(
       await catalogDesignsDb.reserveForOrder(record.id, orderId);
       reserved.push(record.id);
     }
+    return { reservedCount: reserved.length };
   } catch (error) {
     await Promise.all(
       reserved.map((designId) =>

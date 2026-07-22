@@ -9,7 +9,7 @@ import { buildSectionMetadata } from "@/lib/seo/page-metadata";
 import { getProductDisplayOrderRecord } from "@/lib/cms/display-order";
 import type { Locale } from "@/i18n/routing";
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 export async function generateMetadata({
   params,

@@ -75,6 +75,7 @@ function TrendingCard({
   return (
     <Link
       href={href}
+      prefetch={false}
       className={cn(
         'group relative flex h-full flex-col overflow-hidden',
         'border border-white/10 bg-white/[0.04] backdrop-blur-sm',

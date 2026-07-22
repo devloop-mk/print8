@@ -5,8 +5,13 @@ import {
   TRENDING_DESIGN_ACCENTS,
   type TrendingDesignAccent,
 } from '@/lib/data/trending-designs';
-import type { ProductDesignTemplate } from '@/lib/data/catalog';
-import { getMergedProductDesignTemplates } from '@/lib/products/merged-product-designs';
+import {
+  productDesignTemplates as staticProductDesignTemplates,
+  type ProductDesignTemplate,
+} from '@/lib/data/catalog';
+import { managedProductDesignsDb } from '@/lib/db/managed-product-designs';
+import { getCatalogSource } from '@/lib/products/catalog-source';
+import { mergeProductDesignCatalog } from '@/lib/products/merge-product-designs';
 
 export const CMS_HOME_TRENDING_CACHE_TAG = 'cms-home-trending';
 
@@ -16,15 +21,6 @@ export type TrendingProductDesign = {
   titleEn?: string;
   titleMk?: string;
 } & TrendingDesignAccent;
-
-const getTrendingRowsCached = unstable_cache(
-  async () => cmsDb.homeTrending.list(),
-  ['cms-home-trending-rows'],
-  {
-    revalidate: 1800,
-    tags: [CMS_HOME_TRENDING_CACHE_TAG],
-  },
-);
 
 function accentForRank(rank: number): Omit<TrendingDesignAccent, 'id'> {
   const preset = TRENDING_DESIGN_ACCENTS[rank % TRENDING_DESIGN_ACCENTS.length];
@@ -57,19 +53,48 @@ export function pickTrendingProductDesigns(
   });
 }
 
+/**
+ * Homepage trending strip. Intentionally avoids PRODUCT_DESIGNS_CACHE_TAG and
+ * display-order tags so merch/admin catalog saves do not rewrite homepage ISR.
+ * Invalidated only via CMS_HOME_TRENDING_CACHE_TAG (admin trending editor).
+ */
+const getHomeTrendingProductDesignsCached = unstable_cache(
+  async (): Promise<TrendingProductDesign[]> => {
+    const rows = await cmsDb.homeTrending.list();
+    const activeIds =
+      rows.length > 0
+        ? rows
+            .filter((row) => row.active)
+            .sort((a, b) => a.sortOrder - b.sortOrder)
+            .map((row) => row.designId)
+        : DEFAULT_TRENDING_PRODUCT_DESIGN_IDS;
+
+    const source = getCatalogSource();
+    let managed: Awaited<ReturnType<typeof managedProductDesignsDb.list>> = [];
+    if (source !== 'static') {
+      try {
+        managed = await managedProductDesignsDb.list();
+      } catch {
+        managed = [];
+      }
+    }
+
+    const templates = mergeProductDesignCatalog(
+      staticProductDesignTemplates,
+      managed,
+      {},
+      source === 'static' ? 'static' : source,
+    );
+
+    return pickTrendingProductDesigns(templates, activeIds);
+  },
+  ['home-trending-resolved-v1'],
+  {
+    revalidate: 86400,
+    tags: [CMS_HOME_TRENDING_CACHE_TAG],
+  },
+);
+
 export async function getHomeTrendingProductDesigns(): Promise<TrendingProductDesign[]> {
-  const [rows, templates] = await Promise.all([
-    getTrendingRowsCached(),
-    getMergedProductDesignTemplates(),
-  ]);
-
-  const activeIds =
-    rows.length > 0
-      ? rows
-          .filter((row) => row.active)
-          .sort((a, b) => a.sortOrder - b.sortOrder)
-          .map((row) => row.designId)
-      : DEFAULT_TRENDING_PRODUCT_DESIGN_IDS;
-
-  return pickTrendingProductDesigns(templates, activeIds);
+  return getHomeTrendingProductDesignsCached();
 }

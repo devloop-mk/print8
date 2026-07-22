@@ -55,6 +55,7 @@ export function FeaturedDesignCards({ designs }: { designs: FeaturedDesign[] }) 
                 <Link
                   key={design.id}
                   href={getDesignHref(design)}
+                  prefetch={false}
                   className="group block"
                 >
                   <Card className="overflow-hidden p-0 transition group-hover:shadow-md">

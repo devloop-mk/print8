@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAdminApi } from '@/lib/admin/api-auth';
 import { listAdminDesignsPage, saveAdminDesign } from '@/lib/admin/designs';
-import { revalidateDesignCatalogCache } from '@/lib/catalog/revalidate-design-catalog';
 
 const createSchema = z.object({
   id: z.string().min(1),
@@ -67,7 +66,6 @@ export async function POST(request: NextRequest) {
     }
 
     const design = await saveAdminDesign(parsed.data);
-    revalidateDesignCatalogCache();
     return NextResponse.json({ design }, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to save design';

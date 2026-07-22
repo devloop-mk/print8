@@ -12,7 +12,8 @@ import { toGalleryDesignTemplates } from '@/lib/catalog/slim-design-template';
 import { getManagedSvgTemplateDefaultsMap, getManagedSvgTemplateVersionMap } from '@/lib/designs/managed-svg-template-defaults';
 import { ArrowLeft } from 'lucide-react';
 
-export const revalidate = 21600;
+/** Full gallery payload — skip ISR writes; render on demand. */
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({
   params,

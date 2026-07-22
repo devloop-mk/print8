@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { getPublishedDesignTemplates } from '@/lib/catalog/design-catalog';
+import { getHomeFeaturedDesignTemplates } from '@/lib/catalog/design-catalog';
 import {
   getContactCmsValues,
   getResolvedFeaturedServices,
@@ -17,17 +17,14 @@ import { HeroFeatureBar } from '@/components/home/HeroFeatureBar';
 import { HomeHighlights } from '@/components/home/HomeHighlights';
 import { HomeHowItWorks } from '@/components/home/HomeHowItWorks';
 import { HomeCategoryGrid } from '@/components/home/HomeCategoryGrid';
-import {
-  FeaturedDesignCards,
-  MAX_FEATURED_DESIGNS,
-} from '@/components/home/FeaturedDesignCards';
+import { FeaturedDesignCards } from '@/components/home/FeaturedDesignCards';
 import { HomeCustomDesignCta } from '@/components/home/HomeCustomDesignCta';
 import { HomeContactCta } from '@/components/home/HomeContactCta';
 import { ServiceCard } from '@/components/services/ServiceCard';
 import { Reveal } from '@/components/motion/Reveal';
 import { toGalleryDesignTemplates } from '@/lib/catalog/slim-design-template';
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 export default async function HomePage({
   params,
@@ -66,14 +63,12 @@ export default async function HomePage({
         title: ts(`${id}.title`),
         description: ts(`${id}.description`),
       })),
-      getPublishedDesignTemplates(),
+      // Untagged from catalog-designs — exclusive orders must not rewrite home ISR.
+      getHomeFeaturedDesignTemplates(),
       getHomeTrendingProductDesigns(),
     ]);
 
-  // Only serialize the cards we render — full catalog would inflate ISR payload.
-  const featuredDesignCards = toGalleryDesignTemplates(
-    featuredDesigns.slice(0, MAX_FEATURED_DESIGNS),
-  );
+  const featuredDesignCards = toGalleryDesignTemplates(featuredDesigns);
 
   const productCount = getBrowsableProducts().length;
 
