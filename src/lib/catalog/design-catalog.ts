@@ -241,7 +241,7 @@ export async function resolveDesignTemplate(
 }
 
 export function getDesignDisplayName(
-  design: ResolvedDesignTemplate,
+  design: Pick<ResolvedDesignTemplate, 'id' | 'nameEn' | 'nameMk'>,
   locale: 'mk' | 'en',
 ) {
   if (design.nameEn || design.nameMk) {

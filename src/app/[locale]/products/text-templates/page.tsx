@@ -4,10 +4,11 @@ import { getTranslations } from 'next-intl/server';
 import { ProductDesignsCatalog } from '@/components/products/ProductDesignsCatalog';
 import { SectionLoading } from '@/components/ui/SectionLoading';
 import { getCachedProductDesignCatalogEntries } from '@/lib/cache/catalog-cache';
+import { slimProductDesignCatalogEntries } from '@/lib/products/slim-catalog-entry';
 import { buildPageMetadata, buildOgImageUrl } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
-export const revalidate = 3600;
+export const revalidate = 21600;
 
 export async function generateMetadata({
   params,
@@ -33,8 +34,9 @@ export async function generateMetadata({
 }
 
 export default async function ProductTextTemplatesPage() {
-  const initialEntries =
-    await getCachedProductDesignCatalogEntries('text-designs');
+  const initialEntries = slimProductDesignCatalogEntries(
+    await getCachedProductDesignCatalogEntries('text-designs'),
+  );
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">

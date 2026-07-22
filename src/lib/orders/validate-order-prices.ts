@@ -16,6 +16,8 @@ import {
   getTshirtPriceFromMetadata,
   isTshirtProduct,
 } from '@/lib/products/tshirt-print-pricing';
+import { getPremadeDesignUnitPrice } from '@/lib/products/premade-design-order';
+import { getStaticProductDesignTemplates } from '@/lib/products/merged-product-designs';
 
 const STUDIO_DESIGN_UNIT_PRICE = 500;
 const PRICE_EPSILON = 0.01;
@@ -99,8 +101,12 @@ function getProductUnitPrice(
     if (packaged !== null) return packaged;
 
     // Premade ready-designs / couple packs historically omitted printPackage.
-    // Charge the catalog base price (matches front-small for unisex tees).
+    // Re-derive from the design template when possible.
     if (typeof metadata.designTemplateId === 'string') {
+      const design = getStaticProductDesignTemplates().find(
+        (template) => template.id === metadata.designTemplateId,
+      );
+      if (design) return getPremadeDesignUnitPrice(product, design);
       return product.basePrice;
     }
 

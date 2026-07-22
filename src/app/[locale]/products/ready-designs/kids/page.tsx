@@ -5,10 +5,11 @@ import { KidsDesignsArchive } from '@/components/products/KidsDesignsArchive';
 import { SectionLoading } from '@/components/ui/SectionLoading';
 import { getCachedProductDesignCatalogEntries } from '@/lib/cache/catalog-cache';
 import { filterKidsDesignCatalogEntries } from '@/lib/products/kids-designs';
+import { slimProductDesignCatalogEntries } from '@/lib/products/slim-catalog-entry';
 import { buildPageMetadata, buildOgImageUrl } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
-export const revalidate = 3600;
+export const revalidate = 21600;
 
 export async function generateMetadata({
   params,
@@ -36,7 +37,9 @@ export async function generateMetadata({
 export default async function KidsReadyDesignsPage() {
   const allEntries =
     await getCachedProductDesignCatalogEntries('image-designs');
-  const initialEntries = filterKidsDesignCatalogEntries(allEntries);
+  const initialEntries = slimProductDesignCatalogEntries(
+    filterKidsDesignCatalogEntries(allEntries),
+  );
 
   return (
     <Suspense fallback={<SectionLoading />}>

@@ -158,7 +158,10 @@ export function CouplePackCard({
             </p>
             <p className="mt-2 text-sm font-semibold text-brand-600">
               {tc('packPrice', {
-                price: formatPrice(getCouplePackPrice(product), locale),
+                price: formatPrice(
+                  getCouplePackPrice(product, pack, [design1, design2]),
+                  locale,
+                ),
               })}
             </p>
           </div>

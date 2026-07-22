@@ -11,8 +11,8 @@ import {
   type DesignCategory,
   type DesignTemplate,
 } from '@/lib/data/catalog';
-import type { ResolvedDesignTemplate } from '@/lib/catalog/design-catalog';
 import { getDesignDisplayName } from '@/lib/catalog/design-catalog';
+import type { GalleryDesignTemplate } from '@/lib/catalog/slim-design-template';
 import { getDesignThumbAspect } from '@/lib/designs/design-thumb';
 import { parseDesignCategoryFilter } from '@/lib/data/service-routes';
 import {
@@ -122,7 +122,7 @@ export function DesignsGallery({
   svgDefaultsMap,
   svgThumbVersions,
 }: {
-  designs: ResolvedDesignTemplate[];
+  designs: GalleryDesignTemplate[];
   svgDefaultsMap?: Record<string, ManagedSvgTemplateDefaultsPayload>;
   svgThumbVersions?: Record<string, string>;
 }) {

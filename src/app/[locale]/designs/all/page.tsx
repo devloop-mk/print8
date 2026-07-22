@@ -8,10 +8,11 @@ import { PageIntro } from '@/components/brand/PageIntro';
 import { buildSectionMetadata } from '@/lib/seo/page-metadata';
 import type { Locale } from '@/i18n/routing';
 import { getPublishedDesignTemplates } from '@/lib/catalog/design-catalog';
+import { toGalleryDesignTemplates } from '@/lib/catalog/slim-design-template';
 import { getManagedSvgTemplateDefaultsMap, getManagedSvgTemplateVersionMap } from '@/lib/designs/managed-svg-template-defaults';
 import { ArrowLeft } from 'lucide-react';
 
-export const revalidate = 3600;
+export const revalidate = 21600;
 
 export async function generateMetadata({
   params,
@@ -30,11 +31,12 @@ export async function generateMetadata({
 
 export default async function DesignsAllPage() {
   const t = await getTranslations('designs');
-  const [designs, svgDefaultsMap, svgThumbVersions] = await Promise.all([
+  const [published, svgDefaultsMap, svgThumbVersions] = await Promise.all([
     getPublishedDesignTemplates(),
     getManagedSvgTemplateDefaultsMap(),
     getManagedSvgTemplateVersionMap(),
   ]);
+  const designs = toGalleryDesignTemplates(published);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">

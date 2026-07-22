@@ -53,8 +53,14 @@ export async function PATCH(
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    const updated = await updateAdminOrderStatus(id, parsed.data.status as OrderStatus);
-    revalidateDesignCatalogCache();
+    const { updated, availabilityChanged } = await updateAdminOrderStatus(
+      id,
+      parsed.data.status as OrderStatus,
+    );
+    // Exclusive sold/reserved/released is the only reason catalog-designs must refresh.
+    if (availabilityChanged) {
+      revalidateDesignCatalogCache();
+    }
     const order = await getAdminOrder(updated.id);
     return NextResponse.json({ order });
   } catch {

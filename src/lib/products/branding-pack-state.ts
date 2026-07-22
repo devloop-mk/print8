@@ -298,8 +298,8 @@ export function resolveBrandingPackUnitPrice(
 
   if (isTshirtProduct(catalogProduct)) {
     const sideCount = product.printSides?.filter(Boolean).length ?? 1;
-    // Branding packs don't measure footprint; dual sides keep the former
-    // flat dual price (700) via the large+large tier.
+    // Branding packs don't measure footprint — assume large print per side
+    // (dual → front-large-back-large @ 600).
     const pkg = sideCount >= 2 ? 'front-large-back-large' : 'front-large';
     return getTshirtUnitPrice(pkg);
   }

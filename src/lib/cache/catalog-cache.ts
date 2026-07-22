@@ -19,7 +19,7 @@ import {
 import { sortByDisplayOrder } from '@/lib/products/sort-by-display-order';
 
 /** Shared TTL for pages that still use route-level revalidate. */
-export const CATALOG_CACHE_SECONDS = 3600;
+export const CATALOG_CACHE_SECONDS = 21600;
 
 export const CATALOG_CACHE_TAGS = {
   products: 'catalog-products',

@@ -83,8 +83,12 @@ export async function updateAdminOrderStatus(id: string, status: OrderStatus) {
   }
 
   const updated = await db.orders.updateStatus(id, status);
-  await syncExclusiveDesignsForOrderStatus(id, status, existing.items);
-  return updated;
+  const { availabilityChanged } = await syncExclusiveDesignsForOrderStatus(
+    id,
+    status,
+    existing.items,
+  );
+  return { updated, availabilityChanged };
 }
 
 export async function getAdminMetrics(): Promise<AdminMetrics> {

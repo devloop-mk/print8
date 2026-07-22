@@ -102,9 +102,11 @@ export async function syncExclusiveDesignsForOrderStatus(
   orderId: string,
   status: OrderStatus,
   items: CheckoutInput['items'],
-) {
+): Promise<{ availabilityChanged: boolean }> {
   const exclusive = await getExclusiveDesignsInOrder(items);
-  if (exclusive.length === 0) return;
+  if (exclusive.length === 0) return { availabilityChanged: false };
+
+  let availabilityChanged = false;
 
   if (SOLD_STATUSES.includes(status)) {
     for (const record of exclusive) {
@@ -112,31 +114,36 @@ export async function syncExclusiveDesignsForOrderStatus(
         record.reservedOrderId === orderId ||
         record.availability === 'reserved'
       ) {
-        await catalogDesignsDb.markSold(record.id, orderId);
+        const updated = await catalogDesignsDb.markSold(record.id, orderId);
+        if (updated) availabilityChanged = true;
       }
     }
-    return;
+    return { availabilityChanged };
   }
 
   if (RELEASE_STATUSES.includes(status)) {
     for (const record of exclusive) {
       if (record.reservedOrderId === orderId) {
-        await catalogDesignsDb.releaseReservation(record.id, orderId);
+        const updated = await catalogDesignsDb.releaseReservation(
+          record.id,
+          orderId,
+        );
+        if (updated) availabilityChanged = true;
       }
     }
-    return;
+    return { availabilityChanged };
   }
 
   if (ACTIVE_RESERVATION_STATUSES.includes(status)) {
     for (const record of exclusive) {
-      if (
-        record.availability === 'available' &&
-        record.exclusive
-      ) {
+      if (record.availability === 'available' && record.exclusive) {
         await catalogDesignsDb.reserveForOrder(record.id, orderId);
+        availabilityChanged = true;
       }
     }
   }
+
+  return { availabilityChanged };
 }
 
 export function isDesignPubliclyAvailable(record: CatalogDesignRecord) {

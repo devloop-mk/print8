@@ -4,9 +4,7 @@ import { ArrowRight, Sparkles } from 'lucide-react';
 import {
   designCategories,
   type DesignCategory,
-  type DesignTemplate,
 } from '@/lib/data/catalog';
-import type { ResolvedDesignTemplate } from '@/lib/catalog/design-catalog';
 import {
   designCategoryHref,
   designCategoryIcons,
@@ -47,24 +45,15 @@ const categoryAccents: Record<
   },
 };
 
-function countByCategory(designs: DesignTemplate[]) {
-  const counts = new Map<DesignCategory, number>();
-  for (const design of designs) {
-    counts.set(design.category, (counts.get(design.category) ?? 0) + 1);
-  }
-  return counts;
-}
-
 export async function DesignsCategoriesOverview({
-  designs,
+  categoryCounts,
 }: {
-  designs: ResolvedDesignTemplate[];
+  categoryCounts: Partial<Record<DesignCategory, number>>;
 }) {
   const t = await getTranslations('designs');
   const tn = await getTranslations('nav.designsMenu.links');
-  const counts = countByCategory(designs);
   const visibleCategories = designCategories.filter(
-    (category) => (counts.get(category) ?? 0) > 0,
+    (category) => (categoryCounts[category] ?? 0) > 0,
   );
 
   return (
@@ -91,7 +80,7 @@ export async function DesignsCategoriesOverview({
         {visibleCategories.map((category) => {
           const Icon = designCategoryIcons[category];
           const accent = categoryAccents[category];
-          const count = counts.get(category) ?? 0;
+          const count = categoryCounts[category] ?? 0;
 
           return (
             <Link

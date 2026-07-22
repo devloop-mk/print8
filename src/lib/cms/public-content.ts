@@ -12,7 +12,7 @@ export type CmsLocale = 'mk' | 'en';
 
 type ContentMap = Map<string, { en: string; mk: string }>;
 
-const CMS_CACHE_SECONDS = 300;
+const CMS_CACHE_SECONDS = 1800;
 
 const getContentMapCached = unstable_cache(
   async (): Promise<Array<[string, { en: string; mk: string }]>> => {

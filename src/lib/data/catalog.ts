@@ -86,7 +86,7 @@ export const services: Service[] = [
     id: 't-shirt-printing',
     icon: 'Shirt',
     category: 'merch',
-    startingPrice: 400,
+    startingPrice: 350,
     featured: true,
     customization: 'products',
     productTypes: ['t-shirt'],
@@ -1432,7 +1432,8 @@ export const products: Product[] = [
     fit: 'unisex',
     image: getUnisexTshirtMockupPath('bela', 'front'),
     colorsImages: buildUnisexTshirtColorImages(),
-    basePrice: 450,
+    /** Fallback when printPackage missing — matches front-small. Display uses blank (350). */
+    basePrice: 400,
     colors: TSHIRT_UNISEX_COLOR_HEXES,
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
     sides: ['front', 'back'],
@@ -1445,7 +1446,8 @@ export const products: Product[] = [
     nameKey: 'tshirtWomenFitted',
     image: getWomenTshirtMockupPath('bela', 'front'),
     colorsImages: buildWomenTshirtColorImages(),
-    basePrice: 450,
+    /** Fallback when printPackage missing — matches front-small. */
+    basePrice: 400,
     colors: TSHIRT_WOMEN_COLOR_HEXES,
     sizes: ['XS', 'S', 'M', 'L', 'XL'],
     sides: ['front', 'back'],
@@ -1458,7 +1460,8 @@ export const products: Product[] = [
     nameKey: 'tshirtKids',
     image: getKidsTshirtMockupPath('nebesno-plava', 'front'),
     colorsImages: buildKidsTshirtColorImages(),
-    basePrice: 450,
+    /** Fallback when printPackage missing — matches front-small. */
+    basePrice: 400,
     colors: TSHIRT_KIDS_COLOR_HEXES,
     sizes: ['2-3', '4-5', '6-7', '8-9', '10-12', '12-14'],
     sides: ['front', 'back'],

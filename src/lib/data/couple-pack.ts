@@ -1,5 +1,12 @@
 import type { ProductDesignTemplate, ProductType } from '@/lib/data/catalog';
 
+/**
+ * Couple *pack* metadata (paired SKUs, labels, recommended colors) still lives
+ * in code. Partner overlay designs are also emitted into `productDesignTemplates`
+ * and seed into `managed_product_designs`. Moving pack metadata to DB is a
+ * follow-up once merch designs are fully DB-backed.
+ */
+
 export type CouplePartnerRole = 'partner1' | 'partner2';
 
 export interface CouplePartnerDesign {

@@ -117,7 +117,7 @@ export function CouplePackDetail({
   );
   const specs = getProductSpecs(product.type);
   const title = locale === 'mk' ? pack.titleMk : pack.titleEn;
-  const packPrice = getCouplePackPrice(product);
+  const packPrice = getCouplePackPrice(product, pack, [design1, design2]);
   const partner1Label = locale === 'mk' ? partner1.labelMk : partner1.labelEn;
   const partner2Label = locale === 'mk' ? partner2.labelMk : partner2.labelEn;
   const showColorPickers =

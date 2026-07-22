@@ -5,10 +5,11 @@ import { CouplesDesignsArchive } from '@/components/products/CouplesDesignsArchi
 import { SectionLoading } from '@/components/ui/SectionLoading';
 import { getCouplePackTemplates } from '@/lib/data/couple-pack';
 import { resolveCouplePackDesignTemplatesMap } from '@/lib/products/couple-pack-resolved';
+import { slimProductDesignMap } from '@/lib/products/slim-catalog-entry';
 import { buildPageMetadata, buildOgImageUrl } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
-export const revalidate = 3600;
+export const revalidate = 21600;
 
 export async function generateMetadata({
   params,
@@ -35,8 +36,9 @@ export async function generateMetadata({
 
 export default async function CouplesReadyDesignsPage() {
   const initialPacks = getCouplePackTemplates();
-  const initialDesigns =
-    await resolveCouplePackDesignTemplatesMap(initialPacks);
+  const initialDesigns = slimProductDesignMap(
+    await resolveCouplePackDesignTemplatesMap(initialPacks),
+  );
 
   return (
     <Suspense fallback={<SectionLoading />}>

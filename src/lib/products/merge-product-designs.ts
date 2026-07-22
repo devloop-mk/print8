@@ -1,5 +1,6 @@
 import type { ProductDesignTemplate } from '@/lib/data/catalog';
 import type { ManagedProductDesignRecord } from '@/lib/db/managed-product-designs';
+import type { CatalogSource } from '@/lib/products/catalog-source';
 
 function pickDefined<T extends object>(value: T): Partial<T> {
   return Object.fromEntries(
@@ -75,14 +76,55 @@ function readDisplayOrder(
     : undefined;
 }
 
+function sortProductDesignCatalog(
+  templates: ProductDesignTemplate[],
+  managedById: Map<string, ManagedProductDesignRecord>,
+  displayOrder?: ReadonlyMap<string, number> | Readonly<Record<string, number>>,
+): ProductDesignTemplate[] {
+  return [...templates].sort((a, b) => {
+    const overrideA = readDisplayOrder(displayOrder, a.id);
+    const overrideB = readDisplayOrder(displayOrder, b.id);
+    const orderA = overrideA ?? managedById.get(a.id)?.sortOrder ?? 0;
+    const orderB = overrideB ?? managedById.get(b.id)?.sortOrder ?? 0;
+    if (orderA !== orderB) return orderA - orderB;
+    return a.id.localeCompare(b.id);
+  });
+}
+
+/**
+ * Build the storefront product-design catalog.
+ *
+ * - `database`: active DB rows only; if none, fall back to static packs (dev safety)
+ * - `merge`: static packs + DB overrides (inactive DB rows hide the static twin)
+ * - `static`: code packs only
+ */
 export function mergeProductDesignCatalog(
   staticTemplates: ProductDesignTemplate[],
   managedRecords: ManagedProductDesignRecord[],
   displayOrder?: ReadonlyMap<string, number> | Readonly<Record<string, number>>,
+  source: CatalogSource = 'merge',
 ): ProductDesignTemplate[] {
   const managedById = new Map(
     managedRecords.map((record) => [record.id, record]),
   );
+
+  if (source === 'static') {
+    return sortProductDesignCatalog(staticTemplates, managedById, displayOrder);
+  }
+
+  if (source === 'database') {
+    const activeManaged = managedRecords.filter((record) => record.active);
+    if (activeManaged.length > 0) {
+      return sortProductDesignCatalog(
+        activeManaged.map((record) => record.template),
+        managedById,
+        displayOrder,
+      );
+    }
+    // Empty / unavailable DB — keep local storefront working from packs.
+    return sortProductDesignCatalog(staticTemplates, managedById, displayOrder);
+  }
+
   const staticIds = new Set(staticTemplates.map((template) => template.id));
   const merged: ProductDesignTemplate[] = [];
 
@@ -101,12 +143,5 @@ export function mergeProductDesignCatalog(
     merged.push(managed.template);
   }
 
-  return merged.sort((a, b) => {
-    const overrideA = readDisplayOrder(displayOrder, a.id);
-    const overrideB = readDisplayOrder(displayOrder, b.id);
-    const orderA = overrideA ?? managedById.get(a.id)?.sortOrder ?? 0;
-    const orderB = overrideB ?? managedById.get(b.id)?.sortOrder ?? 0;
-    if (orderA !== orderB) return orderA - orderB;
-    return a.id.localeCompare(b.id);
-  });
+  return sortProductDesignCatalog(merged, managedById, displayOrder);
 }

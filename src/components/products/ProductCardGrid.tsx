@@ -17,6 +17,7 @@ import {
 } from '@/components/catalog/CatalogGrid';
 import { buildCustomizerUrl } from '@/lib/products/paths';
 import { getColorSwatchDisplayHex } from '@/lib/products/product-color-labels';
+import { getProductDisplayPrice } from '@/lib/products/tshirt-print-pricing';
 
 export type ProductCardLinkTarget = 'detail' | 'customizer';
 
@@ -98,7 +99,8 @@ export function ProductCardGrid({
                     {productLabel}
                   </p>
                   <p className="mt-1 text-sm text-brand-600">
-                    {t('startingFrom')} {formatPrice(product.basePrice, locale)}
+                    {t('startingFrom')}{' '}
+                    {formatPrice(getProductDisplayPrice(product), locale)}
                   </p>
 
                   <div className="mt-3 flex flex-wrap gap-1.5">

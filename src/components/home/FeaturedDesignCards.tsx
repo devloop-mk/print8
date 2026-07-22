@@ -6,16 +6,14 @@ import { Card } from '@/components/ui/Card';
 import { DesignCardThumbnail } from '@/components/designs/DesignCardThumbnail';
 import {
   getDesignHref,
-  type DesignTemplate,
 } from '@/lib/data/catalog';
+import type { GalleryDesignTemplate } from '@/lib/catalog/slim-design-template';
 import { getDesignThumbAspect } from '@/lib/designs/design-thumb';
 
-const MAX_VISIBLE = 3;
+/** Keep in sync with homepage server slice — only this many enter the ISR payload. */
+export const MAX_FEATURED_DESIGNS = 3;
 
-type FeaturedDesign = DesignTemplate & {
-  nameEn?: string;
-  nameMk?: string;
-};
+type FeaturedDesign = GalleryDesignTemplate;
 
 function getFeaturedDesignName(
   design: FeaturedDesign,
@@ -35,7 +33,7 @@ export function FeaturedDesignCards({ designs }: { designs: FeaturedDesign[] }) 
   const th = useTranslations('home');
   const locale = useLocale();
 
-  const visible = designs.slice(0, MAX_VISIBLE);
+  const visible = designs.slice(0, MAX_FEATURED_DESIGNS);
 
   return (
     <div className="space-y-6">

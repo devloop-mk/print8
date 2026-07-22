@@ -164,25 +164,33 @@ export async function listAdminProductDesigns(options?: {
 export async function importStaticProductDesignsToDatabase(options?: {
   overwrite?: boolean;
 }) {
-  let imported = 0;
+  const existing = await managedProductDesignsDb.list();
+  const existingById = new Map(existing.map((record) => [record.id, record]));
+
+  const toUpsert: Array<{
+    id: string;
+    template: ProductDesignTemplate;
+    active: boolean;
+    sortOrder: number;
+  }> = [];
   let skipped = 0;
 
   for (const template of productDesignTemplates) {
-    const existing = await managedProductDesignsDb.findById(template.id);
-    if (existing && !options?.overwrite) {
+    const current = existingById.get(template.id);
+    if (current && !options?.overwrite) {
       skipped += 1;
       continue;
     }
 
-    await managedProductDesignsDb.upsert({
+    toUpsert.push({
       id: template.id,
       template: { ...template },
-      active: existing?.active ?? true,
-      sortOrder: existing?.sortOrder ?? 0,
+      active: current?.active ?? true,
+      sortOrder: current?.sortOrder ?? 0,
     });
-    imported += 1;
   }
 
+  const imported = await managedProductDesignsDb.upsertMany(toUpsert);
   revalidateProductDesignCaches();
   return {
     imported,

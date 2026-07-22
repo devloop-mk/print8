@@ -51,39 +51,49 @@ export const managedProductDesignsDb = {
     search?: string;
   }): Promise<ManagedProductDesignRecord[]> {
     try {
-      let query = getSupabaseAdmin()
-        .from('managed_product_designs')
-        .select('*')
-        .order('sort_order', { ascending: true })
-        .order('id', { ascending: true });
+      const pageSize = 1000;
+      const rows: ManagedProductDesignRecord[] = [];
+      let from = 0;
 
-      if (options?.activeOnly) {
-        query = query.eq('active', true);
+      for (;;) {
+        let query = getSupabaseAdmin()
+          .from('managed_product_designs')
+          .select('*')
+          .order('sort_order', { ascending: true })
+          .order('id', { ascending: true })
+          .range(from, from + pageSize - 1);
+
+        if (options?.activeOnly) {
+          query = query.eq('active', true);
+        }
+
+        const { data, error } = await query;
+        if (error) throw new Error(error.message);
+
+        const batch = (data as ManagedProductDesignRow[]).map(mapRow);
+        rows.push(...batch);
+        if (batch.length < pageSize) break;
+        from += pageSize;
       }
 
-      const { data, error } = await query;
-      if (error) throw new Error(error.message);
-
-      let rows = (data as ManagedProductDesignRow[]).map(mapRow);
       const search = options?.search?.trim().toLowerCase();
-      if (search) {
-        rows = rows.filter((row) => {
-          const tpl = row.template;
-          return [
-            row.id,
-            tpl.nameKey,
-            tpl.titleEn,
-            tpl.titleMk,
-            tpl.collection,
-            ...(tpl.productTypes ?? []),
-          ]
-            .filter(Boolean)
-            .join(' ')
-            .toLowerCase()
-            .includes(search);
-        });
-      }
-      return rows;
+      if (!search) return rows;
+
+      return rows.filter((row) => {
+        const tpl = row.template;
+        return [
+          row.id,
+          tpl.nameKey,
+          tpl.titleEn,
+          tpl.titleMk,
+          tpl.collection,
+          ...(tpl.productTypes ?? []),
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+          .includes(search);
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       if (isMissingTable(message)) return [];
@@ -126,6 +136,45 @@ export const managedProductDesignsDb = {
       .single();
     if (error) throw new Error(error.message);
     return mapRow(data as ManagedProductDesignRow);
+  },
+
+  /**
+   * Idempotent bulk upsert by id. Preserves existing `active` / `sort_order`
+   * when the input omits them. Chunks to stay under PostgREST payload limits.
+   */
+  async upsertMany(
+    inputs: ManagedProductDesignInput[],
+    options?: { chunkSize?: number },
+  ): Promise<number> {
+    if (inputs.length === 0) return 0;
+
+    const existingById = new Map(
+      (await this.list()).map((record) => [record.id, record]),
+    );
+    const now = new Date().toISOString();
+    const rows = inputs.map((input) => {
+      const existing = existingById.get(input.id);
+      return {
+        id: input.id,
+        template: input.template,
+        active: input.active ?? existing?.active ?? true,
+        sort_order: input.sortOrder ?? existing?.sortOrder ?? 0,
+        created_at: existing?.createdAt ?? now,
+        updated_at: now,
+      };
+    });
+
+    const chunkSize = options?.chunkSize ?? 100;
+    let upserted = 0;
+    for (let i = 0; i < rows.length; i += chunkSize) {
+      const chunk = rows.slice(i, i + chunkSize);
+      const { error } = await getSupabaseAdmin()
+        .from('managed_product_designs')
+        .upsert(chunk);
+      if (error) throw new Error(error.message);
+      upserted += chunk.length;
+    }
+    return upserted;
   },
 
   async update(

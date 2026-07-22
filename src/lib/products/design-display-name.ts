@@ -1,7 +1,12 @@
 import type { ProductDesignTemplate } from '@/lib/data/catalog';
 
+export type ProductDesignDisplayFields = Pick<
+  ProductDesignTemplate,
+  'nameKey' | 'titleEn' | 'titleMk'
+>;
+
 export function getProductDesignDisplayName(
-  design: ProductDesignTemplate,
+  design: ProductDesignDisplayFields,
   locale: 'mk' | 'en',
 ) {
   if (locale === 'mk' && design.titleMk) return design.titleMk;
@@ -18,7 +23,7 @@ export function humanizeProductDesignNameKey(nameKey: string): string {
 }
 
 export function resolveProductDesignDisplayName(
-  design: ProductDesignTemplate,
+  design: ProductDesignDisplayFields,
   locale: 'mk' | 'en',
   translateNameKey: (key: string) => string,
 ) {

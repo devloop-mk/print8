@@ -25,26 +25,32 @@ export const TSHIRT_PRINT_PACKAGES = [
 export type TshirtPrintPackage = (typeof TSHIRT_PRINT_PACKAGES)[number];
 
 /**
- * Unit prices in MKD.
+ * Unit prices in MKD (print package matrix).
  *
- * Blank tee (no print) is the product-only base. Front/back single-side tiers
- * share prices by size. Dual-side splits the old flat `front-back` (700) into
- * size combinations. Small-back duals are +150 over the matching front-only
- * tier (large-back duals are +200, matching the specified 650 / 700 big-back
- * prices).
+ * - blank: garment only (no print)
+ * - single-side small / large: same price for front or back
+ * - dual mixed: small on one side + large on the other
+ * - dual both large: full print both sides
+ * - front-small-back-small: not listed by product — priced at 450
+ *   (400 one-side small + second small), the sensible middle between
+ *   single-small (400) and mixed dual (550)
+ * - legacy `front-back` keys price like front-large-back-large
  */
-const TSHIRT_PACKAGE_PRICES: Record<TshirtPrintPackage, number> = {
-  blank: 400,
-  'front-small': 450,
+export const TSHIRT_PRINT_PACKAGE_PRICES: Record<TshirtPrintPackage, number> = {
+  blank: 350,
+  'front-small': 400,
   'front-large': 500,
-  'back-small': 450,
+  'back-small': 400,
   'back-large': 500,
-  'front-small-back-small': 600,
-  'front-small-back-large': 650,
-  'front-large-back-small': 650,
-  'front-large-back-large': 700,
-  'front-back': 700,
+  'front-small-back-small': 450,
+  'front-small-back-large': 550,
+  'front-large-back-small': 550,
+  'front-large-back-large': 600,
+  'front-back': 600,
 };
+
+/** @deprecated Prefer TSHIRT_PRINT_PACKAGE_PRICES */
+const TSHIRT_PACKAGE_PRICES = TSHIRT_PRINT_PACKAGE_PRICES;
 
 /** Tighter chest logo zone for small front prints. */
 export const TSHIRT_SMALL_PRINT_AREA_INSETS: PrintAreaInsets = {

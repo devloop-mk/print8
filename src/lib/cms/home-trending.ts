@@ -10,7 +10,12 @@ import { getMergedProductDesignTemplates } from '@/lib/products/merged-product-d
 
 export const CMS_HOME_TRENDING_CACHE_TAG = 'cms-home-trending';
 
-export type TrendingProductDesign = ProductDesignTemplate & TrendingDesignAccent;
+export type TrendingProductDesign = {
+  id: string;
+  nameKey: string;
+  titleEn?: string;
+  titleMk?: string;
+} & TrendingDesignAccent;
 
 const getTrendingRowsCached = unstable_cache(
   async () => cmsDb.homeTrending.list(),
@@ -39,7 +44,16 @@ export function pickTrendingProductDesigns(
   return designIds.flatMap((id, index) => {
     const design = byId.get(id);
     if (!design) return [];
-    return [{ ...design, id, ...accentForRank(index) }];
+    // Card UI only needs id + display names; thumbnails are keyed by id.
+    return [
+      {
+        id,
+        nameKey: design.nameKey,
+        ...(design.titleEn ? { titleEn: design.titleEn } : {}),
+        ...(design.titleMk ? { titleMk: design.titleMk } : {}),
+        ...accentForRank(index),
+      },
+    ];
   });
 }
 

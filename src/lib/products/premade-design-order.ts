@@ -18,8 +18,13 @@ import { getSideMetadataPrefix } from '@/lib/products/product-sides';
 import { serializePlacedStickers } from '@/lib/products/sticker-library';
 import { writeTextMetadata } from '@/lib/products/text-layers';
 import {
+  resolveOverlayPlacementForSide,
+} from '@/lib/products/design-overlay';
+import {
+  deriveTshirtPrintPackage,
   getTshirtUnitPrice,
   isTshirtProduct,
+  type TshirtContentFootprint,
   type TshirtPrintPackage,
 } from '@/lib/products/tshirt-print-pricing';
 
@@ -70,13 +75,46 @@ export function writeSideDesignMetadata(
   }
 }
 
+/**
+ * Approximate on-mockup footprint for a premade side from stored overlay
+ * scale (width %). Uses a square box so tall art is not under-priced as
+ * "small". Missing scale → null → derive treats that side as large.
+ */
+function premadeSideFootprint(
+  design: ProductDesignTemplate,
+  side: ProductSide,
+): TshirtContentFootprint | null {
+  if (!getDesignSides(design).includes(side)) return null;
+
+  if (design.kind === 'text' && side === design.defaultSide) {
+    const scale =
+      design.textStyle?.photoScale ?? design.textStyle?.textSize ?? null;
+    if (scale == null) return null;
+    return { width: scale, height: scale };
+  }
+
+  const placement = resolveOverlayPlacementForSide(design, side, 't-shirt');
+  return { width: placement.scale, height: placement.scale };
+}
+
+/**
+ * Auto print package for ready-made tee designs (no live DOM measure).
+ * Classifies each side via overlay/photo scale vs the small chest zone —
+ * same thresholds as the customizer's footprintFitsSmallZone.
+ */
 export function getPremadeTshirtPrintPackage(
   design: ProductDesignTemplate,
 ): TshirtPrintPackage {
   const sides = getDesignSides(design);
-  // Premade dual designs have no measured footprint — keep the former
-  // flat dual price (700) via the large+large tier.
-  return sides.includes('back') ? 'front-large-back-large' : 'front-small';
+  const hasFront = sides.includes('front');
+  const hasBack = sides.includes('back');
+
+  return deriveTshirtPrintPackage({
+    hasFrontContent: hasFront,
+    hasBackContent: hasBack,
+    frontFootprint: hasFront ? premadeSideFootprint(design, 'front') : null,
+    backFootprint: hasBack ? premadeSideFootprint(design, 'back') : null,
+  });
 }
 
 export function getPremadeDesignUnitPrice(

@@ -2,10 +2,24 @@ import type { Product, ProductDesignTemplate } from '@/lib/data/catalog';
 import type { CouplePackTemplate } from '@/lib/data/couple-pack';
 import { partnerDesignToTemplate } from '@/lib/data/couple-pack';
 import type { CartItem } from '@/lib/cart/types';
-import { buildPremadeDesignCartPayload } from '@/lib/products/premade-design-order';
+import {
+  buildPremadeDesignCartPayload,
+  getPremadeDesignUnitPrice,
+} from '@/lib/products/premade-design-order';
 
-export function getCouplePackPrice(product: Product): number {
-  return product.basePrice * 2;
+/** Sum of each partner shirt's tee print-package price (or base × 2 for non-tees). */
+export function getCouplePackPrice(
+  product: Product,
+  pack: CouplePackTemplate,
+  designs?: [ProductDesignTemplate, ProductDesignTemplate],
+): number {
+  const [partner1, partner2] = pack.partnerDesigns;
+  const design1 = designs?.[0] ?? partnerDesignToTemplate(pack, partner1);
+  const design2 = designs?.[1] ?? partnerDesignToTemplate(pack, partner2);
+  return (
+    getPremadeDesignUnitPrice(product, design1) +
+    getPremadeDesignUnitPrice(product, design2)
+  );
 }
 
 export function buildCouplePackCartItems({
@@ -41,7 +55,6 @@ export function buildCouplePackCartItems({
       color: partner1Color,
       size: partner1Size,
       name: `${name} — ${partner1.labelEn}`,
-      price: product.basePrice,
       capturedPreview: capturedPreviews?.[0],
       quantity: 1,
     }),
@@ -51,7 +64,6 @@ export function buildCouplePackCartItems({
       color: partner2Color,
       size: partner2Size,
       name: `${name} — ${partner2.labelEn}`,
-      price: product.basePrice,
       capturedPreview: capturedPreviews?.[1],
       quantity: 1,
     }),

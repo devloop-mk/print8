@@ -7,8 +7,9 @@ import { PageIntro } from '@/components/brand/PageIntro';
 import { buildSectionMetadata } from '@/lib/seo/page-metadata';
 import type { Locale } from '@/i18n/routing';
 import { getPublishedDesignTemplates } from '@/lib/catalog/design-catalog';
+import type { DesignCategory } from '@/lib/data/catalog';
 
-export const revalidate = 3600;
+export const revalidate = 21600;
 
 export async function generateMetadata({
   params,
@@ -47,6 +48,11 @@ export default async function DesignsPage({
 
   const t = await getTranslations('designs');
   const designs = await getPublishedDesignTemplates();
+  const categoryCounts: Partial<Record<DesignCategory, number>> = {};
+  for (const design of designs) {
+    categoryCounts[design.category] =
+      (categoryCounts[design.category] ?? 0) + 1;
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -63,7 +69,7 @@ export default async function DesignsPage({
         </div>
       </PageIntro>
 
-      <DesignsCategoriesOverview designs={designs} />
+      <DesignsCategoriesOverview categoryCounts={categoryCounts} />
     </div>
   );
 }

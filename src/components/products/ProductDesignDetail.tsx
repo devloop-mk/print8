@@ -27,7 +27,11 @@ import {
   resolveDesignProductType,
   type GarmentFit,
 } from '@/lib/products/garment-fit';
-import { buildPremadeDesignCartPayload } from '@/lib/products/premade-design-order';
+import {
+  buildPremadeDesignCartPayload,
+  getPremadeDesignUnitPrice,
+} from '@/lib/products/premade-design-order';
+import { isTshirtProduct } from '@/lib/products/tshirt-print-pricing';
 import { capturePreviewElement } from '@/lib/products/capture-preview';
 import { buildCustomizerUrl, PRODUCT_OFFERING_PATHS } from '@/lib/products/paths';
 import { getProductSpecs } from '@/lib/products/product-specs';
@@ -293,7 +297,12 @@ export function ProductDesignDetail({
               </div>
               <h1 className="mt-3 text-3xl font-bold text-ink-900">{displayName}</h1>
               <p className="mt-2 text-2xl font-semibold text-brand-600">
-                {formatPrice(product.basePrice, locale)}
+                {formatPrice(
+                  isTshirtProduct(product)
+                    ? getPremadeDesignUnitPrice(product, design)
+                    : product.basePrice,
+                  locale,
+                )}
               </p>
             </div>
 

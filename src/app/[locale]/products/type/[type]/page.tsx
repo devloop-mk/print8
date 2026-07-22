@@ -4,12 +4,13 @@ import { notFound } from 'next/navigation';
 import { ProductTypeCatalog } from '@/components/products/ProductTypeCatalog';
 import { SectionLoading } from '@/components/ui/SectionLoading';
 import { getProductTypeCatalogData } from '@/lib/cache/catalog-cache';
+import { slimProductDesignCatalogEntries } from '@/lib/products/slim-catalog-entry';
 import { productTypes } from '@/lib/data/catalog';
 import { buildProductTypePageMetadata } from '@/lib/seo/page-metadata';
 import type { Locale } from '@/i18n/routing';
 import type { ProductType } from '@/lib/data/catalog';
 
-export const revalidate = 3600;
+export const revalidate = 21600;
 
 function isProductType(value: string): value is ProductType {
   return (productTypes as readonly string[]).includes(value);
@@ -42,6 +43,8 @@ export default async function ProductTypePage({
 
   const { products, readyDesignEntries, categoryPreviews } =
     await getProductTypeCatalogData(type);
+  const slimReadyDesignEntries =
+    slimProductDesignCatalogEntries(readyDesignEntries);
 
   return (
     <div className="mx-auto min-w-0 max-w-7xl overflow-x-clip px-4 py-12 sm:px-6 lg:px-8">
@@ -49,7 +52,7 @@ export default async function ProductTypePage({
         <ProductTypeCatalog
           type={type}
           products={products}
-          readyDesignEntries={readyDesignEntries}
+          readyDesignEntries={slimReadyDesignEntries}
           categoryPreviews={categoryPreviews}
         />
       </Suspense>

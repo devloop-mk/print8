@@ -17,11 +17,15 @@ import { HeroFeatureBar } from '@/components/home/HeroFeatureBar';
 import { HomeHighlights } from '@/components/home/HomeHighlights';
 import { HomeHowItWorks } from '@/components/home/HomeHowItWorks';
 import { HomeCategoryGrid } from '@/components/home/HomeCategoryGrid';
-import { FeaturedDesignCards } from '@/components/home/FeaturedDesignCards';
+import {
+  FeaturedDesignCards,
+  MAX_FEATURED_DESIGNS,
+} from '@/components/home/FeaturedDesignCards';
 import { HomeCustomDesignCta } from '@/components/home/HomeCustomDesignCta';
 import { HomeContactCta } from '@/components/home/HomeContactCta';
 import { ServiceCard } from '@/components/services/ServiceCard';
 import { Reveal } from '@/components/motion/Reveal';
+import { toGalleryDesignTemplates } from '@/lib/catalog/slim-design-template';
 
 export const revalidate = 3600;
 
@@ -65,6 +69,11 @@ export default async function HomePage({
       getPublishedDesignTemplates(),
       getHomeTrendingProductDesigns(),
     ]);
+
+  // Only serialize the cards we render — full catalog would inflate ISR payload.
+  const featuredDesignCards = toGalleryDesignTemplates(
+    featuredDesigns.slice(0, MAX_FEATURED_DESIGNS),
+  );
 
   const productCount = getBrowsableProducts().length;
 
@@ -125,7 +134,7 @@ export default async function HomePage({
                 {t('viewAll')} →
               </Link>
             </div>
-            <FeaturedDesignCards designs={featuredDesigns} />
+            <FeaturedDesignCards designs={featuredDesignCards} />
           </div>
         </section>
       </Reveal>

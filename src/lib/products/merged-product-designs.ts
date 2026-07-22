@@ -9,6 +9,7 @@ import {
   type ManagedProductDesignRecord,
 } from '@/lib/db/managed-product-designs';
 import { getDesignDisplayOrderRecord } from '@/lib/cms/display-order';
+import { getCatalogSource } from '@/lib/products/catalog-source';
 import { mergeProductDesignCatalog } from '@/lib/products/merge-product-designs';
 
 export const PRODUCT_DESIGNS_CACHE_TAG = 'product-designs';
@@ -28,19 +29,42 @@ const getCachedManagedProductDesignRecords = unstable_cache(
 );
 
 /**
- * Merge static catalog (already in the module heap) with cached managed rows.
- * Memoized per request via React cache — never written to Data Cache.
+ * Resolve storefront product designs according to `CATALOG_SOURCE`
+ * (see `catalog-source.ts`). Memoized per request via React cache —
+ * never written to Data Cache as a full catalog blob.
  */
 export const getMergedProductDesignTemplates = cache(
   async (): Promise<ProductDesignTemplate[]> => {
-    const [managed, displayOrder] = await Promise.all([
-      getCachedManagedProductDesignRecords(),
-      getDesignDisplayOrderRecord(),
-    ]);
+    const source = getCatalogSource();
+    const displayOrder = await getDesignDisplayOrderRecord();
+
+    if (source === 'static') {
+      return mergeProductDesignCatalog(
+        staticProductDesignTemplates,
+        [],
+        displayOrder,
+        'static',
+      );
+    }
+
+    let managed: ManagedProductDesignRecord[] = [];
+    try {
+      managed = await getCachedManagedProductDesignRecords();
+    } catch {
+      // Supabase unavailable — fall back to static packs.
+      return mergeProductDesignCatalog(
+        staticProductDesignTemplates,
+        [],
+        displayOrder,
+        'static',
+      );
+    }
+
     return mergeProductDesignCatalog(
       staticProductDesignTemplates,
       managed,
       displayOrder,
+      source,
     );
   },
 );

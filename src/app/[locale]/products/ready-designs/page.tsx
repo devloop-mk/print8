@@ -5,6 +5,10 @@ import { ProductDesignsCatalog } from '@/components/products/ProductDesignsCatal
 import { SectionLoading } from '@/components/ui/SectionLoading';
 import { getCachedProductDesignCatalogEntries } from '@/lib/cache/catalog-cache';
 import { resolveCouplePackDesignTemplatesMap } from '@/lib/products/couple-pack-resolved';
+import {
+  slimProductDesignCatalogEntries,
+  slimProductDesignMap,
+} from '@/lib/products/slim-catalog-entry';
 import { buildPageMetadata, buildOgImageUrl } from '@/lib/seo/metadata';
 import { redirect } from '@/i18n/navigation';
 import {
@@ -14,7 +18,7 @@ import {
 } from '@/lib/products/paths';
 import type { Locale } from '@/i18n/routing';
 
-export const revalidate = 3600;
+export const revalidate = 21600;
 
 export async function generateMetadata({
   params,
@@ -66,10 +70,12 @@ export default async function ProductReadyDesignsPage({
     });
   }
 
-  const [initialEntries, initialCoupleDesigns] = await Promise.all([
+  const [rawEntries, rawCoupleDesigns] = await Promise.all([
     getCachedProductDesignCatalogEntries('image-designs'),
     resolveCouplePackDesignTemplatesMap(),
   ]);
+  const initialEntries = slimProductDesignCatalogEntries(rawEntries);
+  const initialCoupleDesigns = slimProductDesignMap(rawCoupleDesigns);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
