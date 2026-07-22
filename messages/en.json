@@ -1611,6 +1611,8 @@
       "fit": "Fit",
       "care": "Care",
       "designText": "Design text",
+      "couplePackNote": "This design is part of the {name} couple pack.",
+      "viewCouplePack": "View couple pack",
       "metaDescription": "Order {name} on a premium printed product — choose color and size, or customize further.",
       "specs": {
         "cotton100": "100% cotton",

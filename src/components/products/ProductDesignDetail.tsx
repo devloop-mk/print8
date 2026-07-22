@@ -33,7 +33,11 @@ import {
 } from '@/lib/products/premade-design-order';
 import { isTshirtProduct } from '@/lib/products/tshirt-print-pricing';
 import { capturePreviewElement } from '@/lib/products/capture-preview';
-import { buildCustomizerUrl, PRODUCT_OFFERING_PATHS } from '@/lib/products/paths';
+import {
+  buildCouplePackDetailUrl,
+  buildCustomizerUrl,
+  PRODUCT_OFFERING_PATHS,
+} from '@/lib/products/paths';
 import { getProductSpecs } from '@/lib/products/product-specs';
 import { cn, formatPrice } from '@/lib/utils';
 import { Card } from '@/components/ui/Card';
@@ -44,7 +48,7 @@ import { DesignColorPicker } from '@/components/products/DesignColorPicker';
 import { GarmentFitSelector } from '@/components/products/GarmentFitSelector';
 import { useCart } from '@/components/cart/CartProvider';
 import { Reveal } from '@/components/motion/Reveal';
-import { Leaf, Palette, ShoppingCart, Sparkles } from 'lucide-react';
+import { Heart, Leaf, Palette, ShoppingCart, Sparkles } from 'lucide-react';
 
 export function ProductDesignDetail({
   designId,
@@ -145,13 +149,18 @@ export function ProductDesignDetail({
     return <p>{td('notFound')}</p>;
   }
 
-  const { design, applicableFits } = resolved;
+  const { design, applicableFits, couplePack } = resolved;
   const designSides = getDesignSides(design);
   const isDualSided = isDualSidedDesign(design);
   const activePreviewSide = isDualSided ? previewSide : design.defaultSide;
   const displayName = resolveProductDesignDisplayName(design, locale as 'mk' | 'en', (key) =>
     t(key),
   );
+  const couplePackTitle = couplePack
+    ? locale === 'mk'
+      ? couplePack.titleMk
+      : couplePack.titleEn
+    : null;
   const applicableColors = getDesignApplicableColors(design, product);
   const previewColor = resolveDesignPreviewColor(design, product, color);
   const specs = getProductSpecs(product.type);
@@ -304,6 +313,23 @@ export function ProductDesignDetail({
                   locale,
                 )}
               </p>
+              {couplePack && couplePackTitle ? (
+                <p className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm text-ink-600">
+                  <Heart
+                    className="inline h-3.5 w-3.5 shrink-0 translate-y-0.5 text-brand-600"
+                    aria-hidden
+                  />
+                  <span>
+                    {tdp('couplePackNote', { name: couplePackTitle })}
+                  </span>
+                  <Link
+                    href={buildCouplePackDetailUrl(couplePack.id)}
+                    className="font-medium text-brand-700 underline-offset-2 hover:underline"
+                  >
+                    {tdp('viewCouplePack')}
+                  </Link>
+                </p>
+              ) : null}
             </div>
 
             <GarmentFitSelector

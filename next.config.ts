@@ -45,7 +45,7 @@ const nextConfig: NextConfig = {
   // /api/og/design falls back to public/og/*.jpg when CDN/site fetch fails.
   outputFileTracingIncludes: {
     '/api/og': ['./public/logo/**', './public/og/**'],
-    '/api/og/design': ['./public/og/**'],
+    '/api/og/design': ['./public/og/**', './public/logo/**'],
   },
   turbopack: {
     root: projectRoot,

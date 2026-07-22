@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
+import { LOGO_HORIZONTAL_LIGHT } from '@/lib/brand/logos';
 import { absoluteUrl } from '@/lib/seo/site';
 import {
   resolveAssetUrl,
@@ -17,6 +18,9 @@ const RESPONSE_HEADERS = {
 };
 const RENDER_TIMEOUT_MS = 8000;
 
+/** Matches design-overlay DEFAULT_OVERLAY_POSITION / DEFAULT_OVERLAY_SCALE. */
+const DEFAULT_PLACEMENT = { x: 50, y: 54, scale: 40 };
+
 // 1x1 transparent PNG — absolute last-resort body so a meta-tag inspector
 // always gets back real image bytes instead of an HTML error page.
 const TRANSPARENT_PNG = Buffer.from(
@@ -28,16 +32,18 @@ const TRANSPARENT_PNG = Buffer.from(
  * Compositor for design/product-design share images.
  *
  * Supports:
- * 1. Mockup + overlay panels (`m0`/`o0`/`x0`/`y0`/`s0`, optional second panel)
+ * 1. Mockup + overlay panels (`m0`/`o0`/`x0`/`y0`/`s0`/`z0`, optional second panel)
  *    — garment/product photo with design art placed like the PDP preview.
  * 2. Pre-composited image panels (`i0`, optional `i1`).
  * 3. Legacy raw artwork (`a` / `b`) side by side on white cards.
  *
- * Never touches satori/next-og or SVG — only raster png/jpg/webp via sharp.
+ * Never touches satori/next-og or SVG for panel art — only raster png/jpg/webp
+ * via sharp. Brand logo SVG is rasterized locally for the top-center mark.
  *
  * Production note: `public/**` is excluded from serverless file tracing
  * (`next.config` outputFileTracingExcludes). Prefer HTTP fetch of CDN/site
- * URLs; disk reads only work locally or for the few `og/` files we re-include.
+ * URLs; disk reads only work locally or for the few `og/` + `logo/` files we
+ * re-include.
  */
 function isSvgPath(value: string) {
   return /\.svg(\?.*)?$/i.test(value);
@@ -134,6 +140,7 @@ async function loadRasterBuffer(value: string | null): Promise<Buffer | null> {
 }
 
 let cachedBackground: Buffer | null | undefined;
+let cachedLogo: Buffer | null | undefined;
 
 async function getBackgroundBuffer(): Promise<Buffer> {
   if (cachedBackground === undefined) {
@@ -158,17 +165,88 @@ async function getBackgroundBuffer(): Promise<Buffer> {
     .toBuffer();
 }
 
+/** Small light brand mark for the blue OG card (top-center). */
+async function getLogoBuffer(): Promise<Buffer | null> {
+  if (cachedLogo !== undefined) return cachedLogo;
+
+  try {
+    const relativePath = decodeURIComponent(LOGO_HORIZONTAL_LIGHT).replace(/^\//, '');
+    const svg = await readFile(
+      path.join(process.cwd(), 'public', relativePath),
+    );
+    cachedLogo = await sharp(svg)
+      .resize({ width: 200, fit: 'inside' })
+      .png()
+      .toBuffer();
+  } catch (error) {
+    console.error('[api/og/design] Failed to load brand logo:', error);
+    cachedLogo = null;
+  }
+  return cachedLogo;
+}
+
 type Placement = { x: number; y: number; scale: number };
+
+/**
+ * Place an overlay using the same model as `getDesignOverlayLayerStyle`:
+ * left/top % of the square frame, width = scale%, centered via translate(-50%,-50%).
+ * Crops correctly when the layer overflows (tall couple art) — never clamps
+ * destination offsets, which would shift the design.
+ */
+async function buildOverlayLayer(
+  overlayBuffer: Buffer,
+  placement: Placement,
+  canvasSize: number,
+): Promise<sharp.OverlayOptions | null> {
+  const overlayW = Math.max(1, Math.round((canvasSize * placement.scale) / 100));
+  const resizedOverlay = await sharp(overlayBuffer)
+    .resize({ width: overlayW, fit: 'inside' })
+    .ensureAlpha()
+    .png()
+    .toBuffer();
+  const om = await sharp(resizedOverlay).metadata();
+  const ow = om.width ?? overlayW;
+  const oh = om.height ?? overlayW;
+  const left = Math.round((canvasSize * placement.x) / 100 - ow / 2);
+  const top = Math.round((canvasSize * placement.y) / 100 - oh / 2);
+
+  if (left >= 0 && top >= 0 && left + ow <= canvasSize && top + oh <= canvasSize) {
+    return { input: resizedOverlay, left, top };
+  }
+
+  // Visible intersection of overlay rect with the canvas.
+  const dstLeft = Math.max(0, left);
+  const dstTop = Math.max(0, top);
+  const dstRight = Math.min(canvasSize, left + ow);
+  const dstBottom = Math.min(canvasSize, top + oh);
+  const width = dstRight - dstLeft;
+  const height = dstBottom - dstTop;
+  if (width <= 0 || height <= 0) return null;
+
+  const cropped = await sharp(resizedOverlay)
+    .extract({
+      left: dstLeft - left,
+      top: dstTop - top,
+      width,
+      height,
+    })
+    .png()
+    .toBuffer();
+
+  return { input: cropped, left: dstLeft, top: dstTop };
+}
 
 /**
  * Square canvas matching ProductMockupFrame: mockup object-contain, overlay
  * positioned with left/top % of the frame and width = scale% (centered).
+ * Optional displayScale mirrors PDP `transform: scale(...)` + overflow clip.
  */
 async function compositeMockupOverlay(
   mockupBuffer: Buffer,
   overlayBuffer: Buffer | null,
   placement: Placement,
   canvasSize: number,
+  displayScale = 1,
 ): Promise<Buffer> {
   const canvas = await sharp({
     create: {
@@ -200,51 +278,47 @@ async function compositeMockupOverlay(
   ];
 
   if (overlayBuffer) {
-    const overlayW = Math.max(1, Math.round((canvasSize * placement.scale) / 100));
-    const resizedOverlay = await sharp(overlayBuffer)
-      .resize({ width: overlayW, fit: 'inside' })
-      .ensureAlpha()
-      .png()
-      .toBuffer();
-    const om = await sharp(resizedOverlay).metadata();
-    const ow = om.width ?? overlayW;
-    const oh = om.height ?? overlayW;
-    const cx = (canvasSize * placement.x) / 100;
-    const cy = (canvasSize * placement.y) / 100;
-    const left = Math.round(cx - ow / 2);
-    const top = Math.round(cy - oh / 2);
-
-    // Sharp rejects negative offsets — pad a full-frame transparent layer.
-    if (left < 0 || top < 0 || left + ow > canvasSize || top + oh > canvasSize) {
-      const padded = await sharp({
-        create: {
-          width: canvasSize,
-          height: canvasSize,
-          channels: 4,
-          background: { r: 0, g: 0, b: 0, alpha: 0 },
-        },
-      })
-        .composite([
-          {
-            input: resizedOverlay,
-            left: Math.max(0, Math.min(left, canvasSize - 1)),
-            top: Math.max(0, Math.min(top, canvasSize - 1)),
-          },
-        ])
-        .png()
-        .toBuffer();
-      layers.push({ input: padded, left: 0, top: 0 });
-    } else {
-      layers.push({ input: resizedOverlay, left, top });
-    }
+    const overlayLayer = await buildOverlayLayer(
+      overlayBuffer,
+      placement,
+      canvasSize,
+    );
+    if (overlayLayer) layers.push(overlayLayer);
   }
 
-  return sharp(canvas).composite(layers).png().toBuffer();
+  let composited = await sharp(canvas).composite(layers).png().toBuffer();
+
+  // Match ProductMockupFrame overflow-hidden + inner scale transform: crop the
+  // center window of size canvas/scale and enlarge back to canvasSize.
+  const scale =
+    Number.isFinite(displayScale) && displayScale > 1 ? displayScale : 1;
+  if (scale > 1.001) {
+    const cropSize = Math.max(1, Math.round(canvasSize / scale));
+    const cropLeft = Math.round((canvasSize - cropSize) / 2);
+    const cropTop = Math.round((canvasSize - cropSize) / 2);
+    composited = await sharp(composited)
+      .extract({
+        left: cropLeft,
+        top: cropTop,
+        width: cropSize,
+        height: cropSize,
+      })
+      .resize(canvasSize, canvasSize, { fit: 'fill' })
+      .png()
+      .toBuffer();
+  }
+
+  return composited;
 }
 
-/** White card holding a single design/mockup image, contained + centered. */
-async function buildCard(imageBuffer: Buffer, cardWidth: number, cardHeight: number): Promise<Buffer> {
-  const padding = 28;
+/** White card holding a single design/mockup image, contained or covered. */
+async function buildCard(
+  imageBuffer: Buffer,
+  cardWidth: number,
+  cardHeight: number,
+  padding: number,
+  fit: 'contain' | 'cover' = 'contain',
+): Promise<Buffer> {
   const innerWidth = Math.max(cardWidth - padding * 2, 1);
   const innerHeight = Math.max(cardHeight - padding * 2, 1);
 
@@ -252,7 +326,7 @@ async function buildCard(imageBuffer: Buffer, cardWidth: number, cardHeight: num
     .resize({
       width: innerWidth,
       height: innerHeight,
-      fit: 'contain',
+      fit,
       background: { r: 255, g: 255, b: 255, alpha: 0 },
     })
     .png()
@@ -280,27 +354,49 @@ async function buildDesignOgImage(images: Buffer[]): Promise<Buffer> {
   const background = await getBackgroundBuffer();
   const composites: sharp.OverlayOptions[] = [];
 
+  // Leave a strip at the top for the brand mark.
+  const logoReserve = 48;
+  const availableHeight = OG_HEIGHT - logoReserve;
+
   if (images.length >= 2) {
-    const cardWidth = 500;
-    const cardHeight = 460;
-    const gap = 36;
-    const totalWidth = cardWidth * 2 + gap;
+    // Square cards — mockup composites are square; landscape cards left
+    // large white side gutters and made designs look undersized.
+    const cardSize = Math.min(530, availableHeight - 6);
+    const gap = 20;
+    const padding = 6;
+    const totalWidth = cardSize * 2 + gap;
     const startX = Math.round((OG_WIDTH - totalWidth) / 2);
-    const top = Math.round((OG_HEIGHT - cardHeight) / 2);
+    const top =
+      logoReserve + Math.round((availableHeight - cardSize) / 2);
 
     const [cardA, cardB] = await Promise.all([
-      buildCard(images[0], cardWidth, cardHeight),
-      buildCard(images[1], cardWidth, cardHeight),
+      buildCard(images[0], cardSize, cardSize, padding),
+      buildCard(images[1], cardSize, cardSize, padding),
     ]);
     composites.push({ input: cardA, left: startX, top });
-    composites.push({ input: cardB, left: startX + cardWidth + gap, top });
+    composites.push({ input: cardB, left: startX + cardSize + gap, top });
   } else {
-    const cardWidth = 720;
-    const cardHeight = 500;
-    const left = Math.round((OG_WIDTH - cardWidth) / 2);
-    const top = Math.round((OG_HEIGHT - cardHeight) / 2);
-    const card = await buildCard(images[0], cardWidth, cardHeight);
+    // Large square card — mockup composites are square; a wide cover-fit
+    // card clipped collar/hem. Fill height to minimize empty blue.
+    const cardSize = Math.min(560, availableHeight - 4);
+    const padding = 4;
+    const left = Math.round((OG_WIDTH - cardSize) / 2);
+    const top =
+      logoReserve + Math.round((availableHeight - cardSize) / 2);
+    const card = await buildCard(images[0], cardSize, cardSize, padding);
     composites.push({ input: card, left, top });
+  }
+
+  const logo = await getLogoBuffer();
+  if (logo) {
+    const logoMeta = await sharp(logo).metadata();
+    const logoW = logoMeta.width ?? 200;
+    const logoH = logoMeta.height ?? 40;
+    composites.push({
+      input: logo,
+      left: Math.round((OG_WIDTH - logoW) / 2),
+      top: Math.max(10, Math.round((logoReserve - logoH) / 2) + 4),
+    });
   }
 
   return sharp(background)
@@ -311,14 +407,23 @@ async function buildDesignOgImage(images: Buffer[]): Promise<Buffer> {
 }
 
 function parsePlacement(searchParams: URLSearchParams, index: number): Placement {
-  const x = Number(searchParams.get(`x${index}`) ?? '50');
-  const y = Number(searchParams.get(`y${index}`) ?? '50');
-  const scale = Number(searchParams.get(`s${index}`) ?? '40');
+  const x = Number(searchParams.get(`x${index}`) ?? String(DEFAULT_PLACEMENT.x));
+  const y = Number(searchParams.get(`y${index}`) ?? String(DEFAULT_PLACEMENT.y));
+  const scale = Number(
+    searchParams.get(`s${index}`) ?? String(DEFAULT_PLACEMENT.scale),
+  );
   return {
-    x: Number.isFinite(x) ? x : 50,
-    y: Number.isFinite(y) ? y : 50,
-    scale: Number.isFinite(scale) && scale > 0 ? scale : 40,
+    x: Number.isFinite(x) ? x : DEFAULT_PLACEMENT.x,
+    y: Number.isFinite(y) ? y : DEFAULT_PLACEMENT.y,
+    scale: Number.isFinite(scale) && scale > 0 ? scale : DEFAULT_PLACEMENT.scale,
   };
+}
+
+function parseDisplayScale(searchParams: URLSearchParams, index: number): number {
+  const z = Number(searchParams.get(`z${index}`) ?? '1');
+  if (!Number.isFinite(z) || z <= 0) return 1;
+  // Clamp to a sane range used by storefront mockup zooms.
+  return Math.min(Math.max(z, 1), 2.5);
 }
 
 async function resolvePanelBuffer(
@@ -336,8 +441,15 @@ async function resolvePanelBuffer(
     if (!mockupBuffer) return null;
     const overlayBuffer = await loadRasterBuffer(searchParams.get(`o${index}`));
     const placement = parsePlacement(searchParams, index);
-    // Composite at a resolution large enough for the OG card (~500–720px).
-    return compositeMockupOverlay(mockupBuffer, overlayBuffer, placement, 720);
+    const displayScale = parseDisplayScale(searchParams, index);
+    // Composite at a resolution large enough for the OG card (~500–980px).
+    return compositeMockupOverlay(
+      mockupBuffer,
+      overlayBuffer,
+      placement,
+      900,
+      displayScale,
+    );
   }
 
   return null;

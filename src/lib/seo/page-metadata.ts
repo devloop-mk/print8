@@ -26,6 +26,7 @@ import { buildOgImageUrl, buildPageMetadata } from '@/lib/seo/metadata';
 import { resolveAssetUrl } from '@/lib/storage/asset-url';
 import { getDesignGalleryImage } from '@/lib/designs/design-thumb';
 import { getCouplePackTemplate, getCouplePackPartnerDesign } from '@/lib/data/couple-pack';
+import { resolveCouplePackPartnerDesigns } from '@/lib/products/couple-pack-resolved';
 import { resolveProductDesignDisplayName } from '@/lib/products/design-display-name';
 
 function isSvgAssetPath(value: string) {
@@ -379,9 +380,22 @@ export async function buildDesignProductMetadata(
 
   // Prefer garment/product + design composition (same idea as the PDP mockup),
   // never bare overlay artwork alone. Respects `?type=` when valid for the design.
-  const panels = coupleMatch
-    ? resolveCouplePackOgPanels(coupleMatch.pack, preferredType)
-    : resolveDesignOgPanels(design, preferredType);
+  // Couple packs: use merged partner templates so admin x/y/scale match the PDP.
+  let panels;
+  if (coupleMatch) {
+    const resolvedPartners = await resolveCouplePackPartnerDesigns(
+      coupleMatch.pack.id,
+    );
+    panels = resolveCouplePackOgPanels(
+      coupleMatch.pack,
+      preferredType,
+      resolvedPartners
+        ? [resolvedPartners.design1, resolvedPartners.design2]
+        : undefined,
+    );
+  } else {
+    panels = resolveDesignOgPanels(design, preferredType);
+  }
 
   const image =
     panels.length > 0
@@ -427,7 +441,14 @@ export async function buildCouplePackMetadata(
     name: packName,
   });
 
-  const panels = resolveCouplePackOgPanels(pack, preferredType);
+  const resolvedPartners = await resolveCouplePackPartnerDesigns(pack.id);
+  const panels = resolveCouplePackOgPanels(
+    pack,
+    preferredType,
+    resolvedPartners
+      ? [resolvedPartners.design1, resolvedPartners.design2]
+      : undefined,
+  );
   const image =
     panels.length > 0
       ? buildDesignOgImageUrl(panels)

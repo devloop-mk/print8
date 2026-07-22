@@ -14,6 +14,7 @@ import {
   resolveOverlayPlacementForSide,
   type OverlayPlacement,
 } from '@/lib/products/design-overlay';
+import { resolveMockupDisplayScale } from '@/lib/products/product-mockup-layout';
 import { getDesignSides, resolveSideOverlayConfig } from '@/lib/products/design-sides';
 import { resolveDesignProduct } from '@/lib/products/garment-fit';
 import { absoluteUrl } from '@/lib/seo/site';
@@ -31,6 +32,8 @@ export type DesignOgPanel =
       mockup: string;
       overlay?: string;
       placement: OverlayPlacement;
+      /** Same zoom as PDP `getMockupImageDisplayStyle(..., 'customizer')`. */
+      displayScale?: number;
     };
 
 function isSvgPath(value: string) {
@@ -101,12 +104,20 @@ function buildMockupPanel(
   const mockup = toOgAssetRef(mockupPath);
   const placement = resolveOverlayPlacementForSide(design, side, product);
   const overlay = resolveRasterOverlayUrl(design, side, color) ?? undefined;
+  // Match DesignTemplatePreview's customizer zoom so landscape mockups crop
+  // the same way as the PDP (shirt + overlay scale together from center).
+  const displayScale = resolveMockupDisplayScale(
+    product,
+    mockupPath,
+    'customizer',
+  );
 
   return {
     kind: 'mockup',
     mockup,
     overlay,
     placement,
+    displayScale,
   };
 }
 
@@ -152,13 +163,22 @@ export function resolveDesignOgPanels(
   return panels.slice(0, 2);
 }
 
+/**
+ * Couple OG panels. Pass merged partner templates (admin placement) when
+ * available so OG matches the PDP; otherwise falls back to static pack data.
+ */
 export function resolveCouplePackOgPanels(
   pack: CouplePackTemplate,
   preferredType?: ProductType,
+  partnerTemplates?: [
+    ProductDesignTemplate | null | undefined,
+    ProductDesignTemplate | null | undefined,
+  ],
 ): DesignOgPanel[] {
   return pack.partnerDesigns
-    .map((partner) => {
-      const design = partnerDesignToTemplate(pack, partner);
+    .map((partner, index) => {
+      const design =
+        partnerTemplates?.[index] ?? partnerDesignToTemplate(pack, partner);
       return buildMockupPanel(
         design,
         design.defaultSide ?? 'front',
@@ -189,6 +209,14 @@ export function buildDesignOgImageUrl(panels: DesignOgPanel[]) {
     search.set(`x${index}`, String(panel.placement.position.x));
     search.set(`y${index}`, String(panel.placement.position.y));
     search.set(`s${index}`, String(panel.placement.scale));
+    if (
+      panel.displayScale != null &&
+      Number.isFinite(panel.displayScale) &&
+      panel.displayScale > 0 &&
+      panel.displayScale !== 1
+    ) {
+      search.set(`z${index}`, String(panel.displayScale));
+    }
   });
 
   return absoluteUrl(`/api/og/design?${search.toString()}`);
