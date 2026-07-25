@@ -95,6 +95,7 @@ import {
   PRODUCT_PHOTO_MIN_SCALE,
   PRODUCT_PRINT_AREA_MAX_SCALE,
   getCustomizerImageMaxScale,
+  PRODUCT_CUSTOMIZER_DEFAULT_ZOOM,
 } from '@/lib/products/customizer-constants';
 import { clampPhotoScale } from '@/lib/products/crop-image';
 import { ProductPhotoUpload } from '@/components/products/ProductPhotoUpload';
@@ -1043,7 +1044,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   const [activePanel, setActivePanel] = useState<EditorPanel>('product');
   const [selectedElement, setSelectedElement] = useState<SelectedElement>(null);
   const contextBarRef = useRef<HTMLDivElement>(null);
-  const [canvasZoom, setCanvasZoom] = useState(100);
+  const [canvasZoom, setCanvasZoom] = useState(PRODUCT_CUSTOMIZER_DEFAULT_ZOOM);
   const [sidesPreviewOpen, setSidesPreviewOpen] = useState(false);
   const [editorMockupInnerHeight, setEditorMockupInnerHeight] = useState<
     number | undefined

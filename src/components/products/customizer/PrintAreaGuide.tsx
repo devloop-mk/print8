@@ -44,7 +44,7 @@ export function PrintAreaGuide({
 
       {label ? (
         <div className="absolute" style={frame}>
-          <span className="absolute left-1 top-1 rounded bg-white/80 px-1.5 py-0.5 text-[10px] font-medium text-ink-600 shadow-sm">
+          <span className="absolute left-1 top-1 hidden rounded bg-white/80 px-1.5 py-0.5 text-[10px] font-medium text-ink-600 shadow-sm md:inline">
             {label}
           </span>
         </div>

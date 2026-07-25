@@ -33,6 +33,9 @@ export const PRODUCT_CUSTOMIZER_IMAGE_ABSOLUTE_MAX_SCALE = 100;
 /** Opacity for design pixels rendered outside the print area while editing. */
 export const PRODUCT_CUSTOMIZER_OUTSIDE_PRINT_AREA_OPACITY = 0.15;
 
+/** Default editor canvas zoom (%) when opening the product customizer. */
+export const PRODUCT_CUSTOMIZER_DEFAULT_ZOOM = 115;
+
 /**
  * Max scale users can pick in the customizer — print-area fit plus overshoot,
  * capped so art cannot span wider than the mockup frame.
