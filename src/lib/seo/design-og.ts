@@ -32,7 +32,7 @@ export type DesignOgPanel =
       mockup: string;
       overlay?: string;
       placement: OverlayPlacement;
-      /** Same zoom as PDP `getMockupImageDisplayStyle(..., 'customizer')`. */
+      /** Same zoom as PDP `getMockupImageDisplayStyle(..., 'catalog-design')`. */
       displayScale?: number;
     };
 
@@ -104,12 +104,11 @@ function buildMockupPanel(
   const mockup = toOgAssetRef(mockupPath);
   const placement = resolveOverlayPlacementForSide(design, side, product);
   const overlay = resolveRasterOverlayUrl(design, side, color) ?? undefined;
-  // Match DesignTemplatePreview's customizer zoom so landscape mockups crop
-  // the same way as the PDP (shirt + overlay scale together from center).
+  // Match DesignTemplatePreview catalog zoom so OG cards match the PDP.
   const displayScale = resolveMockupDisplayScale(
     product,
     mockupPath,
-    'customizer',
+    'catalog-design',
   );
 
   return {

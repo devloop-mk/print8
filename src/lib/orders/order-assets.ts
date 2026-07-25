@@ -30,6 +30,30 @@ export function collectOrderFileIds(data: {
     const meta = item.metadata;
     if (!meta) continue;
     for (const [key, value] of Object.entries(meta)) {
+      if (typeof value !== 'string' || !value) continue;
+      if (
+        key.endsWith('UploadedFileId') ||
+        key === 'uploadedFileId' ||
+        key.endsWith('PrintPngFileId')
+      ) {
+        ids.add(value);
+      }
+    }
+  }
+  return [...ids];
+}
+
+function collectUserPhotoFileIds(data: {
+  items: OrderItemLike[];
+  fileIds?: string[];
+}): string[] {
+  const ids = new Set<string>();
+  for (const id of data.fileIds ?? []) ids.add(id);
+  for (const item of data.items) {
+    for (const id of item.fileIds ?? []) ids.add(id);
+    const meta = item.metadata;
+    if (!meta) continue;
+    for (const [key, value] of Object.entries(meta)) {
       if (
         (key.endsWith('UploadedFileId') || key === 'uploadedFileId') &&
         typeof value === 'string' &&
@@ -60,7 +84,7 @@ export function countPhotosInItems(
   items: OrderItemLike[],
   extraFileIds: string[] = [],
 ): number {
-  return collectOrderFileIds({ items, fileIds: extraFileIds }).length;
+  return collectUserPhotoFileIds({ items, fileIds: extraFileIds }).length;
 }
 
 export function collectOrderStickers(

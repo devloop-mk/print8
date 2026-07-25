@@ -4,6 +4,7 @@ import { OrderStatusBadge } from '@/components/admin/OrderStatusBadge';
 import { OrderStatusUpdater } from '@/components/admin/OrderStatusUpdater';
 import { OrderItemDesignAssets } from '@/components/admin/OrderItemDesignAssets';
 import { OrderItemMetadata } from '@/components/admin/OrderItemMetadata';
+import { OrderItemTextLayers } from '@/components/admin/OrderItemTextLayers';
 import { Card } from '@/components/ui/Card';
 import {
   collectOrderFileIds,
@@ -11,6 +12,7 @@ import {
 } from '@/lib/admin/orders';
 import { adminStrings, formatAdminDate } from '@/lib/admin/strings';
 import { db } from '@/lib/db';
+import { listPremadeMasterAssetRefsFromItem } from '@/lib/orders/premade-master-assets';
 import { formatPrice } from '@/lib/utils';
 
 export default async function AdminOrderDetailPage({
@@ -32,6 +34,9 @@ export default async function AdminOrderDetailPage({
       const file = await db.uploadedFiles.findById(fileId);
       return file ? { fileId, name: file.originalName, mimeType: file.mimeType } : null;
     }),
+  );
+  const premadeMastersByItem = await Promise.all(
+    order.items.map((item) => listPremadeMasterAssetRefsFromItem(item)),
   );
 
   return (
@@ -81,7 +86,10 @@ export default async function AdminOrderDetailPage({
                     item={item}
                     itemIndex={index}
                     itemCount={order.items.length}
+                    premadeMasters={premadeMastersByItem[index] ?? []}
                   />
+
+                  <OrderItemTextLayers item={item} />
 
                   {item.metadata && Object.keys(item.metadata).length > 0 ? (
                     <OrderItemMetadata metadata={item.metadata} />

@@ -6,7 +6,9 @@ import { validateUploadBuffer } from '@/lib/security/validate-upload-content';
 import sharp from 'sharp';
 
 export const MAX_FILE_SIZE = 10 * 1024 * 1024;
-export const MAX_UPLOADS_PER_SESSION = 10;
+/** High-res print PNGs from the customizer can exceed the standard upload cap. */
+export const MAX_PRINT_FILE_SIZE = 25 * 1024 * 1024;
+export const MAX_UPLOADS_PER_SESSION = 25;
 export const ALLOWED_MIME_TYPES = [
   'image/jpeg',
   'image/png',
@@ -132,6 +134,62 @@ export async function processUpload(
     storedName,
     originalStoredName,
     mimeType: storedMimeType,
+    size: Math.max(0, Math.round(Number(file.size))),
+    createdAt: now,
+  }).catch((err) => {
+    throw new Error(formatSupabaseError(err));
+  });
+
+  await db.uploadSessions.incrementUploadCount(session.id);
+
+  return { fileId, originalName: file.name };
+}
+
+export async function processPrintUpload(
+  token: string,
+  file: File,
+): Promise<{ fileId: string; originalName: string }> {
+  const session = await validateUploadToken(token);
+  if (!session) {
+    throw new Error('Invalid or expired upload session');
+  }
+
+  if (new Date(session.expiresAt).getTime() < Date.now()) {
+    throw new Error('Invalid or expired upload session');
+  }
+
+  if (session.uploadCount >= MAX_UPLOADS_PER_SESSION) {
+    throw new Error('Upload limit reached for this session');
+  }
+
+  if (file.size > MAX_PRINT_FILE_SIZE) {
+    throw new Error('File too large');
+  }
+
+  const mimeType = resolveMimeType(file);
+  if (mimeType !== 'image/png') {
+    throw new Error('Print uploads must be PNG');
+  }
+
+  const fileId = nanoid();
+  const arrayBuffer = await file.arrayBuffer();
+  const sourceBuffer = Buffer.from(arrayBuffer) as unknown as Buffer;
+
+  await validateUploadBuffer(sourceBuffer, mimeType);
+
+  const storedName = `${fileId}.png`;
+
+  await putUploadObject(storedName, sourceBuffer, mimeType);
+
+  const now = new Date().toISOString();
+
+  await db.uploadedFiles.insert({
+    id: fileId,
+    sessionId: session.id,
+    originalName: file.name.slice(0, 255),
+    storedName,
+    originalStoredName: storedName,
+    mimeType: 'image/png',
     size: Math.max(0, Math.round(Number(file.size))),
     createdAt: now,
   }).catch((err) => {

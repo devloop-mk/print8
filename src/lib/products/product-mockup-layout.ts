@@ -100,9 +100,18 @@ const TSHIRT_MOCKUP_LAYOUT = createMockupLayout({
 /** Hoodie mockups have generous side padding — zoom in for design cards. */
 const HOODIE_MOCKUP_LAYOUT = createMockupLayout({
   catalogScale: 1.27,
-  customizerInnerScale: 0.88,
+  customizerInnerScale: 1,
   printArea: HOODIE_PRINT_AREA_INSETS,
 });
+
+/**
+ * Hoodie photo mockups leave more empty canvas than unisex tees. Catalog/PDP
+ * views zoom in via `catalogScale`; the interactive customizer stays at 1.
+ */
+export const HOODIE_MOCKUP_CATALOG_SCALE = 1.27;
+
+/** Slight desktop-only zoom in the customizer — full garment stays visible. */
+export const HOODIE_MOCKUP_CUSTOMIZER_SCALE_LG = 1.1;
 
 /** Bodysuit mockups include side padding in the PNG — zoom in and tighten the print zone. */
 const BODYSUIT_MOCKUP_LAYOUT = createMockupLayout({
@@ -211,10 +220,16 @@ function getPerColorTshirtMockupScale(
  * and admin previews. Per-color photo mockup scale compensates for extra canvas
  * padding so overlays stay proportional to the product.
  */
+export type MockupDisplayOptions = {
+  /** Desktop customizer — hoodie mockup can zoom slightly without clipping. */
+  largeCustomizerViewport?: boolean;
+};
+
 export function resolveMockupDisplayScale(
   product: Product,
   mockupPath?: string,
   variant: MockupDisplayVariant = 'catalog-design',
+  options?: MockupDisplayOptions,
 ): number {
   const layout = getProductMockupLayout(product);
 
@@ -227,6 +242,16 @@ export function resolveMockupDisplayScale(
     if (drinkwareScale !== undefined) {
       return drinkwareScale;
     }
+  }
+
+  if (product.type === 'hoodie') {
+    // Customizer must show the full garment (hood + hem). Catalog/PDP zoom in.
+    if (variant === 'customizer') {
+      return options?.largeCustomizerViewport
+        ? HOODIE_MOCKUP_CUSTOMIZER_SCALE_LG
+        : 1;
+    }
+    return layout.catalogScale;
   }
 
   // `catalogScale` compensates for padding baked into catalog/design-card
@@ -251,8 +276,9 @@ export function getMockupImageDisplayStyle(
   product: Product,
   mockupPath?: string,
   variant: MockupDisplayVariant = 'catalog-design',
+  options?: MockupDisplayOptions,
 ): CSSProperties | undefined {
-  const scale = resolveMockupDisplayScale(product, mockupPath, variant);
+  const scale = resolveMockupDisplayScale(product, mockupPath, variant, options);
   if (scale === 1) return undefined;
   return { transform: `scale(${scale})`, transformOrigin: 'center center' };
 }

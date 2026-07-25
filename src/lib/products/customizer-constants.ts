@@ -21,6 +21,32 @@ export const PRODUCT_PRINT_AREA_MAX_SCALE =
  */
 export const PRODUCT_PHOTO_MIN_SCALE = 6;
 
+/**
+ * In the product customizer, users may scale photos/designs up to this
+ * multiple of the print-area-fit max (1.5 = 50% past the fit width/height).
+ */
+export const PRODUCT_CUSTOMIZER_IMAGE_SCALE_OVERSHOOT = 1.5;
+
+/** Hard ceiling for customizer image scale (% of mockup inner frame width). */
+export const PRODUCT_CUSTOMIZER_IMAGE_ABSOLUTE_MAX_SCALE = 100;
+
+/** Opacity for design pixels rendered outside the print area while editing. */
+export const PRODUCT_CUSTOMIZER_OUTSIDE_PRINT_AREA_OPACITY = 0.15;
+
+/**
+ * Max scale users can pick in the customizer — print-area fit plus overshoot,
+ * capped so art cannot span wider than the mockup frame.
+ */
+export function getCustomizerImageMaxScale(printAreaFitMax: number): number {
+  const overshootMax = Math.floor(
+    printAreaFitMax * PRODUCT_CUSTOMIZER_IMAGE_SCALE_OVERSHOOT,
+  );
+  return Math.min(
+    PRODUCT_CUSTOMIZER_IMAGE_ABSOLUTE_MAX_SCALE,
+    Math.max(PRODUCT_PHOTO_MIN_SCALE, overshootMax),
+  );
+}
+
 export const PRODUCT_PHOTO_CROP_ASPECT = 1;
 
 export const PRODUCT_PHOTO_CROP_ASPECT_OPTIONS = [

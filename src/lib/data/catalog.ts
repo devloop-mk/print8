@@ -916,9 +916,6 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
     overlayImage: '/NEW_DESIGNS/t-shirts/gym-zver-gorilla-v2.png',
     overlayScale: 40,
     overlayPosition: { x: 50, y: 54 },
-    overlayByProductType: {
-      hoodie: { position: { x: 50, y: 59 }, scale: 41 },
-    },
     recommendedColor: '#000000',
     defaultSide: 'front',
   },

@@ -11,5 +11,9 @@ export interface CartItem {
   backDesignPreview?: string;
   leftDesignPreview?: string;
   rightDesignPreview?: string;
+  frontPrintPng?: string;
+  backPrintPng?: string;
+  leftPrintPng?: string;
+  rightPrintPng?: string;
   fileIds?: string[];
 }

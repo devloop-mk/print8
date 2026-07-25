@@ -7,7 +7,7 @@ import {
   useMemo,
   useRef,
   useState,
-  type CSSProperties,
+  type PointerEvent,
   type RefObject,
 } from 'react';
 import { flushSync } from 'react-dom';
@@ -15,6 +15,11 @@ import {
   capturePreviewElement,
   waitForPaint,
 } from '@/lib/products/capture-preview';
+import { capturePrintAreaDesign } from '@/lib/products/capture-print-area';
+import {
+  premadeSideSkipsPrintPngCapture,
+  writePremadeArtworkSourceMetadata,
+} from '@/lib/products/premade-artwork-source';
 import { useTranslations, useLocale } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from '@/i18n/navigation';
@@ -89,6 +94,7 @@ import {
 import {
   PRODUCT_PHOTO_MIN_SCALE,
   PRODUCT_PRINT_AREA_MAX_SCALE,
+  getCustomizerImageMaxScale,
 } from '@/lib/products/customizer-constants';
 import { clampPhotoScale } from '@/lib/products/crop-image';
 import { ProductPhotoUpload } from '@/components/products/ProductPhotoUpload';
@@ -127,6 +133,9 @@ import {
   Save,
   Eye,
   Rotate3d,
+  Undo2,
+  Redo2,
+  Check,
 } from 'lucide-react';
 
 import {
@@ -145,6 +154,9 @@ import { CustomizerContextBar } from '@/components/products/customizer/Customize
 import { CustomizerSidesPreviewModal } from '@/components/products/customizer/CustomizerSidesPreviewModal';
 import { PrintAreaGuideSwitch } from '@/components/products/customizer/PrintAreaGuideSwitch';
 import { OutOfPrintAreaToast } from '@/components/products/customizer/OutOfPrintAreaToast';
+import {
+  CustomizerPrintAreaLayers,
+} from '@/components/products/customizer/CustomizerPrintAreaLayers';
 import { DrinkwareWrapHint } from '@/components/products/customizer/DrinkwarePrintAreaGuide';
 import {
   DrinkwarePreviewModeToggle,
@@ -152,6 +164,8 @@ import {
 } from '@/components/products/customizer/Drinkware3DPreviewLazy';
 import { UnsavedWorkDialog } from '@/components/shared/UnsavedWorkDialog';
 import { useDirtySnapshot } from '@/hooks/useDirtySnapshot';
+import { useUndoRedo } from '@/hooks/useUndoRedo';
+import { useUndoRedoKeyboard } from '@/hooks/useUndoRedoKeyboard';
 import { useUnsavedWorkGuard } from '@/hooks/useUnsavedWorkGuard';
 import {
   serializeSideDesigns,
@@ -162,7 +176,6 @@ import { findProductCustomizerDraft } from '@/lib/drafts/ongoing-designs';
 import {
   getMaxTextSizeForPrintArea,
   getPrintAreaCenter,
-  getPrintAreaClipPath,
   getPrintAreaMaxScale,
   getPrintAreaPositionPresets,
   getPrintAreaWidthPercent,
@@ -206,6 +219,24 @@ function recenterIfFullyOutsidePrintArea({
   }
   onPositionChange(getPrintAreaCenter(printBounds));
   notifyMovedOutsidePrintArea();
+}
+
+type RecenterIfOutsideArgs = Parameters<typeof recenterIfFullyOutsidePrintArea>[0];
+
+/**
+ * Defer the outside-print-area check until after React has committed the
+ * drag/resize position and the browser has laid out the overlay. A synchronous
+ * check on pointer-up often false-negatives (toast + recenter only appear
+ * after a side switch re-layout).
+ */
+function scheduleRecenterIfFullyOutsidePrintArea(
+  getArgs: () => RecenterIfOutsideArgs,
+) {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      recenterIfFullyOutsidePrintArea(getArgs());
+    });
+  });
 }
 
 type OverlayGestureHandlers = {
@@ -278,6 +309,7 @@ function useDraggablePosition(
   const dragOriginRef = useRef(position);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   const draggingRef = useRef(false);
+  const movedDuringDragRef = useRef(false);
   const onChangeRef = useRef(onChange);
   const gestureHandlersRef = useRef(gestureHandlers);
   const printBoundsRef = useRef(printBounds);
@@ -306,6 +338,7 @@ function useDraggablePosition(
     event.preventDefault();
     event.stopPropagation();
     draggingRef.current = true;
+    movedDuringDragRef.current = false;
     dragStartRef.current = { x: event.clientX, y: event.clientY };
     dragOriginRef.current = position;
     positionRef.current = position;
@@ -316,6 +349,7 @@ function useDraggablePosition(
   const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!draggingRef.current || !dragStartRef.current) return;
     event.preventDefault();
+    movedDuringDragRef.current = true;
     const deltaX = event.clientX - dragStartRef.current.x;
     const deltaY = event.clientY - dragStartRef.current.y;
     dragStartRef.current = { x: event.clientX, y: event.clientY };
@@ -351,13 +385,19 @@ function useDraggablePosition(
       if (finalPos.x !== origin.x || finalPos.y !== origin.y) {
         onChangeRef.current(finalPos);
       }
-      recenterIfFullyOutsidePrintArea({
+      const el = elementRef.current;
+      if (el && movedDuringDragRef.current) {
+        el.style.removeProperty('left');
+        el.style.removeProperty('top');
+      }
+      movedDuringDragRef.current = false;
+      scheduleRecenterIfFullyOutsidePrintArea(() => ({
         element: measureRefRef.current?.current ?? elementRef.current,
         parent: elementRef.current?.parentElement ?? null,
         printBounds: printBoundsRef.current,
         position: finalPos,
         onPositionChange: onChangeRef.current,
-      });
+      }));
       gestureHandlersRef.current?.onGestureEnd?.();
     }
   };
@@ -381,10 +421,15 @@ function useScaleResize(
 ) {
   const draggingRef = useRef(false);
   const startRef = useRef({ pointerX: 0, pointerY: 0, scale: 0 });
+  const previewScaleRef = useRef<number | null>(null);
+  const [previewScale, setPreviewScale] = useState<number | null>(null);
+  const onScaleChangeRef = useRef(onScaleChange);
   const maxRef = useRef(max);
   maxRef.current = max;
   const minRef = useRef(min);
   minRef.current = min;
+
+  onScaleChangeRef.current = onScaleChange;
 
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -395,6 +440,8 @@ function useScaleResize(
       pointerY: event.clientY,
       scale,
     };
+    previewScaleRef.current = null;
+    setPreviewScale(null);
     gestureHandlers?.onGestureStart?.();
     event.currentTarget.setPointerCapture(event.pointerId);
   };
@@ -413,7 +460,8 @@ function useScaleResize(
       maxRef.current,
       Math.max(effectiveMin, Math.round(startRef.current.scale + delta * 0.15)),
     );
-    onScaleChange(next);
+    previewScaleRef.current = next;
+    setPreviewScale(next);
   };
 
   const endDrag = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -421,6 +469,12 @@ function useScaleResize(
       draggingRef.current = false;
       if (event.currentTarget.hasPointerCapture(event.pointerId)) {
         event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+      const finalScale = previewScaleRef.current;
+      previewScaleRef.current = null;
+      setPreviewScale(null);
+      if (finalScale !== null && finalScale !== scale) {
+        onScaleChangeRef.current(finalScale);
       }
       onResizeEnd?.();
       gestureHandlers?.onGestureEnd?.();
@@ -432,6 +486,7 @@ function useScaleResize(
     onPointerMove,
     onPointerUp: endDrag,
     onPointerCancel: endDrag,
+    displayScale: previewScale ?? scale,
   };
 }
 
@@ -560,6 +615,27 @@ function ResizableImageOverlay({
   overlayGestureHandlers?: OverlayGestureHandlers;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const positionRef = useRef(position);
+  const onPositionChangeRef = useRef(onPositionChange);
+
+  positionRef.current = position;
+  onPositionChangeRef.current = onPositionChange;
+
+  const scheduleRecenter = useCallback(() => {
+    scheduleRecenterIfFullyOutsidePrintArea(() => ({
+      element: containerRef.current,
+      parent: containerRef.current?.parentElement ?? null,
+      printBounds,
+      position: positionRef.current,
+      onPositionChange: onPositionChangeRef.current,
+    }));
+  }, [printBounds]);
+
+  useLayoutEffect(() => {
+    if (!printBounds) return;
+    scheduleRecenter();
+  }, [printBounds, scheduleRecenter]);
+
   const drag = useDraggablePosition(
     position,
     onPositionChange,
@@ -572,59 +648,20 @@ function ResizableImageOverlay({
     (next) => onScaleChange(clampPhotoScale(next, maxScale)),
     PRODUCT_PHOTO_MIN_SCALE,
     maxScale ?? PRODUCT_PRINT_AREA_MAX_SCALE,
-    () => {
-      requestAnimationFrame(() => {
-        recenterIfFullyOutsidePrintArea({
-          element: containerRef.current,
-          parent: containerRef.current?.parentElement ?? null,
-          printBounds,
-          position,
-          onPositionChange,
-        });
-      });
-    },
+    scheduleRecenter,
     overlayGestureHandlers,
   );
+  const displayScale = hideControls ? scale : resize.displayScale;
 
-  return (
-    <div
-      ref={(node) => {
-        containerRef.current = node;
-        drag.ref.current = node;
-      }}
-      className="absolute cursor-grab active:cursor-grabbing pointer-events-auto"
-      data-customizer-selected-layer={selected ? '' : undefined}
-      data-customizer-content-layer=""
-      style={{
-        left: `${position.x}%`,
-        top: `${position.y}%`,
-        width: `${scale}%`,
-        transform: 'translate(-50%, -50%)',
-        touchAction: 'none',
-      }}
-      onPointerDown={(event) => {
-        event.stopPropagation();
-        onSelect?.();
-        drag.onPointerDown(event);
-      }}
-      onPointerMove={drag.onPointerMove}
-      onPointerUp={drag.onPointerUp}
-      onPointerCancel={drag.onPointerCancel}
-    >
-      <div
-        className={cn(
-          'relative rounded-lg',
-          selected && !hideControls && 'ring-2 ring-brand-500 ring-offset-2',
-        )}
-      >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={src}
-        alt={alt}
-        draggable={false}
-        crossOrigin="anonymous"
-        className="pointer-events-none block w-full rounded-lg object-contain shadow-sm"
-      />
+  const positionStyle = {
+    left: `${position.x}%`,
+    top: `${position.y}%`,
+    width: `${displayScale}%`,
+    transform: 'translate(-50%, -50%)',
+  } as const;
+
+  const controls = (
+    <>
       {onRemove && removeLabel ? (
         <OverlayRemoveButton
           onRemove={onRemove}
@@ -636,7 +673,7 @@ function ResizableImageOverlay({
         role="button"
         tabIndex={0}
         aria-label="Resize"
-        className={`absolute -bottom-2 -right-2 flex h-6 w-6 cursor-se-resize items-center justify-center rounded-full border-2 border-white bg-brand-600 shadow-md ${hideControls ? 'hidden' : ''}`}
+        className="absolute -bottom-2 -right-2 flex h-6 w-6 cursor-se-resize items-center justify-center rounded-full border-2 border-white bg-brand-600 shadow-md"
         style={{ touchAction: 'none' }}
         onPointerDown={resize.onPointerDown}
         onPointerMove={resize.onPointerMove}
@@ -653,6 +690,55 @@ function ResizableImageOverlay({
           />
         </svg>
       </div>
+    </>
+  );
+
+  return (
+    <div
+      ref={(node) => {
+        containerRef.current = node;
+        drag.ref.current = node;
+      }}
+      className={cn(
+        'absolute',
+        hideControls
+          ? 'pointer-events-none'
+          : 'cursor-grab active:cursor-grabbing pointer-events-auto',
+      )}
+      data-customizer-selected-layer={selected && !hideControls ? '' : undefined}
+      data-customizer-content-layer=""
+      style={{
+        ...positionStyle,
+        touchAction: hideControls ? 'auto' : 'none',
+      }}
+      {...(hideControls
+        ? {}
+        : {
+            onPointerDown: (event: PointerEvent<HTMLDivElement>) => {
+              event.stopPropagation();
+              onSelect?.();
+              drag.onPointerDown(event);
+            },
+            onPointerMove: drag.onPointerMove,
+            onPointerUp: drag.onPointerUp,
+            onPointerCancel: drag.onPointerCancel,
+          })}
+    >
+      <div
+        className={cn(
+          'relative rounded-lg',
+          selected && !hideControls && 'ring-2 ring-brand-500 ring-offset-2',
+        )}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt={alt}
+          draggable={false}
+          crossOrigin="anonymous"
+          className="pointer-events-none block w-full rounded-lg object-contain shadow-sm"
+        />
+        {!hideControls ? controls : null}
       </div>
     </div>
   );
@@ -683,6 +769,27 @@ function ResizableStickerOverlay({
 }) {
   const definition = getStickerById(sticker.stickerId);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const positionRef = useRef(sticker.position);
+  const onPositionChangeRef = useRef(onPositionChange);
+
+  positionRef.current = sticker.position;
+  onPositionChangeRef.current = onPositionChange;
+
+  const scheduleRecenter = useCallback(() => {
+    scheduleRecenterIfFullyOutsidePrintArea(() => ({
+      element: containerRef.current,
+      parent: containerRef.current?.parentElement ?? null,
+      printBounds,
+      position: positionRef.current,
+      onPositionChange: onPositionChangeRef.current,
+    }));
+  }, [printBounds]);
+
+  useLayoutEffect(() => {
+    if (!printBounds) return;
+    scheduleRecenter();
+  }, [printBounds, scheduleRecenter]);
+
   const drag = useDraggablePosition(
     sticker.position,
     onPositionChange,
@@ -695,21 +802,52 @@ function ResizableStickerOverlay({
     (next) => onScaleChange(Math.min(52, Math.max(12, Math.round(next)))),
     12,
     52,
-    () => {
-      requestAnimationFrame(() => {
-        recenterIfFullyOutsidePrintArea({
-          element: containerRef.current,
-          parent: containerRef.current?.parentElement ?? null,
-          printBounds,
-          position: sticker.position,
-          onPositionChange,
-        });
-      });
-    },
+    scheduleRecenter,
     overlayGestureHandlers,
   );
+  const displayScale = hideControls ? sticker.scale : resize.displayScale;
 
   if (!definition) return null;
+
+  const positionStyle = {
+    left: `${sticker.position.x}%`,
+    top: `${sticker.position.y}%`,
+    width: `${displayScale}%`,
+    transform: 'translate(-50%, -50%)',
+  } as const;
+
+  const controls = (
+    <>
+      {onRemove && removeLabel ? (
+        <OverlayRemoveButton
+          onRemove={onRemove}
+          label={removeLabel}
+          hideControls={hideControls}
+        />
+      ) : null}
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label="Resize sticker"
+        className="absolute -bottom-2 -right-2 flex h-6 w-6 cursor-se-resize items-center justify-center rounded-full border-2 border-white bg-brand-600 shadow-md"
+        style={{ touchAction: 'none' }}
+        onPointerDown={resize.onPointerDown}
+        onPointerMove={resize.onPointerMove}
+        onPointerUp={resize.onPointerUp}
+        onPointerCancel={resize.onPointerCancel}
+      >
+        <svg viewBox="0 0 10 10" className="h-3 w-3 text-white" aria-hidden>
+          <path
+            d="M9 1v8H1"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+        </svg>
+      </div>
+    </>
+  );
 
   return (
     <div
@@ -717,24 +855,30 @@ function ResizableStickerOverlay({
         containerRef.current = node;
         drag.ref.current = node;
       }}
-      className="absolute cursor-grab active:cursor-grabbing pointer-events-auto"
-      data-customizer-selected-layer={selected ? '' : undefined}
+      className={cn(
+        'absolute',
+        hideControls
+          ? 'pointer-events-none select-none'
+          : 'cursor-grab select-none active:cursor-grabbing pointer-events-auto',
+      )}
+      data-customizer-selected-layer={selected && !hideControls ? '' : undefined}
       data-customizer-content-layer=""
       style={{
-        left: `${sticker.position.x}%`,
-        top: `${sticker.position.y}%`,
-        width: `${sticker.scale}%`,
-        transform: 'translate(-50%, -50%)',
-        touchAction: 'none',
+        ...positionStyle,
+        touchAction: hideControls ? 'auto' : 'none',
       }}
-      onPointerDown={(event) => {
-        event.stopPropagation();
-        onSelect?.();
-        drag.onPointerDown(event);
-      }}
-      onPointerMove={drag.onPointerMove}
-      onPointerUp={drag.onPointerUp}
-      onPointerCancel={drag.onPointerCancel}
+      {...(hideControls
+        ? {}
+        : {
+            onPointerDown: (event: PointerEvent<HTMLDivElement>) => {
+              event.stopPropagation();
+              onSelect?.();
+              drag.onPointerDown(event);
+            },
+            onPointerMove: drag.onPointerMove,
+            onPointerUp: drag.onPointerUp,
+            onPointerCancel: drag.onPointerCancel,
+          })}
     >
       <div
         className={cn(
@@ -750,34 +894,7 @@ function ResizableStickerOverlay({
           crossOrigin="anonymous"
           className="pointer-events-none block w-full object-contain drop-shadow-md"
         />
-        {onRemove && removeLabel ? (
-          <OverlayRemoveButton
-            onRemove={onRemove}
-            label={removeLabel}
-            hideControls={hideControls}
-          />
-        ) : null}
-        <div
-          role="button"
-          tabIndex={0}
-          aria-label="Resize sticker"
-          className={`absolute -bottom-2 -right-2 flex h-6 w-6 cursor-se-resize items-center justify-center rounded-full border-2 border-white bg-brand-600 shadow-md ${hideControls ? 'hidden' : ''}`}
-          style={{ touchAction: 'none' }}
-          onPointerDown={resize.onPointerDown}
-          onPointerMove={resize.onPointerMove}
-          onPointerUp={resize.onPointerUp}
-          onPointerCancel={resize.onPointerCancel}
-        >
-          <svg viewBox="0 0 10 10" className="h-3 w-3 text-white" aria-hidden>
-            <path
-              d="M9 1v8H1"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-          </svg>
-        </div>
+        {!hideControls ? controls : null}
       </div>
     </div>
   );
@@ -793,6 +910,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   const { token, loading: uploadLoading, error: uploadError, refreshSession } = useUploadSession();
   const isDrinkware = isCylindricalDrinkwareType(type);
   const isDesktopSplitPreview = useMediaQuery('(min-width: 1280px)') && isDrinkware;
+  const isLargeCustomizerViewport = useMediaQuery('(min-width: 1024px)');
 
   const productId = searchParams.get('id');
   const designId = searchParams.get('design');
@@ -900,14 +1018,36 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
 
   const [quantity, setQuantity] = useState(1);
   const [activeSide, setActiveSide] = useState<ProductSide>('front');
-  const [sideDesigns, setSideDesigns] = useState<Record<ProductSide, SideDesign>>(
+  const sideDesignsHistoryEqual = useCallback(
+    (
+      left: Record<ProductSide, SideDesign>,
+      right: Record<ProductSide, SideDesign>,
+    ) =>
+      JSON.stringify(serializeSideDesigns(left)) ===
+      JSON.stringify(serializeSideDesigns(right)),
+    [],
+  );
+  const {
+    present: sideDesigns,
+    set: setSideDesigns,
+    replace: replaceSideDesigns,
+    undo: undoSideDesigns,
+    redo: redoSideDesigns,
+    reset: resetSideDesigns,
+    canUndo,
+    canRedo,
+  } = useUndoRedo(
     () => createSideDesignsForSides(sides),
+    { isEqual: sideDesignsHistoryEqual },
   );
   const [activePanel, setActivePanel] = useState<EditorPanel>('product');
   const [selectedElement, setSelectedElement] = useState<SelectedElement>(null);
   const contextBarRef = useRef<HTMLDivElement>(null);
   const [canvasZoom, setCanvasZoom] = useState(100);
   const [sidesPreviewOpen, setSidesPreviewOpen] = useState(false);
+  const [editorMockupInnerHeight, setEditorMockupInnerHeight] = useState<
+    number | undefined
+  >(undefined);
 
   const previewRef = useRef<HTMLDivElement | null>(null);
 
@@ -949,10 +1089,50 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
 
   const { isDirty, markClean } = useDirtySnapshot(serializedDraft, baselineReady);
 
+  useUndoRedoKeyboard({
+    undo: undoSideDesigns,
+    redo: redoSideDesigns,
+    canUndo,
+    canRedo,
+    enabled: baselineReady,
+  });
+
   useEffect(() => {
     if (!selectedElement) return;
 
-    const handlePointerDown = (event: PointerEvent) => {
+    const design = sideDesigns[activeSide] ?? createDefaultSideDesign();
+    let stillSelected = true;
+
+    if (selectedElement.startsWith('text:')) {
+      const instanceId = selectedElement.slice('text:'.length);
+      stillSelected = design.textLayers.some(
+        (layer) => layer.instanceId === instanceId,
+      );
+    } else if (selectedElement.startsWith('sticker:')) {
+      const instanceId = selectedElement.slice('sticker:'.length);
+      stillSelected = design.stickers.some(
+        (sticker) => sticker.instanceId === instanceId,
+      );
+    } else if (selectedElement === 'photo') {
+      stillSelected = Boolean(design.uploadedFile?.previewUrl);
+    } else if (selectedElement === 'overlay') {
+      stillSelected = Boolean(
+        design.premadeDesignId ||
+          design.overlayRaster ||
+          design.overlaySvg ||
+          design.isRecolorableOverlay,
+      );
+    }
+
+    if (!stillSelected) {
+      setSelectedElement(null);
+    }
+  }, [activeSide, selectedElement, sideDesigns]);
+
+  useEffect(() => {
+    if (!selectedElement) return;
+
+    const handlePointerDown = (event: globalThis.PointerEvent) => {
       const target = event.target as Node | null;
       if (!target) return;
       if (contextBarRef.current?.contains(target)) return;
@@ -1151,11 +1331,15 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         ? overlayAssetUrl
         : undefined;
 
-  const imageMaxScale = usePrintAreaMaxScale(
+  const printAreaFitMaxScale = usePrintAreaMaxScale(
     previewRef,
     overlayPrintBounds,
     scalableImageUrl,
     mockupLayout?.overlayMaxScale ?? PRODUCT_PRINT_AREA_MAX_SCALE,
+  );
+  const imageMaxScale = useMemo(
+    () => getCustomizerImageMaxScale(printAreaFitMaxScale),
+    [printAreaFitMaxScale],
   );
 
   const activeTextLayerId = useMemo(() => {
@@ -1181,8 +1365,14 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   );
 
   const updateCurrentSide = useCallback(
-    (updates: Partial<SideDesign>) => {
-      setSideDesigns((prev) => ({
+    (
+      updates: Partial<SideDesign>,
+      options?: {
+        record?: boolean;
+      },
+    ) => {
+      const apply = options?.record === false ? replaceSideDesigns : setSideDesigns;
+      apply((prev) => ({
         ...prev,
         [activeSide]: {
           ...(prev[activeSide] ?? createDefaultSideDesign()),
@@ -1190,7 +1380,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         },
       }));
     },
-    [activeSide],
+    [activeSide, replaceSideDesigns, setSideDesigns],
   );
 
   useEffect(() => {
@@ -1204,12 +1394,15 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     );
     if (isPremadeOverlay) return;
     if (currentDesign.uploadedImageScale <= imageMaxScale) return;
-    updateCurrentSide({
-      uploadedImageScale: clampPhotoScale(
-        currentDesign.uploadedImageScale,
-        imageMaxScale,
-      ),
-    });
+    updateCurrentSide(
+      {
+        uploadedImageScale: clampPhotoScale(
+          currentDesign.uploadedImageScale,
+          imageMaxScale,
+        ),
+      },
+      { record: false },
+    );
   }, [imageMaxScale, currentDesign.uploadedImageScale, currentDesign.premadeDesignId, currentDesign.overlayRaster, currentDesign.overlaySvg, currentDesign.isRecolorableOverlay, updateCurrentSide]);
 
   const addSticker = useCallback(
@@ -1377,7 +1570,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
 
   useEffect(() => {
     if (editCartItemId) return;
-    setSideDesigns((prev) => {
+    replaceSideDesigns((prev) => {
       let changed = false;
       const next = { ...prev };
       for (const side of sides) {
@@ -1388,12 +1581,12 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       }
       return changed ? next : prev;
     });
-  }, [sides, editCartItemId]);
+  }, [sides, editCartItemId, replaceSideDesigns]);
 
   useEffect(() => {
     if (!product || editCartItemId) return;
     const productSides = getProductSides(product);
-    setSideDesigns((prev) => {
+    resetSideDesigns((prev) => {
       const next = createSideDesignsForSides(productSides);
       for (const side of productSides) {
         if (prev[side]) next[side] = prev[side];
@@ -1401,7 +1594,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       return next;
     });
     setActiveSide('front');
-  }, [product?.id, product, editCartItemId]);
+  }, [product?.id, product, editCartItemId, resetSideDesigns]);
 
   useEffect(() => {
     if (editCartItemId || !product) return;
@@ -1442,7 +1635,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     const initialSide = getInitialCustomizerSide(template);
 
     if (Object.keys(sideDesignMap).length > 0) {
-      setSideDesigns((prev) => ({
+      resetSideDesigns((prev) => ({
         ...prev,
         ...sideDesignMap,
       }));
@@ -1468,6 +1661,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     editCartItemId,
     product,
     resumeParam,
+    resetSideDesigns,
   ]);
 
   useEffect(() => {
@@ -1492,8 +1686,8 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         };
       }
     }
-    setSideDesigns(restored);
-  }, [product, designId, editCartItemId, resumeParam]);
+    resetSideDesigns(restored);
+  }, [product, designId, editCartItemId, resumeParam, resetSideDesigns]);
 
   useEffect(() => {
     if (!editCartItemId || !product) return;
@@ -1513,7 +1707,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       restored[side] = sideDesignFromRestored(data);
     }
 
-    setSideDesigns(restored);
+    resetSideDesigns(restored);
     if (
       typeof meta.activeSide === 'string' &&
       isProductSide(meta.activeSide) &&
@@ -1521,7 +1715,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     ) {
       setActiveSide(meta.activeSide);
     }
-  }, [editCartItemId, product, cartItems, sides]);
+  }, [editCartItemId, product, cartItems, sides, resetSideDesigns]);
 
   const mockupImage = product
     ? getProductMockup(product, color, activeSide)
@@ -1578,6 +1772,84 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     return results;
   }
 
+  async function captureAllSidePrintPngs(): Promise<
+    Partial<Record<ProductSide, string>>
+  > {
+    if (!product || isDrinkware) return {};
+
+    const results: Partial<Record<ProductSide, string>> = {};
+    const originalSide = activeSide;
+
+    for (const side of cartSides) {
+      if (!sideHasContent(side)) continue;
+
+      const sideDesign = sideDesigns[side] ?? createDefaultSideDesign();
+      if (
+        premadeSideSkipsPrintPngCapture(
+          sideDesign,
+          activeDesignTemplate,
+          side,
+        )
+      ) {
+        continue;
+      }
+
+      flushSync(() => setActiveSide(side));
+      await waitForPaint();
+      if (!previewRef.current) continue;
+
+      const insets = isTshirtProduct(product)
+        ? getTshirtPrintAreaInsets('front-large', side, product)
+        : getProductMockupLayout(product).printArea;
+
+      const captured = await capturePrintAreaDesign(
+        previewRef.current,
+        insets,
+        {
+          design: sideDesign,
+          template: activeDesignTemplate,
+          product,
+          shirtColor: color,
+          side,
+        },
+      );
+      if (captured) results[side] = captured;
+    }
+
+    flushSync(() => setActiveSide(originalSide));
+    return results;
+  }
+
+  function openAddToCartPreview() {
+    const incomingStickers = cartSides.reduce(
+      (total, side) => total + (sideDesigns[side]?.stickers.length ?? 0),
+      0,
+    );
+    const incomingPhotos = new Set(
+      cartSides
+        .map((side) => sideDesigns[side]?.uploadedFile?.fileId)
+        .filter((id): id is string => Boolean(id)),
+    ).size;
+
+    const limits = evaluateCartAssetLimits(cartItems, {
+      stickerCount: incomingStickers,
+      photoCount: incomingPhotos,
+      excludingItemId: editCartItemId ?? undefined,
+    });
+
+    if (!limits.ok) {
+      setCartLimitError(limits.stickersOver > 0 ? 'stickers' : 'photos');
+      return;
+    }
+
+    setCartLimitError(null);
+    const inner = previewRef.current?.querySelector<HTMLElement>(
+      '[data-mockup-inner]',
+    );
+    setEditorMockupInnerHeight(inner?.getBoundingClientRect().height);
+    setSidesPreviewOpen(true);
+  }
+
   async function handleAddToCart() {
     const incomingStickers = cartSides.reduce(
       (total, side) => total + (sideDesigns[side]?.stickers.length ?? 0),
@@ -1605,6 +1877,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     flushSync(() => setIsCapturing(true));
 
     let captured: Partial<Record<ProductSide, string>> = {};
+    let printPngs: Partial<Record<ProductSide, string>> = {};
 
     try {
       if (isDrinkware) {
@@ -1629,9 +1902,11 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         }
       } else if (cartSides.length > 1) {
         captured = await captureAllSidePreviews();
+        printPngs = await captureAllSidePrintPngs();
       } else {
         const front = await capturePreview(previewRef);
         if (front) captured.front = front;
+        printPngs = await captureAllSidePrintPngs();
       }
     } finally {
       flushSync(() => setIsCapturing(false));
@@ -1698,6 +1973,15 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       if (d.stickers.length > 0) {
         metadata[`${prefix}Stickers`] = serializePlacedStickers(d.stickers);
       }
+      if (activeDesignTemplate) {
+        writePremadeArtworkSourceMetadata(
+          metadata,
+          prefix,
+          d,
+          activeDesignTemplate,
+          side,
+        );
+      }
     }
 
     if (designId && activeDesignTemplate) {
@@ -1718,6 +2002,10 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       backDesignPreview: captured.back,
       leftDesignPreview: captured.left,
       rightDesignPreview: captured.right,
+      frontPrintPng: printPngs.front,
+      backPrintPng: printPngs.back,
+      leftPrintPng: printPngs.left,
+      rightPrintPng: printPngs.right,
       metadata,
       fileIds,
     };
@@ -1843,6 +2131,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       preview3DTextLayers={preview3DTextLayers}
       preview3DSideDesign={preview3DSideDesign}
       overlayGestureHandlers={overlayGestureHandlers}
+      largeCustomizerViewport={isLargeCustomizerViewport}
     />
   );
 
@@ -1944,6 +2233,28 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
               type="button"
               size="sm"
               variant="outline"
+              onClick={undoSideDesigns}
+              disabled={!canUndo || isCapturing}
+              aria-label={t('undo')}
+              title={t('undoShortcut')}
+            >
+              <Undo2 className="h-3.5 w-3.5" aria-hidden />
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={redoSideDesigns}
+              disabled={!canRedo || isCapturing}
+              aria-label={t('redo')}
+              title={t('redoShortcut')}
+            >
+              <Redo2 className="h-3.5 w-3.5" aria-hidden />
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
               onClick={() => setSidesPreviewOpen(true)}
               disabled={isCapturing}
             >
@@ -1963,7 +2274,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
             </Button>
             <Button
               size="sm"
-              onClick={handleAddToCart}
+              onClick={openAddToCartPreview}
               disabled={isCapturing}
             >
               {isCapturing ? t('capturing') : t('addToCart')}
@@ -2011,14 +2322,38 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
                 : t('orderPhotoLimit', { max: MAX_PHOTOS_PER_ORDER })}
             </p>
           ) : null}
-          <div className="mx-auto mb-2.5 flex max-w-lg gap-2">
+          <div className="mx-auto mb-2.5 flex max-w-lg items-stretch gap-1.5">
             <Button
               type="button"
               variant="outline"
-              size="md"
+              size="sm"
+              onClick={undoSideDesigns}
+              disabled={!canUndo || isCapturing}
+              className="h-10 w-10 shrink-0 p-0 normal-case tracking-normal"
+              aria-label={t('undo')}
+              title={t('undoShortcut')}
+            >
+              <Undo2 className="h-4 w-4" aria-hidden />
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={redoSideDesigns}
+              disabled={!canRedo || isCapturing}
+              className="h-10 w-10 shrink-0 p-0 normal-case tracking-normal"
+              aria-label={t('redo')}
+              title={t('redoShortcut')}
+            >
+              <Redo2 className="h-4 w-4" aria-hidden />
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
               onClick={() => setSidesPreviewOpen(true)}
               disabled={isCapturing}
-              className="min-h-11 shrink-0 px-3 normal-case tracking-normal"
+              className="h-10 w-10 shrink-0 p-0 normal-case tracking-normal"
               aria-label={t('previewAllSides')}
             >
               <Eye className="h-4 w-4" aria-hidden />
@@ -2026,23 +2361,29 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
             <Button
               type="button"
               variant="outline"
-              size="md"
+              size="sm"
               onClick={() => void handleSaveDesign()}
               loading={saveState === 'saving'}
               disabled={isCapturing || saveState === 'saving'}
-              className="min-h-11 flex-1 normal-case tracking-normal"
+              className="h-10 w-10 shrink-0 p-0 normal-case tracking-normal"
+              aria-label={
+                saveState === 'saved' ? t('designSaved') : t('saveDesign')
+              }
             >
-              <Save className="mr-1.5 h-4 w-4 shrink-0" aria-hidden />
-              {saveState === 'saved' ? t('designSaved') : t('saveDesign')}
+              {saveState === 'saved' ? (
+                <Check className="h-4 w-4" aria-hidden />
+              ) : (
+                <Save className="h-4 w-4" aria-hidden />
+              )}
             </Button>
             <Button
               type="button"
-              size="md"
-              onClick={handleAddToCart}
+              size="sm"
+              onClick={openAddToCartPreview}
               disabled={isCapturing}
-              className="min-h-11 flex-1 normal-case tracking-normal"
+              className="h-10 min-w-0 flex-1 truncate normal-case tracking-normal"
             >
-              {isCapturing ? t('capturing') : t('addToCart')}
+              {isCapturing ? t('capturingShort') : t('addToCart')}
             </Button>
           </div>
           <div className="mx-auto flex max-w-lg items-center gap-1">
@@ -2120,7 +2461,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     />
       <CustomizerSidesPreviewModal
         open={sidesPreviewOpen}
-        sides={sides}
+        sides={cartSides}
         sideLabel={sideLabel}
         sideHasContent={sideHasContent}
         onClose={() => setSidesPreviewOpen(false)}
@@ -2129,7 +2470,9 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
           void handleAddToCart();
         }}
         addToCartDisabled={isCapturing}
-        addToCartLabel={isCapturing ? t('capturing') : t('addToCart')}
+        addToCartLabel={
+          isCapturing ? t('capturing') : t('confirmAddToCart')
+        }
         renderSide={(side) => {
           const design = sideDesigns[side] ?? createDefaultSideDesign();
           const sideMockup = getProductMockup(product, color, side) ?? '';
@@ -2166,6 +2509,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
               onStickerScaleChange={() => {}}
               onRemoveSticker={() => {}}
               printAreaOverride={printOverride}
+              referenceMockupInnerHeight={editorMockupInnerHeight}
             />
           );
         }}
@@ -2201,6 +2545,7 @@ function ResizableTextOverlay({
   selected,
   onSelect,
   overlayGestureHandlers,
+  referenceMockupInnerHeight,
 }: {
   text: string;
   color: string;
@@ -2220,6 +2565,7 @@ function ResizableTextOverlay({
   selected?: boolean;
   onSelect?: () => void;
   overlayGestureHandlers?: OverlayGestureHandlers;
+  referenceMockupInnerHeight?: number;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const textContentRef = useRef<HTMLSpanElement | null>(null);
@@ -2227,6 +2573,7 @@ function ResizableTextOverlay({
   const onPositionChangeRef = useRef(onPositionChange);
   const onSizeChangeRef = useRef(onSizeChange);
   const [maxTextSize, setMaxTextSize] = useState(72);
+  const [mockupInnerHeight, setMockupInnerHeight] = useState(0);
 
   positionRef.current = position;
   onPositionChangeRef.current = onPositionChange;
@@ -2250,6 +2597,22 @@ function ResizableTextOverlay({
     }
   }, [printBounds, size, text]);
 
+  useLayoutEffect(() => {
+    const mockupInner = containerRef.current?.closest<HTMLElement>(
+      '[data-mockup-inner]',
+    );
+    if (!mockupInner) return;
+
+    const measure = () => {
+      setMockupInnerHeight(mockupInner.getBoundingClientRect().height);
+    };
+    measure();
+
+    const observer = new ResizeObserver(measure);
+    observer.observe(mockupInner);
+    return () => observer.disconnect();
+  }, []);
+
   const recenterIfOutside = useCallback(() => {
     recenterIfFullyOutsidePrintArea({
       element: textContentRef.current ?? containerRef.current,
@@ -2258,6 +2621,16 @@ function ResizableTextOverlay({
       position: positionRef.current,
       onPositionChange: onPositionChangeRef.current,
     });
+  }, [printBounds]);
+
+  const scheduleRecenter = useCallback(() => {
+    scheduleRecenterIfFullyOutsidePrintArea(() => ({
+      element: textContentRef.current ?? containerRef.current,
+      parent: containerRef.current?.parentElement ?? null,
+      printBounds,
+      position: positionRef.current,
+      onPositionChange: onPositionChangeRef.current,
+    }));
   }, [printBounds]);
 
   const drag = useDraggablePosition(
@@ -2300,55 +2673,39 @@ function ResizableTextOverlay({
     [maxTextSize],
   );
 
-  const resize = useScaleResize(size, handleSizeChange, 12, maxTextSize, () => {
-    requestAnimationFrame(() => recenterIfOutside());
-  }, overlayGestureHandlers);
+  const resize = useScaleResize(
+    size,
+    handleSizeChange,
+    12,
+    maxTextSize,
+    scheduleRecenter,
+    overlayGestureHandlers,
+  );
+  const displaySize = hideControls ? size : resize.displayScale;
+  const textScale =
+    referenceMockupInnerHeight && mockupInnerHeight > 0
+      ? mockupInnerHeight / referenceMockupInnerHeight
+      : 1;
+  const renderedSize = Math.max(1, Math.round(displaySize * textScale));
 
-  return (
-    <div
-      ref={(node) => {
-        containerRef.current = node;
-        drag.ref.current = node;
-      }}
-      className="absolute cursor-grab select-none text-center leading-tight active:cursor-grabbing pointer-events-auto"
-      data-customizer-selected-layer={selected ? '' : undefined}
-      data-customizer-content-layer=""
-      style={{
-        color,
-        left: `${position.x}%`,
-        top: `${position.y}%`,
-        transform: 'translate(-50%, -50%)',
-        fontSize: `${size}px`,
-        fontFamily,
-        fontWeight,
-        letterSpacing,
-        lineHeight,
-        textShadow,
-        touchAction: 'none',
-        // Explicit max-content: auto width on absolute + left uses shrink-to-fit
-        // (space from left edge to container right), so dragging right narrows the
-        // box and wrongly wraps single-line text.
-        width: 'max-content',
-        maxWidth: `${maxWidthPercent}%`,
-        whiteSpace: isMultiline ? 'pre-line' : 'nowrap',
-      }}
-      onPointerDown={(event) => {
-        event.stopPropagation();
-        onSelect?.();
-        drag.onPointerDown(event);
-      }}
-      onPointerMove={drag.onPointerMove}
-      onPointerUp={drag.onPointerUp}
-      onPointerCancel={drag.onPointerCancel}
-    >
-      <span
-        ref={textContentRef}
-        className={cn(
-          'relative inline-block rounded px-1',
-          selected && !hideControls && 'ring-2 ring-brand-500 ring-offset-2',
-        )}
-      >
-      {text}
+  const textStyle = {
+    color,
+    left: `${position.x}%`,
+    top: `${position.y}%`,
+    transform: 'translate(-50%, -50%)',
+    fontSize: `${renderedSize}px`,
+    fontFamily,
+    fontWeight,
+    letterSpacing,
+    lineHeight,
+    textShadow,
+    width: 'max-content' as const,
+    maxWidth: `${maxWidthPercent}%`,
+    whiteSpace: isMultiline ? ('pre-line' as const) : ('nowrap' as const),
+  };
+
+  const controls = (
+    <>
       {onRemove && removeLabel ? (
         <OverlayRemoveButton
           onRemove={onRemove}
@@ -2361,13 +2718,56 @@ function ResizableTextOverlay({
         role="button"
         tabIndex={0}
         aria-label="Resize text"
-        className={`absolute -bottom-3 -right-3 flex h-5 w-5 cursor-se-resize items-center justify-center rounded-full border-2 border-white bg-brand-600 shadow-md ${hideControls ? 'hidden' : ''}`}
+        className="absolute -bottom-3 -right-3 flex h-5 w-5 cursor-se-resize items-center justify-center rounded-full border-2 border-white bg-brand-600 shadow-md"
         style={{ touchAction: 'none' }}
         onPointerDown={resize.onPointerDown}
         onPointerMove={resize.onPointerMove}
         onPointerUp={resize.onPointerUp}
         onPointerCancel={resize.onPointerCancel}
       />
+    </>
+  );
+
+  return (
+    <div
+      ref={(node) => {
+        containerRef.current = node;
+        drag.ref.current = node;
+      }}
+      className={cn(
+        'absolute text-center leading-tight',
+        hideControls
+          ? 'pointer-events-none select-none'
+          : 'cursor-grab select-none active:cursor-grabbing pointer-events-auto',
+      )}
+      data-customizer-selected-layer={selected && !hideControls ? '' : undefined}
+      data-customizer-content-layer=""
+      style={{
+        ...textStyle,
+        touchAction: hideControls ? 'auto' : 'none',
+      }}
+      {...(hideControls
+        ? {}
+        : {
+            onPointerDown: (event: PointerEvent<HTMLDivElement>) => {
+              event.stopPropagation();
+              onSelect?.();
+              drag.onPointerDown(event);
+            },
+            onPointerMove: drag.onPointerMove,
+            onPointerUp: drag.onPointerUp,
+            onPointerCancel: drag.onPointerCancel,
+          })}
+    >
+      <span
+        ref={textContentRef}
+        className={cn(
+          'relative inline-block rounded px-1',
+          selected && !hideControls && 'ring-2 ring-brand-500 ring-offset-2',
+        )}
+      >
+        {text}
+        {!hideControls ? controls : null}
       </span>
     </div>
   );
@@ -2402,12 +2802,14 @@ function InteractivePreview({
   onSelectElement,
   imageMaxScale,
   printAreaOverride,
+  referenceMockupInnerHeight,
   compact = false,
   desktopSplitPreview = false,
   drinkwareCanvasHeightPx = DRINKWARE_FLAT_CANVAS_HEIGHT_PX,
   preview3DTextLayers,
   preview3DSideDesign,
   overlayGestureHandlers,
+  largeCustomizerViewport = false,
 }: {
   mockupImage: string;
   sideDesign: SideDesign;
@@ -2444,6 +2846,8 @@ function InteractivePreview({
   onSelectElement: (element: SelectedElement) => void;
   imageMaxScale: number;
   printAreaOverride?: PrintAreaInsets;
+  /** Mockup inner height from the editor canvas — scales text in compact previews. */
+  referenceMockupInnerHeight?: number;
   /** Desktop viewport already shows a live 3D pane beside this canvas — keep the flat canvas active and skip the flat/3D toggle. */
   desktopSplitPreview?: boolean;
   drinkwareCanvasHeightPx?: number;
@@ -2451,6 +2855,7 @@ function InteractivePreview({
   preview3DTextLayers?: PlacedTextLayer[];
   preview3DSideDesign?: SideDesign;
   overlayGestureHandlers?: OverlayGestureHandlers;
+  largeCustomizerViewport?: boolean;
 }) {
   const t = useTranslations('products.customizer');
   const usesGarmentColorMockup =
@@ -2489,9 +2894,12 @@ function InteractivePreview({
         overlayMaxScale: getPrintAreaMaxScale(printAreaOverride),
       }
     : baseMockupLayout;
-  const shirtMockupStyle = compact
-    ? undefined
-    : getMockupImageDisplayStyle(product, shirtImage, 'customizer');
+  const shirtMockupStyle = getMockupImageDisplayStyle(
+    product,
+    shirtImage,
+    'customizer',
+    { largeCustomizerViewport },
+  );
   const overlayPrintBounds = getOverlayPrintBounds(mockupLayout);
   const isDrinkware = isCylindricalDrinkwareType(productType);
   const drinkwareHasHandle = isDrinkware && getDrinkware3DConfig(productType).hasHandle;
@@ -2505,13 +2913,6 @@ function InteractivePreview({
   const show3dPreview =
     isDrinkware && previewMode === '3d' && !isCapturing && !desktopSplitPreview;
   const showModeToggle = isDrinkware && !isCapturing && !desktopSplitPreview;
-  // Flat apparel mockups (t-shirt/hoodie/bodysuit/…) clip designs to the
-  // print-area rect so anything dragged/scaled past the dashed border
-  // doesn't render on the rest of the garment. Drinkware's flat unwrap has
-  // its own out-of-bounds rules (seam/handle gaps) and must stay unclipped.
-  const printAreaClipStyle: CSSProperties | undefined = isDrinkware
-    ? undefined
-    : { clipPath: getPrintAreaClipPath(mockupLayout.printArea) };
 
   // Drinkware 2D editor is a flat unwrap template — never show the mug photo.
   useEffect(() => {
@@ -2555,9 +2956,13 @@ function InteractivePreview({
           : cn(
               isDrinkware
                 ? 'max-w-[min(48rem,94vw)] shadow-[0_8px_40px_rgba(15,23,42,0.08)]'
-                : 'w-[min(18rem,78vw)] bg-white shadow-[0_8px_40px_rgba(15,23,42,0.12)] md:w-[min(28rem,46vh)] lg:w-[min(32rem,52vh)] xl:w-[min(36rem,58vh)]',
+                : productType === 'hoodie'
+                  ? 'w-[min(18rem,78vw)] bg-white shadow-[0_8px_40px_rgba(15,23,42,0.12)] md:w-[min(28rem,46vh)] lg:w-[min(34rem,54vh)] xl:w-[min(38rem,60vh)]'
+                  : 'w-[min(18rem,78vw)] bg-white shadow-[0_8px_40px_rgba(15,23,42,0.12)] md:w-[min(28rem,46vh)] lg:w-[min(32rem,52vh)] xl:w-[min(36rem,58vh)]',
               // Editor keeps overflow visible so zoomed mockups aren't clipped.
-              productType === 't-shirt' ? 'overflow-visible' : 'overflow-hidden',
+              productType === 't-shirt' || productType === 'hoodie'
+                ? 'overflow-visible'
+                : 'overflow-hidden',
             ),
         // Drinkware: fixed unwrap px size (1:1 with texture). Else aspect classes.
         isDrinkware && drinkwareFlatSize
@@ -2594,7 +2999,8 @@ function InteractivePreview({
         className={cn(
           isDrinkware ? 'relative h-full w-full select-none' : mockupLayout.innerClass,
           'pointer-events-none',
-          compact || productType !== 't-shirt'
+          compact ||
+          (productType !== 't-shirt' && productType !== 'hoodie')
             ? 'overflow-hidden'
             : 'overflow-visible',
         )}
@@ -2640,100 +3046,109 @@ function InteractivePreview({
           />
         ) : null}
 
-        <div className="pointer-events-none absolute inset-0" style={printAreaClipStyle}>
-        {hasTemplateOverlay ? (
-          <ResizableDesignOverlay
-            design={sideDesign}
-            template={designTemplate}
-            shirtColor={shirtColor}
-            scale={sideDesign.uploadedImageScale}
-            position={sideDesign.uploadedImagePosition}
-            onScaleChange={onImageScaleChange}
-            onPositionChange={onImagePositionChange}
-            onRemove={onRemoveImage}
-            removeLabel={removeImageLabel}
-            hideControls={isCapturing}
-            maxScale={imageMaxScale}
-            printBounds={overlayPrintBounds}
-            selected={selectedElement === 'overlay'}
-            onSelect={() => onSelectElement('overlay')}
-            overlayGestureHandlers={overlayGestureHandlers}
-          />
-        ) : null}
+        <CustomizerPrintAreaLayers
+          isCapturing={Boolean(isCapturing)}
+          printAreaInsets={mockupLayout.printArea}
+          useDimOutsideMask={!isDrinkware}
+        >
+          <>
+            {hasTemplateOverlay ? (
+              <ResizableDesignOverlay
+                design={sideDesign}
+                template={designTemplate}
+                shirtColor={shirtColor}
+                scale={sideDesign.uploadedImageScale}
+                position={sideDesign.uploadedImagePosition}
+                onScaleChange={onImageScaleChange}
+                onPositionChange={onImagePositionChange}
+                onRemove={onRemoveImage}
+                removeLabel={removeImageLabel}
+                hideControls={isCapturing}
+                maxScale={imageMaxScale}
+                printBounds={overlayPrintBounds}
+                selected={selectedElement === 'overlay'}
+                onSelect={() => onSelectElement('overlay')}
+                overlayGestureHandlers={overlayGestureHandlers}
+              />
+            ) : null}
 
-        {sideDesign.uploadedFile?.isImage &&
-          sideDesign.uploadedFile.previewUrl &&
-          !hasTemplateOverlay ? (
-            <ResizableImageOverlay
-              src={sideDesign.uploadedFile.previewUrl}
-              alt={sideDesign.uploadedFile.name}
-              scale={sideDesign.uploadedImageScale}
-              position={sideDesign.uploadedImagePosition}
-              onScaleChange={onImageScaleChange}
-              onPositionChange={onImagePositionChange}
-              onRemove={onRemoveImage}
-              removeLabel={removeImageLabel}
-              hideControls={isCapturing}
-              maxScale={imageMaxScale}
-              printBounds={overlayPrintBounds}
-              selected={selectedElement === 'photo'}
-              onSelect={() => onSelectElement('photo')}
-              overlayGestureHandlers={overlayGestureHandlers}
-            />
-          ) : null}
+            {sideDesign.uploadedFile?.isImage &&
+            sideDesign.uploadedFile.previewUrl &&
+            !hasTemplateOverlay ? (
+              <ResizableImageOverlay
+                src={sideDesign.uploadedFile.previewUrl}
+                alt={sideDesign.uploadedFile.name}
+                scale={sideDesign.uploadedImageScale}
+                position={sideDesign.uploadedImagePosition}
+                onScaleChange={onImageScaleChange}
+                onPositionChange={onImagePositionChange}
+                onRemove={onRemoveImage}
+                removeLabel={removeImageLabel}
+                hideControls={isCapturing}
+                maxScale={imageMaxScale}
+                printBounds={overlayPrintBounds}
+                selected={selectedElement === 'photo'}
+                onSelect={() => onSelectElement('photo')}
+                overlayGestureHandlers={overlayGestureHandlers}
+              />
+            ) : null}
 
-        {textLayers.map((layer) =>
-          layer.text ? (
-            <ResizableTextOverlay
-              key={layer.instanceId}
-              text={layer.text}
-              color={layer.color}
-              size={layer.size}
-              position={layer.position}
-              fontFamily={getCustomizerFontFamily(layer.fontFamily)}
-              fontWeight={layer.fontWeight}
-              letterSpacing={layer.letterSpacing}
-              lineHeight={layer.lineHeight}
-              textShadow={layer.textShadow}
-              onSizeChange={(size) =>
-                onTextLayerSizeChange(layer.instanceId, size)
-              }
-              onPositionChange={(pos) =>
-                onTextLayerPositionChange(layer.instanceId, pos)
-              }
-              onRemove={() => onRemoveTextLayer(layer.instanceId)}
-              removeLabel={removeTextLabel}
-              hideControls={isCapturing}
-              printBounds={overlayPrintBounds}
-              selected={selectedElement === `text:${layer.instanceId}`}
-              onSelect={() => onSelectElement(`text:${layer.instanceId}`)}
-              overlayGestureHandlers={overlayGestureHandlers}
-            />
-          ) : null,
-        )}
+            {textLayers.map((layer) =>
+              layer.text ? (
+                <ResizableTextOverlay
+                  key={layer.instanceId}
+                  text={layer.text}
+                  color={layer.color}
+                  size={layer.size}
+                  position={layer.position}
+                  fontFamily={getCustomizerFontFamily(layer.fontFamily)}
+                  fontWeight={layer.fontWeight}
+                  letterSpacing={layer.letterSpacing}
+                  lineHeight={layer.lineHeight}
+                  textShadow={layer.textShadow}
+                  onSizeChange={(size) =>
+                    onTextLayerSizeChange(layer.instanceId, size)
+                  }
+                  onPositionChange={(pos) =>
+                    onTextLayerPositionChange(layer.instanceId, pos)
+                  }
+                  onRemove={() => onRemoveTextLayer(layer.instanceId)}
+                  removeLabel={removeTextLabel}
+                  hideControls={isCapturing}
+                  printBounds={overlayPrintBounds}
+                  selected={selectedElement === `text:${layer.instanceId}`}
+                  onSelect={() =>
+                    onSelectElement(`text:${layer.instanceId}`)
+                  }
+                  overlayGestureHandlers={overlayGestureHandlers}
+                  referenceMockupInnerHeight={referenceMockupInnerHeight}
+                />
+              ) : null,
+            )}
 
-        {stickers.map((sticker) => (
-          <ResizableStickerOverlay
-            key={sticker.instanceId}
-            sticker={sticker}
-            onPositionChange={(pos) =>
-              onStickerPositionChange(sticker.instanceId, pos)
-            }
-            onScaleChange={(scale) =>
-              onStickerScaleChange(sticker.instanceId, scale)
-            }
-            onRemove={() => onRemoveSticker(sticker.instanceId)}
-            removeLabel={removeStickerLabel}
-            hideControls={isCapturing}
-            printBounds={overlayPrintBounds}
-            selected={selectedElement === `sticker:${sticker.instanceId}`}
-            onSelect={() =>
-              onSelectElement(`sticker:${sticker.instanceId}`)
-            }
-            overlayGestureHandlers={overlayGestureHandlers}
-          />
-        ))}
-        </div>
+            {stickers.map((sticker) => (
+              <ResizableStickerOverlay
+                key={sticker.instanceId}
+                sticker={sticker}
+                onPositionChange={(pos) =>
+                  onStickerPositionChange(sticker.instanceId, pos)
+                }
+                onScaleChange={(scale) =>
+                  onStickerScaleChange(sticker.instanceId, scale)
+                }
+                onRemove={() => onRemoveSticker(sticker.instanceId)}
+                removeLabel={removeStickerLabel}
+                hideControls={isCapturing}
+                printBounds={overlayPrintBounds}
+                selected={selectedElement === `sticker:${sticker.instanceId}`}
+                onSelect={() =>
+                  onSelectElement(`sticker:${sticker.instanceId}`)
+                }
+                overlayGestureHandlers={overlayGestureHandlers}
+              />
+            ))}
+          </>
+        </CustomizerPrintAreaLayers>
 
         {sideDesign.showPhotoGuide &&
           !sideDesign.uploadedFile?.previewUrl &&

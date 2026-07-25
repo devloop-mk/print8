@@ -55,6 +55,10 @@ export function stripBulkyCartItems(items: CartItem[]): CartItem[] {
     rightDesignPreview: isDataUrl(item.rightDesignPreview)
       ? undefined
       : item.rightDesignPreview,
+    frontPrintPng: isDataUrl(item.frontPrintPng) ? undefined : item.frontPrintPng,
+    backPrintPng: isDataUrl(item.backPrintPng) ? undefined : item.backPrintPng,
+    leftPrintPng: isDataUrl(item.leftPrintPng) ? undefined : item.leftPrintPng,
+    rightPrintPng: isDataUrl(item.rightPrintPng) ? undefined : item.rightPrintPng,
     metadata: item.metadata ? stripBulkyMetadata(item.metadata) : undefined,
   }));
 }

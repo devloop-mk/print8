@@ -19,7 +19,11 @@ import {
   mapCheckoutApiFieldErrors,
   validateCheckoutFields,
 } from "@/lib/validations/checkout-form";
-import { prepareCheckoutPayload } from "@/lib/orders/prepare-checkout-payload";
+import {
+  CheckoutPrepareError,
+  prepareCheckoutPayload,
+} from "@/lib/orders/prepare-checkout-payload";
+import { cartHasInlinePrintPngs } from "@/lib/cart/print-png-cart";
 import { SPIN_PENDING_COUPON_KEY } from "@/lib/rewards/spin-config";
 import type { CheckoutInput } from "@/lib/validations/order";
 
@@ -225,18 +229,77 @@ export function CheckoutForm() {
     return Object.keys(newErrors).length === 0;
   }
 
+  async function resolveUploadTokenForCheckout(): Promise<string | null> {
+    const needsSession =
+      cartHasInlinePrintPngs(items) ||
+      fileIds.length > 0 ||
+      items.some((item) => (item.fileIds?.length ?? 0) > 0);
+
+    if (!needsSession) return token;
+
+    let activeToken = token;
+    if (!activeToken) {
+      return refreshSession();
+    }
+
+    try {
+      const res = await fetch("/api/upload/session/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: activeToken }),
+      });
+      const data = (await res.json()) as { valid?: boolean };
+      if (data.valid) return activeToken;
+    } catch {
+      // fall through to refresh or keep token for server-side error
+    }
+
+    const hasCommittedUploads =
+      fileIds.length > 0 ||
+      items.some((item) => (item.fileIds?.length ?? 0) > 0);
+    if (hasCommittedUploads) return activeToken;
+
+    return refreshSession();
+  }
+
+  function mapPrepareError(code: string): string {
+    switch (code) {
+      case "print_upload_requires_session":
+      case "invalid_upload_token":
+        return t("uploadSessionError");
+      case "print_file_too_large":
+        return t("printFileTooLarge");
+      case "print_upload_failed":
+        return t("printUploadFailed");
+      case "invalid_order_data":
+        return t("invalidOrderData");
+      default:
+        return t("submitError");
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validate() || items.length === 0) return;
 
     setProcessing(true);
     try {
+      const uploadToken = await resolveUploadTokenForCheckout();
+      if (
+        cartHasInlinePrintPngs(items) &&
+        !uploadToken
+      ) {
+        setErrors({ form: t("uploadSessionError") });
+        setProcessing(false);
+        return;
+      }
+
       const payload = await prepareCheckoutPayload({
         ...form,
         locale: locale as CheckoutInput["locale"],
         items,
         fileIds,
-        uploadToken: token,
+        uploadToken,
         newsletterOptIn,
         couponCode: couponCode.trim() || null,
       });
@@ -303,7 +366,19 @@ export function CheckoutForm() {
           data.code === "invalid_upload_token" ||
           data.code === "invalid_file_reference"
         ) {
-          setErrors({ form: t("submitError") });
+          setErrors({
+            form:
+              data.code === "upload_token_required" ||
+              data.code === "invalid_upload_token" ||
+              data.code === "invalid_file_reference"
+                ? t("uploadSessionError")
+                : t("submitError"),
+          });
+          setProcessing(false);
+          return;
+        }
+        if (data.code === "order_print_storage_failed") {
+          setErrors({ form: t("printUploadFailed") });
           setProcessing(false);
           return;
         }
@@ -325,8 +400,12 @@ export function CheckoutForm() {
       setRedirecting(true);
       sessionStorage.removeItem("print8-upload-token");
       router.push(`/order/success?number=${data.orderNumber}`);
-    } catch {
-      setErrors({ form: t("submitError") });
+    } catch (err) {
+      if (err instanceof CheckoutPrepareError) {
+        setErrors({ form: mapPrepareError(err.code) });
+      } else {
+        setErrors({ form: t("submitError") });
+      }
       setProcessing(false);
     }
   }

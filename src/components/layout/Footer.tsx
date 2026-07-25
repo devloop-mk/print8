@@ -48,13 +48,13 @@ export function Footer() {
               </Link>
             </li>
             <li>
-              <Link href="/designs" className="transition hover:text-white">
-                {nav('designs')}
+              <Link href="/products" className="transition hover:text-white">
+                {nav('products')}
               </Link>
             </li>
             <li>
-              <Link href="/products" className="transition hover:text-white">
-                {nav('products')}
+              <Link href="/designs" className="transition hover:text-white">
+                {nav('designs')}
               </Link>
             </li>
             <li>

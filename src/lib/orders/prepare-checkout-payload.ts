@@ -9,12 +9,25 @@ import {
 } from '@/lib/validations/order';
 import { isAdvancedMetadataKey } from '@/lib/admin/order-metadata';
 import { isDataUrl } from '@/lib/storage/cart-storage';
+import { uploadCheckoutAsset } from '@/lib/orders/upload-checkout-asset';
+import { orderItemSideUsesPremadeMasterForProduction } from '@/lib/products/premade-artwork-source';
 import {
   PRODUCT_SIDES,
   SIDE_PREVIEW_CART_KEYS,
+  SIDE_PRINT_PNG_CART_KEYS,
   getSideMetadataPrefix,
   type SidePreviewCartKey,
 } from '@/lib/products/product-sides';
+
+export class CheckoutPrepareError extends Error {
+  constructor(
+    public readonly code: string,
+    message?: string,
+  ) {
+    super(message ?? code);
+    this.name = 'CheckoutPrepareError';
+  }
+}
 
 const MAX_PREVIEW_BYTES = 550_000;
 const PREVIEW_COMPRESSION_STEPS = [
@@ -33,7 +46,6 @@ const SIDE_REDUNDANT_WHEN_PREVIEW_SUFFIXES = [
   'OverlaySvg',
   'OverlaySvgPrimary',
   'OverlaySvgSecondary',
-  'TextLayers',
 ] as const;
 
 type CheckoutItem = CheckoutInput['items'][number];
@@ -44,6 +56,10 @@ type SidePreviewFields = Pick<
   | 'backDesignPreview'
   | 'leftDesignPreview'
   | 'rightDesignPreview'
+  | 'frontPrintPng'
+  | 'backPrintPng'
+  | 'leftPrintPng'
+  | 'rightPrintPng'
 >;
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -121,11 +137,19 @@ function hasSidePreview(
 function shouldStripSideRedundantKey(
   key: string,
   item: SidePreviewFields,
+  metadata: Record<string, string | number | boolean>,
 ): boolean {
   for (const side of PRODUCT_SIDES) {
     const prefix = getSideMetadataPrefix(side);
     if (!key.startsWith(prefix)) continue;
     if (!hasSidePreview(item, side)) continue;
+
+    if (key.endsWith('PremadeDesignImage')) {
+      const value = metadata[key];
+      if (typeof value === 'string' && !isDataUrl(value)) {
+        continue;
+      }
+    }
 
     if (
       SIDE_REDUNDANT_WHEN_PREVIEW_SUFFIXES.some((suffix) =>
@@ -148,7 +172,7 @@ function stripCheckoutMetadata(
   for (const [key, value] of Object.entries(metadata)) {
     if (CHECKOUT_STRIP_METADATA_KEYS.has(key)) continue;
     if (key.startsWith('logo_') && isDataUrl(value)) continue;
-    if (shouldStripSideRedundantKey(key, item)) continue;
+    if (shouldStripSideRedundantKey(key, item, metadata)) continue;
 
     if (
       (key.endsWith('OverlayRaster') ||
@@ -214,7 +238,14 @@ function fitCheckoutItem(item: CheckoutItem): CheckoutItem {
   return parsed.success ? parsed.data : fitted;
 }
 
-async function prepareCheckoutItem(item: CartItem): Promise<CheckoutItem> {
+function sidePrintPngFileIdKey(side: (typeof PRODUCT_SIDES)[number]): string {
+  return `${getSideMetadataPrefix(side)}PrintPngFileId`;
+}
+
+async function prepareCheckoutItem(
+  item: CartItem,
+  uploadToken?: string | null,
+): Promise<CheckoutItem> {
   const previewKeys: SidePreviewCartKey[] = [
     'designPreview',
     'backDesignPreview',
@@ -231,6 +262,43 @@ async function prepareCheckoutItem(item: CartItem): Promise<CheckoutItem> {
     }
   }
 
+  let metadata = item.metadata
+    ? stripCheckoutMetadata(item.metadata, previews)
+    : undefined;
+
+  for (const side of PRODUCT_SIDES) {
+    const inlineKey = SIDE_PRINT_PNG_CART_KEYS[side];
+    const value = item[inlineKey];
+    if (typeof value !== 'string' || !isDataUrl(value)) continue;
+
+    if (orderItemSideUsesPremadeMasterForProduction(item.metadata, side)) {
+      continue;
+    }
+
+    if (!uploadToken) {
+      throw new CheckoutPrepareError('print_upload_requires_session');
+    }
+
+    try {
+      const { fileId } = await uploadCheckoutAsset(
+        uploadToken,
+        value,
+        `${side}-print.png`,
+      );
+      metadata = metadata ?? {};
+      metadata[sidePrintPngFileIdKey(side)] = fileId;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'upload_failed';
+      if (message === 'File too large') {
+        throw new CheckoutPrepareError('print_file_too_large');
+      }
+      if (message.includes('Invalid or expired upload session')) {
+        throw new CheckoutPrepareError('invalid_upload_token');
+      }
+      throw new CheckoutPrepareError('print_upload_failed', message);
+    }
+  }
+
   const prepared: CheckoutItem = {
     type: item.type,
     name: item.name,
@@ -238,9 +306,7 @@ async function prepareCheckoutItem(item: CartItem): Promise<CheckoutItem> {
     quantity: item.quantity,
     ...previews,
     fileIds: item.fileIds,
-    metadata: item.metadata
-      ? stripCheckoutMetadata(item.metadata, previews)
-      : undefined,
+    metadata,
   };
 
   return fitCheckoutItem(prepared);
@@ -278,7 +344,9 @@ export async function prepareCheckoutPayload(input: {
   newsletterOptIn?: boolean;
   couponCode?: string | null;
 }): Promise<CheckoutOrderPayload> {
-  const items = await Promise.all(input.items.map(prepareCheckoutItem));
+  const items = await Promise.all(
+    input.items.map((item) => prepareCheckoutItem(item, input.uploadToken)),
+  );
   const couponCode = input.couponCode?.trim();
 
   const payload: CheckoutOrderPayload = {
@@ -300,8 +368,9 @@ export async function prepareCheckoutPayload(input: {
   const parsed = checkoutSchema.safeParse(payload);
   if (!parsed.success) {
     console.error('[checkout] payload validation failed', parsed.error.flatten());
+    throw new CheckoutPrepareError('invalid_order_data');
   }
 
-  return payload;
+  return parsed.data;
 }
 

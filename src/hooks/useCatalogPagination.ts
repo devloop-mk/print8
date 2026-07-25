@@ -14,12 +14,15 @@ type UseCatalogPaginationOptions = {
   totalItems: number;
   pageSize?: number;
   extraParams?: Record<string, string | undefined>;
+  /** When true, page changes update the URL without scrolling to the top. */
+  preventScroll?: boolean;
 };
 
 export function useCatalogPagination({
   totalItems,
   pageSize = CATALOG_PAGE_SIZE,
   extraParams,
+  preventScroll = false,
 }: UseCatalogPaginationOptions) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -53,9 +56,9 @@ export function useCatalogPagination({
   const setPage = useCallback(
     (nextPage: number) => {
       const clamped = clampCatalogPage(nextPage, totalItems, pageSize);
-      router.replace(buildHref(clamped), { scroll: true });
+      router.replace(buildHref(clamped), { scroll: !preventScroll });
     },
-    [buildHref, pageSize, router, totalItems],
+    [buildHref, pageSize, preventScroll, router, totalItems],
   );
 
   const resetPage = useCallback(() => {

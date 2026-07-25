@@ -1,5 +1,6 @@
 'use client';
 
+import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { ArrowLeft } from 'lucide-react';
@@ -16,6 +17,7 @@ import { ProductTypeDesignCategories } from '@/components/products/ProductTypeDe
 import { ProductTypeReadyDesignsSection } from '@/components/products/ProductTypeReadyDesignsSection';
 import { ProductTypeSuggestions } from '@/components/products/ProductTypeSuggestions';
 import { Reveal } from '@/components/motion/Reveal';
+import { parseCatalogPage } from '@/lib/catalog/pagination';
 
 type ProductTypeCatalogProps = {
   type: ProductType;
@@ -34,6 +36,9 @@ export function ProductTypeCatalog({
   const tt = useTranslations('products.typePages');
   const tNav = useTranslations('nav.productsMenu.categories');
   const parentCategory = getCategoryForProductType(type);
+  const searchParams = useSearchParams();
+  const catalogPage = parseCatalogPage(searchParams.get('page'));
+  const showPlainProducts = catalogPage <= 1;
 
   return (
     <div className="w-full min-w-0 max-w-full space-y-8">
@@ -72,40 +77,42 @@ export function ProductTypeCatalog({
         </p>
       </div>
 
-      <section id="products-grid" className="scroll-mt-24 space-y-4">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h2 className="text-xl font-bold text-ink-900 sm:text-2xl">
-              {tt('plainProductsTitle')}
-            </h2>
-            <p className="mt-1 text-sm text-ink-600">{tt('plainProductsSubtitle')}</p>
+      {showPlainProducts ? (
+        <section id="products-grid" className="scroll-mt-24 space-y-4">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-bold text-ink-900 sm:text-2xl">
+                {tt('plainProductsTitle')}
+              </h2>
+              <p className="mt-1 text-sm text-ink-600">{tt('plainProductsSubtitle')}</p>
+            </div>
+            {readyDesignEntries.length > 0 ? (
+              <a
+                href="#ready-designs"
+                className="text-sm font-semibold text-brand-600 transition hover:text-brand-700"
+              >
+                {tt('jumpToReadyDesigns', { count: readyDesignEntries.length })}
+              </a>
+            ) : null}
           </div>
-          {readyDesignEntries.length > 0 ? (
-            <a
-              href="#ready-designs"
-              className="text-sm font-semibold text-brand-600 transition hover:text-brand-700"
-            >
-              {tt('jumpToReadyDesigns', { count: readyDesignEntries.length })}
-            </a>
-          ) : null}
-        </div>
 
-        <Reveal delay={80} className="min-w-0">
-          <ProductCardGrid items={products} />
-        </Reveal>
+          <Reveal delay={80} className="min-w-0">
+            <ProductCardGrid items={products} />
+          </Reveal>
 
-        <ProductTypeDesignCategories
-          type={type}
-          categoryPreviews={categoryPreviews}
-        />
-      </section>
+          <ProductTypeDesignCategories
+            type={type}
+            categoryPreviews={categoryPreviews}
+          />
+        </section>
+      ) : null}
 
       <ProductTypeReadyDesignsSection
         type={type}
         entries={readyDesignEntries}
       />
 
-      <ProductTypeSuggestions type={type} />
+      {showPlainProducts ? <ProductTypeSuggestions type={type} /> : null}
     </div>
   );
 }

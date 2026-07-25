@@ -161,6 +161,153 @@ function isDesignLayerImage(img: HTMLImageElement): boolean {
 
 type StyleRestorer = () => void;
 
+type PrintAreaInsets = {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+};
+
+function parsePercent(value: string): number | null {
+  const match = value.trim().match(/^([-.\d]+)%$/);
+  if (!match) return null;
+  const parsed = Number(match[1]);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function parseInsetClipPath(clipPath: string): PrintAreaInsets | null {
+  const match = clipPath.match(
+    /inset\(\s*([\d.]+)%\s+([\d.]+)%\s+([\d.]+)%\s+([\d.]+)%\s*\)/i,
+  );
+  if (!match) return null;
+
+  return {
+    top: Number(match[1]),
+    right: Number(match[2]),
+    bottom: Number(match[3]),
+    left: Number(match[4]),
+  };
+}
+
+function readPrintAreaInsets(el: HTMLElement): PrintAreaInsets | null {
+  const insetsAttr = el.getAttribute('data-print-area-insets');
+  if (insetsAttr) {
+    try {
+      const parsed = JSON.parse(insetsAttr) as PrintAreaInsets;
+      if (
+        Number.isFinite(parsed.top) &&
+        Number.isFinite(parsed.right) &&
+        Number.isFinite(parsed.bottom) &&
+        Number.isFinite(parsed.left)
+      ) {
+        return parsed;
+      }
+    } catch {
+      // fall through to clip-path parsing
+    }
+  }
+
+  return parseInsetClipPath(window.getComputedStyle(el).clipPath);
+}
+
+function saveInlineStyles(
+  el: HTMLElement,
+  keys: Array<keyof CSSStyleDeclaration & string>,
+): Record<string, string> {
+  const saved: Record<string, string> = {};
+  for (const key of keys) {
+    saved[key] = el.style.getPropertyValue(
+      key.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`),
+    );
+  }
+  return saved;
+}
+
+function restoreInlineStyles(
+  el: HTMLElement,
+  saved: Record<string, string>,
+): void {
+  for (const [key, value] of Object.entries(saved)) {
+    const cssKey = key.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
+    if (value) {
+      el.style.setProperty(cssKey, value);
+    } else {
+      el.style.removeProperty(cssKey);
+    }
+  }
+}
+
+/**
+ * html2canvas ignores CSS clip-path. Shrink the print-area shell to the
+ * printable rect with overflow:hidden and remap overlay % coords so cart
+ * previews hide artwork outside the print zone.
+ */
+function preparePrintAreaClipForCapture(root: HTMLElement): StyleRestorer {
+  const restorers: StyleRestorer[] = [];
+
+  root.querySelectorAll<HTMLElement>('[data-print-area-content]').forEach((el) => {
+    const insets = readPrintAreaInsets(el);
+    if (!insets) return;
+
+    const printW = 100 - insets.left - insets.right;
+    const printH = 100 - insets.top - insets.bottom;
+    if (printW <= 0 || printH <= 0) return;
+
+    const shellPrev = saveInlineStyles(el, [
+      'clipPath',
+      'overflow',
+      'top',
+      'left',
+      'right',
+      'bottom',
+      'width',
+      'height',
+    ]);
+
+    el.style.clipPath = 'none';
+    el.style.overflow = 'hidden';
+    el.style.top = `${insets.top}%`;
+    el.style.left = `${insets.left}%`;
+    el.style.right = 'auto';
+    el.style.bottom = 'auto';
+    el.style.width = `${printW}%`;
+    el.style.height = `${printH}%`;
+
+    restorers.push(() => restoreInlineStyles(el, shellPrev));
+
+    for (const child of Array.from(el.children)) {
+      if (!(child instanceof HTMLElement)) continue;
+
+      const childPrev = saveInlineStyles(child, ['left', 'top', 'width', 'maxWidth']);
+      const left = parsePercent(child.style.left);
+      const top = parsePercent(child.style.top);
+
+      if (left !== null) {
+        child.style.left = `${((left - insets.left) / printW) * 100}%`;
+      }
+      if (top !== null) {
+        child.style.top = `${((top - insets.top) / printH) * 100}%`;
+      }
+
+      const width = parsePercent(child.style.width);
+      if (width !== null) {
+        child.style.width = `${(width / printW) * 100}%`;
+      }
+
+      const maxWidth = parsePercent(child.style.maxWidth);
+      if (maxWidth !== null) {
+        child.style.maxWidth = `${(maxWidth / printW) * 100}%`;
+      }
+
+      restorers.push(() => restoreInlineStyles(child, childPrev));
+    }
+  });
+
+  return () => {
+    for (let i = restorers.length - 1; i >= 0; i -= 1) restorers[i]();
+  };
+}
+
 function prepareMockupZoomAndOverflow(root: HTMLElement): StyleRestorer {
   const restorers: StyleRestorer[] = [];
   const elements = [root, ...Array.from(root.querySelectorAll<HTMLElement>('*'))];
@@ -316,6 +463,7 @@ export async function capturePreviewElement(
 ): Promise<string | undefined> {
   const restoreZoom = prepareMockupZoomAndOverflow(element);
   let restoreFit: StyleRestorer = () => undefined;
+  let restorePrintClip: StyleRestorer = () => undefined;
 
   try {
     await waitForPaint();
@@ -324,6 +472,16 @@ export async function capturePreviewElement(
     // After zoom is removed, bake object-fit using the real layout box.
     restoreFit = prepareMockupObjectFit(element);
     await waitForPaint();
+
+    // Full mockup captures need a hard print-area clip; print-PNG captures
+    // pass the content node directly and crop separately afterward.
+    if (
+      element.getAttribute('data-print-area-content') === null &&
+      element.querySelector('[data-print-area-content]')
+    ) {
+      restorePrintClip = preparePrintAreaClipForCapture(element);
+      await waitForPaint();
+    }
 
     const svgSubstitutions = await buildRasterizedSvgSubstitutions(element);
     const html2canvas = await loadHtml2Canvas();
@@ -348,6 +506,7 @@ export async function capturePreviewElement(
     console.warn('[capture-preview] failed', error);
     return undefined;
   } finally {
+    restorePrintClip();
     restoreFit();
     restoreZoom();
   }

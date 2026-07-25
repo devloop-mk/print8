@@ -7,8 +7,22 @@ import type {
   ProductType,
 } from '@/lib/data/catalog';
 import { resolveSideOverlayConfig } from '@/lib/products/design-sides';
+import {
+  getPrintAreaCenter,
+  HOODIE_PRINT_AREA_INSETS,
+  TSHIRT_PRINT_AREA_INSETS,
+} from '@/lib/products/print-area';
 import { resolveAssetUrl, resolveMasterAssetUrl } from '@/lib/storage/asset-url';
 import { sanitizeCssHexColor } from '@/lib/security/sanitize-svg';
+
+/**
+ * Empirical hoodie scale from admin tuning (median ~28 on a scale-40 tee).
+ */
+export const HOODIE_FROM_TEE_SCALE_FACTOR = 28 / 40;
+
+/** Old bulk pack defaults that are too large on hoodie mockups. */
+const LEGACY_PACK_HOODIE_SCALE_RATIO = 33 / 40;
+const BAD_SEED_HOODIE_SCALE = 41;
 
 export type OverlaySvgColors = {
   primary: string;
@@ -42,10 +56,92 @@ export function getDesignOverlayLayerStyle(
   };
 }
 
+function templateIncludesTeeAndHoodie(
+  productTypes: ProductType[] | undefined,
+): boolean {
+  if (!productTypes?.length) return false;
+  return productTypes.includes('t-shirt') && productTypes.includes('hoodie');
+}
+
+/** Derive hoodie placement from a tee-tuned base using print-area geometry. */
+export function deriveHoodiePlacementFromTeeBase(
+  base: OverlayPlacement,
+): OverlayPlacement {
+  const hoodieCenter = getPrintAreaCenter(HOODIE_PRINT_AREA_INSETS);
+  const teeCenter = getPrintAreaCenter(TSHIRT_PRINT_AREA_INSETS);
+
+  return {
+    scale: Math.max(
+      12,
+      Math.round(base.scale * HOODIE_FROM_TEE_SCALE_FACTOR),
+    ),
+    position: {
+      x: base.position.x,
+      y: Math.round(base.position.y + (hoodieCenter.y - teeCenter.y)),
+    },
+  };
+}
+
+function legacyPackHoodieScaleForBase(baseScale: number): number {
+  return Math.round(baseScale * LEGACY_PACK_HOODIE_SCALE_RATIO);
+}
+
+function isBadDefaultHoodieOverride(
+  base: OverlayPlacement,
+  override: { scale?: number; position?: { x: number; y: number } },
+): boolean {
+  if (override.scale === undefined) return false;
+
+  // Keep admin-tuned hoodie sizes (user bulk-fixed ~24–32 on scale-40 tees).
+  if (override.scale <= 32 && override.scale < base.scale * 0.85) {
+    return false;
+  }
+
+  if (override.scale >= base.scale) return true;
+  if (override.scale === BAD_SEED_HOODIE_SCALE) return true;
+  if (override.scale === legacyPackHoodieScaleForBase(base.scale)) return true;
+  if (override.scale >= 33) return true;
+
+  return false;
+}
+
+function resolvePlacementWithProductType(
+  base: OverlayPlacement,
+  productType: ProductType,
+  overlayByProductType:
+    | Partial<Record<ProductType, { position?: { x: number; y: number }; scale?: number }>>
+    | undefined,
+  productTypes: ProductType[] | undefined,
+): OverlayPlacement {
+  if (productType === 'hoodie' && templateIncludesTeeAndHoodie(productTypes)) {
+    const typeOverride = overlayByProductType?.hoodie;
+    if (typeOverride && !isBadDefaultHoodieOverride(base, typeOverride)) {
+      return {
+        position: typeOverride.position ?? base.position,
+        scale: typeOverride.scale ?? base.scale,
+      };
+    }
+    return deriveHoodiePlacementFromTeeBase(base);
+  }
+
+  const typeOverride = overlayByProductType?.[productType];
+  if (typeOverride) {
+    return {
+      position: typeOverride.position ?? base.position,
+      scale: typeOverride.scale ?? base.scale,
+    };
+  }
+
+  return base;
+}
+
 export function resolveOverlayPlacement(
   template: Pick<
     ProductDesignTemplate,
-    'overlayPosition' | 'overlayScale' | 'overlayByProductType'
+    | 'overlayPosition'
+    | 'overlayScale'
+    | 'overlayByProductType'
+    | 'productTypes'
   >,
   productOrType: Product | ProductType,
 ): OverlayPlacement {
@@ -57,13 +153,12 @@ export function resolveOverlayPlacement(
     scale: template.overlayScale ?? DEFAULT_OVERLAY_SCALE,
   };
 
-  const typeOverride = template.overlayByProductType?.[productType];
-  if (!typeOverride) return base;
-
-  return {
-    position: typeOverride.position ?? base.position,
-    scale: typeOverride.scale ?? base.scale,
-  };
+  return resolvePlacementWithProductType(
+    base,
+    productType,
+    template.overlayByProductType,
+    template.productTypes,
+  );
 }
 
 export function resolveSideOverlayPlacement(
@@ -72,6 +167,7 @@ export function resolveSideOverlayPlacement(
     'overlayPosition' | 'overlayScale' | 'overlayByProductType'
   >,
   productOrType: Product | ProductType,
+  productTypes?: ProductType[],
 ): OverlayPlacement {
   const productType =
     typeof productOrType === 'string' ? productOrType : productOrType.type;
@@ -81,13 +177,12 @@ export function resolveSideOverlayPlacement(
     scale: config.overlayScale ?? DEFAULT_OVERLAY_SCALE,
   };
 
-  const typeOverride = config.overlayByProductType?.[productType];
-  if (!typeOverride) return base;
-
-  return {
-    position: typeOverride.position ?? base.position,
-    scale: typeOverride.scale ?? base.scale,
-  };
+  return resolvePlacementWithProductType(
+    base,
+    productType,
+    config.overlayByProductType,
+    productTypes,
+  );
 }
 
 export function resolveOverlayPlacementForSide(
@@ -97,7 +192,11 @@ export function resolveOverlayPlacementForSide(
 ): OverlayPlacement {
   const config = resolveSideOverlayConfig(template, side);
   if (config) {
-    return resolveSideOverlayPlacement(config, productOrType);
+    return resolveSideOverlayPlacement(
+      config,
+      productOrType,
+      template.productTypes,
+    );
   }
   return resolveOverlayPlacement(template, productOrType);
 }

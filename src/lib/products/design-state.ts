@@ -172,7 +172,11 @@ export function sideDesignFromOverlaySideConfig(
   product: Product,
   shirtColor?: string,
 ): SideDesign | null {
-  const placement = resolveSideOverlayPlacement(config, product);
+  const placement = resolveSideOverlayPlacement(
+    config,
+    product,
+    template.productTypes,
+  );
 
   const base = {
     ...createDefaultSideDesign(),

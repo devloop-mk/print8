@@ -26,8 +26,8 @@ const GlobalSearch = dynamic(
 const navItems = [
   { href: "/", key: "home" },
   { href: "/services", key: "services" },
-  { href: "/designs", key: "designs" },
   { href: "/products", key: "products" },
+  { href: "/designs", key: "designs" },
   { href: "/about", key: "about" },
   { href: "/contact", key: "help" },
 ] as const;

@@ -28,10 +28,10 @@ export const DEFAULT_PRINT_AREA_INSETS: PrintAreaInsets = {
 
 /** Chest print zone for t-shirts (front). */
 export const TSHIRT_PRINT_AREA_INSETS: PrintAreaInsets = {
-  top: 10,
-  right: 27,
-  bottom: 2,
-  left: 26,
+  top: 22,
+  right: 32,
+  bottom: 13,
+  left: 32,
 };
 
 /**

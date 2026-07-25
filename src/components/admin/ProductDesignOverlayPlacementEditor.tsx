@@ -175,7 +175,11 @@ export function ProductDesignOverlayPlacementEditor({
 
   const placement = useMemo(() => {
     if (overlayConfig) {
-      return resolveSideOverlayPlacement(overlayConfig, previewType);
+      return resolveSideOverlayPlacement(
+        overlayConfig,
+        previewType,
+        template.productTypes,
+      );
     }
     return resolveOverlayPlacement(template, previewType);
   }, [overlayConfig, previewType, template]);
@@ -306,7 +310,7 @@ export function ProductDesignOverlayPlacementEditor({
   const mockupStyle = getMockupImageDisplayStyle(
     previewProduct,
     mockup ?? undefined,
-    'customizer',
+    'catalog-design',
   );
 
   const isOversized = placement.scale > aspectMaxScale;

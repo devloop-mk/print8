@@ -74,6 +74,10 @@ const HIDDEN_METADATA_KEYS = new Set([
   'svgFrontStoredName',
   'svgBackStoredName',
   'svgState',
+  'frontPrintPngStoredName',
+  'backPrintPngStoredName',
+  'leftPrintPngStoredName',
+  'rightPrintPngStoredName',
 ]);
 
 export function splitOrderMetadata(metadata: Record<string, string | number | boolean>) {
@@ -83,6 +87,7 @@ export function splitOrderMetadata(metadata: Record<string, string | number | bo
   for (const [key, value] of Object.entries(metadata)) {
     if (HIDDEN_METADATA_KEYS.has(key)) continue;
     if (key.startsWith('text_') || key.startsWith('color_')) continue;
+    if (key.endsWith('TextLayers')) continue;
     const entry = {
       key,
       label: formatMetadataKey(key),

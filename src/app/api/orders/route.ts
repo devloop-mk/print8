@@ -16,6 +16,7 @@ import { revalidateDesignCatalogCache } from '@/lib/catalog/revalidate-design-ca
 import { enforceRateLimit } from '@/lib/security/rate-limit';
 import { subscribeToNewsletter } from '@/lib/db/newsletter';
 import { persistOrderPrintSvgs } from '@/lib/orders/persist-order-print-svgs';
+import { persistOrderPrintPngs } from '@/lib/orders/persist-order-print-pngs';
 import { validateCouponForCheckout } from '@/lib/coupons/validate-coupon';
 import {
   issueRewardCoupon,
@@ -143,9 +144,10 @@ export async function POST(request: NextRequest) {
 
     let itemsForStorage = data.items;
     try {
-      itemsForStorage = await persistOrderPrintSvgs(orderNumber, data.items);
+      itemsForStorage = await persistOrderPrintSvgs(orderNumber, itemsForStorage);
+      itemsForStorage = await persistOrderPrintPngs(orderNumber, itemsForStorage);
     } catch (printStorageError) {
-      console.error('[orders] print SVG storage failed:', printStorageError);
+      console.error('[orders] print asset storage failed:', printStorageError);
       return NextResponse.json(
         {
           error: 'Failed to store print files for this order',

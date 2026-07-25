@@ -178,7 +178,7 @@ export function DesignTemplatePreview({
   const mockupStyle = getMockupImageDisplayStyle(
     product,
     stableMockup ?? shirtMockup,
-    'customizer',
+    'catalog-design',
   );
 
   return (

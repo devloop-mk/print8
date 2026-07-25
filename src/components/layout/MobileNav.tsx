@@ -151,34 +151,6 @@ export function MobileNav({ open, onClose, onOpenSearch }: MobileNavProps) {
             <li>
               <button
                 type="button"
-                onClick={() => setDesignsOpen((value) => !value)}
-                aria-expanded={designsOpen}
-                className={cn(
-                  'flex w-full items-center justify-between rounded-xl px-4 py-3 text-base font-medium transition',
-                  designsActive || designsOpen
-                    ? 'bg-brand-50 text-brand-700'
-                    : 'text-ink-700 hover:bg-ink-50',
-                )}
-              >
-                {t('designs')}
-                <ChevronDown
-                  className={cn(
-                    'h-5 w-5 shrink-0 transition',
-                    designsOpen && 'rotate-180',
-                  )}
-                  aria-hidden
-                />
-              </button>
-              {designsOpen ? (
-                <div className="mt-1 rounded-xl border border-ink-100 bg-ink-50/80 p-3">
-                  <DesignsNavMenu variant="mobile" onNavigate={onClose} />
-                </div>
-              ) : null}
-            </li>
-
-            <li>
-              <button
-                type="button"
                 onClick={() => setProductsOpen((value) => !value)}
                 aria-expanded={productsOpen}
                 className={cn(
@@ -200,6 +172,34 @@ export function MobileNav({ open, onClose, onOpenSearch }: MobileNavProps) {
               {productsOpen ? (
                 <div className="mt-1 rounded-xl border border-ink-100 bg-ink-50/80 p-3">
                   <ProductsNavMenu variant="mobile" onNavigate={onClose} />
+                </div>
+              ) : null}
+            </li>
+
+            <li>
+              <button
+                type="button"
+                onClick={() => setDesignsOpen((value) => !value)}
+                aria-expanded={designsOpen}
+                className={cn(
+                  'flex w-full items-center justify-between rounded-xl px-4 py-3 text-base font-medium transition',
+                  designsActive || designsOpen
+                    ? 'bg-brand-50 text-brand-700'
+                    : 'text-ink-700 hover:bg-ink-50',
+                )}
+              >
+                {t('designs')}
+                <ChevronDown
+                  className={cn(
+                    'h-5 w-5 shrink-0 transition',
+                    designsOpen && 'rotate-180',
+                  )}
+                  aria-hidden
+                />
+              </button>
+              {designsOpen ? (
+                <div className="mt-1 rounded-xl border border-ink-100 bg-ink-50/80 p-3">
+                  <DesignsNavMenu variant="mobile" onNavigate={onClose} />
                 </div>
               ) : null}
             </li>

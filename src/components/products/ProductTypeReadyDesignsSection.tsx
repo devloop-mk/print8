@@ -1,32 +1,44 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { Link } from '@/i18n/navigation';
+import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import type { ProductType } from '@/lib/data/catalog';
+import { getCouplePackTemplates } from '@/lib/data/couple-pack';
 import {
   filterDesignCatalogEntries,
   getCatalogColors,
   type ProductDesignCatalogEntry,
 } from '@/lib/products/design-catalog';
+import { getDesignCollectionLabel } from '@/lib/products/design-collection-labels';
 import {
   sortDesignCatalogEntries,
   type DesignCatalogSort,
 } from '@/lib/products/design-catalog-sort';
-import { PRODUCT_OFFERING_PATHS } from '@/lib/products/paths';
+import {
+  COUPLES_DESIGN_COLLECTION,
+  KIDS_DESIGN_COLLECTION,
+  PRODUCT_OFFERING_PATHS,
+} from '@/lib/products/paths';
 import {
   CatalogFilterLayout,
   type CatalogFilterGroup,
 } from '@/components/catalog/CatalogFilterLayout';
 import { CatalogSortSelect } from '@/components/catalog/CatalogSortSelect';
+import { CatalogPageSizeSelect } from '@/components/catalog/CatalogPageSizeSelect';
 import { ProductDesignCatalogCard } from '@/components/products/ProductDesignCatalogCard';
 import { filterProductDesignEntriesBySearchQuery } from '@/lib/catalog/catalog-search';
 import { useCatalogSearchLabels } from '@/hooks/useCatalogSearchLabels';
 import { CatalogGridLayout } from '@/components/catalog/CatalogGrid';
 import { CatalogPagination } from '@/components/catalog/CatalogPagination';
 import { useCatalogPagination } from '@/hooks/useCatalogPagination';
-import { PRODUCT_TYPE_READY_DESIGNS_PAGE_SIZE } from '@/lib/catalog/pagination';
+import {
+  parseCatalogPageSize,
+  PRODUCT_TYPE_READY_DESIGNS_PAGE_SIZE,
+  PRODUCT_TYPE_READY_DESIGNS_PAGE_SIZES,
+} from '@/lib/catalog/pagination';
 import { Reveal } from '@/components/motion/Reveal';
 
 type ProductTypeReadyDesignsSectionProps = {
@@ -44,20 +56,144 @@ export function ProductTypeReadyDesignsSection({
   const ts = useTranslations('search');
   const locale = useLocale() as 'mk' | 'en';
   const searchLabels = useCatalogSearchLabels();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const [colorFilter, setColorFilter] = useState<string | 'all'>('all');
+  const [collectionFilter, setCollectionFilter] = useState<string | 'all'>(() => {
+    const fromUrl = searchParams.get('collection');
+    return fromUrl && fromUrl.trim() ? fromUrl.trim() : 'all';
+  });
   const [sort, setSort] = useState<DesignCatalogSort>('featured');
   const [searchQuery, setSearchQuery] = useState('');
 
+  useEffect(() => {
+    const fromUrl = searchParams.get('collection');
+    const next = fromUrl && fromUrl.trim() ? fromUrl.trim() : 'all';
+    setCollectionFilter(next);
+  }, [searchParams]);
+
+  const pageSize = useMemo(
+    () =>
+      parseCatalogPageSize(
+        searchParams.get('perPage'),
+        PRODUCT_TYPE_READY_DESIGNS_PAGE_SIZES,
+        PRODUCT_TYPE_READY_DESIGNS_PAGE_SIZE,
+      ),
+    [searchParams],
+  );
+
+  const handlePageSizeChange = useCallback(
+    (next: number) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (next === PRODUCT_TYPE_READY_DESIGNS_PAGE_SIZE) params.delete('perPage');
+      else params.set('perPage', String(next));
+      params.delete('page');
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
+
   const availableColors = useMemo(() => getCatalogColors(entries), [entries]);
+
+  const entriesForCollectionOptions = useMemo(() => {
+    const byType = filterDesignCatalogEntries(entries, {
+      type,
+      color: 'all',
+    });
+
+    if (!searchQuery.trim()) return byType;
+
+    return filterProductDesignEntriesBySearchQuery(
+      byType,
+      searchQuery,
+      searchLabels,
+    );
+  }, [entries, searchLabels, searchQuery, type]);
+
+  const collectionOptions = useMemo(() => {
+    const collections = new Set<string>();
+    for (const entry of entriesForCollectionOptions) {
+      if (entry.design.collection) collections.add(entry.design.collection);
+    }
+
+    let packs = getCouplePackTemplates().filter((pack) =>
+      pack.productTypes.includes(type),
+    );
+    const query = searchQuery.trim().toLowerCase();
+    if (query) {
+      packs = packs.filter((pack) => {
+        const haystack = `${pack.titleEn} ${pack.titleMk} ${pack.partnerDesigns
+          .map((partner) => `${partner.labelEn} ${partner.labelMk}`)
+          .join(' ')}`.toLowerCase();
+        return haystack.includes(query);
+      });
+    }
+    if (packs.length > 0) {
+      collections.add(COUPLES_DESIGN_COLLECTION);
+    }
+
+    return [...collections]
+      .map((value) => ({
+        value,
+        label: getDesignCollectionLabel(value, locale),
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [entriesForCollectionOptions, locale, searchQuery, type]);
+
+  useEffect(() => {
+    if (collectionFilter === 'all') return;
+    if (collectionOptions.some((option) => option.value === collectionFilter)) {
+      return;
+    }
+    setCollectionFilter('all');
+    const params = new URLSearchParams(searchParams.toString());
+    if (!params.has('collection')) return;
+    params.delete('collection');
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [
+    collectionFilter,
+    collectionOptions,
+    pathname,
+    router,
+    searchParams,
+  ]);
+
+  const handleCollectionChange = useCallback(
+    (value: string | 'all') => {
+      if (value === KIDS_DESIGN_COLLECTION) {
+        router.push(PRODUCT_OFFERING_PATHS.kidsReadyDesigns);
+        return;
+      }
+      if (value === COUPLES_DESIGN_COLLECTION) {
+        router.push(PRODUCT_OFFERING_PATHS.couplesReadyDesigns);
+        return;
+      }
+
+      setCollectionFilter(value);
+      const params = new URLSearchParams(searchParams.toString());
+      if (value === 'all') params.delete('collection');
+      else params.set('collection', value);
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
 
   const filteredByAttributes = useMemo(
     () =>
       filterDesignCatalogEntries(entries, {
         type,
         color: colorFilter,
-      }),
-    [entries, type, colorFilter],
+      }).filter((entry) =>
+        collectionFilter === 'all'
+          ? true
+          : entry.design.collection === collectionFilter,
+      ),
+    [collectionFilter, entries, type, colorFilter],
   );
 
   const filtered = useMemo(() => {
@@ -82,13 +218,14 @@ export function ProductTypeReadyDesignsSection({
   ]);
 
   const filterSignature = useMemo(
-    () => [colorFilter, searchQuery.trim(), sort].join('|'),
-    [colorFilter, searchQuery, sort],
+    () => [collectionFilter, colorFilter, searchQuery.trim(), sort].join('|'),
+    [collectionFilter, colorFilter, searchQuery, sort],
   );
 
   const { page, setPage, resetPage, paginate } = useCatalogPagination({
     totalItems: filtered.length,
-    pageSize: PRODUCT_TYPE_READY_DESIGNS_PAGE_SIZE,
+    pageSize,
+    preventScroll: true,
   });
 
   const prevFilterSignature = useRef(filterSignature);
@@ -98,6 +235,18 @@ export function ProductTypeReadyDesignsSection({
     resetPage();
   }, [filterSignature, resetPage]);
 
+  const isInitialCatalogPage = useRef(true);
+  useEffect(() => {
+    if (page <= 1) return;
+    const target = document.getElementById('ready-designs');
+    if (!target) return;
+    const behavior = isInitialCatalogPage.current ? 'auto' : 'smooth';
+    isInitialCatalogPage.current = false;
+    requestAnimationFrame(() => {
+      target.scrollIntoView({ behavior, block: 'start' });
+    });
+  }, [page]);
+
   const visibleEntries = useMemo(
     () => paginate(filtered),
     [filtered, paginate],
@@ -105,6 +254,23 @@ export function ProductTypeReadyDesignsSection({
 
   const filterGroups = useMemo((): CatalogFilterGroup[] => {
     const groups: CatalogFilterGroup[] = [];
+
+    if (collectionOptions.length > 0) {
+      groups.push({
+        kind: 'pills',
+        id: 'collection',
+        title: tc('filterCollection'),
+        options: [
+          { value: 'all' as const, label: tc('allCollections') },
+          ...collectionOptions.map((option) => ({
+            value: option.value,
+            label: option.label,
+          })),
+        ],
+        value: collectionFilter,
+        onChange: handleCollectionChange,
+      });
+    }
 
     if (availableColors.length > 0) {
       groups.push({
@@ -119,7 +285,14 @@ export function ProductTypeReadyDesignsSection({
     }
 
     return groups;
-  }, [availableColors, colorFilter, tc]);
+  }, [
+    availableColors,
+    collectionFilter,
+    collectionOptions,
+    colorFilter,
+    handleCollectionChange,
+    tc,
+  ]);
 
   if (entries.length === 0) {
     return null;
@@ -171,7 +344,14 @@ export function ProductTypeReadyDesignsSection({
             <>
               <CatalogGridLayout
                 toolbarStart={
-                  <CatalogSortSelect value={sort} onChange={setSort} />
+                  <div className="mr-auto flex flex-wrap items-center gap-2">
+                    <CatalogSortSelect value={sort} onChange={setSort} />
+                    <CatalogPageSizeSelect
+                      value={pageSize}
+                      onChange={handlePageSizeChange}
+                      options={PRODUCT_TYPE_READY_DESIGNS_PAGE_SIZES}
+                    />
+                  </div>
                 }
               >
                 {visibleEntries.map((entry) => (
@@ -186,7 +366,7 @@ export function ProductTypeReadyDesignsSection({
               <CatalogPagination
                 page={page}
                 totalItems={filtered.length}
-                pageSize={PRODUCT_TYPE_READY_DESIGNS_PAGE_SIZE}
+                pageSize={pageSize}
                 onPageChange={setPage}
                 previousLabel={tc('paginationPrevious')}
                 nextLabel={tc('paginationNext')}

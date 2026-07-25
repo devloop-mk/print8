@@ -38,12 +38,26 @@ export type SidePreviewCartKey =
   | 'leftDesignPreview'
   | 'rightDesignPreview';
 
+export type SidePrintPngCartKey =
+  | 'frontPrintPng'
+  | 'backPrintPng'
+  | 'leftPrintPng'
+  | 'rightPrintPng';
+
 export const SIDE_PREVIEW_CART_KEYS: Record<ProductSide, SidePreviewCartKey> = {
   front: 'designPreview',
   back: 'backDesignPreview',
   left: 'leftDesignPreview',
   right: 'rightDesignPreview',
 };
+
+export const SIDE_PRINT_PNG_CART_KEYS: Record<ProductSide, SidePrintPngCartKey> =
+  {
+    front: 'frontPrintPng',
+    back: 'backPrintPng',
+    left: 'leftPrintPng',
+    right: 'rightPrintPng',
+  };
 
 export function getSidePreviewFromCartItem(
   item: {

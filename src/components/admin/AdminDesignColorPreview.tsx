@@ -66,7 +66,7 @@ export function AdminDesignColorPreview({
   const mockupStyle = getMockupImageDisplayStyle(
     product,
     shirtMockup,
-    'customizer',
+    'catalog-design',
   );
 
   return (

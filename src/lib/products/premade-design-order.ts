@@ -17,9 +17,8 @@ import {
 import { getSideMetadataPrefix } from '@/lib/products/product-sides';
 import { serializePlacedStickers } from '@/lib/products/sticker-library';
 import { writeTextMetadata } from '@/lib/products/text-layers';
-import {
-  resolveOverlayPlacementForSide,
-} from '@/lib/products/design-overlay';
+import { writePremadeArtworkSourceMetadata } from '@/lib/products/premade-artwork-source';
+import { resolveOverlayPlacementForSide } from '@/lib/products/design-overlay';
 import {
   deriveTshirtPrintPackage,
   getTshirtUnitPrice,
@@ -73,6 +72,18 @@ export function writeSideDesignMetadata(
   if (design.stickers.length > 0) {
     metadata[`${prefix}Stickers`] = serializePlacedStickers(design.stickers);
   }
+}
+
+export function writeSideDesignMetadataWithTemplate(
+  metadata: Record<string, string | number | boolean>,
+  side: ProductSide,
+  design: SideDesign,
+  template: ProductDesignTemplate | null,
+) {
+  writeSideDesignMetadata(metadata, side, design);
+  if (!template) return;
+  const prefix = getSideMetadataPrefix(side);
+  writePremadeArtworkSourceMetadata(metadata, prefix, design, template, side);
 }
 
 /**
@@ -163,7 +174,12 @@ export function buildPremadeDesignOrderMetadata({
   for (const side of sides) {
     const sideDesign = sideDesignMap[side];
     if (sideDesign) {
-      writeSideDesignMetadata(metadata, side, sideDesign);
+      writeSideDesignMetadataWithTemplate(
+        metadata,
+        side,
+        sideDesign,
+        design,
+      );
     }
   }
 

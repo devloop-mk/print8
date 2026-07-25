@@ -243,6 +243,22 @@ export const adminStrings = {
     advancedInfo: 'Напредни информации',
     printReadySvg: 'SVG за печатење',
     printReadySvgHint: 'Преземете ги овие SVG датотеки и печатете ги директно — исти се како што ги прилагодил клиентот.',
+    printReadyPngLabel: 'PNG за печатење',
+    printReadyPngHint: 'Производни PNG датотеки — само дизајнот (без мајка), исечен на печатната зона.',
+    premadeMasterLabel: 'Оригинален дизајн',
+    premadeMasterHint:
+      'Оригинална датотека од cloud складиштето. За печатење ја користите оваа датотека, а големина и позиција ги одредувате според прегледот на маицата погоре. Текстот (ако има) додајте го рачно според прегледот.',
+    premadeMasterOriginalOnly:
+      'Само поместување / големина — оригиналот е доволен за печат',
+    premadeMasterProductionNote:
+      'Печатење од оригинал + преглед на маицата (без автоматски PNG)',
+    previewMockupSuffix: 'преглед',
+    textLayersTitle: 'Текст на дизајнот',
+    textLayerLabel: 'Текст {index}',
+    textLayerFont: 'Фонт',
+    textLayerColor: 'Боја',
+    textLayerSize: 'Големина',
+    textLayerPosition: 'Позиција',
     designAssetsTitle: 'Дизајн за печатење',
     itemPosition: 'Артикл {current} / {total}',
     downloadPreview: 'Преземи',

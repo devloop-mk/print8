@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminApi } from '@/lib/admin/api-auth';
 import { getAdminOrder } from '@/lib/admin/orders';
 import { listSvgPrintFileRefsFromMetadata } from '@/lib/designs/svg-order-assets';
+import { listProductPrintPngRefsFromItem } from '@/lib/orders/product-order-assets';
+import { listPremadeMasterAssetRefsFromItem } from '@/lib/orders/premade-master-assets';
 import { getOrderPrintObject } from '@/lib/storage/object-storage';
 import { contentDispositionAttachment } from '@/lib/security/sanitize';
 
@@ -19,7 +21,14 @@ export async function GET(
   try {
     const { id, itemIndex: itemIndexRaw, side: sideRaw } = await params;
     const itemIndex = Number.parseInt(itemIndexRaw, 10);
-    const side = sideRaw === 'front' || sideRaw === 'back' ? sideRaw : null;
+    const side =
+      sideRaw === 'front' ||
+      sideRaw === 'back' ||
+      sideRaw === 'left' ||
+      sideRaw === 'right'
+        ? sideRaw
+        : null;
+    const format = request.nextUrl.searchParams.get('format');
 
     if (!Number.isInteger(itemIndex) || itemIndex < 0 || !side) {
       return NextResponse.json({ error: 'Invalid print file path' }, { status: 400 });
@@ -33,6 +42,60 @@ export async function GET(
     const item = order.items[itemIndex];
     if (!item) {
       return NextResponse.json({ error: 'Order item not found' }, { status: 404 });
+    }
+
+    if (format === 'master') {
+      const masterFile = (
+        await listPremadeMasterAssetRefsFromItem(item)
+      ).find((entry) => entry.side === side);
+      if (!masterFile?.masterUrl) {
+        return NextResponse.json({ error: 'Master file not found' }, { status: 404 });
+      }
+
+      return NextResponse.redirect(masterFile.masterUrl);
+    }
+
+    if (format === 'png') {
+      const pngFile = listProductPrintPngRefsFromItem(item).find(
+        (entry) => entry.side === side,
+      );
+      if (!pngFile) {
+        return NextResponse.json({ error: 'Print file not found' }, { status: 404 });
+      }
+
+      if (pngFile.externalUrl) {
+        return NextResponse.redirect(pngFile.externalUrl);
+      }
+
+      if (pngFile.pngDataUrl) {
+        const match = pngFile.pngDataUrl.match(/^data:image\/png;base64,(.+)$/);
+        if (!match) {
+          return NextResponse.json({ error: 'Print file not found' }, { status: 404 });
+        }
+        const body = Buffer.from(match[1], 'base64');
+        return new NextResponse(new Uint8Array(body), {
+          headers: {
+            'Content-Type': 'image/png',
+            'Cache-Control': 'private, no-store',
+            'Content-Disposition': contentDispositionAttachment(pngFile.filename),
+            'X-Content-Type-Options': 'nosniff',
+          },
+        });
+      }
+
+      if (!pngFile.storedName) {
+        return NextResponse.json({ error: 'Print file not found' }, { status: 404 });
+      }
+
+      const stored = await getOrderPrintObject(pngFile.storedName);
+      return new NextResponse(new Uint8Array(stored.body), {
+        headers: {
+          'Content-Type': stored.contentType ?? 'image/png',
+          'Cache-Control': 'private, no-store',
+          'Content-Disposition': contentDispositionAttachment(pngFile.filename),
+          'X-Content-Type-Options': 'nosniff',
+        },
+      });
     }
 
     const file = listSvgPrintFileRefsFromMetadata(item.metadata, item.name).find(

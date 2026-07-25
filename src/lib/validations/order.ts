@@ -58,6 +58,10 @@ export const orderItemSchema = z.object({
   backDesignPreview: previewSchema,
   leftDesignPreview: previewSchema,
   rightDesignPreview: previewSchema,
+  frontPrintPng: previewSchema,
+  backPrintPng: previewSchema,
+  leftPrintPng: previewSchema,
+  rightPrintPng: previewSchema,
   fileIds: z.array(z.string().max(64)).max(20).optional(),
 });
 

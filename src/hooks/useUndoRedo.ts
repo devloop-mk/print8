@@ -84,11 +84,30 @@ export function useUndoRedo<T>(
   }, [bump]);
 
   const reset = useCallback(
-    (value: T) => {
+    (value: T | ((previous: T) => T)) => {
       pastRef.current = [];
       futureRef.current = [];
       skipRecordRef.current = true;
-      setPresent(value);
+      setPresent((previous) =>
+        typeof value === 'function'
+          ? (value as (current: T) => T)(previous)
+          : value,
+      );
+      skipRecordRef.current = false;
+      bump();
+    },
+    [bump],
+  );
+
+  /** Update present without pushing to the undo stack (hydration, auto-clamps). */
+  const replace = useCallback(
+    (value: T | ((previous: T) => T)) => {
+      skipRecordRef.current = true;
+      setPresent((previous) =>
+        typeof value === 'function'
+          ? (value as (current: T) => T)(previous)
+          : value,
+      );
       skipRecordRef.current = false;
       bump();
     },
@@ -98,6 +117,7 @@ export function useUndoRedo<T>(
   return {
     present,
     set,
+    replace,
     undo,
     redo,
     reset,
