@@ -118,7 +118,21 @@ export const customersDb = {
       .select('*')
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      const duplicateEmail =
+        error.code === '23505' ||
+        error.message.includes('customers_email_normalized_uidx');
+      if (duplicateEmail) {
+        const byEmail = await this.findByEmailNormalized(email);
+        if (byEmail?.id === input.id) {
+          return byEmail;
+        }
+        throw new Error(
+          `customer_email_conflict: auth user ${input.id} email ${emailNormalized} belongs to customer ${byEmail?.id ?? 'unknown'}`,
+        );
+      }
+      throw new Error(error.message);
+    }
     return mapCustomer(data as CustomerRow);
   },
 

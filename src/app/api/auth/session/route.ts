@@ -9,10 +9,17 @@ export async function GET() {
       return NextResponse.json({ authenticated: false });
     }
 
-    const transactions = await listCustomerPointTransactions(
-      session.customer.id,
-      20,
-    );
+    let recentTransactions: Awaited<
+      ReturnType<typeof listCustomerPointTransactions>
+    > = [];
+    try {
+      recentTransactions = await listCustomerPointTransactions(
+        session.customer.id,
+        20,
+      );
+    } catch (transactionError) {
+      console.error('[auth/session] loyalty transactions failed:', transactionError);
+    }
 
     return NextResponse.json({
       authenticated: true,
@@ -27,9 +34,10 @@ export async function GET() {
         pointsPendingBalance: session.customer.pointsPendingBalance,
         firstOrderBonusGranted: session.customer.firstOrderBonusGranted,
       },
-      recentTransactions: transactions,
+      recentTransactions,
     });
-  } catch {
-    return NextResponse.json({ error: 'Failed to load session' }, { status: 500 });
+  } catch (error) {
+    console.error('[auth/session] unexpected error:', error);
+    return NextResponse.json({ authenticated: false });
   }
 }

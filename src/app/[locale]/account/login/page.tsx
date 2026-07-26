@@ -1,12 +1,17 @@
-import { redirect } from 'next/navigation';
+import { redirect } from '@/i18n/navigation';
 import { Suspense } from 'react';
 import { getCustomerSession } from '@/lib/auth/customer';
 import { LoginForm } from '@/components/auth/LoginForm';
 
-export default async function AccountLoginPage() {
+export default async function AccountLoginPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
   const session = await getCustomerSession();
   if (session) {
-    redirect('/account');
+    redirect({ href: '/account', locale });
   }
 
   return (
