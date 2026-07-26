@@ -273,9 +273,10 @@ export function OngoingDesignsNav({
         aria-label={t('open', { count })}
       >
         <PenLine className="h-5 w-5" />
-        <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center border border-brand-800 bg-brand-600 px-1 text-[10px] font-bold text-white">
-          {count}
-        </span>
+        <span
+          className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-brand-600"
+          aria-hidden
+        />
       </button>
 
       {saveHintVisible && !open ? (

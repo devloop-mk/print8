@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname } from '@/i18n/navigation';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { cn } from '@/lib/utils';
 
@@ -37,7 +37,7 @@ export function PageTransition({ children }: PageTransitionProps) {
   }, [pathname, reducedMotion]);
 
   const shellClass = isCustomizerRoute
-    ? 'flex min-h-0 flex-1 flex-col'
+    ? 'flex min-h-[calc(100dvh-var(--site-header-height,4.5rem))] flex-1 flex-col'
     : 'flex min-h-[calc(100dvh-4.5rem)] min-w-0 flex-1 flex-col';
 
   if (reducedMotion) {

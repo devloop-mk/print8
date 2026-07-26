@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import type { ProductDesignTemplate } from '@/lib/data/catalog';
 import type { SideDesign } from '@/lib/products/design-state';
 import type { DrinkwareImageLayer } from '@/lib/products/build-drinkware-wrap-texture';
+import { getPlacedPhotos } from '@/lib/products/photo-layers';
 import { useOverlayAssetUrl } from '@/hooks/useOverlayAssetUrl';
 
 /**
@@ -35,6 +36,8 @@ export function useDrinkwareDesignImageLayers({
   // settles the overlay layer would be missing from the captured texture.
   const ready = !sideDesign.overlaySvg || overlayAssetUrl !== null;
 
+  const placedPhotos = getPlacedPhotos(sideDesign);
+
   const images = useMemo((): DrinkwareImageLayer[] => {
     const layers: DrinkwareImageLayer[] = [];
     if (hasTemplateOverlay && overlayAssetUrl) {
@@ -43,21 +46,20 @@ export function useDrinkwareDesignImageLayers({
         scale: sideDesign.uploadedImageScale,
         position: sideDesign.uploadedImagePosition,
       });
-    } else if (
-      sideDesign.uploadedFile?.isImage &&
-      sideDesign.uploadedFile.previewUrl
-    ) {
+    }
+    for (const photo of placedPhotos) {
+      if (!photo.previewUrl) continue;
       layers.push({
-        src: sideDesign.uploadedFile.previewUrl,
-        scale: sideDesign.uploadedImageScale,
-        position: sideDesign.uploadedImagePosition,
+        src: photo.previewUrl,
+        scale: photo.scale,
+        position: photo.position,
       });
     }
     return layers;
   }, [
     hasTemplateOverlay,
     overlayAssetUrl,
-    sideDesign.uploadedFile,
+    sideDesign.uploadedPhotos,
     sideDesign.uploadedImageScale,
     sideDesign.uploadedImagePosition,
   ]);

@@ -58,8 +58,7 @@ export function RegisterForm() {
     <Card className="mx-auto max-w-md p-6">
       <h1 className="font-display text-2xl font-bold text-ink-900">{t('registerTitle')}</h1>
       <p className="mt-2 text-sm text-ink-600">{t('registerSubtitle')}</p>
-      <GoogleSignInButton />
-      <form onSubmit={handleSubmit} className="mt-2 space-y-4">
+      <form onSubmit={handleSubmit} className="mt-4 space-y-4">
         <div>
           <label className="mb-1 block text-sm font-medium text-ink-700" htmlFor="fullName">
             {t('fullName')}
@@ -107,6 +106,7 @@ export function RegisterForm() {
           {loading ? t('loading') : t('register')}
         </Button>
       </form>
+      <GoogleSignInButton />
       <p className="mt-4 text-center text-sm text-ink-600">
         {t('hasAccount')}{' '}
         <Link href="/account/login" className="font-semibold text-brand-700 hover:underline">

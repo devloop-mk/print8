@@ -11,6 +11,7 @@ import type { PrintAreaInsets } from '@/lib/products/print-area';
 
 export function useDrinkwareWrapTexture({
   productType,
+  productId,
   productColor,
   printBounds,
   images,
@@ -18,6 +19,7 @@ export function useDrinkwareWrapTexture({
   canvasHeightPx,
 }: {
   productType: ProductType;
+  productId?: string;
   productColor: string;
   printBounds: PrintAreaInsets;
   images: DrinkwareImageLayer[];
@@ -58,6 +60,7 @@ export function useDrinkwareWrapTexture({
 
     void buildDrinkwareWrapTexture({
       productType,
+      productId,
       productColor,
       printBounds,
       images,
@@ -82,6 +85,7 @@ export function useDrinkwareWrapTexture({
     };
   }, [
     productType,
+    productId,
     productColor,
     printBounds,
     imageKey,

@@ -18,7 +18,7 @@
   <circle cx="176" cy="248" r="22" fill="#fff" opacity="0.95"/>
   <text x="176" y="255" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="700" fill="#2f7cb8">5</text>
   <circle cx="304" cy="248" r="26" fill="#e85d04" opacity="0.9"/>
-  <text x="304" y="256" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" font-weight="700" fill="#fff"></text>
+  <text x="304" y="256" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" font-weight="700" fill="#fff">5</text>
   <rect x="148" y="296" width="184" height="36" rx="18" fill="#163d5c"/>
   <text x="240" y="319" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#fff">loyalty points</text>
 </svg>

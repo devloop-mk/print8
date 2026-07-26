@@ -3,6 +3,7 @@ import type { CheckoutInput } from '@/lib/validations/order';
 import type { ProductSide } from '@/lib/data/catalog';
 import { PRODUCT_SIDES, getSideMetadataPrefix } from '@/lib/products/product-sides';
 import { parsePlacedStickers } from '@/lib/products/sticker-library';
+import { parsePlacedPhotos } from '@/lib/products/photo-layers';
 
 export const MAX_STICKERS_PER_ORDER = 24;
 export const MAX_PHOTOS_PER_ORDER = 10;
@@ -38,6 +39,11 @@ export function collectOrderFileIds(data: {
       ) {
         ids.add(value);
       }
+      if (key.endsWith('UploadedPhotos') && typeof value === 'string') {
+        for (const photo of parsePlacedPhotos(value)) {
+          if (photo.fileId) ids.add(photo.fileId);
+        }
+      }
     }
   }
   return [...ids];
@@ -60,6 +66,11 @@ function collectUserPhotoFileIds(data: {
         value
       ) {
         ids.add(value);
+      }
+      if (key.endsWith('UploadedPhotos') && typeof value === 'string') {
+        for (const photo of parsePlacedPhotos(value)) {
+          if (photo.fileId) ids.add(photo.fileId);
+        }
       }
     }
   }

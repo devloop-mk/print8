@@ -310,7 +310,7 @@ export function ProductDesignOverlayPlacementEditor({
   const mockupStyle = getMockupImageDisplayStyle(
     previewProduct,
     mockup ?? undefined,
-    'catalog-design',
+    'customizer',
   );
 
   const isOversized = placement.scale > aspectMaxScale;

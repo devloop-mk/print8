@@ -57,6 +57,13 @@ function serializeSideDesign(design: SideDesign): SideDesign {
           isImage: design.uploadedFile.isImage,
         }
       : null,
+    uploadedPhotos: design.uploadedPhotos.map((photo) => ({
+      instanceId: photo.instanceId,
+      fileId: photo.fileId,
+      name: photo.name,
+      scale: photo.scale,
+      position: photo.position,
+    })),
   };
 }
 

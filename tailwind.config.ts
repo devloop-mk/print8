@@ -19,6 +19,12 @@ const config: Config = {
       full: '0',
     },
     extend: {
+      width: {
+        '6xl': '72rem',
+      },
+      minWidth: {
+        '6xl': '72rem',
+      },
       colors: {
         brand: {
           50: '#f0f6fa',

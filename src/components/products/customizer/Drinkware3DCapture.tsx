@@ -76,18 +76,20 @@ function CaptureRig({
 
 function CaptureScene({
   productType,
+  productId,
   productColor,
   textureCanvas,
   rotationY,
   onCapture,
 }: {
   productType: ProductType;
+  productId?: string;
   productColor: string;
   textureCanvas: HTMLCanvasElement;
   rotationY: number;
   onCapture: (dataUrl: string) => void;
 }) {
-  const config = getDrinkware3DConfig(productType);
+  const config = getDrinkware3DConfig(productType, productId);
 
   return (
     <Canvas
@@ -106,6 +108,7 @@ function CaptureScene({
       <group rotation={[0, rotationY, 0]}>
         <DrinkwareBody
           productType={productType}
+          productId={productId}
           productColor={productColor}
           textureCanvas={textureCanvas}
         />
@@ -117,11 +120,13 @@ function CaptureScene({
 
 function DrinkwareCaptureRunner({
   productType,
+  productId,
   productColor,
   textureCanvas,
   onDone,
 }: {
   productType: ProductType;
+  productId?: string;
   productColor: string;
   textureCanvas: HTMLCanvasElement;
   onDone: (result: CaptureResult) => void;
@@ -147,6 +152,7 @@ function DrinkwareCaptureRunner({
   return (
     <CaptureScene
       productType={productType}
+      productId={productId}
       productColor={productColor}
       textureCanvas={textureCanvas}
       rotationY={rotationY}
@@ -161,6 +167,7 @@ function DrinkwareCaptureRunner({
  */
 function DrinkwareCaptureBootstrap({
   productType,
+  productId,
   productColor,
   sideDesign,
   designTemplate,
@@ -170,6 +177,7 @@ function DrinkwareCaptureBootstrap({
   onDone,
 }: {
   productType: ProductType;
+  productId?: string;
   productColor: string;
   sideDesign: SideDesign;
   designTemplate: ProductDesignTemplate | null | undefined;
@@ -204,6 +212,7 @@ function DrinkwareCaptureBootstrap({
 
     void buildDrinkwareWrapTexture({
       productType,
+      productId,
       productColor,
       printBounds,
       images,
@@ -224,13 +233,14 @@ function DrinkwareCaptureBootstrap({
         cancelled = true;
       };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- imageKey/textKey capture the real deps
-  }, [ready, productType, productColor, imageKey, textKey, canvasHeightPx, printBounds]);
+  }, [ready, productType, productId, productColor, imageKey, textKey, canvasHeightPx, printBounds]);
 
   if (!ready || !textureCanvas || failedRef.current) return null;
 
   return (
     <DrinkwareCaptureRunner
       productType={productType}
+      productId={productId}
       productColor={productColor}
       textureCanvas={textureCanvas}
       onDone={onDone}
@@ -246,6 +256,7 @@ function DrinkwareCaptureBootstrap({
  */
 export async function captureDrinkware3DPreviews(options: {
   productType: ProductType;
+  productId?: string;
   productColor: string;
   sideDesign: SideDesign;
   designTemplate: ProductDesignTemplate | null | undefined;
@@ -297,6 +308,7 @@ export async function captureDrinkware3DPreviews(options: {
       root.render(
         <DrinkwareCaptureBootstrap
           productType={options.productType}
+          productId={options.productId}
           productColor={options.productColor}
           sideDesign={options.sideDesign}
           designTemplate={options.designTemplate}

@@ -39,13 +39,30 @@ function isSignupConfirmation(
   );
 }
 
+function isPasswordRecovery(
+  searchParams: URLSearchParams,
+  otpType: string | null,
+): boolean {
+  return (
+    searchParams.get('type') === 'recovery' || otpType === 'recovery'
+  );
+}
+
 function buildPostAuthRedirectPath(
   origin: string,
   locale: Locale,
   searchParams: URLSearchParams,
   nextCookie: string | undefined,
   nextParam: string | null,
+  otpType: string | null = null,
 ): string {
+  if (isPasswordRecovery(searchParams, otpType)) {
+    return new URL(
+      localePath(locale, '/account/reset-password'),
+      origin,
+    ).pathname;
+  }
+
   if (isSignupConfirmation(searchParams)) {
     return new URL(`${localePath(locale, '/account')}?email=confirmed`, origin).pathname;
   }
@@ -110,6 +127,7 @@ export async function GET(request: NextRequest) {
     searchParams,
     nextCookie,
     nextParam,
+    otpType,
   );
 
   const supabase = await createSupabaseRouteHandlerClient();

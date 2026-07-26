@@ -5,13 +5,20 @@ import { LoginForm } from '@/components/auth/LoginForm';
 
 export default async function AccountLoginPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ redirect?: string }>;
 }) {
   const { locale } = await params;
+  const { redirect: redirectPath } = await searchParams;
   const session = await getCustomerSession();
   if (session) {
-    redirect({ href: '/account', locale });
+    const safeRedirect =
+      redirectPath?.startsWith('/') && !redirectPath.startsWith('//')
+        ? redirectPath
+        : '/account';
+    redirect({ href: safeRedirect, locale });
   }
 
   return (

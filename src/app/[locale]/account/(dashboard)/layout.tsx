@@ -1,10 +1,12 @@
 import { redirect } from '@/i18n/navigation';
 import { getCustomerSession } from '@/lib/auth/customer';
-import { AccountDashboard } from '@/components/account/AccountDashboard';
+import { AccountShell } from '@/components/account/AccountShell';
 
-export default async function AccountPage({
+export default async function AccountDashboardLayout({
+  children,
   params,
 }: {
+  children: React.ReactNode;
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
@@ -13,5 +15,5 @@ export default async function AccountPage({
     redirect({ href: '/account/login', locale });
   }
 
-  return <AccountDashboard />;
+  return <AccountShell>{children}</AccountShell>;
 }

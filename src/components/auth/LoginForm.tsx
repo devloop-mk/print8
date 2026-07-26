@@ -14,11 +14,23 @@ export function LoginForm({ redirectTo = '/account' }: { redirectTo?: string }) 
   const t = useTranslations('account');
   const router = useRouter();
   const searchParams = useSearchParams();
+  const redirectParam = searchParams.get('redirect');
+  const resolvedRedirect =
+    redirectParam?.startsWith('/') && !redirectParam.startsWith('//')
+      ? redirectParam
+      : redirectTo;
   const { refresh } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const emailParam = searchParams.get('email');
+    if (emailParam?.trim()) {
+      setEmail(emailParam.trim());
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const oauth = searchParams.get('oauth');
@@ -50,11 +62,15 @@ export function LoginForm({ redirectTo = '/account' }: { redirectTo?: string }) 
       });
       const data = await res.json();
       if (!res.ok) {
+        if (data.code === 'use_google') {
+          setError(t('loginUseGoogle'));
+          return;
+        }
         setError(data.error ?? t('loginFailed'));
         return;
       }
       await refresh();
-      router.push(redirectTo);
+      router.push(resolvedRedirect);
       router.refresh();
     } catch {
       setError(t('loginFailed'));
@@ -70,8 +86,7 @@ export function LoginForm({ redirectTo = '/account' }: { redirectTo?: string }) 
       </Suspense>
       <h1 className="font-display text-2xl font-bold text-ink-900">{t('loginTitle')}</h1>
       <p className="mt-2 text-sm text-ink-600">{t('loginSubtitle')}</p>
-      <GoogleSignInButton redirectTo={redirectTo} />
-      <form onSubmit={handleSubmit} className="mt-2 space-y-4">
+      <form onSubmit={handleSubmit} className="mt-4 space-y-4">
         <div>
           <label className="mb-1 block text-sm font-medium text-ink-700" htmlFor="email">
             {t('email')}
@@ -87,9 +102,17 @@ export function LoginForm({ redirectTo = '/account' }: { redirectTo?: string }) 
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-ink-700" htmlFor="password">
-            {t('password')}
-          </label>
+          <div className="mb-1 flex items-center justify-between gap-2">
+            <label className="text-sm font-medium text-ink-700" htmlFor="password">
+              {t('password')}
+            </label>
+            <Link
+              href="/account/forgot-password"
+              className="text-xs font-medium text-brand-700 hover:underline"
+            >
+              {t('forgotPassword')}
+            </Link>
+          </div>
           <input
             id="password"
             type="password"
@@ -105,6 +128,7 @@ export function LoginForm({ redirectTo = '/account' }: { redirectTo?: string }) 
           {loading ? t('loading') : t('login')}
         </Button>
       </form>
+      <GoogleSignInButton redirectTo={resolvedRedirect} />
       <p className="mt-4 text-center text-sm text-ink-600">
         {t('noAccount')}{' '}
         <Link href="/account/register" className="font-semibold text-brand-700 hover:underline">

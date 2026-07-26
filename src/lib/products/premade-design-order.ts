@@ -16,6 +16,10 @@ import {
 } from '@/lib/products/design-sides';
 import { getSideMetadataPrefix } from '@/lib/products/product-sides';
 import { serializePlacedStickers } from '@/lib/products/sticker-library';
+import {
+  getPlacedPhotos,
+  serializePlacedPhotos,
+} from '@/lib/products/photo-layers';
 import { writeTextMetadata } from '@/lib/products/text-layers';
 import { writePremadeArtworkSourceMetadata } from '@/lib/products/premade-artwork-source';
 import { resolveOverlayPlacementForSide } from '@/lib/products/design-overlay';
@@ -63,11 +67,22 @@ export function writeSideDesignMetadata(
   if (design.overlayRaster) {
     metadata[`${prefix}OverlayRaster`] = design.overlayRaster;
   }
-  if (design.uploadedFile?.fileId) {
-    metadata[`${prefix}UploadedFileId`] = design.uploadedFile.fileId;
-  }
-  if (design.uploadedFile?.previewUrl) {
+  const placedPhotos = getPlacedPhotos(design);
+  if (placedPhotos.length > 0) {
+    metadata[`${prefix}UploadedPhotos`] = serializePlacedPhotos(placedPhotos);
+    const primary = placedPhotos[0];
+    metadata[`${prefix}UploadedFileId`] = primary.fileId;
+    if (primary.previewUrl) {
+      metadata[`${prefix}UploadedPreviewUrl`] = primary.previewUrl;
+    }
+    metadata[`${prefix}UploadedImageScale`] = primary.scale;
+    metadata[`${prefix}UploadedImagePositionX`] = primary.position.x;
+    metadata[`${prefix}UploadedImagePositionY`] = primary.position.y;
+  } else if (design.uploadedFile?.previewUrl) {
     metadata[`${prefix}UploadedPreviewUrl`] = design.uploadedFile.previewUrl;
+    if (design.uploadedFile.fileId) {
+      metadata[`${prefix}UploadedFileId`] = design.uploadedFile.fileId;
+    }
   }
   if (design.stickers.length > 0) {
     metadata[`${prefix}Stickers`] = serializePlacedStickers(design.stickers);

@@ -89,6 +89,9 @@ export function formatSupabaseError(error: unknown): string {
     message.includes('customers') &&
     (message.includes('does not exist') || message.includes('schema cache'))
   ) {
+    if (message.includes('points_pending_balance')) {
+      return 'Pending loyalty points column is missing. Run supabase/migrations/add-loyalty-pending-points.sql in the Supabase SQL editor.';
+    }
     return 'Customer accounts table is missing. Run supabase/migrations/add-customer-accounts-loyalty.sql in the Supabase SQL editor.';
   }
   if (message.includes('Invalid API key') || message.includes('JWT')) {

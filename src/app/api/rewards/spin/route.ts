@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { getCustomerSession } from '@/lib/auth/customer';
 import { issueSpinCoupon } from '@/lib/db/coupons';
 import { sendSpinRewardEmail } from '@/lib/email/spin-reward-email';
 import {
@@ -32,7 +33,7 @@ const spinOnlySchema = z.object({
 });
 
 const claimSchema = z.object({
-  email: z.string().trim().email().max(254),
+  email: z.string().trim().email().max(254).optional(),
   claimToken: z.string().min(16).max(600),
   locale: z.enum(['mk', 'en']).optional(),
   /** Honeypot — must stay empty */
@@ -106,6 +107,7 @@ export async function POST(request: NextRequest) {
     const ua = request.headers.get('user-agent') || '';
     const ipHash = hashSpinFingerprint(ip);
     const userAgentHash = hashSpinFingerprint(ua);
+    const session = await getCustomerSession();
 
     const raw = body as Record<string, unknown>;
     const isClaim = typeof raw.claimToken === 'string' && raw.claimToken.length > 0;
@@ -119,7 +121,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const { email, claimToken, website } = parsed.data;
+      const { claimToken, website } = parsed.data;
       const locale = parsed.data.locale === 'en' ? 'en' : 'mk';
 
       if (website && website.length > 0) {
@@ -131,6 +133,19 @@ export async function POST(request: NextRequest) {
         });
       }
 
+      const claimEmail = session
+        ? normalizeSpinEmail(session.customer.email)
+        : parsed.data.email
+          ? normalizeSpinEmail(parsed.data.email)
+          : null;
+
+      if (!claimEmail) {
+        return NextResponse.json(
+          { error: 'Email required', code: 'email_required' },
+          { status: 400 },
+        );
+      }
+
       const payload = verifySpinClaimToken(claimToken, ipHash);
       if (!payload) {
         return NextResponse.json(
@@ -139,7 +154,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const emailNormalized = normalizeSpinEmail(email);
+      const emailNormalized = claimEmail;
       const existing = await findSpinPlayByEmail(emailNormalized);
       if (existing) {
         return NextResponse.json(
@@ -236,6 +251,23 @@ export async function POST(request: NextRequest) {
 
     if (website && website.length > 0) {
       return decoySpinResponse();
+    }
+
+    if (session) {
+      const existing = await findSpinPlayByEmail(
+        normalizeSpinEmail(session.customer.email),
+      );
+      if (existing) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: 'already_played',
+            code: 'already_played',
+            alreadyPlayed: true,
+          },
+          { status: 409 },
+        );
+      }
     }
 
     const prize = pickWinningPrize();

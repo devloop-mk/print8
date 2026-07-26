@@ -13,6 +13,8 @@ type DrinkwarePrintAreaGuideProps = {
   hidden?: boolean;
   /** Show handle / center orientation markers (mugs). */
   showHandleHint?: boolean;
+  /** Single center line when there is no handle seam (thermos, tumbler). */
+  showCenterGuide?: boolean;
   handleHintLabel?: string;
   centerLabel?: string;
 };
@@ -58,6 +60,7 @@ export function DrinkwarePrintAreaGuide({
   wrapLabel,
   hidden = false,
   showHandleHint = false,
+  showCenterGuide = false,
   handleHintLabel,
   centerLabel,
 }: DrinkwarePrintAreaGuideProps) {
@@ -170,6 +173,25 @@ export function DrinkwarePrintAreaGuide({
                 {handleHintLabel}
               </span>
             ) : null}
+          </div>
+        </>
+      ) : showCenterGuide ? (
+        <>
+          <div
+            className="absolute w-px bg-ink-300/80"
+            style={{
+              left: `${centerX}%`,
+              top: `${printTop}%`,
+              bottom: `${wrapInsets.bottom}%`,
+            }}
+          />
+          <div
+            className="absolute flex -translate-x-1/2 flex-col items-center gap-0.5 text-ink-500"
+            style={{ left: `${centerX}%`, bottom: '1.5%' }}
+          >
+            <span className="whitespace-nowrap rounded bg-white/90 px-1.5 py-0.5 text-[9px] font-semibold tracking-wide text-ink-600 shadow-sm">
+              {centerLabel ?? 'Center'}
+            </span>
           </div>
         </>
       ) : null}

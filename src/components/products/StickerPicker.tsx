@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, type ComponentType } from 'react';
+import { useEffect, useRef, useState, type ComponentType, type PointerEvent } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   STICKER_CATEGORIES,
@@ -53,6 +53,13 @@ export function StickerPicker({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showScrollHint, setShowScrollHint] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const categoryScrollRef = useRef<HTMLDivElement>(null);
+  const categoryDragRef = useRef({
+    pointerId: -1,
+    startX: 0,
+    startScrollLeft: 0,
+    dragged: false,
+  });
   const stickers = getStickersByCategory(category);
 
   useEffect(() => {
@@ -83,6 +90,59 @@ export function StickerPicker({
       observer.disconnect();
     };
   }, [category, stickers.length, compact]);
+
+  function handleCategoryPointerDown(event: React.PointerEvent<HTMLDivElement>) {
+    if (disabled || event.button !== 0) return;
+    const el = categoryScrollRef.current;
+    if (!el) return;
+
+    categoryDragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startScrollLeft: el.scrollLeft,
+      dragged: false,
+    };
+    el.setPointerCapture(event.pointerId);
+  }
+
+  function handleCategoryPointerMove(event: React.PointerEvent<HTMLDivElement>) {
+    const el = categoryScrollRef.current;
+    const drag = categoryDragRef.current;
+    if (!el || drag.pointerId !== event.pointerId) return;
+
+    const deltaX = event.clientX - drag.startX;
+    if (Math.abs(deltaX) > 2) {
+      drag.dragged = true;
+    }
+    el.scrollLeft = drag.startScrollLeft - deltaX;
+  }
+
+  function endCategoryDrag(event: React.PointerEvent<HTMLDivElement>) {
+    const el = categoryScrollRef.current;
+    const drag = categoryDragRef.current;
+    if (drag.pointerId !== event.pointerId) return;
+
+    if (el) {
+      try {
+        el.releasePointerCapture(event.pointerId);
+      } catch {
+        /* ignore */
+      }
+    }
+
+    if (drag.dragged) {
+      const blockAccidentalClick = (clickEvent: MouseEvent) => {
+        clickEvent.stopPropagation();
+        clickEvent.preventDefault();
+      };
+      window.addEventListener('click', blockAccidentalClick, {
+        capture: true,
+        once: true,
+      });
+    }
+
+    categoryDragRef.current.pointerId = -1;
+  }
 
   const selectedSticker = selectedId ? getStickerById(selectedId) : null;
 
@@ -125,12 +185,17 @@ export function StickerPicker({
       )}
     >
       <div
+        ref={categoryScrollRef}
         className={cn(
-          'flex shrink-0 gap-1.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+          'flex shrink-0 cursor-grab gap-1.5 overflow-x-auto pb-1 select-none active:cursor-grabbing [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
           compact && 'pb-2',
         )}
         role="tablist"
         aria-label={t('stickerCategories')}
+        onPointerDown={handleCategoryPointerDown}
+        onPointerMove={handleCategoryPointerMove}
+        onPointerUp={endCategoryDrag}
+        onPointerCancel={endCategoryDrag}
       >
         {STICKER_CATEGORIES.map((cat) => {
           const Icon = CATEGORY_ICONS[cat];

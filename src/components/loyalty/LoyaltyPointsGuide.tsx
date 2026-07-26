@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { getCustomerSession } from '@/lib/auth/customer';
 import {
   FIRST_ORDER_BONUS_POINTS,
   LOYALTY_POINT_MKDISCOUNT_VALUE,
@@ -26,6 +27,7 @@ const EXAMPLE_POINTS_FOR_DISCOUNT = 400;
 
 export async function LoyaltyPointsGuide() {
   const t = await getTranslations('loyaltyPoints');
+  const session = await getCustomerSession();
 
   const exampleEarned = calculateEarnedPoints(EXAMPLE_ORDER_MKD);
   const exampleTotal = exampleEarned + FIRST_ORDER_BONUS_POINTS;
@@ -52,19 +54,49 @@ export async function LoyaltyPointsGuide() {
               {t('title')}
             </h1>
             <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-ink-600 lg:mx-0 lg:text-lg">
-              {t('subtitle')}
+              {session ? t('subtitleLoggedIn') : t('subtitle')}
             </p>
-            <div className="mt-6 flex flex-wrap justify-center gap-3 lg:justify-start">
-              <Link href="/account/register">
-                <Button className="gap-2">
-                  {t('ctaRegister')}
-                  <ArrowRight className="h-4 w-4" aria-hidden />
-                </Button>
-              </Link>
-              <Link href="/account/login">
-                <Button variant="outline">{t('ctaLogin')}</Button>
-              </Link>
-            </div>
+            {session ? (
+              <Card className="mt-6 border-brand-200 bg-white/90 p-5 text-left shadow-sm">
+                <p className="text-xs font-bold uppercase tracking-wider text-brand-700">
+                  {t('balanceLabel')}
+                </p>
+                <p className="mt-2 font-display text-4xl font-bold text-brand-950">
+                  {session.customer.pointsBalance}{' '}
+                  <span className="text-2xl font-semibold text-brand-700">
+                    {t('balancePoints')}
+                  </span>
+                </p>
+                <p className="mt-1 text-sm text-ink-600">{t('balanceReady')}</p>
+                {session.customer.pointsPendingBalance > 0 ? (
+                  <p className="mt-2 text-sm font-medium text-amber-800">
+                    {t('balancePending', {
+                      count: session.customer.pointsPendingBalance,
+                    })}
+                  </p>
+                ) : null}
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <Link href="/account">
+                    <Button variant="outline">{t('ctaAccount')}</Button>
+                  </Link>
+                  <Link href="/checkout">
+                    <Button>{t('ctaCheckout')}</Button>
+                  </Link>
+                </div>
+              </Card>
+            ) : (
+              <div className="mt-6 flex flex-wrap justify-center gap-3 lg:justify-start">
+                <Link href="/account/register">
+                  <Button className="gap-2">
+                    {t('ctaRegister')}
+                    <ArrowRight className="h-4 w-4" aria-hidden />
+                  </Button>
+                </Link>
+                <Link href="/account/login">
+                  <Button variant="outline">{t('ctaLogin')}</Button>
+                </Link>
+              </div>
+            )}
           </div>
 
           <div className="relative mx-auto w-full max-w-md lg:max-w-none">
@@ -308,9 +340,11 @@ export async function LoyaltyPointsGuide() {
           <Link href="/products">
             <Button>{t('ctaProducts')}</Button>
           </Link>
-          <Link href="/account">
-            <Button variant="outline">{t('ctaAccount')}</Button>
-          </Link>
+          {!session ? (
+            <Link href="/account">
+              <Button variant="outline">{t('ctaAccount')}</Button>
+            </Link>
+          ) : null}
         </div>
       </div>
     </div>

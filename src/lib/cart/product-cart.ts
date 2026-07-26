@@ -162,6 +162,7 @@ import {
   type RestoredSideDesign,
 } from "@/lib/products/design-state";
 import { parsePlacedStickers } from "@/lib/products/sticker-library";
+import { parsePlacedPhotos } from "@/lib/products/photo-layers";
 import { parseTextLayersFromMetadata } from "@/lib/products/text-layers";
 
 function num(value: unknown, fallback: number): number {
@@ -178,6 +179,7 @@ export function restoreSideDesignFromMetadata(
 ): RestoredSideDesign | null {
   const prefix = getSideMetadataPrefix(side);
   const stickers = parsePlacedStickers(metadata[`${prefix}Stickers`]);
+  const uploadedPhotos = parsePlacedPhotos(metadata[`${prefix}UploadedPhotos`]);
   const flatText = {
     customText: str(metadata[`${prefix}CustomText`]),
     customTextColor: str(metadata[`${prefix}CustomTextColor`], "#1e3a5f"),
@@ -204,6 +206,7 @@ export function restoreSideDesignFromMetadata(
     metadata[`${prefix}PremadeDesignImage`] ||
     metadata[`${prefix}UploadedPreviewUrl`] ||
     metadata[`${prefix}UploadedFileId`] ||
+    uploadedPhotos.length > 0 ||
     metadata[`${prefix}OverlaySvg`] ||
     metadata[`${prefix}HasOverlayVariants`] ||
     metadata[`${prefix}OverlayRaster`] ||
@@ -243,6 +246,7 @@ export function restoreSideDesignFromMetadata(
     uploadedPreviewUrl: str(metadata[`${prefix}UploadedPreviewUrl`]) || null,
     showPhotoGuide: false,
     stickers,
+    uploadedPhotos,
   };
 }
 

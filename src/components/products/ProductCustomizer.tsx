@@ -96,6 +96,7 @@ import {
   PRODUCT_PRINT_AREA_MAX_SCALE,
   getCustomizerImageMaxScale,
   PRODUCT_CUSTOMIZER_DEFAULT_ZOOM,
+  PRODUCT_CUSTOMIZER_DEFAULT_ZOOM_DRINKWARE,
 } from '@/lib/products/customizer-constants';
 import { clampPhotoScale } from '@/lib/products/crop-image';
 import { ProductPhotoUpload } from '@/components/products/ProductPhotoUpload';
@@ -107,6 +108,17 @@ import {
   serializePlacedStickers,
   type PlacedSticker,
 } from '@/lib/products/sticker-library';
+import {
+  MAX_PHOTOS_PER_SIDE,
+  createPlacedPhoto,
+  getPlacedPhotos,
+  collectPlacedPhotoFileIds,
+  serializePlacedPhotos,
+  normalizeSideDesignPhotos,
+  hydratePlacedPhotoPreviewUrls,
+  sideHasPremadeOverlayArtwork,
+  type PlacedPhoto,
+} from '@/lib/products/photo-layers';
 import {
   createPlacedTextLayer,
   MAX_TEXT_LAYERS_PER_SIDE,
@@ -144,6 +156,7 @@ import {
   normalizeHex,
   suggestInkForShirt,
 } from '@/lib/products/design-overlay';
+import { resolveProductDesignDisplayName } from '@/lib/products/design-display-name';
 import { useOverlayAssetUrl } from '@/hooks/useOverlayAssetUrl';
 import { Palette } from 'lucide-react';
 import type {
@@ -159,10 +172,6 @@ import {
   CustomizerPrintAreaLayers,
 } from '@/components/products/customizer/CustomizerPrintAreaLayers';
 import { DrinkwareWrapHint } from '@/components/products/customizer/DrinkwarePrintAreaGuide';
-import {
-  DrinkwarePreviewModeToggle,
-  type DrinkwarePreviewMode,
-} from '@/components/products/customizer/Drinkware3DPreviewLazy';
 import { UnsavedWorkDialog } from '@/components/shared/UnsavedWorkDialog';
 import { useDirtySnapshot } from '@/hooks/useDirtySnapshot';
 import { useUndoRedo } from '@/hooks/useUndoRedo';
@@ -343,6 +352,10 @@ function useDraggablePosition(
     dragStartRef.current = { x: event.clientX, y: event.clientY };
     dragOriginRef.current = position;
     positionRef.current = position;
+    const el = elementRef.current;
+    if (el) {
+      applyVisualPosition(position);
+    }
     gestureHandlersRef.current?.onGestureStart?.();
     event.currentTarget.setPointerCapture(event.pointerId);
   };
@@ -360,8 +373,6 @@ function useDraggablePosition(
     const parentRect = parent.getBoundingClientRect();
     const currentX = (positionRef.current.x / 100) * parentRect.width;
     const currentY = (positionRef.current.y / 100) * parentRect.height;
-    // Only bounded by the canvas itself — the print area is enforced (with
-    // recovery) once the drag ends, not on every frame.
     const nextX = Math.min(Math.max(currentX + deltaX, 0), parentRect.width);
     const nextY = Math.min(Math.max(currentY + deltaY, 0), parentRect.height);
     const next = {
@@ -381,15 +392,8 @@ function useDraggablePosition(
       }
       const finalPos = positionRef.current;
       const origin = dragOriginRef.current;
-      // Single React commit for the drag — triggers footprint remeasure once.
-      // Skip if the pointer was released without moving (click-to-select).
       if (finalPos.x !== origin.x || finalPos.y !== origin.y) {
         onChangeRef.current(finalPos);
-      }
-      const el = elementRef.current;
-      if (el && movedDuringDragRef.current) {
-        el.style.removeProperty('left');
-        el.style.removeProperty('top');
       }
       movedDuringDragRef.current = false;
       scheduleRecenterIfFullyOutsidePrintArea(() => ({
@@ -494,15 +498,15 @@ function useScaleResize(
 function OverlayRemoveButton({
   onRemove,
   label,
-  hideControls,
+  hidden,
   placement = 'image',
 }: {
   onRemove: () => void;
   label: string;
-  hideControls?: boolean;
+  hidden?: boolean;
   placement?: 'image' | 'text';
 }) {
-  if (hideControls) return null;
+  if (hidden) return null;
 
   return (
     <button
@@ -653,6 +657,7 @@ function ResizableImageOverlay({
     overlayGestureHandlers,
   );
   const displayScale = hideControls ? scale : resize.displayScale;
+  const showChrome = selected && !hideControls;
 
   const positionStyle = {
     left: `${position.x}%`,
@@ -667,14 +672,14 @@ function ResizableImageOverlay({
         <OverlayRemoveButton
           onRemove={onRemove}
           label={removeLabel}
-          hideControls={hideControls}
+          hidden={!showChrome}
         />
       ) : null}
       <div
         role="button"
         tabIndex={0}
         aria-label="Resize"
-        className="absolute -bottom-2 -right-2 flex h-6 w-6 cursor-se-resize items-center justify-center rounded-full border-2 border-white bg-brand-600 shadow-md"
+        className="absolute -bottom-2 -right-2 z-20 flex h-6 w-6 cursor-se-resize items-center justify-center rounded-full border-2 border-white bg-brand-600 shadow-md"
         style={{ touchAction: 'none' }}
         onPointerDown={resize.onPointerDown}
         onPointerMove={resize.onPointerMove}
@@ -706,7 +711,7 @@ function ResizableImageOverlay({
           ? 'pointer-events-none'
           : 'cursor-grab active:cursor-grabbing pointer-events-auto',
       )}
-      data-customizer-selected-layer={selected && !hideControls ? '' : undefined}
+      data-customizer-selected-layer={showChrome ? '' : undefined}
       data-customizer-content-layer=""
       style={{
         ...positionStyle,
@@ -728,18 +733,18 @@ function ResizableImageOverlay({
       <div
         className={cn(
           'relative rounded-lg',
-          selected && !hideControls && 'ring-2 ring-brand-500 ring-offset-2',
+          showChrome && 'ring-2 ring-brand-500 ring-offset-2',
         )}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={src}
-          alt={alt}
-          draggable={false}
-          crossOrigin="anonymous"
-          className="pointer-events-none block w-full rounded-lg object-contain shadow-sm"
-        />
-        {!hideControls ? controls : null}
+          <img
+            src={src}
+            alt={alt}
+            draggable={false}
+            crossOrigin="anonymous"
+            className="pointer-events-none block w-full rounded-lg object-contain shadow-sm"
+          />
+        {showChrome ? controls : null}
       </div>
     </div>
   );
@@ -807,6 +812,7 @@ function ResizableStickerOverlay({
     overlayGestureHandlers,
   );
   const displayScale = hideControls ? sticker.scale : resize.displayScale;
+  const showChrome = selected && !hideControls;
 
   if (!definition) return null;
 
@@ -823,14 +829,14 @@ function ResizableStickerOverlay({
         <OverlayRemoveButton
           onRemove={onRemove}
           label={removeLabel}
-          hideControls={hideControls}
+          hidden={!showChrome}
         />
       ) : null}
       <div
         role="button"
         tabIndex={0}
         aria-label="Resize sticker"
-        className="absolute -bottom-2 -right-2 flex h-6 w-6 cursor-se-resize items-center justify-center rounded-full border-2 border-white bg-brand-600 shadow-md"
+        className="absolute -bottom-2 -right-2 z-20 flex h-6 w-6 cursor-se-resize items-center justify-center rounded-full border-2 border-white bg-brand-600 shadow-md"
         style={{ touchAction: 'none' }}
         onPointerDown={resize.onPointerDown}
         onPointerMove={resize.onPointerMove}
@@ -862,7 +868,7 @@ function ResizableStickerOverlay({
           ? 'pointer-events-none select-none'
           : 'cursor-grab select-none active:cursor-grabbing pointer-events-auto',
       )}
-      data-customizer-selected-layer={selected && !hideControls ? '' : undefined}
+      data-customizer-selected-layer={showChrome ? '' : undefined}
       data-customizer-content-layer=""
       style={{
         ...positionStyle,
@@ -884,18 +890,18 @@ function ResizableStickerOverlay({
       <div
         className={cn(
           'relative rounded-lg',
-          selected && !hideControls && 'ring-2 ring-brand-500 ring-offset-2',
+          showChrome && 'ring-2 ring-brand-500 ring-offset-2',
         )}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={definition.src}
-          alt=""
-          draggable={false}
-          crossOrigin="anonymous"
-          className="pointer-events-none block w-full object-contain drop-shadow-md"
-        />
-        {!hideControls ? controls : null}
+          <img
+            src={definition.src}
+            alt=""
+            draggable={false}
+            crossOrigin="anonymous"
+            className="pointer-events-none block w-full object-contain drop-shadow-md"
+          />
+        {showChrome ? controls : null}
       </div>
     </div>
   );
@@ -1043,8 +1049,24 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   );
   const [activePanel, setActivePanel] = useState<EditorPanel>('product');
   const [selectedElement, setSelectedElement] = useState<SelectedElement>(null);
+  /** Last text layer edited in the panel — survives canvas deselect when opening tabs. */
+  const [editingTextLayerId, setEditingTextLayerId] = useState<string | null>(
+    null,
+  );
   const contextBarRef = useRef<HTMLDivElement>(null);
-  const [canvasZoom, setCanvasZoom] = useState(PRODUCT_CUSTOMIZER_DEFAULT_ZOOM);
+
+  const handleSelectElement = useCallback((element: SelectedElement) => {
+    setSelectedElement(element);
+    if (element?.startsWith('text:')) {
+      setEditingTextLayerId(element.slice('text:'.length));
+    }
+  }, []);
+  const [canvasZoom, setCanvasZoom] = useState(
+    () =>
+      isDrinkware
+        ? PRODUCT_CUSTOMIZER_DEFAULT_ZOOM_DRINKWARE
+        : PRODUCT_CUSTOMIZER_DEFAULT_ZOOM,
+  );
   const [sidesPreviewOpen, setSidesPreviewOpen] = useState(false);
   const [editorMockupInnerHeight, setEditorMockupInnerHeight] = useState<
     number | undefined
@@ -1114,8 +1136,11 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       stillSelected = design.stickers.some(
         (sticker) => sticker.instanceId === instanceId,
       );
-    } else if (selectedElement === 'photo') {
-      stillSelected = Boolean(design.uploadedFile?.previewUrl);
+    } else if (selectedElement.startsWith('photo:')) {
+      const instanceId = selectedElement.slice('photo:'.length);
+      stillSelected = getPlacedPhotos(design).some(
+        (photo) => photo.instanceId === instanceId,
+      );
     } else if (selectedElement === 'overlay') {
       stillSelected = Boolean(
         design.premadeDesignId ||
@@ -1137,6 +1162,13 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       const target = event.target as Node | null;
       if (!target) return;
       if (contextBarRef.current?.contains(target)) return;
+
+      if (
+        target instanceof Element &&
+        target.closest('[data-customizer-editor-chrome]')
+      ) {
+        return;
+      }
 
       const selectedLayer = document.querySelector(
         '[data-customizer-selected-layer]',
@@ -1213,13 +1245,24 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     }
   }, [saveDraft]);
 
-  const currentDesign = useMemo(
-    () =>
-      normalizeSideDesignText(
+  const currentDesign = useMemo(() => {
+    const normalized = normalizeSideDesignText(
+      normalizeSideDesignPhotos(
         sideDesigns[activeSide] ?? createDefaultSideDesign(),
       ),
-    [sideDesigns, activeSide],
-  );
+    );
+    const photos = normalized.uploadedPhotos;
+    if (
+      photos.length === 0 ||
+      photos.every((photo) => photo.previewUrl || !photo.fileId?.trim())
+    ) {
+      return normalized;
+    }
+    return {
+      ...normalized,
+      uploadedPhotos: hydratePlacedPhotoPreviewUrls(photos, token),
+    };
+  }, [sideDesigns, activeSide, token]);
 
   const activeDesignTemplateId = designId ?? currentDesign.premadeDesignId ?? null;
   const {
@@ -1232,6 +1275,40 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     template: activeDesignTemplate,
     shirtColor: color,
   });
+
+  // Track editor mockup inner height for compact side previews (text scales with mockup).
+  useLayoutEffect(() => {
+    if (isDrinkware) return;
+    const container = previewRef.current;
+    if (!container) return;
+
+    const mockupInner = container.querySelector<HTMLElement>('[data-mockup-inner]');
+    if (!mockupInner) return;
+
+    const update = () => {
+      setEditorMockupInnerHeight(mockupInner.offsetHeight || undefined);
+    };
+    update();
+
+    const observer = new ResizeObserver(update);
+    observer.observe(mockupInner);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [
+    activeSide,
+    color,
+    type,
+    product.id,
+    canvasZoom,
+    isDrinkware,
+    isLargeCustomizerViewport,
+  ]);
+
+  function openSidesPreview() {
+    const inner = previewRef.current?.querySelector<HTMLElement>('[data-mockup-inner]');
+    setEditorMockupInnerHeight(inner?.offsetHeight ?? undefined);
+    setSidesPreviewOpen(true);
+  }
 
   // Re-measure the active side's on-canvas footprint whenever its geometry
   // (position/scale/text/stickers) changes — drives the auto-derived print
@@ -1326,11 +1403,8 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   );
 
   const scalableImageUrl =
-    currentDesign.uploadedFile?.isImage && currentDesign.uploadedFile.previewUrl
-      ? currentDesign.uploadedFile.previewUrl
-      : hasScalableOverlay && overlayAssetUrl
-        ? overlayAssetUrl
-        : undefined;
+    getPlacedPhotos(currentDesign)[0]?.previewUrl ??
+    (hasScalableOverlay && overlayAssetUrl ? overlayAssetUrl : undefined);
 
   const printAreaFitMaxScale = usePrintAreaMaxScale(
     previewRef,
@@ -1347,8 +1421,16 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     if (selectedElement?.startsWith('text:')) {
       return selectedElement.replace('text:', '');
     }
+    if (
+      editingTextLayerId &&
+      currentDesign.textLayers.some(
+        (layer) => layer.instanceId === editingTextLayerId,
+      )
+    ) {
+      return editingTextLayerId;
+    }
     return currentDesign.textLayers[0]?.instanceId ?? null;
-  }, [selectedElement, currentDesign.textLayers]);
+  }, [selectedElement, editingTextLayerId, currentDesign.textLayers]);
 
   const {
     preview3DTextLayers,
@@ -1462,6 +1544,76 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     [activeSide],
   );
 
+  const addPhoto = useCallback(
+    (fileId: string, name: string, previewUrl: string | undefined) => {
+      const current = normalizeSideDesignPhotos(
+        sideDesigns[activeSide] ?? createDefaultSideDesign(),
+      );
+      if (current.uploadedPhotos.length >= MAX_PHOTOS_PER_SIDE) return;
+      const placed = createPlacedPhoto(
+        fileId,
+        name,
+        previewUrl,
+        current.uploadedPhotos.length,
+      );
+      setSideDesigns((prev) => {
+        const side = normalizeSideDesignPhotos(
+          prev[activeSide] ?? createDefaultSideDesign(),
+        );
+        return {
+          ...prev,
+          [activeSide]: {
+            ...side,
+            uploadedPhotos: [...side.uploadedPhotos, placed],
+            showPhotoGuide: false,
+          },
+        };
+      });
+      setSelectedElement(`photo:${placed.instanceId}`);
+    },
+    [activeSide, sideDesigns],
+  );
+
+  const updatePhoto = useCallback(
+    (instanceId: string, updates: Partial<PlacedPhoto>) => {
+      setSideDesigns((prev) => {
+        const current = normalizeSideDesignPhotos(
+          prev[activeSide] ?? createDefaultSideDesign(),
+        );
+        return {
+          ...prev,
+          [activeSide]: {
+            ...current,
+            uploadedPhotos: current.uploadedPhotos.map((photo) =>
+              photo.instanceId === instanceId ? { ...photo, ...updates } : photo,
+            ),
+          },
+        };
+      });
+    },
+    [activeSide],
+  );
+
+  const removePhoto = useCallback(
+    (instanceId: string) => {
+      setSideDesigns((prev) => {
+        const current = normalizeSideDesignPhotos(
+          prev[activeSide] ?? createDefaultSideDesign(),
+        );
+        return {
+          ...prev,
+          [activeSide]: {
+            ...current,
+            uploadedPhotos: current.uploadedPhotos.filter(
+              (photo) => photo.instanceId !== instanceId,
+            ),
+          },
+        };
+      });
+    },
+    [activeSide],
+  );
+
   const addTextLayer = useCallback(() => {
     let newLayerId: string | null = null;
     const printPresets = product
@@ -1498,10 +1650,10 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     });
 
     if (newLayerId) {
-      setSelectedElement(`text:${newLayerId}`);
+      handleSelectElement(`text:${newLayerId}`);
       setActivePanel('text');
     }
-  }, [activeSide, product, effectivePrintAreaInsets]);
+  }, [activeSide, product, effectivePrintAreaInsets, handleSelectElement]);
 
   const printTextSizeMax = useMemo(() => {
     if (!product) return 72;
@@ -1509,8 +1661,8 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       '[data-mockup-inner]',
     );
     const height =
-      inner?.getBoundingClientRect().height ??
-      (previewRef.current?.getBoundingClientRect().height ?? 400) * 0.85;
+      inner?.offsetHeight ??
+      (previewRef.current?.offsetHeight ?? 400) * 0.85;
     return getMaxTextSizeForPrintArea(height, effectivePrintAreaInsets);
   }, [product, activeSide, canvasZoom, sideDesigns, effectivePrintAreaInsets]);
 
@@ -1547,26 +1699,32 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
 
   const removeTextLayer = useCallback(
     (instanceId: string) => {
-      setSideDesigns((prev) => {
-        const current = normalizeSideDesignText(
-          prev[activeSide] ?? createDefaultSideDesign(),
-        );
-        const filtered = current.textLayers.filter(
-          (layer) => layer.instanceId !== instanceId,
-        );
+      const current = normalizeSideDesignText(
+        sideDesigns[activeSide] ?? createDefaultSideDesign(),
+      );
+      const filtered = current.textLayers.filter(
+        (layer) => layer.instanceId !== instanceId,
+      );
 
-        return {
-          ...prev,
-          [activeSide]: syncFlatTextFields({
-            ...current,
-            textLayers: filtered,
-            ...(filtered.length === 0 ? { customText: '' } : {}),
-          }),
-        };
-      });
-      setSelectedElement(null);
+      setSideDesigns((prev) => ({
+        ...prev,
+        [activeSide]: syncFlatTextFields({
+          ...current,
+          textLayers: filtered,
+          ...(filtered.length === 0 ? { customText: '' } : {}),
+        }),
+      }));
+
+      setSelectedElement((sel) =>
+        sel === `text:${instanceId}` ? null : sel,
+      );
+      setEditingTextLayerId((editingId) =>
+        editingId === instanceId
+          ? (filtered[0]?.instanceId ?? null)
+          : editingId,
+      );
     },
-    [activeSide],
+    [activeSide, sideDesigns],
   );
 
   useEffect(() => {
@@ -1718,6 +1876,28 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     }
   }, [editCartItemId, product, cartItems, sides, resetSideDesigns]);
 
+  const getSideDesignForPreview = useCallback(
+    (side: ProductSide): SideDesign => {
+      const normalized = normalizeSideDesignText(
+        normalizeSideDesignPhotos(
+          sideDesigns[side] ?? createDefaultSideDesign(),
+        ),
+      );
+      const photos = normalized.uploadedPhotos;
+      if (
+        photos.length === 0 ||
+        photos.every((photo) => photo.previewUrl || !photo.fileId?.trim())
+      ) {
+        return normalized;
+      }
+      return {
+        ...normalized,
+        uploadedPhotos: hydratePlacedPhotoPreviewUrls(photos, token),
+      };
+    },
+    [sideDesigns, token],
+  );
+
   const mockupImage = product
     ? getProductMockup(product, color, activeSide)
     : '';
@@ -1827,9 +2007,11 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       0,
     );
     const incomingPhotos = new Set(
-      cartSides
-        .map((side) => sideDesigns[side]?.uploadedFile?.fileId)
-        .filter((id): id is string => Boolean(id)),
+      cartSides.flatMap((side) =>
+        collectPlacedPhotoFileIds(
+          sideDesigns[side] ?? createDefaultSideDesign(),
+        ),
+      ),
     ).size;
 
     const limits = evaluateCartAssetLimits(cartItems, {
@@ -1844,11 +2026,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     }
 
     setCartLimitError(null);
-    const inner = previewRef.current?.querySelector<HTMLElement>(
-      '[data-mockup-inner]',
-    );
-    setEditorMockupInnerHeight(inner?.getBoundingClientRect().height);
-    setSidesPreviewOpen(true);
+    openSidesPreview();
   }
 
   async function handleAddToCart() {
@@ -1857,9 +2035,11 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       0,
     );
     const incomingPhotos = new Set(
-      cartSides
-        .map((side) => sideDesigns[side]?.uploadedFile?.fileId)
-        .filter((id): id is string => Boolean(id)),
+      cartSides.flatMap((side) =>
+        collectPlacedPhotoFileIds(
+          sideDesigns[side] ?? createDefaultSideDesign(),
+        ),
+      ),
     ).size;
 
     const limits = evaluateCartAssetLimits(cartItems, {
@@ -1887,6 +2067,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         // what the buyer will actually receive.
         const drinkware3D = await captureDrinkware3DPreviews({
           productType: type,
+          productId: product?.id,
           productColor: color,
           sideDesign: currentDesign,
           designTemplate: activeDesignTemplate,
@@ -1971,6 +2152,18 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       if (d.uploadedFile?.previewUrl) {
         metadata[`${prefix}UploadedPreviewUrl`] = d.uploadedFile.previewUrl;
       }
+      const placedPhotos = getPlacedPhotos(d);
+      if (placedPhotos.length > 0) {
+        metadata[`${prefix}UploadedPhotos`] = serializePlacedPhotos(placedPhotos);
+        const primary = placedPhotos[0];
+        metadata[`${prefix}UploadedFileId`] = primary.fileId;
+        if (primary.previewUrl) {
+          metadata[`${prefix}UploadedPreviewUrl`] = primary.previewUrl;
+        }
+        metadata[`${prefix}UploadedImageScale`] = primary.scale;
+        metadata[`${prefix}UploadedImagePositionX`] = primary.position.x;
+        metadata[`${prefix}UploadedImagePositionY`] = primary.position.y;
+      }
       if (d.stickers.length > 0) {
         metadata[`${prefix}Stickers`] = serializePlacedStickers(d.stickers);
       }
@@ -1990,9 +2183,9 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       metadata.designKind = activeDesignTemplate.kind;
     }
 
-    const fileIds = cartSides
-      .map((s) => sideDesigns[s].uploadedFile?.fileId)
-      .filter((id): id is string => Boolean(id));
+    const fileIds = cartSides.flatMap((side) =>
+      collectPlacedPhotoFileIds(sideDesigns[side] ?? createDefaultSideDesign()),
+    );
 
     const cartPayload = {
       type: 'product' as const,
@@ -2029,15 +2222,18 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
           bottom: { x: 50, y: 65 },
         };
     if (activePanel === 'text') {
-      const layerId =
-        selectedElement?.startsWith('text:')
-          ? selectedElement.replace('text:', '')
-          : currentDesign.textLayers[0]?.instanceId;
+      const layerId = activeTextLayerId;
       if (layerId) {
         updateTextLayer(layerId, { position: positions[preset] });
       }
     } else if (activePanel === 'photo' || activePanel === 'design') {
-      updateCurrentSide({ uploadedImagePosition: positions[preset] });
+      if (selectedElement?.startsWith('photo:')) {
+        updatePhoto(selectedElement.slice('photo:'.length), {
+          position: positions[preset],
+        });
+      } else if (selectedElement === 'overlay') {
+        updateCurrentSide({ uploadedImagePosition: positions[preset] });
+      }
     }
   }
 
@@ -2067,7 +2263,12 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       setSelectedElement(null);
       return;
     }
-    if (target === 'photo' || target === 'overlay') {
+    if (target.startsWith('photo:')) {
+      removePhoto(target.slice('photo:'.length));
+      setSelectedElement(null);
+      return;
+    }
+    if (target === 'overlay') {
       updateCurrentSide(clearSideDesignArtwork());
       setSelectedElement(null);
       return;
@@ -2075,11 +2276,6 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     if (target.startsWith('sticker:')) {
       removeSticker(target.replace('sticker:', ''));
     }
-    setSelectedElement(null);
-  }
-
-  function handleRemoveImage() {
-    updateCurrentSide(clearSideDesignArtwork());
     setSelectedElement(null);
   }
 
@@ -2096,7 +2292,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       isCapturing={isCapturing}
       photoGuideLabel={t('photoGuide')}
       selectedElement={selectedElement}
-      onSelectElement={setSelectedElement}
+      onSelectElement={handleSelectElement}
       imageMaxScale={imageMaxScale}
       textLayers={currentDesign.textLayers}
       onTextLayerPositionChange={(instanceId, pos) =>
@@ -2106,15 +2302,32 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         updateTextLayer(instanceId, { size })
       }
       onRemoveTextLayer={removeTextLayer}
-      onImagePositionChange={(pos) =>
+      onPhotoPositionChange={(instanceId, pos) =>
+        updatePhoto(instanceId, { position: pos })
+      }
+      onPhotoScaleChange={(instanceId, scale) =>
+        updatePhoto(instanceId, {
+          scale: clampPhotoScale(scale, imageMaxScale),
+        })
+      }
+      onRemovePhoto={(instanceId) => {
+        removePhoto(instanceId);
+        if (selectedElement === `photo:${instanceId}`) {
+          setSelectedElement(null);
+        }
+      }}
+      onOverlayPositionChange={(pos) =>
         updateCurrentSide({ uploadedImagePosition: pos })
       }
-      onImageScaleChange={(scale) =>
+      onOverlayScaleChange={(scale) =>
         updateCurrentSide({
           uploadedImageScale: clampPhotoScale(scale, imageMaxScale),
         })
       }
-      onRemoveImage={handleRemoveImage}
+      onRemoveOverlay={() => {
+        updateCurrentSide(clearSideDesignArtwork());
+        setSelectedElement(null);
+      }}
       removeTextLabel={t('removeText')}
       removeImageLabel={t('removeImage')}
       stickers={currentDesign.stickers}
@@ -2138,22 +2351,24 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
 
   const drinkwareSidePreviewNode =
     isDrinkware && isDesktopSplitPreview && !isCapturing ? (
-      <div className="flex h-full min-h-0 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col">
         <div className="flex shrink-0 items-center gap-2 border-b border-ink-100 px-4 py-3">
           <Rotate3d className="h-4 w-4 text-brand-600" aria-hidden />
           <h2 className="text-sm font-semibold text-ink-900">
             {t('preview3dPaneTitle')}
           </h2>
         </div>
-        <div className="relative min-h-0 flex-1 bg-[#f4f6f8]">
+        <div className="flex min-h-0 flex-1 items-center justify-center bg-[#f4f6f8] p-4 md:p-6">
           <DrinkwareDesignPreview3D
             productType={type}
+            productId={product.id}
             shirtColor={color}
             sideDesign={preview3DSideDesign}
             designTemplate={activeDesignTemplate}
             printBounds={overlayPrintBounds ?? effectivePrintAreaInsets}
             textLayers={preview3DTextLayers}
-            variant="pane"
+            variant="floating"
+            className="w-[min(28rem,46vh)] max-w-full shadow-[0_8px_40px_rgba(15,23,42,0.12)]"
             canvasHeightPx={drinkwareCanvasHeightPx}
           />
         </div>
@@ -2179,7 +2394,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       onAddTextLayer={addTextLayer}
       onUpdateTextLayer={updateTextLayer}
       onSelectTextLayer={(instanceId) =>
-        setSelectedElement(`text:${instanceId}`)
+        handleSelectElement(`text:${instanceId}`)
       }
       activeTextLayerId={activeTextLayerId}
       printTextSizeMax={printTextSizeMax}
@@ -2189,6 +2404,10 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       stickersAtLimit={
         currentDesign.stickers.length >= MAX_STICKERS_PER_SIDE
       }
+      photosAtLimit={
+        getPlacedPhotos(currentDesign).length >= MAX_PHOTOS_PER_SIDE
+      }
+      onAddPhoto={addPhoto}
       token={token}
       uploadLoading={uploadLoading}
       uploadError={uploadError}
@@ -2205,11 +2424,14 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   );
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex h-full min-h-0 flex-col">
       <OutOfPrintAreaToast />
       <CustomizerShell
       topBar={
-        <div className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-ink-100 bg-white px-3 md:px-5">
+        <div
+          className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-ink-100 bg-white px-3 md:px-5"
+          data-customizer-editor-chrome
+        >
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
@@ -2256,7 +2478,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
               type="button"
               size="sm"
               variant="outline"
-              onClick={() => setSidesPreviewOpen(true)}
+              onClick={openSidesPreview}
               disabled={isCapturing}
             >
               <Eye className="mr-1.5 h-3.5 w-3.5" aria-hidden />
@@ -2315,7 +2537,10 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       onZoomChange={setCanvasZoom}
       sidePreview={drinkwareSidePreviewNode}
       mobileBottomBar={
-        <div className="fixed inset-x-0 bottom-0 z-[55] border-t border-ink-200 bg-white/95 px-3 pt-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] shadow-[0_-4px_24px_rgba(15,23,42,0.08)] backdrop-blur md:hidden">
+        <div
+          className="fixed inset-x-0 bottom-0 z-[55] border-t border-ink-200 bg-white/95 px-3 pt-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] shadow-[0_-4px_24px_rgba(15,23,42,0.08)] backdrop-blur md:hidden"
+          data-customizer-editor-chrome
+        >
           {cartLimitError ? (
             <p className="mb-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
               {cartLimitError === 'stickers'
@@ -2352,7 +2577,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => setSidesPreviewOpen(true)}
+              onClick={openSidesPreview}
               disabled={isCapturing}
               className="h-10 w-10 shrink-0 p-0 normal-case tracking-normal"
               aria-label={t('previewAllSides')}
@@ -2431,6 +2656,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
                 'absolute inset-x-0 bottom-0 flex max-h-[min(72vh,32rem)] flex-col rounded-t-2xl bg-white shadow-2xl',
                 activePanel === 'stickers' && 'h-[min(58vh,30rem)] max-h-none',
               )}
+              data-customizer-editor-chrome
             >
               <div className="flex shrink-0 items-center justify-between border-b border-ink-100 px-5 py-3">
                 <h3 className="font-semibold text-ink-900">
@@ -2465,6 +2691,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         sides={cartSides}
         sideLabel={sideLabel}
         sideHasContent={sideHasContent}
+        use3DPreviewLabels={isDrinkware}
         onClose={() => setSidesPreviewOpen(false)}
         onAddToCart={() => {
           setSidesPreviewOpen(false);
@@ -2475,7 +2702,27 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
           isCapturing ? t('capturing') : t('confirmAddToCart')
         }
         renderSide={(side) => {
-          const design = sideDesigns[side] ?? createDefaultSideDesign();
+          const design = getSideDesignForPreview(side);
+
+          if (isDrinkware) {
+            return (
+              <DrinkwareDesignPreview3D
+                productType={type}
+                productId={product.id}
+                shirtColor={color}
+                sideDesign={design}
+                designTemplate={activeDesignTemplate}
+                printBounds={
+                  overlayPrintBounds ?? effectivePrintAreaInsets
+                }
+                textLayers={design.textLayers}
+                variant="floating"
+                className="w-full max-w-[14rem] shadow-[0_8px_40px_rgba(15,23,42,0.12)]"
+                canvasHeightPx={drinkwareCanvasHeightPx}
+              />
+            );
+          }
+
           const sideMockup = getProductMockup(product, color, side) ?? '';
           // Same generous chest zone used during editing (see
           // effectivePrintAreaInsets above) — content was never clamped to
@@ -2503,8 +2750,10 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
               onTextLayerPositionChange={() => {}}
               onTextLayerSizeChange={() => {}}
               onRemoveTextLayer={() => {}}
-              onImagePositionChange={() => {}}
-              onImageScaleChange={() => {}}
+              onPhotoPositionChange={() => {}}
+              onPhotoScaleChange={() => {}}
+              onOverlayPositionChange={() => {}}
+              onOverlayScaleChange={() => {}}
               stickers={design.stickers}
               onStickerPositionChange={() => {}}
               onStickerScaleChange={() => {}}
@@ -2591,7 +2840,7 @@ function ResizableTextOverlay({
     if (printBounds) {
       setMaxTextSize(
         getMaxTextSizeForPrintArea(
-          parent.getBoundingClientRect().height,
+          parent.offsetHeight,
           printBounds,
         ),
       );
@@ -2605,7 +2854,7 @@ function ResizableTextOverlay({
     if (!mockupInner) return;
 
     const measure = () => {
-      setMockupInnerHeight(mockupInner.getBoundingClientRect().height);
+      setMockupInnerHeight(mockupInner.offsetHeight);
     };
     measure();
 
@@ -2688,6 +2937,7 @@ function ResizableTextOverlay({
       ? mockupInnerHeight / referenceMockupInnerHeight
       : 1;
   const renderedSize = Math.max(1, Math.round(displaySize * textScale));
+  const showChrome = selected && !hideControls;
 
   const textStyle = {
     color,
@@ -2711,7 +2961,7 @@ function ResizableTextOverlay({
         <OverlayRemoveButton
           onRemove={onRemove}
           label={removeLabel}
-          hideControls={hideControls}
+          hidden={!showChrome}
           placement="text"
         />
       ) : null}
@@ -2719,7 +2969,7 @@ function ResizableTextOverlay({
         role="button"
         tabIndex={0}
         aria-label="Resize text"
-        className="absolute -bottom-3 -right-3 flex h-5 w-5 cursor-se-resize items-center justify-center rounded-full border-2 border-white bg-brand-600 shadow-md"
+        className="absolute -bottom-3 -right-3 z-20 flex h-5 w-5 cursor-se-resize items-center justify-center rounded-full border-2 border-white bg-brand-600 shadow-md"
         style={{ touchAction: 'none' }}
         onPointerDown={resize.onPointerDown}
         onPointerMove={resize.onPointerMove}
@@ -2741,7 +2991,7 @@ function ResizableTextOverlay({
           ? 'pointer-events-none select-none'
           : 'cursor-grab select-none active:cursor-grabbing pointer-events-auto',
       )}
-      data-customizer-selected-layer={selected && !hideControls ? '' : undefined}
+      data-customizer-selected-layer={showChrome ? '' : undefined}
       data-customizer-content-layer=""
       style={{
         ...textStyle,
@@ -2761,14 +3011,13 @@ function ResizableTextOverlay({
           })}
     >
       <span
-        ref={textContentRef}
         className={cn(
           'relative inline-block rounded px-1',
-          selected && !hideControls && 'ring-2 ring-brand-500 ring-offset-2',
+          showChrome && 'ring-2 ring-brand-500 ring-offset-2',
         )}
       >
-        {text}
-        {!hideControls ? controls : null}
+        <span ref={textContentRef}>{text}</span>
+        {showChrome ? controls : null}
       </span>
     </div>
   );
@@ -2789,9 +3038,12 @@ function InteractivePreview({
   onTextLayerPositionChange,
   onTextLayerSizeChange,
   onRemoveTextLayer,
-  onImagePositionChange,
-  onImageScaleChange,
-  onRemoveImage,
+  onPhotoPositionChange,
+  onPhotoScaleChange,
+  onRemovePhoto,
+  onOverlayPositionChange,
+  onOverlayScaleChange,
+  onRemoveOverlay,
   removeTextLabel,
   removeImageLabel,
   stickers,
@@ -2830,9 +3082,15 @@ function InteractivePreview({
   ) => void;
   onTextLayerSizeChange: (instanceId: string, size: number) => void;
   onRemoveTextLayer: (instanceId: string) => void;
-  onImagePositionChange: (pos: { x: number; y: number }) => void;
-  onImageScaleChange: (scale: number) => void;
-  onRemoveImage?: () => void;
+  onPhotoPositionChange: (
+    instanceId: string,
+    pos: { x: number; y: number },
+  ) => void;
+  onPhotoScaleChange: (instanceId: string, scale: number) => void;
+  onRemovePhoto?: (instanceId: string) => void;
+  onOverlayPositionChange?: (pos: { x: number; y: number }) => void;
+  onOverlayScaleChange?: (scale: number) => void;
+  onRemoveOverlay?: () => void;
   removeTextLabel?: string;
   removeImageLabel?: string;
   stickers: PlacedSticker[];
@@ -2903,17 +3161,16 @@ function InteractivePreview({
   );
   const overlayPrintBounds = getOverlayPrintBounds(mockupLayout);
   const isDrinkware = isCylindricalDrinkwareType(productType);
-  const drinkwareHasHandle = isDrinkware && getDrinkware3DConfig(productType).hasHandle;
+  const drinkwareHasHandle =
+    isDrinkware && getDrinkware3DConfig(productType, product.id).hasHandle;
   const drinkwareFlatSize = isDrinkware
-    ? getDrinkwareFlatCanvasSize(productType)
+    ? getDrinkwareFlatCanvasSize(productType, product.id)
     : null;
   const live3DTextLayers = preview3DTextLayers ?? textLayers;
   const live3DSideDesign = preview3DSideDesign ?? sideDesign;
-  const [previewMode, setPreviewMode] = useState<DrinkwarePreviewMode>('flat');
-
-  const show3dPreview =
-    isDrinkware && previewMode === '3d' && !isCapturing && !desktopSplitPreview;
-  const showModeToggle = isDrinkware && !isCapturing && !desktopSplitPreview;
+  const showStacked3dPreview =
+    isDrinkware && !isCapturing && !desktopSplitPreview;
+  const placedPhotos = getPlacedPhotos(sideDesign);
 
   // Drinkware 2D editor is a flat unwrap template — never show the mug photo.
   useEffect(() => {
@@ -2923,45 +3180,33 @@ function InteractivePreview({
   }, [isDrinkware, shirtColor]);
 
   return (
-    <div className="flex flex-col items-center gap-2">
-    {showModeToggle ? (
-      <DrinkwarePreviewModeToggle
-        mode={previewMode}
-        onChange={setPreviewMode}
-      />
-    ) : null}
-
-    {show3dPreview ? (
-      <div className="flex flex-col items-center gap-2">
-        <DrinkwareDesignPreview3D
-          productType={productType}
-          shirtColor={shirtColor}
-          sideDesign={live3DSideDesign}
-          designTemplate={designTemplate}
-          printBounds={overlayPrintBounds}
-          textLayers={live3DTextLayers}
-          canvasHeightPx={drinkwareCanvasHeightPx}
-        />
-        <p className="max-w-[min(18rem,78vw)] text-center text-[11px] leading-snug text-ink-500 md:max-w-[min(28rem,46vh)]">
-          {t('preview3dEditHint')}
-        </p>
-      </div>
-    ) : null}
-
+    <div
+      className={cn(
+        'flex flex-col items-center gap-3',
+        compact && 'w-full',
+      )}
+    >
     <div
       ref={containerRef}
       className={cn(
         'relative flex items-center justify-center rounded-sm touch-pan-y',
         compact
-          ? 'w-full max-w-[16rem] overflow-hidden bg-transparent shadow-none sm:max-w-[18rem]'
+          ? cn(
+              'w-full min-w-[12rem] max-w-[16rem] bg-transparent shadow-none sm:max-w-[18rem]',
+              productType === 't-shirt' || productType === 'hoodie'
+                ? 'overflow-visible'
+                : 'overflow-hidden',
+            )
           : cn(
               isDrinkware
                 ? 'max-w-[min(48rem,94vw)] shadow-[0_8px_40px_rgba(15,23,42,0.08)]'
                 : productType === 'hoodie'
                   ? 'w-[min(18rem,78vw)] bg-white shadow-[0_8px_40px_rgba(15,23,42,0.12)] md:w-[min(28rem,46vh)] lg:w-[min(34rem,54vh)] xl:w-[min(38rem,60vh)]'
                   : 'w-[min(18rem,78vw)] bg-white shadow-[0_8px_40px_rgba(15,23,42,0.12)] md:w-[min(28rem,46vh)] lg:w-[min(32rem,52vh)] xl:w-[min(36rem,58vh)]',
-              // Editor keeps overflow visible so zoomed mockups aren't clipped.
-              productType === 't-shirt' || productType === 'hoodie'
+              // Editor keeps overflow visible so zoomed mockups and selection chrome aren't clipped.
+              productType === 't-shirt' ||
+              productType === 'hoodie' ||
+              (isDrinkware && !isCapturing)
                 ? 'overflow-visible'
                 : 'overflow-hidden',
             ),
@@ -2972,7 +3217,6 @@ function InteractivePreview({
             ? 'aspect-square'
             : 'aspect-[3/4]',
         isCapturing && !compact && 'opacity-90',
-        show3dPreview && 'hidden',
       )}
       style={
         isDrinkware && drinkwareFlatSize
@@ -3000,10 +3244,11 @@ function InteractivePreview({
         className={cn(
           isDrinkware ? 'relative h-full w-full select-none' : mockupLayout.innerClass,
           'pointer-events-none',
-          compact ||
-          (productType !== 't-shirt' && productType !== 'hoodie')
-            ? 'overflow-hidden'
-            : 'overflow-visible',
+          productType === 't-shirt' ||
+            productType === 'hoodie' ||
+            (isDrinkware && !isCapturing)
+            ? 'overflow-visible'
+            : 'overflow-hidden',
         )}
       >
         <div
@@ -3042,6 +3287,7 @@ function InteractivePreview({
             wrapLabel={t('drinkwareWrapArea')}
             frontLabel={t('drinkwareFrontPreview')}
             showHandleHint={drinkwareHasHandle}
+            showCenterGuide={isDrinkware && !drinkwareHasHandle}
             handleHintLabel={t('drinkwareHandleHint')}
             centerLabel={t('drinkwareCenterOfMug')}
           />
@@ -3060,9 +3306,13 @@ function InteractivePreview({
                 shirtColor={shirtColor}
                 scale={sideDesign.uploadedImageScale}
                 position={sideDesign.uploadedImagePosition}
-                onScaleChange={onImageScaleChange}
-                onPositionChange={onImagePositionChange}
-                onRemove={onRemoveImage}
+                onScaleChange={(scale) =>
+                  onOverlayScaleChange?.(scale)
+                }
+                onPositionChange={(pos) =>
+                  onOverlayPositionChange?.(pos)
+                }
+                onRemove={onRemoveOverlay}
                 removeLabel={removeImageLabel}
                 hideControls={isCapturing}
                 maxScale={imageMaxScale}
@@ -3073,26 +3323,31 @@ function InteractivePreview({
               />
             ) : null}
 
-            {sideDesign.uploadedFile?.isImage &&
-            sideDesign.uploadedFile.previewUrl &&
-            !hasTemplateOverlay ? (
+            {placedPhotos.map((photo) => (
               <ResizableImageOverlay
-                src={sideDesign.uploadedFile.previewUrl}
-                alt={sideDesign.uploadedFile.name}
-                scale={sideDesign.uploadedImageScale}
-                position={sideDesign.uploadedImagePosition}
-                onScaleChange={onImageScaleChange}
-                onPositionChange={onImagePositionChange}
-                onRemove={onRemoveImage}
+                key={photo.instanceId}
+                src={photo.previewUrl ?? ''}
+                alt={photo.name}
+                scale={photo.scale}
+                position={photo.position}
+                onScaleChange={(scale) =>
+                  onPhotoScaleChange(photo.instanceId, scale)
+                }
+                onPositionChange={(pos) =>
+                  onPhotoPositionChange(photo.instanceId, pos)
+                }
+                onRemove={() => onRemovePhoto?.(photo.instanceId)}
                 removeLabel={removeImageLabel}
                 hideControls={isCapturing}
                 maxScale={imageMaxScale}
                 printBounds={overlayPrintBounds}
-                selected={selectedElement === 'photo'}
-                onSelect={() => onSelectElement('photo')}
+                selected={selectedElement === `photo:${photo.instanceId}`}
+                onSelect={() =>
+                  onSelectElement(`photo:${photo.instanceId}`)
+                }
                 overlayGestureHandlers={overlayGestureHandlers}
               />
-            ) : null}
+            ))}
 
             {textLayers.map((layer) =>
               layer.text ? (
@@ -3152,7 +3407,7 @@ function InteractivePreview({
         </CustomizerPrintAreaLayers>
 
         {sideDesign.showPhotoGuide &&
-          !sideDesign.uploadedFile?.previewUrl &&
+          placedPhotos.length === 0 &&
           !isCapturing && (
             <div
               className="pointer-events-none absolute flex items-center justify-center rounded-full border-2 border-dashed border-brand-400/70 bg-brand-50/40"
@@ -3172,9 +3427,29 @@ function InteractivePreview({
         </div>
       </div>
     </div>
+
+    {showStacked3dPreview ? (
+      <div className="flex w-full max-w-[min(48rem,94vw)] flex-col items-center gap-2">
+        <DrinkwareDesignPreview3D
+          productType={productType}
+          productId={product.id}
+          shirtColor={shirtColor}
+          sideDesign={live3DSideDesign}
+          designTemplate={designTemplate}
+          printBounds={overlayPrintBounds}
+          textLayers={live3DTextLayers}
+          variant="floating"
+          className="w-[min(18rem,78vw)] shadow-[0_8px_40px_rgba(15,23,42,0.12)] sm:w-[min(22rem,40vh)]"
+          canvasHeightPx={drinkwareCanvasHeightPx}
+        />
+        <p className="max-w-[min(18rem,78vw)] text-center text-[11px] leading-snug text-ink-500 sm:max-w-[min(22rem,40vh)]">
+          {t('preview3dEditHint')}
+        </p>
+      </div>
+    ) : null}
+
     {!isCapturing &&
     mockupLayout.wrapPrintArea &&
-    previewMode === 'flat' &&
     !desktopSplitPreview ? (
       <DrinkwareWrapHint>{t('drinkwareWrapHint')}</DrinkwareWrapHint>
     ) : null}
@@ -3274,6 +3549,8 @@ function EditorPanelContent({
   printTextSizeMax,
   textLayersAtLimit,
   stickersAtLimit,
+  photosAtLimit,
+  onAddPhoto,
   token,
   uploadLoading,
   uploadError,
@@ -3311,6 +3588,8 @@ function EditorPanelContent({
   printTextSizeMax: number;
   textLayersAtLimit: boolean;
   stickersAtLimit: boolean;
+  photosAtLimit: boolean;
+  onAddPhoto: (fileId: string, name: string, previewUrl?: string) => void;
   token: string | null;
   uploadLoading: boolean;
   uploadError: string | null;
@@ -3325,6 +3604,7 @@ function EditorPanelContent({
   selectableColors: string[];
 }) {
   const t = useTranslations('products.customizer');
+  const tProducts = useTranslations('products');
   const hasSecondaryInk = designTemplate?.overlayRecolor?.slots === 2;
   const primaryInk = currentDesign.overlaySvgColors?.primary ?? '#F4EDE4';
   const secondaryInk =
@@ -3561,60 +3841,63 @@ function EditorPanelContent({
   }
 
   if (panel === 'photo') {
+    const placedPhotos = getPlacedPhotos(currentDesign);
+    const hasIncludedDesign = sideHasPremadeOverlayArtwork(currentDesign);
+
     return (
       <div className="space-y-4">
-        {currentDesign.uploadedFile ? (
-          <>
+        {hasIncludedDesign ? (
+          <div className="rounded-lg border border-brand-200 bg-brand-50/60 px-3 py-2.5">
             <p className="text-sm font-medium text-ink-900">
-              {currentDesign.uploadedFile.name}
+              {designTemplate
+                ? resolveProductDesignDisplayName(
+                    designTemplate,
+                    locale as 'mk' | 'en',
+                    (key) => tProducts(key),
+                  )
+                : t('includedDesign')}
             </p>
-            <ProductPhotoUpload
-              token={token}
-              uploadLoading={uploadLoading}
-              uploadError={uploadError}
-              refreshSession={refreshSession}
-              hasPhoto
-              previewUrl={currentDesign.uploadedFile.previewUrl}
-              onUploadComplete={(fileId, name, previewUrl) => {
-                updateCurrentSide({
-                  uploadedFile: {
-                    fileId,
-                    name,
-                    isImage: true,
-                    previewUrl,
-                  },
-                  showPhotoGuide: false,
-                  uploadedImageScale: clampPhotoScale(
-                    currentDesign.uploadedImageScale,
-                    imageMaxScale,
-                  ),
-                });
-              }}
-            />
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-ink-600">{t('imageSize')}</span>
-              <StepperInput
-                value={currentDesign.uploadedImageScale}
-                onChange={(v) =>
-                  updateCurrentSide({
-                    uploadedImageScale: clampPhotoScale(v, imageMaxScale),
-                  })
-                }
-                min={PRODUCT_PHOTO_MIN_SCALE}
-                max={imageMaxScale}
-                step={2}
-              />
-            </div>
-            <PositionPresets onPreset={setPositionPreset} />
-            <Button
-              variant="secondary"
-              className="w-full"
-              onClick={() => updateCurrentSide({ uploadedFile: null })}
-            >
-              {t('removePhoto')}
-            </Button>
-          </>
-        ) : (
+            <p className="mt-0.5 text-xs text-ink-500">
+              {t('includedDesignHint')}
+            </p>
+          </div>
+        ) : null}
+
+        {photosAtLimit ? (
+          <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            {t('photoSideLimit', { max: MAX_PHOTOS_PER_SIDE })}
+          </p>
+        ) : null}
+
+        {placedPhotos.length > 0 ? (
+          <ul className="space-y-2">
+            {placedPhotos.map((photo, index) => (
+              <li
+                key={photo.instanceId}
+                className="flex items-center justify-between gap-2 rounded-lg border border-ink-200 bg-ink-50/60 px-3 py-2"
+              >
+                <span className="min-w-0 truncate text-sm text-ink-800">
+                  {photo.name || t('photo')} {index + 1}
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    updateCurrentSide({
+                      uploadedPhotos: placedPhotos.filter(
+                        (item) => item.instanceId !== photo.instanceId,
+                      ),
+                    })
+                  }
+                  className="shrink-0 text-xs font-medium text-red-600 hover:text-red-700"
+                >
+                  {t('removePhoto')}
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
+        {!photosAtLimit ? (
           <ProductPhotoUpload
             token={token}
             uploadLoading={uploadLoading}
@@ -3622,22 +3905,10 @@ function EditorPanelContent({
             refreshSession={refreshSession}
             hasPhoto={false}
             onUploadComplete={(fileId, name, previewUrl) => {
-              updateCurrentSide({
-                uploadedFile: {
-                  fileId,
-                  name,
-                  isImage: true,
-                  previewUrl,
-                },
-                showPhotoGuide: false,
-                uploadedImageScale: clampPhotoScale(
-                  currentDesign.uploadedImageScale,
-                  imageMaxScale,
-                ),
-              });
+              onAddPhoto(fileId, name, previewUrl);
             }}
           />
-        )}
+        ) : null}
       </div>
     );
   }

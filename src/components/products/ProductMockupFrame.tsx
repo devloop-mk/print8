@@ -45,7 +45,7 @@ export function ProductMockupFrame({
       )}
     >
       <div className={innerClass}>
-        <div className="relative h-full w-full" style={innerStyle}>
+        <div className="relative h-full w-full" data-mockup-inner style={innerStyle}>
           {children}
         </div>
       </div>

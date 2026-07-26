@@ -1,5 +1,6 @@
 import type { ProductType } from '@/lib/data/catalog';
-import type { PrintAreaInsets } from '@/lib/products/print-area';
+
+export type Drinkware3DMaterial = 'ceramic' | 'glass';
 
 export type Drinkware3DConfig = {
   radiusTop: number;
@@ -20,6 +21,15 @@ export type Drinkware3DConfig = {
   handleGapFraction: number;
   /** Wall thickness for hollow ceramic look (outer − inner radius). */
   wallThickness: number;
+  material: Drinkware3DMaterial;
+  /** Thicker glass foot at the base (glass beer mug). */
+  baseHeight?: number;
+  /**
+   * Remap cylinder UVs so the bottom of the wrap texture maps above the
+   * physical base — keeps art centered on the visible glass wall.
+   */
+  wrapUvBottomInset?: number;
+  wrapUvTopInset?: number;
 };
 
 /**
@@ -37,8 +47,10 @@ const MUG_CONFIG: Drinkware3DConfig = {
   /** ~4% per side — tight clear zone so art can sit close to the handle. */
   handleGapFraction: 0.08,
   wallThickness: 0.045,
+  material: 'ceramic',
 };
 
+/** Generic cup (non-glass) — short tapered tumbler, no handle. */
 const CUP_CONFIG: Drinkware3DConfig = {
   radiusTop: 0.48,
   radiusBottom: 0.4,
@@ -49,6 +61,27 @@ const CUP_CONFIG: Drinkware3DConfig = {
   cameraZ: 2.55,
   handleGapFraction: 0,
   wallThickness: 0.04,
+  material: 'ceramic',
+};
+
+/**
+ * Glass beer mug (cup-glass-beer) — straight tall cylinder, D-handle,
+ * proportions matched to the 2D product photo (~1.5× height vs diameter).
+ */
+const GLASS_BEER_CUP_CONFIG: Drinkware3DConfig = {
+  radiusTop: 0.41,
+  radiusBottom: 0.41,
+  height: 1.24,
+  hasHandle: true,
+  hasLid: false,
+  lidHeight: 0.1,
+  cameraZ: 2.85,
+  handleGapFraction: 0.08,
+  wallThickness: 0.016,
+  material: 'glass',
+  baseHeight: 0.055,
+  wrapUvBottomInset: 0.11,
+  wrapUvTopInset: 0.03,
 };
 
 const THERMOS_CONFIG: Drinkware3DConfig = {
@@ -61,6 +94,7 @@ const THERMOS_CONFIG: Drinkware3DConfig = {
   cameraZ: 3.2,
   handleGapFraction: 0,
   wallThickness: 0.035,
+  material: 'ceramic',
 };
 
 const configs: Partial<Record<ProductType, Drinkware3DConfig>> = {
@@ -69,7 +103,17 @@ const configs: Partial<Record<ProductType, Drinkware3DConfig>> = {
   thermos: THERMOS_CONFIG,
 };
 
-export function getDrinkware3DConfig(type: ProductType): Drinkware3DConfig {
+const productConfigs: Record<string, Drinkware3DConfig> = {
+  'cup-glass-beer': GLASS_BEER_CUP_CONFIG,
+};
+
+export function getDrinkware3DConfig(
+  type: ProductType,
+  productId?: string,
+): Drinkware3DConfig {
+  if (productId && productConfigs[productId]) {
+    return productConfigs[productId];
+  }
   return configs[type] ?? MUG_CONFIG;
 }
 
@@ -91,28 +135,35 @@ export type DrinkwareWrapTextureSize = {
  * Full unwrapped cylinder aspect (circumference ÷ height).
  * The flat 2D editor uses this same aspect so % positions map 1:1 to UVs.
  */
-export function getDrinkwareWrapAspect(type: ProductType): number {
-  const config = getDrinkware3DConfig(type);
+export function getDrinkwareWrapAspect(
+  type: ProductType,
+  productId?: string,
+): number {
+  const config = getDrinkware3DConfig(type, productId);
   const avgRadius = (config.radiusTop + config.radiusBottom) / 2;
   return (2 * Math.PI * avgRadius) / config.height;
 }
 
 export function getDrinkwareWrapTextureSize(
   type: ProductType,
+  productId?: string,
 ): DrinkwareWrapTextureSize {
-  const aspect = getDrinkwareWrapAspect(type);
+  const aspect = getDrinkwareWrapAspect(type, productId);
   const height = DRINKWARE_WRAP_TEXTURE_HEIGHT;
   const width = Math.max(512, Math.round((height * aspect) / 64) * 64);
   return { width, height };
 }
 
 /** Flat unwrap editor size in CSS px — same aspect as the wrap texture. */
-export function getDrinkwareFlatCanvasSize(type: ProductType): {
+export function getDrinkwareFlatCanvasSize(
+  type: ProductType,
+  productId?: string,
+): {
   width: number;
   height: number;
   aspect: number;
 } {
-  const aspect = getDrinkwareWrapAspect(type);
+  const aspect = getDrinkwareWrapAspect(type, productId);
   const height = DRINKWARE_FLAT_CANVAS_HEIGHT_PX;
   return { width: Math.round(height * aspect), height, aspect };
 }
@@ -144,23 +195,9 @@ export function getDrinkwareTextureFontSize(
   return Math.max(8, Math.round(layerSizePx * (textureHeight / refHeight)));
 }
 
-/** Half of the handle gap as a fraction of texture/canvas width (each edge). */
-export function getHandleGapEdgeFraction(type: ProductType): number {
-  return getDrinkware3DConfig(type).handleGapFraction / 2;
-}
-
-/**
- * Print-area insets for the flat unwrap editor.
- * Horizontal insets match the handle gap so overlays cannot enter the seam.
- */
-export function getDrinkwareUnwrapPrintInsets(type: ProductType): PrintAreaInsets {
-  const edge = Math.round(getHandleGapEdgeFraction(type) * 1000) / 10;
-  if (type === 'thermos') {
-    return { top: 8, right: 0, bottom: 14, left: 0 };
-  }
-  if (type === 'cup') {
-    return { top: 6, right: 0, bottom: 16, left: 0 };
-  }
-  // Full mug body height; horizontal insets match the handle seam gap.
-  return { top: 0, right: edge, bottom: 0, left: edge };
+export function getHandleGapEdgeFraction(
+  type: ProductType,
+  productId?: string,
+): number {
+  return getDrinkware3DConfig(type, productId).handleGapFraction / 2;
 }

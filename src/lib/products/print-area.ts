@@ -1,12 +1,15 @@
 /**
  * Printable region on the product mockup (percent of the mockup inner frame).
  *
- * Fine-tune per product type in:
- *   src/lib/products/product-mockup-layout.ts  →  layoutsByType / createMockupLayout()
+ * Fine-tune per product type:
+ *   • Drinkware flat unwrap (dashed 2D border) — constants below + getDrinkwareUnwrapPrintInsets()
+ *   • Photo mockups (tee, hoodie, …) — product-mockup-layout.ts layoutsByType
  *
  * Global defaults:
- *   src/lib/products/customizer-constants.ts  →  PRODUCT_PRINT_AREA_INSET_PERCENT
+ *   customizer-constants.ts → PRODUCT_PRINT_AREA_INSET_PERCENT
  */
+
+import type { ProductType } from '@/lib/data/catalog';
 
 export type PrintAreaInsets = {
   /** Distance from top edge (%) */
@@ -69,44 +72,78 @@ export const BODYSUIT_PRINT_AREA_INSETS: PrintAreaInsets = {
 };
 
 /**
- * Mug / cup — flat unwrap editor print zone (no product photo).
- * Horizontal insets = half handle gap (4% each) so art cannot enter the seam.
- * Prefer getDrinkwareUnwrapPrintInsets() for live values from handleGapFraction.
- * Vertical insets are zero so the printable band spans the full mug body height.
- * Texture builder also clears the seam strips after drawing.
+ * Drinkware — flat cylinder unwrap editor (dashed border on the 2D canvas).
+ * Each shape has its own band; product-specific overrides in
+ * DRINKWARE_UNWRAP_PRINT_INSETS_BY_PRODUCT_ID.
  */
-export const DRINKWARE_PRINT_AREA_INSETS: PrintAreaInsets = {
-  top: 0,
+export const MUG_UNWRAP_PRINT_AREA_INSETS: PrintAreaInsets = {
+  top: 2,
   right: 4,
-  bottom: 0,
+  bottom: 10,
   left: 4,
 };
+
+export const CUP_UNWRAP_PRINT_AREA_INSETS: PrintAreaInsets = {
+  top: 6,
+  right: 0,
+  bottom: 18,
+  left: 0,
+};
+
+export const THERMOS_UNWRAP_PRINT_AREA_INSETS: PrintAreaInsets = {
+  top: 12,
+  right: 0,
+  bottom: 16,
+  left: 0,
+};
+
+/** Glass beer mug (cup-glass-beer) — tall wall, thick base. */
+export const GLASS_BEER_CUP_UNWRAP_PRINT_AREA_INSETS: PrintAreaInsets = {
+  top: 3,
+  right: 4,
+  bottom: 10,
+  left: 4,
+};
+
+/** Per-product unwrap overrides (when type alone is not enough). */
+export const DRINKWARE_UNWRAP_PRINT_INSETS_BY_PRODUCT_ID: Record<
+  string,
+  PrintAreaInsets
+> = {
+  'cup-glass-beer': GLASS_BEER_CUP_UNWRAP_PRINT_AREA_INSETS,
+};
+
+const DRINKWARE_UNWRAP_BY_TYPE: Partial<Record<ProductType, PrintAreaInsets>> =
+  {
+    mug: MUG_UNWRAP_PRINT_AREA_INSETS,
+    cup: CUP_UNWRAP_PRINT_AREA_INSETS,
+    thermos: THERMOS_UNWRAP_PRINT_AREA_INSETS,
+  };
 
 /**
- * Mug / cup — same as the unwrap print zone (canvas IS the cylinder unwrap).
+ * Printable band on the drinkware flat unwrap canvas (2D dashed guide + clamps).
  */
-export const DRINKWARE_WRAP_PRINT_AREA_INSETS: PrintAreaInsets = {
-  top: 0,
-  right: 4,
-  bottom: 0,
-  left: 4,
-};
+export function getDrinkwareUnwrapPrintInsets(
+  type: ProductType,
+  productId?: string,
+): PrintAreaInsets {
+  if (productId && DRINKWARE_UNWRAP_PRINT_INSETS_BY_PRODUCT_ID[productId]) {
+    return DRINKWARE_UNWRAP_PRINT_INSETS_BY_PRODUCT_ID[productId];
+  }
+  return DRINKWARE_UNWRAP_BY_TYPE[type] ?? MUG_UNWRAP_PRINT_AREA_INSETS;
+}
 
-/** Thermos — flat unwrap editor print zone. */
-export const THERMOS_PRINT_AREA_INSETS: PrintAreaInsets = {
-  top: 8,
-  right: 2,
-  bottom: 12,
-  left: 2,
-};
+/** @deprecated Use MUG_UNWRAP_PRINT_AREA_INSETS */
+export const DRINKWARE_PRINT_AREA_INSETS = MUG_UNWRAP_PRINT_AREA_INSETS;
 
-/** Thermos — same as unwrap print zone. */
-export const THERMOS_WRAP_PRINT_AREA_INSETS: PrintAreaInsets = {
-  top: 8,
-  right: 2,
-  bottom: 12,
-  left: 2,
-};
+/** @deprecated Use MUG_UNWRAP_PRINT_AREA_INSETS */
+export const DRINKWARE_WRAP_PRINT_AREA_INSETS = MUG_UNWRAP_PRINT_AREA_INSETS;
+
+/** @deprecated Use THERMOS_UNWRAP_PRINT_AREA_INSETS */
+export const THERMOS_PRINT_AREA_INSETS = THERMOS_UNWRAP_PRINT_AREA_INSETS;
+
+/** @deprecated Use THERMOS_UNWRAP_PRINT_AREA_INSETS */
+export const THERMOS_WRAP_PRINT_AREA_INSETS = THERMOS_UNWRAP_PRINT_AREA_INSETS;
 
 /** Cap front panel. */
 export const CAP_PRINT_AREA_INSETS: PrintAreaInsets = {

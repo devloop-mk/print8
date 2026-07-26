@@ -20,6 +20,7 @@ export type DrinkwarePreviewVariant = 'floating' | 'pane';
 
 type Drinkware3DPreviewProps = {
   productType: ProductType;
+  productId?: string;
   productColor: string;
   printBounds: PrintAreaInsets;
   images: DrinkwareImageLayer[];
@@ -32,6 +33,7 @@ type Drinkware3DPreviewProps = {
 
 export function Drinkware3DPreview({
   productType,
+  productId,
   productColor,
   printBounds,
   images,
@@ -43,6 +45,7 @@ export function Drinkware3DPreview({
   const t = useTranslations('products.customizer');
   const { textureCanvas, loading } = useDrinkwareWrapTexture({
     productType,
+    productId,
     productColor,
     printBounds,
     images,
@@ -67,6 +70,7 @@ export function Drinkware3DPreview({
       ) : null}
       <Drinkware3DScene
         productType={productType}
+        productId={productId}
         productColor={productColor}
         textureCanvas={textureCanvas}
       />

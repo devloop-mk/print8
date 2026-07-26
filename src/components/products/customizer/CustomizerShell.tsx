@@ -150,11 +150,11 @@ export function CustomizerShell({
   );
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white pb-[7.75rem] md:pb-0">
-      {topBar}
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-white pb-[7.75rem] md:pb-0">
+      <div className="shrink-0">{topBar}</div>
 
       <div className="flex min-h-0 flex-1 overflow-hidden">
-        <aside className="hidden shrink-0 md:flex">
+        <aside className="hidden shrink-0 md:flex" data-customizer-editor-chrome>
           <nav className="flex w-[5.25rem] flex-col items-center gap-1.5 border-r border-ink-200 bg-ink-50/80 py-3">
             {items.map((item) => (
               <button
@@ -189,9 +189,12 @@ export function CustomizerShell({
           ) : null}
         </aside>
 
-        <main className="relative flex min-w-0 flex-1 flex-col bg-[#e9edf2]">
+        <main className="relative flex min-h-0 min-w-0 flex-1 flex-col bg-[#e9edf2]">
           {hasMultipleSides ? (
-            <div className="flex shrink-0 flex-col items-center gap-2 border-b border-ink-200/60 bg-white/80 px-3 py-2 backdrop-blur-sm sm:flex-row sm:justify-center">
+            <div
+              className="flex shrink-0 flex-col items-center gap-2 border-b border-ink-200/60 bg-white/80 px-3 py-2 backdrop-blur-sm sm:flex-row sm:justify-center"
+              data-customizer-editor-chrome
+            >
               <div className="inline-flex rounded-lg bg-ink-100/80 p-1">
                 {sides.map((side) => (
                   <button
@@ -287,7 +290,10 @@ export function CustomizerShell({
             canvasColumn
           )}
 
-          <div className="flex h-12 shrink-0 items-center justify-center gap-3 border-t border-ink-200/70 bg-white px-4">
+          <div
+            className="flex h-12 shrink-0 items-center justify-center gap-3 border-t border-ink-200/70 bg-white px-4"
+            data-customizer-editor-chrome
+          >
             <button
               type="button"
               onClick={() => onZoomChange(Math.max(40, canvasZoom - 10))}

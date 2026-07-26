@@ -13,6 +13,26 @@ import { resolveProductColorImageKey } from '@/lib/products/product-color-images
 
 const MIN_TEXT_CONTRAST = 2.8;
 
+/** Shared whites across supplier palettes (unisex tee vs bodysuit mockups). */
+const WHITE_SWATCH_EQUIVALENTS = new Set([
+  '#ffffff',
+  '#c5ccd6',
+  '#fff',
+]);
+
+function paletteColorsMatch(productColor: string, savedColor: string): boolean {
+  const productKey = normalizeHex(productColor);
+  const savedKey = normalizeHex(savedColor);
+  if (productKey === savedKey) return true;
+  if (
+    WHITE_SWATCH_EQUIVALENTS.has(productKey) &&
+    WHITE_SWATCH_EQUIVALENTS.has(savedKey)
+  ) {
+    return true;
+  }
+  return false;
+}
+
 function intersectWithProductColors(
   product: Product,
   colors: string[],
@@ -35,7 +55,9 @@ function intersectWithProductColors(
     if (mapped) allowed.add(normalizeHex(mapped));
   }
 
-  return productColors.filter((color) => allowed.has(normalizeHex(color)));
+  return productColors.filter((color) =>
+    [...allowed].some((saved) => paletteColorsMatch(color, saved)),
+  );
 }
 
 export function getDesignApplicableColors(

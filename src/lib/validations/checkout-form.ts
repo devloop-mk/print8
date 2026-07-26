@@ -19,6 +19,10 @@ export type CheckoutValidationMessages = {
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+export function isCheckoutEmailValid(email: string): boolean {
+  return EMAIL_PATTERN.test(email.trim());
+}
+
 export function validateCheckoutFields(
   form: CheckoutFormFields,
   messages: CheckoutValidationMessages,

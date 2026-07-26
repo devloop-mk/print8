@@ -83,7 +83,7 @@ export default async function LocaleLayout({
             <CookieConsent />
             <SpinWheelPromoPopupLazy />
             <Header />
-            <main className="flex min-h-[calc(100dvh-4.5rem)] min-w-0 flex-1 flex-col">
+            <main className="flex min-h-0 min-w-0 flex-1 flex-col">
               <PageTransition>{children}</PageTransition>
             </main>
             <FooterGate />

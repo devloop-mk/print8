@@ -16,6 +16,7 @@ import {
   PRODUCT_PRINT_AREA_MAX_SCALE,
 } from '@/lib/products/customizer-constants';
 import { clampPhotoScale } from '@/lib/products/crop-image';
+import { getPlacedPhotos } from '@/lib/products/photo-layers';
 
 function MiniStepper({
   value,
@@ -135,12 +136,41 @@ export function CustomizerContextBar({
         </>
       ) : null}
 
-      {selected === 'photo' || selected === 'overlay' ? (
+      {selected.startsWith('photo:') ? (
+        <>
+          <span className="text-xs font-medium text-ink-500">{t('photo')}</span>
+          <MiniStepper
+            value={
+              getPlacedPhotos(currentDesign).find(
+                (photo) => `photo:${photo.instanceId}` === selected,
+              )?.scale ?? currentDesign.uploadedImageScale
+            }
+            onChange={(v) => {
+              const id = selected.replace('photo:', '');
+              onUpdate({
+                uploadedPhotos: getPlacedPhotos(currentDesign).map((photo) =>
+                  photo.instanceId === id
+                    ? {
+                        ...photo,
+                        scale: clampPhotoScale(v, overlayMaxScale),
+                      }
+                    : photo,
+                ),
+              });
+            }}
+            min={PRODUCT_PHOTO_MIN_SCALE}
+            max={overlayMaxScale}
+            step={2}
+          />
+        </>
+      ) : null}
+
+      {selected === 'overlay' ? (
         <>
           <span className="text-xs font-medium text-ink-500">
-            {selected === 'overlay' ? t('designColor') : t('photo')}
+            {t('designColor')}
           </span>
-          {selected === 'overlay' && currentDesign.isRecolorableOverlay ? (
+          {currentDesign.isRecolorableOverlay ? (
             <>
               <input
                 type="color"

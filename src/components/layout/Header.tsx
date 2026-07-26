@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { useCart } from "@/components/cart/CartProvider";
@@ -41,6 +41,28 @@ export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [menuMounted, setMenuMounted] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
+
+  useLayoutEffect(() => {
+    const node = headerRef.current;
+    if (!node) return;
+
+    const syncHeaderHeight = () => {
+      document.documentElement.style.setProperty(
+        '--site-header-height',
+        `${node.offsetHeight}px`,
+      );
+    };
+
+    syncHeaderHeight();
+    const observer = new ResizeObserver(syncHeaderHeight);
+    observer.observe(node);
+
+    return () => {
+      observer.disconnect();
+      document.documentElement.style.removeProperty('--site-header-height');
+    };
+  }, []);
 
   function openMenu() {
     setMenuMounted(true);
@@ -63,7 +85,10 @@ export function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 border-b-2 border-ink-200 bg-white/95 backdrop-blur-md">
+      <header
+        ref={headerRef}
+        className="sticky top-0 z-50 border-b-2 border-ink-200 bg-white/95 backdrop-blur-md"
+      >
         <div
           className="hidden h-1 w-full bg-gradient-to-r from-brand-500 via-brand-700 to-ink-900 lg:block"
           aria-hidden
@@ -121,9 +146,10 @@ export function Header() {
             >
               <User className="h-5 w-5" />
               {auth?.customer && auth.customer.pointsBalance > 0 ? (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center border border-brand-800 bg-brand-600 px-1 text-[10px] font-bold text-white">
-                  {auth.customer.pointsBalance > 99 ? "99+" : auth.customer.pointsBalance}
-                </span>
+                <span
+                  className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-brand-600"
+                  aria-hidden
+                />
               ) : null}
             </Link>
 

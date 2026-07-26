@@ -14,6 +14,7 @@ export function sideHasDesignContent(design: SideDesign | undefined): boolean {
   return Boolean(
     sideHasTextContent(design) ||
       design.uploadedFile ||
+      design.uploadedPhotos.length > 0 ||
       design.premadeDesignImage ||
       design.bakedMockupUrl ||
       design.overlaySvg ||
@@ -29,6 +30,10 @@ export function cloneSideDesign(source: SideDesign): SideDesign {
     customTextPosition: { ...source.customTextPosition },
     uploadedImagePosition: { ...source.uploadedImagePosition },
     uploadedFile: source.uploadedFile ? { ...source.uploadedFile } : null,
+    uploadedPhotos: source.uploadedPhotos.map((photo) => ({
+      ...photo,
+      position: { ...photo.position },
+    })),
     overlaySvgColors: source.overlaySvgColors
       ? { ...source.overlaySvgColors }
       : null,

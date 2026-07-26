@@ -18,6 +18,7 @@ export type DrinkwareImageLayer = {
 
 export type BuildDrinkwareWrapTextureInput = {
   productType: ProductType;
+  productId?: string;
   productColor: string;
   /** Kept for API compat; placement uses the full unwrap canvas 1:1. */
   printBounds: PrintAreaInsets;
@@ -164,7 +165,10 @@ function clearHandleGap(
 export async function buildDrinkwareWrapTexture(
   input: BuildDrinkwareWrapTextureInput,
 ): Promise<HTMLCanvasElement> {
-  const textureSize = getDrinkwareWrapTextureSize(input.productType);
+  const textureSize = getDrinkwareWrapTextureSize(
+    input.productType,
+    input.productId,
+  );
   const canvas = document.createElement('canvas');
   canvas.width = textureSize.width;
   canvas.height = textureSize.height;
@@ -209,7 +213,7 @@ export async function buildDrinkwareWrapTexture(
     input.productColor,
     textureSize.width,
     textureSize.height,
-    getHandleGapEdgeFraction(input.productType),
+    getHandleGapEdgeFraction(input.productType, input.productId),
   );
 
   return canvas;

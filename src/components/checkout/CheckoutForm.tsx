@@ -18,6 +18,7 @@ import { CheckoutSteps } from "@/components/checkout/CheckoutSteps";
 import {
   mapCheckoutApiFieldErrors,
   validateCheckoutFields,
+  isCheckoutEmailValid,
 } from "@/lib/validations/checkout-form";
 import {
   CheckoutPrepareError,
@@ -30,6 +31,8 @@ import { PointsEarnPreview } from "@/components/checkout/PointsEarnPreview";
 import { CheckoutAccountPrompt } from "@/components/checkout/CheckoutAccountPrompt";
 import { useOptionalAuth } from "@/components/auth/AuthProvider";
 import type { CheckoutInput } from "@/lib/validations/order";
+import type { Locale } from "@/i18n/routing";
+import { buildLocalizedAccountPath } from "@/lib/auth/oauth";
 
 export function CheckoutForm() {
   const t = useTranslations("checkout");
@@ -58,12 +61,19 @@ export function CheckoutForm() {
   const [pointsToRedeem, setPointsToRedeem] = useState(0);
   const [pointsDiscount, setPointsDiscount] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [emailAccountExists, setEmailAccountExists] = useState(false);
+  const [emailSignInMethods, setEmailSignInMethods] = useState<{
+    google: boolean;
+    email: boolean;
+  } | null>(null);
   const [processing, setProcessing] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
   const pendingCouponAutoApply = useRef(false);
   const pendingCouponEmail = useRef<string | undefined>(undefined);
+  const emailCheckAbortRef = useRef<AbortController | null>(null);
 
   const payableTotal = Math.max(0, total - couponDiscount - pointsDiscount);
+  const isLoggedIn = Boolean(auth?.customer);
 
   const handlePointsChange = useCallback(
     (value: {
@@ -88,6 +98,109 @@ export function CheckoutForm() {
       address: prev.address || auth.customer?.defaultAddress || prev.address,
     }));
   }, [auth?.customer]);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      setEmailAccountExists(false);
+      setEmailSignInMethods(null);
+    }
+  }, [isLoggedIn]);
+
+  const checkEmailAccount = useCallback(
+    async (email: string) => {
+      if (auth?.loading || isLoggedIn) {
+        setEmailAccountExists(false);
+        setEmailSignInMethods(null);
+        return;
+      }
+
+      const trimmed = email.trim();
+      if (!isCheckoutEmailValid(trimmed)) {
+        setEmailAccountExists(false);
+        setEmailSignInMethods(null);
+        return;
+      }
+
+      emailCheckAbortRef.current?.abort();
+      const controller = new AbortController();
+      emailCheckAbortRef.current = controller;
+
+      try {
+        const res = await fetch("/api/checkout/check-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: trimmed }),
+          signal: controller.signal,
+        });
+        const data = (await res.json().catch(() => ({}))) as {
+          exists?: boolean;
+          signInMethods?: { google?: boolean; email?: boolean };
+        };
+        if (!res.ok) return;
+        const exists = Boolean(data.exists);
+        setEmailAccountExists(exists);
+        setEmailSignInMethods(
+          exists && data.signInMethods
+            ? {
+                google: Boolean(data.signInMethods.google),
+                email: Boolean(data.signInMethods.email),
+              }
+            : null,
+        );
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+      }
+    },
+    [auth?.loading, isLoggedIn],
+  );
+
+  useEffect(() => {
+    if (auth?.loading || isLoggedIn) return;
+
+    const trimmed = form.email.trim();
+    if (!isCheckoutEmailValid(trimmed)) {
+      setEmailAccountExists(false);
+      setEmailSignInMethods(null);
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      void checkEmailAccount(trimmed);
+    }, 500);
+
+    return () => window.clearTimeout(timer);
+  }, [form.email, auth?.loading, isLoggedIn, checkEmailAccount]);
+
+  function storeCheckoutPrefill() {
+    try {
+      sessionStorage.setItem(
+        "print8-checkout-prefill",
+        JSON.stringify({
+          fullName: form.fullName,
+          phone: form.phone,
+          email: form.email,
+        }),
+      );
+    } catch {
+      // ignore quota errors
+    }
+  }
+
+  function goToLoginFromCheckout() {
+    storeCheckoutPrefill();
+    const params = new URLSearchParams({
+      redirect: "/checkout",
+      email: form.email.trim(),
+    });
+    router.push(`/account/login?${params.toString()}`);
+  }
+
+  function goToGoogleFromCheckout() {
+    storeCheckoutPrefill();
+    const nextPath = buildLocalizedAccountPath(locale as Locale, "/checkout");
+    const params = new URLSearchParams({ next: nextPath });
+    window.location.assign(`/api/auth/oauth/google?${params.toString()}`);
+  }
 
   useEffect(() => {
     try {
@@ -201,6 +314,10 @@ export function CheckoutForm() {
   function updateField(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: "" }));
+    if (field === "email") {
+      setEmailAccountExists(false);
+      setEmailSignInMethods(null);
+    }
   }
 
   function getValidationMessages() {
@@ -506,12 +623,53 @@ export function CheckoutForm() {
               label={t("email")}
               value={form.email}
               onChange={(v) => updateField("email", v)}
+              onBlur={() => void checkEmailAccount(form.email)}
               type="email"
               error={errors.email}
               required
               className="sm:col-span-2"
-              hint={t("emailHint")}
+              hint={!emailAccountExists && !isLoggedIn ? t("emailHint") : undefined}
             />
+            {!isLoggedIn && emailAccountExists ? (
+              <div
+                className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-900 sm:col-span-2"
+              >
+                <p>
+                  {emailSignInMethods?.google && !emailSignInMethods?.email
+                    ? t("emailAccountExistsGoogleOnly")
+                    : t("emailAccountExists")}
+                </p>
+                <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
+                  {emailSignInMethods?.google ? (
+                    <button
+                      type="button"
+                      onClick={goToGoogleFromCheckout}
+                      className="font-semibold text-brand-700 hover:text-brand-800 hover:underline"
+                    >
+                      {t("emailAccountExistsGoogle")}
+                    </button>
+                  ) : null}
+                  {emailSignInMethods?.email ? (
+                    <button
+                      type="button"
+                      onClick={goToLoginFromCheckout}
+                      className="font-semibold text-brand-700 hover:text-brand-800 hover:underline"
+                    >
+                      {t("emailAccountExistsLogin")}
+                    </button>
+                  ) : null}
+                  {!emailSignInMethods ? (
+                    <button
+                      type="button"
+                      onClick={goToLoginFromCheckout}
+                      className="font-semibold text-brand-700 hover:text-brand-800 hover:underline"
+                    >
+                      {t("emailAccountExistsLogin")}
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
           </div>
         </Card>
 
@@ -789,6 +947,7 @@ function Field({
   label,
   value,
   onChange,
+  onBlur,
   error,
   required,
   type = "text",
@@ -798,6 +957,7 @@ function Field({
   label: string;
   value: string;
   onChange: (v: string) => void;
+  onBlur?: () => void;
   error?: string;
   required?: boolean;
   type?: string;
@@ -814,6 +974,7 @@ function Field({
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onBlur={onBlur}
         required={required}
         className={`w-full rounded-lg border px-3 py-2 text-sm ${
           error ? "border-red-400" : "border-ink-300"

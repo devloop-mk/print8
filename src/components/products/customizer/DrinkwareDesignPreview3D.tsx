@@ -15,6 +15,7 @@ import { Drinkware3DPreviewLazy } from '@/components/products/customizer/Drinkwa
  */
 export function DrinkwareDesignPreview3D({
   productType,
+  productId,
   shirtColor,
   sideDesign,
   designTemplate,
@@ -25,6 +26,7 @@ export function DrinkwareDesignPreview3D({
   canvasHeightPx,
 }: {
   productType: ProductType;
+  productId?: string;
   shirtColor: string;
   sideDesign: SideDesign;
   designTemplate: ProductDesignTemplate | null | undefined;
@@ -43,6 +45,7 @@ export function DrinkwareDesignPreview3D({
   return (
     <Drinkware3DPreviewLazy
       productType={productType}
+      productId={productId}
       productColor={shirtColor}
       printBounds={printBounds}
       images={images}

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import type {
+  Product,
   ProductDesignTemplate,
   ProductType,
 } from '@/lib/data/catalog';
@@ -13,6 +14,7 @@ import {
   AdminDesignColorPreview,
   resolveAdminPreviewProduct,
 } from '@/components/admin/AdminDesignColorPreview';
+import { getDesignApplicableColors } from '@/lib/products/design-applicable-colors';
 import { getProductColorLabelKey } from '@/lib/products/product-color-labels';
 import { normalizeHex } from '@/lib/products/design-overlay';
 import { TSHIRT_UNISEX_COLORS } from '@/lib/products/tshirt-unisex-colors';
@@ -57,11 +59,24 @@ function getColorLabelMk(hex: string): string {
   return hex;
 }
 
-function isColorEnabled(hex: string, applicableColors: string[]): boolean {
+function isColorEnabled(
+  hex: string,
+  applicableColors: string[],
+  template: ProductDesignTemplate,
+  previewProduct: Product,
+): boolean {
   if (applicableColors.length === 0) return true;
-  return applicableColors.some(
-    (color) => normalizeHex(color) === normalizeHex(hex),
+
+  const applicableForProduct = getDesignApplicableColors(
+    { ...template, applicableColors },
+    previewProduct,
   );
+
+  // Saved palette may be from another garment (e.g. unisex tee hex on bodysuit).
+  if (applicableForProduct.length === 0) return true;
+
+  const key = normalizeHex(hex);
+  return applicableForProduct.some((color) => normalizeHex(color) === key);
 }
 
 export function ProductDesignColorMatrix({
@@ -106,9 +121,23 @@ export function ProductDesignColorMatrix({
   const enabledCount = useMemo(() => {
     if (applicableColors.length === 0) return colorOptions.length;
     return colorOptions.filter((option) =>
-      isColorEnabled(option.hex, applicableColors),
+      isColorEnabled(
+        option.hex,
+        applicableColors,
+        template,
+        previewProduct,
+      ),
     ).length;
-  }, [applicableColors, colorOptions]);
+  }, [applicableColors, colorOptions, previewProduct, template]);
+
+  const applicablePaletteMismatch = useMemo(() => {
+    if (!previewProduct || applicableColors.length === 0) return false;
+    const applicableForProduct = getDesignApplicableColors(
+      { ...template, applicableColors },
+      previewProduct,
+    );
+    return applicableForProduct.length === 0;
+  }, [applicableColors, previewProduct, template]);
 
   const hasDesignOverlay = Boolean(
     template.printMasterImage || template.overlayImage || template.overlaySvg,
@@ -220,9 +249,22 @@ export function ProductDesignColorMatrix({
         </p>
       ) : null}
 
+      {applicablePaletteMismatch ? (
+        <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          Избраните бои не одговараат на палетата за{' '}
+          {PRODUCT_TYPE_LABELS_MK[previewType] ?? previewType}. Кликнете на боите
+          подоле за да ги прилагодите за овој тип.
+        </p>
+      ) : null}
+
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {colorOptions.map((option) => {
-          const enabled = isColorEnabled(option.hex, applicableColors);
+          const enabled = isColorEnabled(
+            option.hex,
+            applicableColors,
+            template,
+            previewProduct,
+          );
           const variant = overlayColorVariants[normalizeHex(option.hex)] ?? '';
 
           return (

@@ -283,6 +283,39 @@ export async function countCouponRedemptionsToday(couponId: string): Promise<num
   return count ?? 0;
 }
 
+export type IssuedRewardCoupon = CouponRecord & {
+  redeemed: boolean;
+};
+
+export async function listIssuedRewardCouponsForEmail(
+  email: string,
+): Promise<IssuedRewardCoupon[]> {
+  const normalized = email.trim().toLowerCase();
+  if (!normalized) return [];
+
+  const { data, error } = await getSupabaseAdmin()
+    .from('coupons')
+    .select('*')
+    .eq('issued_to_email', normalized)
+    .eq('kind', 'reward_issued')
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+
+  const coupons = ((data ?? []) as CouponRow[]).map(mapCoupon);
+  const results: IssuedRewardCoupon[] = [];
+
+  for (const coupon of coupons) {
+    const totalUsed = await countCouponRedemptions(coupon.id);
+    const redeemed =
+      coupon.maxRedemptionsTotal != null &&
+      totalUsed >= coupon.maxRedemptionsTotal;
+    results.push({ ...coupon, redeemed });
+  }
+
+  return results;
+}
+
 export async function recordCouponRedemption(input: {
   couponId: string;
   orderId: string;

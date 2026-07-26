@@ -36,7 +36,7 @@ export default async function CustomizeProductPage({
   const isMagnet = type === "magnet";
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex h-full min-h-0 flex-col">
       <Suspense fallback={<LocalePageLoading />}>
         {isMagnet ? (
           <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">

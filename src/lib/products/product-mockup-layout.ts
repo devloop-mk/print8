@@ -23,8 +23,8 @@ import {
   WOMEN_TSHIRT_PRINT_AREA_INSETS,
   BODYSUIT_PRINT_AREA_INSETS,
   type PrintAreaInsets,
+  getDrinkwareUnwrapPrintInsets,
 } from '@/lib/products/print-area';
-import { getDrinkwareUnwrapPrintInsets } from '@/lib/products/drinkware-3d-config';
 
 export function isCylindricalDrinkwareType(type: ProductType): boolean {
   return type === 'mug' || type === 'cup' || type === 'thermos';
@@ -289,6 +289,16 @@ export function getProductMockupLayout(
   const product = typeof productOrType === 'string' ? null : productOrType;
   const type =
     typeof productOrType === 'string' ? productOrType : productOrType.type;
+
+  if (product && isCylindricalDrinkwareType(product.type)) {
+    const unwrap = getDrinkwareUnwrapPrintInsets(product.type, product.id);
+    return createMockupLayout({
+      customizerInnerScale: 1,
+      printArea: unwrap,
+      wrapPrintArea: unwrap,
+    });
+  }
+
   const base = layoutsByType[type] ?? DEFAULT_MOCKUP_LAYOUT;
 
   const productPrintArea =

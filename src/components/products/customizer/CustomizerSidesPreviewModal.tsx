@@ -19,6 +19,7 @@ export function CustomizerSidesPreviewModal({
   onAddToCart,
   addToCartDisabled,
   addToCartLabel,
+  use3DPreviewLabels = false,
 }: {
   open: boolean;
   loading?: boolean;
@@ -30,6 +31,8 @@ export function CustomizerSidesPreviewModal({
   onAddToCart: () => void;
   addToCartDisabled?: boolean;
   addToCartLabel: string;
+  /** Drinkware 3D previews are not a garment "front" side — use the 3D pane title. */
+  use3DPreviewLabels?: boolean;
 }) {
   const t = useTranslations('products.customizer');
 
@@ -101,11 +104,13 @@ export function CustomizerSidesPreviewModal({
               {sides.map((side) => (
                 <article
                   key={side}
-                  className="overflow-hidden rounded-xl border border-ink-200 bg-white shadow-sm"
+                  className="overflow-visible rounded-xl border border-ink-200 bg-white shadow-sm"
                 >
                   <div className="flex items-center justify-between border-b border-ink-100 px-3 py-2">
                     <h3 className="text-sm font-semibold text-ink-900">
-                      {sideLabel(side)}
+                      {use3DPreviewLabels
+                        ? t('preview3dPaneTitle')
+                        : sideLabel(side)}
                     </h3>
                     {sideHasContent(side) ? (
                       <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-700">
@@ -117,7 +122,7 @@ export function CustomizerSidesPreviewModal({
                       </span>
                     )}
                   </div>
-                  <div className="flex justify-center bg-[#eef2f6] p-3 sm:p-4">
+                  <div className="flex justify-center overflow-visible bg-[#eef2f6] p-3 pb-5 sm:p-4 sm:pb-6">
                     {renderSide(side)}
                   </div>
                 </article>

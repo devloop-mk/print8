@@ -34,7 +34,7 @@ export function getPremadeMasterStoragePath(
 }
 
 function sideHasUserUploadedPhoto(design: SideDesign): boolean {
-  return Boolean(design.uploadedFile?.fileId?.trim());
+  return design.uploadedPhotos.length > 0 || Boolean(design.uploadedFile?.fileId?.trim());
 }
 
 function sideHasExtraText(

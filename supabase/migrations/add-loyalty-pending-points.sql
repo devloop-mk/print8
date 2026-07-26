@@ -43,6 +43,7 @@ set search_path = public
 as $$
 declare
   v_pending integer;
+  v_balance integer;
 begin
   if p_delta = 0 then
     raise exception 'zero_delta';
@@ -62,7 +63,7 @@ begin
   end if;
 
   select c.points_pending_balance, c.points_balance
-  into v_pending, balance_after
+  into v_pending, v_balance
   from public.customers c
   where c.id = p_customer_id
   for update;
@@ -98,7 +99,7 @@ begin
     p_customer_id,
     p_type,
     p_delta,
-    balance_after,
+    v_balance,
     p_order_id,
     p_note,
     p_idempotency_key

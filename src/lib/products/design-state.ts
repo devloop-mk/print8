@@ -8,6 +8,7 @@ import type {
 import { getProductDesignTemplate } from "@/lib/data/catalog";
 import type { PlacedSticker } from "@/lib/products/sticker-library";
 import type { PlacedTextLayer } from "@/lib/products/text-layers";
+import type { PlacedPhoto } from "@/lib/products/photo-layers";
 import { createPlacedTextLayer } from "@/lib/products/text-layers";
 import {
   ensureInkContrast,
@@ -39,6 +40,7 @@ export interface SideDesign {
   customTextLineHeight: number;
   customTextShadow: string;
   uploadedFile: UploadedFile | null;
+  uploadedPhotos: PlacedPhoto[];
   uploadedImageScale: number;
   uploadedImagePosition: { x: number; y: number };
   premadeDesignImage: string | null;
@@ -73,6 +75,7 @@ export function createDefaultSideDesign(): SideDesign {
     customTextLineHeight: 1.2,
     customTextShadow: DEFAULT_TEXT_SHADOW,
     uploadedFile: null,
+    uploadedPhotos: [],
     uploadedImageScale: 40,
     uploadedImagePosition: { x: 50, y: 48 },
     premadeDesignImage: null,
@@ -95,6 +98,7 @@ export function clearSideDesignArtwork(): Partial<SideDesign> {
   const defaults = createDefaultSideDesign();
   return {
     uploadedFile: null,
+    uploadedPhotos: [],
     premadeDesignImage: null,
     premadeDesignId: null,
     overlaySvg: null,
@@ -319,6 +323,7 @@ export interface RestoredSideDesign {
   showPhotoGuide: boolean;
   textLayers: PlacedTextLayer[];
   stickers: PlacedSticker[];
+  uploadedPhotos: PlacedPhoto[];
 }
 
 export function sideDesignFromRestored(data: RestoredSideDesign): SideDesign {
@@ -362,12 +367,27 @@ export function sideDesignFromRestored(data: RestoredSideDesign): SideDesign {
     bakedMockupUrl: null,
     isTextTemplate: data.isTextTemplate,
     showPhotoGuide: data.showPhotoGuide,
+    uploadedPhotos:
+      data.uploadedPhotos.length > 0
+        ? data.uploadedPhotos
+        : data.uploadedFileId?.trim() && data.uploadedPreviewUrl
+          ? [
+              {
+                instanceId: `legacy-${data.uploadedFileId}`,
+                fileId: data.uploadedFileId,
+                name: "uploaded-image",
+                previewUrl: data.uploadedPreviewUrl,
+                scale: data.uploadedImageScale,
+                position: { ...data.uploadedImagePosition },
+              },
+            ]
+          : [],
     uploadedFile:
-      data.uploadedPreviewUrl || data.uploadedFileId
+      data.uploadedPreviewUrl && !data.uploadedFileId?.trim()
         ? {
             fileId: data.uploadedFileId ?? "",
             name: "uploaded-image",
-            previewUrl: data.uploadedPreviewUrl ?? undefined,
+            previewUrl: data.uploadedPreviewUrl,
             isImage: true,
           }
         : null,

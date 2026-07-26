@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { Link, useRouter } from '@/i18n/navigation';
 import { Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { useOptionalAuth } from '@/components/auth/AuthProvider';
 import { useCart } from '@/components/cart/CartProvider';
 import { LOGO_MARK } from '@/lib/brand/logos';
 import { cn } from '@/lib/utils';
@@ -147,6 +148,7 @@ export function SpinWheelGame() {
   const t = useTranslations('spinWheel');
   const locale = useLocale();
   const router = useRouter();
+  const auth = useOptionalAuth();
   const { total, hydrated } = useCart();
   const reactId = useId();
   const uid = reactId.replace(/:/g, '');
@@ -160,6 +162,16 @@ export function SpinWheelGame() {
   const [result, setResult] = useState<SpinResult | null>(null);
   const [copied, setCopied] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
+  const [statusLoaded, setStatusLoaded] = useState(false);
+
+  const isLoggedIn = Boolean(auth?.customer);
+  const accountEmail = auth?.customer?.email ?? '';
+
+  useEffect(() => {
+    if (accountEmail) {
+      setEmail(accountEmail);
+    }
+  }, [accountEmail]);
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -168,6 +180,59 @@ export function SpinWheelGame() {
     mq.addEventListener('change', onChange);
     return () => mq.removeEventListener('change', onChange);
   }, []);
+
+  useEffect(() => {
+    if (!auth?.customer) {
+      setStatusLoaded(true);
+      return;
+    }
+    if (statusLoaded || readPendingClaim()) {
+      if (!statusLoaded) setStatusLoaded(true);
+      return;
+    }
+
+    void (async () => {
+      try {
+        const res = await fetch('/api/rewards/spin/status', { cache: 'no-store' });
+        const data = (await res.json()) as {
+          alreadyPlayed?: boolean;
+          play?: {
+            prizeKey: string;
+            discountAmount: number;
+            minOrderAmount: number | null;
+            couponCode: string | null;
+            couponRedeemed?: boolean;
+            validDays?: number;
+            createdAt?: string;
+          };
+        };
+
+        if (!res.ok || !data.alreadyPlayed || !data.play) return;
+
+        const { segmentIndex, segment } = resolveWinSegment(
+          getSpinSegmentIndex(data.play.prizeKey as SpinPrizeKey),
+          data.play.prizeKey,
+        );
+
+        setResult({
+          prizeKey: data.play.prizeKey,
+          segmentIndex,
+          discountAmount: data.play.discountAmount,
+          minOrderAmount: data.play.minOrderAmount ?? segment.minOrderAmount,
+          couponCode: data.play.couponCode,
+          emailSent: false,
+          validDays: data.play.validDays,
+        });
+        setRotation(getSpinLandingRotation(segmentIndex, reduceMotion ? 1 : 6));
+        setPhase(data.play.couponCode ? 'result' : 'already');
+        clearPendingClaim();
+      } catch {
+        /* ignore */
+      } finally {
+        setStatusLoaded(true);
+      }
+    })();
+  }, [auth?.customer, statusLoaded, reduceMotion]);
 
   const sliceDeg = getSpinSliceDegrees();
   const idleMotion = phase === 'idle' && !reduceMotion;
@@ -193,6 +258,68 @@ export function SpinWheelGame() {
     setPhase('claim');
     setRotation(getSpinLandingRotation(pending.result.segmentIndex, reduceMotion ? 1 : 6));
   }, [reduceMotion]);
+
+  async function claimPrize(claimEmail: string) {
+    if (!claimToken || !result) return false;
+    setError(null);
+    setClaiming(true);
+
+    try {
+      const res = await fetch('/api/rewards/spin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: claimEmail,
+          claimToken,
+          locale: locale === 'en' ? 'en' : 'mk',
+          website: '',
+        }),
+      });
+
+      const data = (await res.json()) as {
+        ok?: boolean;
+        code?: string;
+        alreadyPlayed?: boolean;
+        couponCode?: string | null;
+        emailSent?: boolean;
+        error?: string;
+      };
+
+      if (res.status === 409 || data.code === 'already_played') {
+        setPhase('already');
+        return false;
+      }
+
+      if (res.status === 400 && data.code === 'invalid_token') {
+        setError(t('errors.expiredSpin'));
+        return false;
+      }
+
+      if (!res.ok || !data.ok || !data.couponCode) {
+        setError(t('errors.generic'));
+        return false;
+      }
+
+      setResult({
+        ...result,
+        couponCode: data.couponCode,
+        emailSent: Boolean(data.emailSent),
+      });
+      setPhase('result');
+      clearPendingClaim();
+      try {
+        localStorage.setItem(SPIN_CLAIMED_FLAG_KEY, '1');
+      } catch {
+        /* ignore */
+      }
+      return true;
+    } catch {
+      setError(t('errors.generic'));
+      return false;
+    } finally {
+      setClaiming(false);
+    }
+  }
 
   async function onSpin(event: FormEvent) {
     event.preventDefault();
@@ -230,7 +357,13 @@ export function SpinWheelGame() {
         validDays?: number;
         error?: string;
         code?: string;
+        alreadyPlayed?: boolean;
       };
+
+      if (res.status === 409 || data.code === 'already_played') {
+        setPhase('already');
+        return;
+      }
 
       if (!res.ok || !data.ok || typeof data.segmentIndex !== 'number') {
         setPhase('idle');
@@ -246,7 +379,7 @@ export function SpinWheelGame() {
       animateToSegment(segmentIndex);
 
       setClaimToken(data.claimToken ?? null);
-      setResult({
+      const spinResult: SpinResult = {
         prizeKey: data.prizeKey ?? segment.key,
         segmentIndex,
         discountAmount: data.discountAmount ?? segment.discountAmount,
@@ -254,23 +387,22 @@ export function SpinWheelGame() {
         couponCode: null,
         emailSent: false,
         validDays: data.validDays,
-      });
+      };
+
+      setResult(spinResult);
 
       if (data.claimToken) {
-        savePendingClaim(data.claimToken, {
-          prizeKey: data.prizeKey ?? segment.key,
-          segmentIndex,
-          discountAmount: data.discountAmount ?? segment.discountAmount,
-          minOrderAmount: data.minOrderAmount ?? segment.minOrderAmount,
-          couponCode: null,
-          emailSent: false,
-          validDays: data.validDays,
-        });
+        savePendingClaim(data.claimToken, spinResult);
       }
 
       const delay = reduceMotion ? 200 : 5200;
       window.setTimeout(() => {
-        setPhase('claim');
+        if (isLoggedIn && data.claimToken && accountEmail) {
+          setPhase('claim');
+          void claimPrize(accountEmail);
+        } else {
+          setPhase('claim');
+        }
       }, delay);
     } catch {
       setPhase('idle');
@@ -281,69 +413,14 @@ export function SpinWheelGame() {
   async function onClaim(event: FormEvent) {
     event.preventDefault();
     if (claiming || !claimToken || !result) return;
-    setError(null);
 
-    const trimmed = email.trim();
+    const trimmed = isLoggedIn ? accountEmail : email.trim();
     if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
       setError(t('errors.invalidEmail'));
       return;
     }
 
-    setClaiming(true);
-
-    try {
-      const res = await fetch('/api/rewards/spin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: trimmed,
-          claimToken,
-          locale: locale === 'en' ? 'en' : 'mk',
-          website: '',
-        }),
-      });
-
-      const data = (await res.json()) as {
-        ok?: boolean;
-        code?: string;
-        alreadyPlayed?: boolean;
-        couponCode?: string | null;
-        emailSent?: boolean;
-        error?: string;
-      };
-
-      if (res.status === 409 || data.code === 'already_played') {
-        setPhase('already');
-        return;
-      }
-
-      if (res.status === 400 && data.code === 'invalid_token') {
-        setError(t('errors.expiredSpin'));
-        return;
-      }
-
-      if (!res.ok || !data.ok || !data.couponCode) {
-        setError(t('errors.generic'));
-        return;
-      }
-
-      setResult({
-        ...result,
-        couponCode: data.couponCode,
-        emailSent: Boolean(data.emailSent),
-      });
-      setPhase('result');
-      clearPendingClaim();
-      try {
-        localStorage.setItem(SPIN_CLAIMED_FLAG_KEY, '1');
-      } catch {
-        /* ignore */
-      }
-    } catch {
-      setError(t('errors.generic'));
-    } finally {
-      setClaiming(false);
-    }
+    await claimPrize(trimmed);
   }
 
   async function copyCode() {
@@ -371,7 +448,7 @@ export function SpinWheelGame() {
         SPIN_PENDING_COUPON_KEY,
         JSON.stringify({
           code: result.couponCode,
-          email: email.trim().toLowerCase(),
+          email: (accountEmail || email.trim()).toLowerCase(),
         }),
       );
     } catch {
@@ -646,9 +723,16 @@ export function SpinWheelGame() {
           <p className="font-display text-xl font-bold text-brand-900">
             {t('alreadyTitle')}
           </p>
-          <p className="mt-2 text-sm text-ink-600">{t('alreadyBody')}</p>
-          <Link href="/products" className="mt-5 inline-block">
-            <Button>{t('shopCta')}</Button>
+          <p className="mt-2 text-sm text-ink-600">
+            {isLoggedIn ? t('alreadyBodyLoggedIn') : t('alreadyBody')}
+          </p>
+          {isLoggedIn ? (
+            <Link href="/account" className="mt-5 inline-block">
+              <Button variant="outline">{t('viewAccountCta')}</Button>
+            </Link>
+          ) : null}
+          <Link href="/products" className={cn('inline-block', isLoggedIn ? 'mt-3' : 'mt-5')}>
+            <Button variant={isLoggedIn ? 'primary' : 'primary'}>{t('shopCta')}</Button>
           </Link>
         </div>
       ) : null}
@@ -663,45 +747,60 @@ export function SpinWheelGame() {
           <p className="font-display text-2xl font-bold text-brand-900">
             {t('winTitle', { amount: result.discountAmount })}
           </p>
-          <p className="mt-2 text-sm text-ink-600">{t('claimBody')}</p>
-          <form onSubmit={onClaim} className="mt-5 space-y-4 text-left">
-            <label className="block text-sm font-medium text-ink-700">
-              {t('emailLabel')}
+          <p className="mt-2 text-sm text-ink-600">
+            {isLoggedIn ? t('claimBodyLoggedIn') : t('claimBody')}
+          </p>
+          {isLoggedIn ? (
+            <div className="mt-5">
+              {claiming ? (
+                <p className="text-sm font-medium text-brand-700">{t('claimingLoggedIn')}</p>
+              ) : null}
+              {error ? (
+                <p className="mt-3 text-center text-sm text-red-600" role="alert">
+                  {error}
+                </p>
+              ) : null}
+            </div>
+          ) : (
+            <form onSubmit={onClaim} className="mt-5 space-y-4 text-left">
+              <label className="block text-sm font-medium text-ink-700">
+                {t('emailLabel')}
+                <input
+                  type="email"
+                  name="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  disabled={claiming}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="mt-1.5 w-full border border-ink-300 bg-white px-3 py-2.5 text-ink-900 outline-none focus:border-brand-500"
+                  placeholder={t('emailPlaceholder')}
+                />
+              </label>
               <input
-                type="email"
-                name="email"
-                autoComplete="email"
-                required
-                value={email}
-                disabled={claiming}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-1.5 w-full border border-ink-300 bg-white px-3 py-2.5 text-ink-900 outline-none focus:border-brand-500"
-                placeholder={t('emailPlaceholder')}
+                type="text"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                className="absolute left-[-9999px] h-0 w-0 opacity-0"
+                aria-hidden
               />
-            </label>
-            <input
-              type="text"
-              name="website"
-              tabIndex={-1}
-              autoComplete="off"
-              className="absolute left-[-9999px] h-0 w-0 opacity-0"
-              aria-hidden
-            />
-            <Button
-              type="submit"
-              size="lg"
-              loading={claiming}
-              disabled={claiming || !claimToken}
-              className="w-full border-[#e85d04] bg-[#e85d04] hover:border-[#f48c06] hover:bg-[#f48c06]"
-            >
-              {claiming ? t('claiming') : t('claimCta')}
-            </Button>
-            {error ? (
-              <p className="text-center text-sm text-red-600" role="alert">
-                {error}
-              </p>
-            ) : null}
-          </form>
+              <Button
+                type="submit"
+                size="lg"
+                loading={claiming}
+                disabled={claiming || !claimToken}
+                className="w-full border-[#e85d04] bg-[#e85d04] hover:border-[#f48c06] hover:bg-[#f48c06]"
+              >
+                {claiming ? t('claiming') : t('claimCta')}
+              </Button>
+              {error ? (
+                <p className="text-center text-sm text-red-600" role="alert">
+                  {error}
+                </p>
+              ) : null}
+            </form>
+          )}
           <p className="mt-4 text-center text-xs leading-relaxed text-ink-500">
             {t('rules')}
           </p>
@@ -729,6 +828,10 @@ export function SpinWheelGame() {
               {result.emailSent ? (
                 <p className="mt-2 text-sm font-medium text-brand-700">
                   {t('emailSent')}
+                </p>
+              ) : isLoggedIn ? (
+                <p className="mt-2 text-sm font-medium text-brand-700">
+                  {t('rewardSavedToAccount')}
                 </p>
               ) : (
                 <p className="mt-2 text-sm text-ink-500">{t('emailFallback')}</p>
@@ -772,6 +875,11 @@ export function SpinWheelGame() {
             </>
           )}
           <div className="mt-6 flex flex-wrap justify-center gap-3">
+            {isLoggedIn ? (
+              <Link href="/account">
+                <Button variant="outline">{t('viewAccountCta')}</Button>
+              </Link>
+            ) : null}
             <Link href="/products">
               <Button variant={canUseNow ? 'outline' : 'primary'}>
                 {t('shopCta')}

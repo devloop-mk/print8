@@ -2,7 +2,7 @@ export type EditorPanel = 'product' | 'text' | 'photo' | 'stickers' | 'design' |
 
 export type SelectedElement =
   | `text:${string}`
-  | 'photo'
+  | `photo:${string}`
   | 'overlay'
   | `sticker:${string}`
   | null;

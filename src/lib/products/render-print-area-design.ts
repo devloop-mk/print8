@@ -22,6 +22,7 @@ import {
   type PrintAreaInsets,
 } from '@/lib/products/print-area';
 import { resolveAssetUrl } from '@/lib/storage/asset-url';
+import { getPlacedPhotos } from '@/lib/products/photo-layers';
 
 /** Long edge (px) for print-ready PNG — ~300 DPI at typical garment print width. */
 const TARGET_PRINT_WIDTH_BY_TYPE: Partial<Record<ProductType, number>> = {
@@ -355,7 +356,6 @@ export async function renderPrintAreaDesign(
   const context = canvas.getContext('2d');
   if (!context) return undefined;
 
-  const hasPremade = Boolean(template) || Boolean(design.premadeDesignId);
   const designImage = await resolveDesignImage(
     design,
     template,
@@ -373,24 +373,25 @@ export async function renderPrintAreaDesign(
       width,
       height,
     );
-  } else if (
-    !hasPremade &&
-    design.uploadedFile?.isImage &&
-    design.uploadedFile.previewUrl
-  ) {
+  }
+
+  const placedPhotos = getPlacedPhotos(design);
+
+  for (const photo of placedPhotos) {
+    if (!photo.previewUrl) continue;
     try {
-      const uploaded = await loadImage(design.uploadedFile.previewUrl);
+      const uploaded = await loadImage(photo.previewUrl);
       drawImageLayer(
         context,
         uploaded,
-        design.uploadedImagePosition,
-        design.uploadedImageScale,
+        photo.position,
+        photo.scale,
         insets,
         width,
         height,
       );
     } catch {
-      // continue with text/stickers only
+      // skip broken photo
     }
   }
 

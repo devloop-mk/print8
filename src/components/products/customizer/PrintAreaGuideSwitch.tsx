@@ -11,6 +11,7 @@ type PrintAreaGuideSwitchProps = {
   wrapLabel: string;
   frontLabel: string;
   showHandleHint?: boolean;
+  showCenterGuide?: boolean;
   handleHintLabel?: string;
   centerLabel?: string;
 };
@@ -22,6 +23,7 @@ export function PrintAreaGuideSwitch({
   wrapLabel,
   frontLabel,
   showHandleHint,
+  showCenterGuide,
   handleHintLabel,
   centerLabel,
 }: PrintAreaGuideSwitchProps) {
@@ -34,6 +36,7 @@ export function PrintAreaGuideSwitch({
         frontLabel={frontLabel}
         hidden={hidden}
         showHandleHint={showHandleHint}
+        showCenterGuide={showCenterGuide}
         handleHintLabel={handleHintLabel}
         centerLabel={centerLabel}
       />

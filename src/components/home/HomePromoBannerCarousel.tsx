@@ -7,6 +7,7 @@ import { Link } from '@/i18n/navigation';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { promoBannerSlides } from '@/lib/home/promo-banner-slides';
+import { PromoBannerDesktopBackdrop } from '@/components/home/PromoBannerDesktopBackdrop';
 
 const AUTO_ADVANCE_MS = 6500;
 const PROGRAMMATIC_SCROLL_MS = 350;
@@ -257,10 +258,12 @@ export function HomePromoBannerCarousel({ className = '' }: { className?: string
       >
         <div
           className={cn(
-            'relative min-h-0 w-full overflow-hidden bg-brand-800',
+            'relative min-h-0 w-full overflow-hidden',
             'aspect-[16/9] max-h-[min(68vh,720px)]',
           )}
         >
+          <PromoBannerDesktopBackdrop />
+
           {promoBannerSlides.map((slide, slideIndex) => {
             const active = slideIndex === index;
             return (
@@ -275,7 +278,7 @@ export function HomePromoBannerCarousel({ className = '' }: { className?: string
                 {renderDesktopImage(slide, slideIndex)}
 
                 <div
-                  className="pointer-events-none absolute inset-0 bg-gradient-to-r from-brand-800 from-[20%] via-brand-800/80 via-[42%] to-transparent to-[62%]"
+                  className="pointer-events-none absolute inset-0 bg-gradient-to-r from-brand-950/50 from-[18%] via-brand-900/35 via-[42%] to-transparent to-[60%]"
                   aria-hidden
                 />
 

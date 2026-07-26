@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { createSupabaseRouteHandlerClient } from '@/lib/supabase/server-auth';
 import { formatSupabaseError } from '@/lib/supabase/client';
 import { customersDb } from '@/lib/db/customers';
+import { getCustomerSignInMethods } from '@/lib/auth/customer-sign-in-methods';
 import { enforceRateLimit } from '@/lib/security/rate-limit';
 
 const loginSchema = z.object({
@@ -29,6 +30,16 @@ export async function POST(request: NextRequest) {
     });
 
     if (error || !data.user?.email) {
+      const customer = await customersDb.findByEmailNormalized(email);
+      if (customer) {
+        const signInMethods = await getCustomerSignInMethods(customer.id);
+        if (signInMethods.google && !signInMethods.email) {
+          return NextResponse.json(
+            { error: 'This account uses Google sign-in', code: 'use_google' },
+            { status: 401 },
+          );
+        }
+      }
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 

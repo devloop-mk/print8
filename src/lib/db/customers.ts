@@ -110,7 +110,6 @@ export const customersDb = {
         full_name: input.fullName ?? null,
         phone: input.phone ?? null,
         points_balance: 0,
-        points_pending_balance: 0,
         first_order_bonus_granted: false,
         created_at: now,
         updated_at: now,
