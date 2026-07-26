@@ -23,6 +23,19 @@ Optional SQL update for Google `name` metadata: `migrations/auth-trigger-google-
 
 **Do not enable** “OAuth Server” (third-party apps using Print 8 as IdP) — that is unrelated to Google login.
 
+### Google OAuth branding verification
+
+Google may reject branding if the home page URL, app name, or site purpose do not match. Use this checklist:
+
+1. **Home page URL** in Google Cloud → Branding: use `https://print8.mk/mk` (not `www` unless you verified `www` in Search Console).
+2. **Verify domain** in [Google Search Console](https://search.google.com/search-console):
+   - Add property `https://print8.mk` (and `https://www.print8.mk` if you use www).
+   - Verify via DNS TXT in Cloudflare (recommended) or HTML file.
+3. **Authorized domains** in Google Cloud: `print8.mk` (no `https://`).
+4. **Privacy / Terms:** `https://print8.mk/mk/privacy` and `https://print8.mk/mk/terms`.
+5. The homepage shows a visible **Print 8** heading and explains the shop and customer accounts (including Google sign-in).
+6. **Publish** the OAuth app (move out of Testing) after verification passes.
+
 ---
 
 # Supabase Auth email templates

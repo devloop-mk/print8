@@ -67,6 +67,7 @@ export function buildPageMetadata({
 
   return {
     metadataBase: new URL(siteUrl),
+    applicationName: 'Print 8',
     title,
     description,
     alternates: {
