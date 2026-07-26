@@ -1,22 +1,9 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import type { NextRequest, NextResponse } from 'next/server';
+import { getSupabaseAnonKey, getSupabaseAuthUrl } from '@/lib/supabase/auth-env';
 
-function readEnv(name: string): string {
-  const value = process.env[name]?.trim();
-  if (!value) {
-    throw new Error(`Missing ${name} in environment variables`);
-  }
-  return value;
-}
-
-export function getSupabaseAuthUrl(): string {
-  return readEnv('NEXT_PUBLIC_SUPABASE_URL');
-}
-
-export function getSupabaseAnonKey(): string {
-  return readEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY');
-}
+export { getSupabaseAuthUrl, getSupabaseAnonKey } from '@/lib/supabase/auth-env';
 
 /** API route handlers — writable cookies() store (login, signup, logout). */
 export async function createSupabaseRouteHandlerClient() {

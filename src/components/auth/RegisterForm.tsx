@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link, useRouter } from '@/i18n/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 
@@ -57,7 +58,8 @@ export function RegisterForm() {
     <Card className="mx-auto max-w-md p-6">
       <h1 className="font-display text-2xl font-bold text-ink-900">{t('registerTitle')}</h1>
       <p className="mt-2 text-sm text-ink-600">{t('registerSubtitle')}</p>
-      <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+      <GoogleSignInButton />
+      <form onSubmit={handleSubmit} className="mt-2 space-y-4">
         <div>
           <label className="mb-1 block text-sm font-medium text-ink-700" htmlFor="fullName">
             {t('fullName')}

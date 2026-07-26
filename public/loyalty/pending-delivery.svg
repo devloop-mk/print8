@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" fill="none" aria-hidden="true">
+  <rect width="320" height="240" rx="24" fill="#fff8f0"/>
+  <circle cx="72" cy="64" r="40" fill="#e85d04" opacity="0.12"/>
+  <circle cx="260" cy="176" r="44" fill="#2f7cb8" opacity="0.1"/>
+  <rect x="72" y="108" width="120" height="72" rx="10" fill="#2f7cb8" opacity="0.18"/>
+  <rect x="88" y="92" width="88" height="56" rx="8" fill="#fff" stroke="#2f7cb8" stroke-width="3"/>
+  <path d="M200 132h56l20 28v28h-76v-28l20-28z" fill="#2f7cb8"/>
+  <rect x="208" y="156" width="40" height="20" rx="4" fill="#1e5a8a"/>
+  <circle cx="220" cy="184" r="10" fill="#163d5c"/>
+  <circle cx="252" cy="184" r="10" fill="#163d5c"/>
+  <circle cx="200" cy="72" r="36" fill="#fff" stroke="#e85d04" stroke-width="4"/>
+  <path d="M200 52v24l14 10" stroke="#e85d04" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="156" y="120" width="52" height="28" rx="14" fill="#e85d04"/>
+  <text x="182" y="139" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" font-weight="700" fill="#fff">pending</text>
+</svg>

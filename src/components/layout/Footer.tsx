@@ -68,6 +68,11 @@ export function Footer() {
               </Link>
             </li>
             <li>
+              <Link href="/loyalty-points" className="transition hover:text-white">
+                {nav('loyaltyPoints')}
+              </Link>
+            </li>
+            <li>
               <Link href="/order-status" className="transition hover:text-white">
                 {nav('orderStatus')}
               </Link>

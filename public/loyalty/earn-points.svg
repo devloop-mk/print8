@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" fill="none" aria-hidden="true">
+  <rect width="320" height="240" rx="24" fill="#f0f7fc"/>
+  <circle cx="248" cy="52" r="36" fill="#e85d04" opacity="0.15"/>
+  <circle cx="56" cy="188" r="48" fill="#2f7cb8" opacity="0.12"/>
+  <path d="M96 88h112l-12 88H84l12-88z" fill="#2f7cb8" opacity="0.2"/>
+  <path d="M108 72h88l8 16H100l8-16z" fill="#2f7cb8"/>
+  <rect x="108" y="96" width="96" height="72" rx="8" fill="#fff" stroke="#2f7cb8" stroke-width="3"/>
+  <circle cx="160" cy="132" r="22" fill="#e85d04"/>
+  <text x="160" y="139" text-anchor="middle" font-family="system-ui,sans-serif" font-size="18" font-weight="700" fill="#fff">+</text>
+  <circle cx="196" cy="168" r="28" fill="#2f7cb8"/>
+  <text x="196" y="175" text-anchor="middle" font-family="system-ui,sans-serif" font-size="16" font-weight="700" fill="#fff">5</text>
+  <circle cx="124" cy="168" r="20" fill="#e85d04" opacity="0.85"/>
+  <text x="124" y="173" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" font-weight="700" fill="#fff">5</text>
+</svg>

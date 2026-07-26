@@ -1,20 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
 import { Link, useRouter } from '@/i18n/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 
 export function LoginForm({ redirectTo = '/account' }: { redirectTo?: string }) {
   const t = useTranslations('account');
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { refresh } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const oauth = searchParams.get('oauth');
+    if (oauth === 'failed' || oauth === 'missing_code') {
+      setError(t('googleSignInFailed'));
+    }
+  }, [searchParams, t]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -45,7 +55,8 @@ export function LoginForm({ redirectTo = '/account' }: { redirectTo?: string }) 
     <Card className="mx-auto max-w-md p-6">
       <h1 className="font-display text-2xl font-bold text-ink-900">{t('loginTitle')}</h1>
       <p className="mt-2 text-sm text-ink-600">{t('loginSubtitle')}</p>
-      <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+      <GoogleSignInButton redirectTo={redirectTo} />
+      <form onSubmit={handleSubmit} className="mt-2 space-y-4">
         <div>
           <label className="mb-1 block text-sm font-medium text-ink-700" htmlFor="email">
             {t('email')}

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360" fill="none" aria-hidden="true">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="480" y2="360" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f0f7fc"/>
+      <stop offset="1" stop-color="#fff8f0"/>
+    </linearGradient>
+  </defs>
+  <rect width="480" height="360" rx="32" fill="url(#bg)"/>
+  <circle cx="400" cy="72" r="56" fill="#2f7cb8" opacity="0.12"/>
+  <circle cx="88" cy="288" r="64" fill="#e85d04" opacity="0.1"/>
+  <circle cx="240" cy="180" r="88" fill="#fff" opacity="0.7"/>
+  <circle cx="240" cy="180" r="72" fill="#2f7cb8"/>
+  <text x="240" y="196" text-anchor="middle" font-family="system-ui,sans-serif" font-size="42" font-weight="800" fill="#fff">8</text>
+  <circle cx="176" cy="148" r="28" fill="#e85d04"/>
+  <text x="176" y="156" text-anchor="middle" font-family="system-ui,sans-serif" font-size="20" font-weight="700" fill="#fff">+</text>
+  <circle cx="304" cy="148" r="24" fill="#fff" opacity="0.95"/>
+  <text x="304" y="155" text-anchor="middle" font-family="system-ui,sans-serif" font-size="16" font-weight="700" fill="#2f7cb8">5</text>
+  <circle cx="176" cy="248" r="22" fill="#fff" opacity="0.95"/>
+  <text x="176" y="255" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="700" fill="#2f7cb8">5</text>
+  <circle cx="304" cy="248" r="26" fill="#e85d04" opacity="0.9"/>
+  <text x="304" y="256" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" font-weight="700" fill="#fff"></text>
+  <rect x="148" y="296" width="184" height="36" rx="18" fill="#163d5c"/>
+  <text x="240" y="319" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#fff">loyalty points</text>
+</svg>

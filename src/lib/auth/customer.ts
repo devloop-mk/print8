@@ -15,13 +15,18 @@ export async function getCustomerSession(): Promise<CustomerSession | null> {
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user?.id || !data.user.email) return null;
 
+  const metadata = data.user.user_metadata;
+  const fullNameFromMeta =
+    typeof metadata?.full_name === 'string'
+      ? metadata.full_name
+      : typeof metadata?.name === 'string'
+        ? metadata.name
+        : null;
+
   const customer = await customersDb.ensureProfile({
     id: data.user.id,
     email: data.user.email,
-    fullName:
-      typeof data.user.user_metadata?.full_name === 'string'
-        ? data.user.user_metadata.full_name
-        : null,
+    fullName: fullNameFromMeta,
   });
 
   await customersDb.linkPastOrders(customer.id, customer.email);

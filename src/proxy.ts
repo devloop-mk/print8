@@ -59,5 +59,11 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/', '/(mk|en)/:path*', '/admin/:path*', '/api/admin/:path*'],
+  matcher: [
+    '/',
+    '/(mk|en)/:path*',
+    '/auth/:path*',
+    '/admin/:path*',
+    '/api/admin/:path*',
+  ],
 };

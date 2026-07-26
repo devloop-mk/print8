@@ -94,6 +94,14 @@ export function AccountDashboard() {
             {t('firstOrderBonusHint')}
           </p>
         ) : null}
+        <p className="mt-4 text-sm">
+          <Link
+            href="/loyalty-points"
+            className="font-semibold text-brand-700 hover:underline"
+          >
+            {t('pointsLearnMore')}
+          </Link>
+        </p>
       </Card>
 
       <section>

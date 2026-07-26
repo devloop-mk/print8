@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1"
     />
-    <title>Потврдете е-пошта — Print 8</title>
+    <title>Потврдете новата е-пошта — Print 8</title>
   </head>
   <body
     style="
@@ -66,7 +66,7 @@
                     color: #ffffff;
                   "
                 >
-                  Потврдете ја вашата е-пошта
+                  Потврдете промена на е-пошта
                 </h1>
                 <p
                   style="
@@ -76,13 +76,93 @@
                     color: #dceaf4;
                   "
                 >
-                  Активирајте ја сметката и почнете да собирате поени со вашите
-                  нарачки.
+                  Потврдете новата адреса за да завршите промената.
                 </p>
               </td>
             </tr>
             <tr>
               <td style="padding: 28px 32px">
+                <p
+                  style="
+                    margin: 0 0 16px;
+                    font-size: 15px;
+                    line-height: 1.65;
+                    color: #0f172a;
+                  "
+                >
+                  Барате промена на е-пошта за вашата Print 8 сметка:
+                </p>
+                <table
+                  role="presentation"
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                  style="
+                    border-collapse: collapse;
+                    margin: 0 0 22px;
+                    background: #f8fafc;
+                    border: 1px solid #e2e8f0;
+                  "
+                >
+                  <tr>
+                    <td style="padding: 14px 16px">
+                      <p
+                        style="
+                          margin: 0 0 4px;
+                          font-size: 11px;
+                          font-weight: 700;
+                          letter-spacing: 0.08em;
+                          text-transform: uppercase;
+                          color: #64748b;
+                        "
+                      >
+                        Тековна е-пошта
+                      </p>
+                      <p
+                        style="
+                          margin: 0;
+                          font-size: 15px;
+                          line-height: 1.4;
+                          color: #0f172a;
+                        "
+                      >
+                        {{ .Email }}
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      style="
+                        padding: 14px 16px;
+                        border-top: 1px solid #e2e8f0;
+                      "
+                    >
+                      <p
+                        style="
+                          margin: 0 0 4px;
+                          font-size: 11px;
+                          font-weight: 700;
+                          letter-spacing: 0.08em;
+                          text-transform: uppercase;
+                          color: #64748b;
+                        "
+                      >
+                        Нова е-пошта
+                      </p>
+                      <p
+                        style="
+                          margin: 0;
+                          font-size: 15px;
+                          line-height: 1.4;
+                          font-weight: 600;
+                          color: #2f7cb2;
+                        "
+                      >
+                        {{ .NewEmail }}
+                      </p>
+                    </td>
+                  </tr>
+                </table>
                 <p
                   style="
                     margin: 0 0 22px;
@@ -91,8 +171,8 @@
                     color: #0f172a;
                   "
                 >
-                  Ви благодариме за регистрацијата на print8.mk. Кликнете на
-                  копчето подолу за да ја потврдите вашата е-пошта.
+                  Кликнете на копчето подолу за да потврдите промената. Врската
+                  е валидна ограничено време и може да се користи само еднаш.
                 </p>
                 <a
                   href="{{ .ConfirmationURL }}"
@@ -106,7 +186,7 @@
                     padding: 14px 24px;
                     border-radius: 6px;
                   "
-                  >Потврди е-пошта</a
+                  >Потврди новата е-пошта</a
                 >
                 <p
                   style="
@@ -122,6 +202,17 @@
                     style="color: #2f7cb2"
                     >{{ .ConfirmationURL }}</a
                   >
+                </p>
+                <p
+                  style="
+                    margin: 20px 0 0;
+                    font-size: 13px;
+                    line-height: 1.6;
+                    color: #64748b;
+                  "
+                >
+                  Ако не сте побарали промена, игнорирајте овој е-маил — вашата
+                  е-пошта нема да се промени.
                 </p>
               </td>
             </tr>

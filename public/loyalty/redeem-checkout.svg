@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" fill="none" aria-hidden="true">
+  <rect width="320" height="240" rx="24" fill="#f0f7fc"/>
+  <circle cx="248" cy="188" r="44" fill="#2f7cb8" opacity="0.12"/>
+  <circle cx="64" cy="56" r="36" fill="#e85d04" opacity="0.14"/>
+  <rect x="88" y="56" width="144" height="128" rx="16" fill="#fff" stroke="#2f7cb8" stroke-width="3"/>
+  <rect x="104" y="72" width="112" height="12" rx="6" fill="#dbeafe"/>
+  <rect x="104" y="92" width="88" height="10" rx="5" fill="#e2e8f0"/>
+  <rect x="104" y="110" width="96" height="10" rx="5" fill="#e2e8f0"/>
+  <rect x="104" y="136" width="112" height="36" rx="8" fill="#2f7cb8"/>
+  <text x="160" y="158" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="700" fill="#fff">checkout</text>
+  <path d="M56 148l28-48h40l-12 48H56z" fill="#e85d04"/>
+  <circle cx="72" cy="168" r="14" fill="#fff" stroke="#e85d04" stroke-width="3"/>
+  <text x="72" y="173" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" font-weight="700" fill="#e85d04">%</text>
+  <rect x="196" y="44" width="72" height="40" rx="8" fill="#e85d04"/>
+  <text x="236" y="69" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="700" fill="#fff">500</text>
+</svg>

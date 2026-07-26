@@ -58,6 +58,12 @@ export function PointsEarnPreview({ payableTotal }: PointsEarnPreviewProps) {
           {t('pointsEarnBonusIncluded', { count: quote.bonus })}
         </p>
       ) : null}
+      <Link
+        href="/loyalty-points"
+        className="mt-2 inline-block text-sm font-semibold text-brand-700 hover:underline"
+      >
+        {t('pointsLearnMore')}
+      </Link>
     </div>
   );
 }

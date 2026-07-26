@@ -18,6 +18,7 @@
       "faq": "FAQ",
       "orderStatus": "Order status",
       "howToOrder": "How to order",
+      "loyaltyPoints": "Loyalty points",
       "newsletter": "Newsletter",
       "legal": "Legal"
     }
@@ -66,6 +67,7 @@
     "faq": "FAQ",
     "orderStatus": "Order status",
     "howToOrder": "How to order",
+    "loyaltyPoints": "Loyalty points",
     "order": "Order",
     "cart": "Cart",
     "account": "Account",
@@ -79,6 +81,7 @@
       "contactDesc": "Message us or find our details",
       "faqDesc": "Answers to common questions",
       "howToOrderDesc": "A short step-by-step ordering guide",
+      "loyaltyPointsDesc": "How to earn, unlock, and spend points",
       "orderStatusDesc": "Check where your order is",
       "hint": "We usually reply within one business day"
     },
@@ -2160,6 +2163,7 @@
     "pointsDiscount": "Points discount",
     "pointsEarnTitle": "You will earn {count} points from this order",
     "pointsEarnPendingNote": "Points are added to your account right away and become usable after delivery.",
+    "pointsLearnMore": "How loyalty points work →",
     "pointsEarnBonusIncluded": "Includes {count} first-order bonus points.",
     "pointsEarnGuest": "Log in to earn up to {count} points on this order.",
     "pointsPendingCheckout": "{count} pending (usable after delivery)",
@@ -2188,6 +2192,9 @@
     "registerFailed": "Could not create account. Try a different email.",
     "signupRateLimited": "Too many signup attempts. Wait a few minutes or check Supabase email rate limits.",
     "confirmEmail": "Account created. Check your email to confirm your address, then log in.",
+    "orContinueWith": "Or continue with",
+    "googleSignIn": "Continue with Google",
+    "googleSignInFailed": "Google sign-in did not work. Try again or use email and password.",
     "hasAccount": "Already have an account?",
     "noAccount": "Don't have an account?",
     "pointsBalance": "Your points",
@@ -2205,6 +2212,7 @@
     "pointsUsed": "Used {count} pts",
     "pointsEarned": "+{count} pts earned",
     "shopWithPoints": "Shop and use points at checkout →",
+    "pointsLearnMore": "How loyalty points work →",
     "orderStatus": {
       "pending": "Pending",
       "confirmed": "Confirmed",
@@ -2301,6 +2309,97 @@
       "delivered": "Delivered / picked up",
       "cancelled": "Cancelled"
     }
+  },
+  "loyaltyPoints": {
+    "title": "Loyalty points",
+    "subtitle": "Create a free account, earn points on every order, and turn them into real savings at checkout. Points show up right away and unlock when your order is delivered.",
+    "eyebrow": "Rewards program",
+    "ctaRegister": "Create free account",
+    "ctaLogin": "Log in",
+    "ctaProducts": "Browse products",
+    "ctaAccount": "My account",
+    "stats": {
+      "earnLabel": "Earn rate",
+      "earnValue": "{points} pts / 100 MKD",
+      "earnHint": "Based on cash you pay after discounts",
+      "valueLabel": "Point value",
+      "valueAmount": "{value} MKD",
+      "valueHint": "Discount per point at checkout",
+      "bonusLabel": "First order",
+      "bonusValue": "+{points} pts",
+      "bonusHint": "One-time bonus on your first delivered order"
+    },
+    "pillarsTitle": "Three simple rules",
+    "pillarsSubtitle": "No hidden tiers or complicated math — just shop, deliver, and save.",
+    "pillars": {
+      "earn": {
+        "title": "Earn on every order",
+        "body": "Logged-in customers earn points from the cash amount you pay (after coupons and any points discount). Every full 100 MKD paid adds more points to your balance."
+      },
+      "pending": {
+        "title": "Pending until delivery",
+        "body": "Points appear on your account immediately after you order, but stay pending until the order is marked delivered or picked up. That keeps the program fair if an order is cancelled."
+      },
+      "redeem": {
+        "title": "Redeem at checkout",
+        "body": "Use your ready balance on the next order. Choose how many points to apply — we calculate the MKD discount for you. You can cover up to the full order subtotal after coupons."
+      }
+    },
+    "stepsTitle": "How it works",
+    "stepsSubtitle": "From sign-up to savings in four steps.",
+    "steps": {
+      "account": {
+        "title": "Create your account",
+        "body": "Register with your email. It’s free and takes less than a minute. Guest checkout is still available, but only accounts earn and spend points."
+      },
+      "shop": {
+        "title": "Shop as usual",
+        "body": "Pick products, ready designs, or print services. Personalize, add to cart, and review your preview before checkout."
+      },
+      "checkout": {
+        "title": "Checkout with points",
+        "body": "At checkout you’ll see how many points you’ll earn on this order. If you have a ready balance, apply points for an instant MKD discount."
+      },
+      "delivery": {
+        "title": "Delivery unlocks points",
+        "body": "When your order is delivered or picked up, pending points move to your ready balance. Your first delivered order also unlocks the one-time welcome bonus."
+      }
+    },
+    "example": {
+      "eyebrow": "Worked example",
+      "title": "See the math",
+      "intro": "Imagine your first order totals 1,000 MKD in cash after any coupon — here’s what you’d see:",
+      "orderLine": "Cash paid on order",
+      "earnLine": "Earn ({points} pts per 100 MKD)",
+      "bonusLine": "First-order welcome bonus",
+      "totalLine": "Pending after checkout",
+      "redeemNote": "Once delivered, those points become ready. Later, {points} points could take {amount} MKD off a future order.",
+      "redeemTitle": "Redeeming points",
+      "redeemBody": "Each point is worth {value} MKD off. We only charge the points needed for the discount you get."
+    },
+    "faqTitle": "Common questions",
+    "faq": {
+      "guest": {
+        "q": "Can I earn points as a guest?",
+        "a": "No — you need a free account so we can track your balance. You can still order as a guest, but you won’t earn or redeem points."
+      },
+      "pending": {
+        "q": "Why are my points pending?",
+        "a": "Points stay pending until delivery or store pickup so cancelled orders don’t award points. You’ll see the same total at checkout and in your account."
+      },
+      "expire": {
+        "q": "Do points expire?",
+        "a": "Your ready balance stays on your account until you use it. We may update program rules in future, but we’ll always communicate changes clearly."
+      },
+      "combine": {
+        "q": "Can I use points with coupons?",
+        "a": "Yes. Coupons apply first; points discount the remaining subtotal. You earn points on the cash amount you actually pay."
+      }
+    },
+    "alsoTitle": "More ways to save",
+    "alsoBody": "Try our spin wheel for surprise discounts, or read the short ordering guide if you’re new to Print 8.",
+    "alsoSpin": "Spin the wheel",
+    "alsoHowToOrder": "How to order"
   },
   "howToOrder": {
     "title": "How to order",

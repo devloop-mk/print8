@@ -22,6 +22,7 @@ const STATIC_PATHS = [
   '/about',
   '/faq',
   '/how-to-order',
+  '/loyalty-points',
   '/order-status',
   '/rewards',
 ] as const;
