@@ -10,6 +10,47 @@ export type CustomerSession = {
   customer: CustomerRecord;
 };
 
+function fallbackCustomerRecord(
+  id: string,
+  email: string,
+  fullName: string | null,
+): CustomerRecord {
+  const now = new Date().toISOString();
+  return {
+    id,
+    email,
+    emailNormalized: normalizeCustomerEmail(email),
+    fullName,
+    phone: null,
+    defaultCity: null,
+    defaultAddress: null,
+    pointsBalance: 0,
+    pointsPendingBalance: 0,
+    firstOrderBonusGranted: false,
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+async function resolveCustomerRecord(
+  id: string,
+  email: string,
+  fullName: string | null,
+): Promise<CustomerRecord> {
+  try {
+    return await customersDb.ensureProfile({
+      id,
+      email,
+      fullName,
+    });
+  } catch (profileError) {
+    console.error('[auth] ensureProfile failed:', profileError);
+    const existing = await customersDb.findById(id);
+    if (existing) return existing;
+    return fallbackCustomerRecord(id, email, fullName);
+  }
+}
+
 export async function getCustomerSession(): Promise<CustomerSession | null> {
   try {
     const supabase = await createSupabaseServerClient();
@@ -24,11 +65,11 @@ export async function getCustomerSession(): Promise<CustomerSession | null> {
           ? metadata.name
           : null;
 
-    const customer = await customersDb.ensureProfile({
-      id: data.user.id,
-      email: data.user.email,
-      fullName: fullNameFromMeta,
-    });
+    const customer = await resolveCustomerRecord(
+      data.user.id,
+      data.user.email,
+      fullNameFromMeta,
+    );
 
     try {
       await customersDb.linkPastOrders(customer.id, customer.email);

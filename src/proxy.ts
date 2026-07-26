@@ -24,10 +24,6 @@ function redirectToCanonicalHost(request: NextRequest): NextResponse | null {
 
   if (!currentHost || currentHost === canonicalHost) return null;
 
-  const normalizedCurrent = currentHost.replace(/^www\./, '');
-  const normalizedCanonical = canonicalHost.replace(/^www\./, '');
-  if (normalizedCurrent !== normalizedCanonical) return null;
-
   const target = new URL(
     `${request.nextUrl.pathname}${request.nextUrl.search}`,
     canonical,

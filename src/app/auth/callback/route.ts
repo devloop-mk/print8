@@ -9,7 +9,7 @@ import {
 import { routing, type Locale } from '@/i18n/routing';
 import { customersDb } from '@/lib/db/customers';
 import { localePath } from '@/lib/seo/site';
-import { createSupabaseRouteClient } from '@/lib/supabase/server-auth';
+import { createSupabaseRouteHandlerClient } from '@/lib/supabase/server-auth';
 
 function oauthLoginRedirect(
   origin: string,
@@ -111,8 +111,8 @@ export async function GET(request: NextRequest) {
     nextCookie,
     nextParam,
   );
-  let response = NextResponse.redirect(new URL(targetPath, origin));
-  const supabase = createSupabaseRouteClient(request, response);
+
+  const supabase = await createSupabaseRouteHandlerClient();
 
   if (code) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
@@ -132,6 +132,7 @@ export async function GET(request: NextRequest) {
       return oauthLoginRedirect(origin, locale, reason);
     }
 
+    const response = NextResponse.redirect(new URL(targetPath, origin));
     response.cookies.delete(OAUTH_NEXT_COOKIE);
 
     if (data.user) {
@@ -156,6 +157,7 @@ export async function GET(request: NextRequest) {
       return emailConfirmFailedRedirect(origin, locale);
     }
 
+    const response = NextResponse.redirect(new URL(targetPath, origin));
     response.cookies.delete(OAUTH_NEXT_COOKIE);
 
     if (data.user) {
