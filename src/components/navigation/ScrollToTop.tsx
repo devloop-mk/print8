@@ -3,12 +3,54 @@
 import { useLayoutEffect, useRef } from 'react';
 import { usePathname } from '@/i18n/navigation';
 
+function unlockBodyScroll() {
+  document.body.style.overflow = '';
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.width = '';
+}
+
 function scrollToTopInstant() {
+  unlockBodyScroll();
+
   const html = document.documentElement;
+  const body = document.body;
+  const scrollingElement = document.scrollingElement;
+
   const previousScrollBehavior = html.style.scrollBehavior;
   html.style.scrollBehavior = 'auto';
+
   window.scrollTo(0, 0);
+  try {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  } catch {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }
+
+  html.scrollTop = 0;
+  body.scrollTop = 0;
+  if (scrollingElement) scrollingElement.scrollTop = 0;
+
   html.style.scrollBehavior = previousScrollBehavior;
+}
+
+function scheduleScrollToTop(): () => void {
+  scrollToTopInstant();
+  let raf1 = 0;
+  let raf2 = 0;
+  raf1 = requestAnimationFrame(() => {
+    scrollToTopInstant();
+    raf2 = requestAnimationFrame(scrollToTopInstant);
+  });
+  const t1 = window.setTimeout(scrollToTopInstant, 50);
+  const t2 = window.setTimeout(scrollToTopInstant, 350);
+
+  return () => {
+    cancelAnimationFrame(raf1);
+    cancelAnimationFrame(raf2);
+    window.clearTimeout(t1);
+    window.clearTimeout(t2);
+  };
 }
 
 function isInternalNavAnchor(anchor: HTMLAnchorElement): boolean {
@@ -36,19 +78,20 @@ function isInternalNavAnchor(anchor: HTMLAnchorElement): boolean {
 /**
  * Forces an instant scroll-to-top when a route change starts.
  *
- * The site opts in to `scroll-behavior: smooth` globally (for anchor links),
- * which also makes the browser/Next.js's own scroll-restoration animate on
- * every page navigation. On long, scrolled pages (especially mobile) that
- * animation takes long enough that the shorter next page (or its loading
- * skeleton) renders while we're still smooth-scrolling up, briefly exposing
- * the footer.
- *
- * We scroll on the *click* (before content swaps) and again on pathname
- * change, always with `scroll-behavior: auto` for that jump.
+ * Global `scroll-behavior: smooth` makes default navigation scroll animate; on
+ * mobile that often finishes mid-transition and leaves a small offset. Mobile
+ * nav also sets `body { overflow: hidden }` while open, which blocks scroll
+ * resets until the drawer closes — we unlock and re-scroll after that.
  */
 export function ScrollToTop() {
   const pathname = usePathname();
   const isFirstRender = useRef(true);
+
+  useLayoutEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+  }, []);
 
   useLayoutEffect(() => {
     function onClick(event: MouseEvent) {
@@ -59,7 +102,7 @@ export function ScrollToTop() {
       const anchor = target?.closest('a');
       if (!anchor || !isInternalNavAnchor(anchor)) return;
 
-      scrollToTopInstant();
+      scheduleScrollToTop();
     }
 
     document.addEventListener('click', onClick, true);
@@ -72,7 +115,7 @@ export function ScrollToTop() {
       return;
     }
 
-    scrollToTopInstant();
+    return scheduleScrollToTop();
   }, [pathname]);
 
   return null;
