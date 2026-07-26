@@ -124,7 +124,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
           <div className="mt-8 space-y-1 border-t border-ink-100 pt-4">
             <a
-              href="/mk"
+              href="/"
               target="_blank"
               rel="noreferrer"
               className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-ink-600 hover:bg-ink-50"
@@ -185,7 +185,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 );
               })}
               <a
-                href="/mk"
+                href="/"
                 target="_blank"
                 rel="noreferrer"
                 className="flex w-16 shrink-0 flex-col items-center gap-1 rounded-lg px-1 py-2 text-[10px] font-medium text-ink-500"

@@ -148,13 +148,6 @@
     "heroStatDesigns": "Print designs",
     "heroStatServices": "Print services",
     "heroStatDelivery": "Cargo delivery",
-    "sitePurpose": {
-      "subtitle": "Online print shop · print8.mk",
-      "about": "Print 8 is an online print shop based in Štip, North Macedonia. Order personalized apparel, drinkware, invitations, print services, and more — with cargo delivery or store pickup.",
-      "accounts": "A free Print 8 account gives you order history, loyalty points, and secure sign-in with Google or email on print8.mk.",
-      "privacy": "Privacy policy",
-      "terms": "Terms of service"
-    },
     "categoryStrip": {
       "label": "Browse by category",
       "items": {
@@ -2009,6 +2002,11 @@
     "title": "About Print 8",
     "subtitle": "Your trusted partner for professional printing.",
     "story": "Print 8 is a company dedicated to high-quality printing and personalized products. With modern equipment and experience, we turn your ideas into reality — from simple business cards to complex gift sets.",
+    "websiteTitle": "print8.mk — Print 8",
+    "websiteBody": "Print 8 is an online print shop based in Štip, North Macedonia. Order personalized apparel, drinkware, invitations, print services, and more — with cargo delivery or store pickup.",
+    "accountsBody": "A free Print 8 account gives you order history, loyalty points, and secure sign-in with Google or email. Points rules and account terms are described in our Terms & Conditions and on the loyalty points page.",
+    "privacyLink": "Privacy policy",
+    "termsLink": "Terms & conditions",
     "mission": "Our mission",
     "missionText": "To provide accessible, quality printing services with a focus on customer satisfaction and fast delivery.",
     "values": "Our values",

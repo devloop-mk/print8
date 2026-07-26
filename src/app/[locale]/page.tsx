@@ -16,7 +16,6 @@ import { HomePromoBannerCarousel } from '@/components/home/HomePromoBannerCarous
 import { HeroFeatureBar } from '@/components/home/HeroFeatureBar';
 import { HomeHighlights } from '@/components/home/HomeHighlights';
 import { HomeHowItWorks } from '@/components/home/HomeHowItWorks';
-import { HomeSitePurpose } from '@/components/home/HomeSitePurpose';
 import { HomeCategoryGrid } from '@/components/home/HomeCategoryGrid';
 import { FeaturedDesignCards } from '@/components/home/FeaturedDesignCards';
 import { HomeCustomDesignCta } from '@/components/home/HomeCustomDesignCta';
@@ -76,11 +75,12 @@ export default async function HomePage({
   return (
     <>
       <section className="relative overflow-hidden border-b border-ink-200 bg-ink-950 text-white">
+        <h1 className="sr-only">
+          Print 8 — {cmsTexts['home.heroTitle']}
+        </h1>
         <HomePromoBannerCarousel />
         <HeroFeatureBar />
       </section>
-
-      <HomeSitePurpose />
 
       <Reveal delay={15}>
         <HomeCategoryGrid productCount={productCount} />

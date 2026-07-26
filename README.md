@@ -4,7 +4,7 @@ Professional printing company website built with Next.js 16, featuring bilingual
 
 ## Features
 
-- **Bilingual** — Macedonian (default) and English via URL locales (`/mk`, `/en`)
+- **Bilingual** — Macedonian (default, no URL prefix) and English (`/en/...`)
 - **Services** — All 12 Print 8 services with order-to-cart flow
 - **Designs** — Template gallery + Fabric.js design studio
 - **Products** — Catalog with customizer for t-shirts, mugs, cups, bags, gift sets
@@ -21,7 +21,7 @@ bun install
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) — redirects to `/mk`.
+Open [http://localhost:3000](http://localhost:3000) — Macedonian by default; English at `/en`.
 
 ## Project Structure
 

@@ -137,6 +137,7 @@ export const config = {
   matcher: [
     '/',
     '/(mk|en)/:path*',
+    '/((?!api|_next|_vercel|admin|auth|.*\\..*).*)',
     '/auth/:path*',
     '/api/:path*',
     '/admin/:path*',

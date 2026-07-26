@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 import { Card } from "@/components/ui/Card";
 import { Sparkles, Zap, ShieldCheck } from "lucide-react";
+import { AboutWebsiteSection } from "@/components/about/AboutWebsiteSection";
 import { PageIntro } from "@/components/brand/PageIntro";
 import { buildSectionMetadata } from "@/lib/seo/page-metadata";
 import type { Locale } from "@/i18n/routing";
@@ -25,6 +26,8 @@ export default async function AboutPage() {
 
       <div className="mx-auto max-w-3xl">
         <p className="text-lg leading-relaxed text-ink-600">{t("story")}</p>
+
+        <AboutWebsiteSection />
 
         <div className="mt-12">
           <h2 className="text-2xl font-bold text-ink-900">{t("mission")}</h2>

@@ -1,4 +1,5 @@
 import type { Locale } from '@/i18n/navigation';
+import { routing } from '@/i18n/routing';
 
 const DEFAULT_SITE_URL = 'https://print8.mk';
 
@@ -63,8 +64,12 @@ export function toAbsoluteAssetUrl(url: string) {
   return absoluteUrl(url);
 }
 
+/** Public URL path for a locale. Default locale (mk) has no prefix; English uses `/en`. */
 export function localePath(locale: Locale, path = '') {
   const normalized = path.startsWith('/') ? path : path ? `/${path}` : '';
+  if (locale === routing.defaultLocale) {
+    return normalized || '/';
+  }
   return `/${locale}${normalized}`;
 }
 

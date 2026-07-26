@@ -6,6 +6,7 @@ import {
   HOME_FEATURED_DESIGNS_CACHE_TAG,
 } from '@/lib/catalog/design-catalog';
 import { routing } from '@/i18n/routing';
+import { localePath } from '@/lib/seo/site';
 
 /** Bust published-design Data Cache (force-dynamic listings + designs hub). */
 export function revalidateDesignCatalogCache() {
@@ -19,7 +20,7 @@ export function revalidateDesignCatalogCache() {
 export function revalidateStorefrontDesignListingPaths() {
   revalidateTag(HOME_FEATURED_DESIGNS_CACHE_TAG, 'max');
   for (const locale of routing.locales) {
-    revalidatePath(`/${locale}`, 'page');
-    revalidatePath(`/${locale}/designs`, 'page');
+    revalidatePath(localePath(locale), 'page');
+    revalidatePath(localePath(locale, '/designs'), 'page');
   }
 }

@@ -29,11 +29,7 @@ export function sendPageView(pathname: string) {
   const key = trackKey(pathname);
   inflight.add(key);
 
-  const locale = pathname.startsWith('/en')
-    ? 'en'
-    : pathname.startsWith('/mk')
-      ? 'mk'
-      : null;
+  const locale = pathname.startsWith('/en') ? 'en' : 'mk';
 
   fetch('/api/analytics/pageview', {
     method: 'POST',

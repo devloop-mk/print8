@@ -8,6 +8,7 @@ import {
   sanitizeOAuthNextPath,
 } from '@/lib/auth/oauth';
 import { routing } from '@/i18n/routing';
+import { localePath } from '@/lib/seo/site';
 import { createSupabaseRouteClient } from '@/lib/supabase/server-auth';
 
 export async function GET(request: NextRequest) {
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
   const locale = nextParam
     ? resolveLocaleFromOAuthPath(nextParam)
     : routing.defaultLocale;
-  const loginPath = `/${locale}/account/login`;
+  const loginPath = localePath(locale, '/account/login');
   const safeNext = sanitizeOAuthNextPath(nextParam, locale);
   const callbackUrl = buildOAuthCallbackUrl(origin);
 

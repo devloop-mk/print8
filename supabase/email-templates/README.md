@@ -27,13 +27,13 @@ Optional SQL update for Google `name` metadata: `migrations/auth-trigger-google-
 
 Google may reject branding if the home page URL, app name, or site purpose do not match. Use this checklist:
 
-1. **Home page URL** in Google Cloud → Branding: use `https://print8.mk/mk` (not `www` unless you verified `www` in Search Console).
+1. **Home page URL** in Google Cloud → Branding: use `https://print8.mk/about` (explains Print 8, accounts, and Google sign-in — not the shop homepage).
 2. **Verify domain** in [Google Search Console](https://search.google.com/search-console):
    - Add property `https://print8.mk` (and `https://www.print8.mk` if you use www).
    - Verify via DNS TXT in Cloudflare (recommended) or HTML file.
 3. **Authorized domains** in Google Cloud: `print8.mk` (no `https://`).
-4. **Privacy / Terms:** `https://print8.mk/mk/privacy` and `https://print8.mk/mk/terms`.
-5. The homepage shows a visible **Print 8** heading and explains the shop and customer accounts (including Google sign-in).
+4. **Privacy / Terms:** `https://print8.mk/privacy` and `https://print8.mk/terms`.
+5. The **About** page (`/about`) describes the shop, customer accounts, and sign-in options for OAuth verification.
 6. **Publish** the OAuth app (move out of Testing) after verification passes.
 
 ---

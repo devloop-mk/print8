@@ -8,21 +8,25 @@ import {
 } from '@/lib/auth/oauth';
 import { routing, type Locale } from '@/i18n/routing';
 import { customersDb } from '@/lib/db/customers';
+import { localePath } from '@/lib/seo/site';
 import { createSupabaseRouteClient } from '@/lib/supabase/server-auth';
 
 function oauthLoginRedirect(
   origin: string,
-  locale: string,
+  locale: Locale,
   reason: string,
 ): NextResponse {
   return NextResponse.redirect(
-    new URL(`/${locale}/account/login?oauth=failed&reason=${reason}`, origin),
+    new URL(
+      `${localePath(locale, '/account/login')}?oauth=failed&reason=${reason}`,
+      origin,
+    ),
   );
 }
 
 function emailConfirmFailedRedirect(origin: string, locale: Locale): NextResponse {
   return NextResponse.redirect(
-    new URL(`/${locale}/account/login?email=confirm_failed`, origin),
+    new URL(`${localePath(locale, '/account/login')}?email=confirm_failed`, origin),
   );
 }
 
@@ -43,7 +47,7 @@ function buildPostAuthRedirectPath(
   nextParam: string | null,
 ): string {
   if (isSignupConfirmation(searchParams)) {
-    return new URL(`/${locale}/account?email=confirmed`, origin).pathname;
+    return new URL(`${localePath(locale, '/account')}?email=confirmed`, origin).pathname;
   }
 
   return sanitizeOAuthNextPath(nextCookie ?? nextParam, locale);
@@ -81,7 +85,7 @@ export async function GET(request: NextRequest) {
   const nextParam = searchParams.get('next');
   const nextCookie = request.cookies.get(OAUTH_NEXT_COOKIE)?.value;
   const locale = resolveLocaleFromOAuthPath(
-    nextCookie ?? nextParam ?? `/${routing.defaultLocale}/account`,
+    nextCookie ?? nextParam ?? localePath(routing.defaultLocale, '/account'),
   );
 
   const providerError = searchParams.get('error');
@@ -96,7 +100,7 @@ export async function GET(request: NextRequest) {
 
   if (!code && !tokenHash) {
     return NextResponse.redirect(
-      new URL(`/${locale}/account/login?oauth=missing_code`, origin),
+      new URL(`${localePath(locale, '/account/login')}?oauth=missing_code`, origin),
     );
   }
 

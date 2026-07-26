@@ -13,7 +13,7 @@
   },
   "consent": {
     "title": "We use cookies",
-    "description": "We use essential cookies for cart and order functionality, and optional analytics cookies to understand how the website is used.",
+    "description": "We use essential cookies for cart, checkout, and signed-in accounts, and optional analytics cookies to understand how the website is used.",
     "learnMore": "Cookie Policy",
     "privacyLink": "Privacy Policy",
     "accept": "Accept",
@@ -28,7 +28,7 @@
   "privacy": {
     "title": "Privacy Policy",
     "subtitle": "How Print 8 collects, uses, and protects your personal data.",
-    "lastUpdated": "Last updated: 15 June 2026",
+    "lastUpdated": "Last updated: 26 July 2026",
     "metaDescription": "Print 8 privacy policy — how we process personal data for orders, contact requests, and website use.",
     "intro": "Print 8 (“we”, “us”) respects your privacy. This policy explains what personal data we collect when you use print8.mk, why we collect it, how long we keep it, and what rights you have under applicable data protection law, including the Law on Personal Data Protection of North Macedonia and the EU General Data Protection Regulation (GDPR) where it applies.",
     "sections": [
@@ -44,7 +44,9 @@
           "Order data: products or services ordered, quantities, prices, design choices, customization details, order notes, and uploaded files.",
           "Technical data: browser type, pages visited, approximate usage patterns, referrer URL, and a pseudonymous visitor identifier stored in a cookie when analytics consent is given.",
           "Communication data: messages you send through contact forms or email.",
-          "Payment-related data: we currently offer cash on delivery (COD); we do not store payment card details on this website."
+          "Payment-related data: we currently offer cash on delivery (COD); we do not store payment card details on this website.",
+          "Account data (optional): login email, name, order history, loyalty points balance and transaction history.",
+          "Google sign-in (if you choose it): email and name from your Google account, according to your Google settings."
         ]
       },
       {
@@ -55,6 +57,7 @@
           "To respond to enquiries and provide customer support (legitimate interest / pre-contract steps).",
           "To send order confirmations and service-related emails (contract performance).",
           "To maintain website security, prevent abuse, and improve our services (legitimate interest).",
+          "To operate customer accounts, loyalty points, and authentication (contract / legitimate interest).",
           "To measure website traffic with analytics cookies, only if you consent (consent).",
           "To comply with legal obligations such as accounting or tax record-keeping where applicable."
         ]
@@ -65,13 +68,15 @@
       },
       {
         "title": "5. Cookies and similar technologies",
-        "body": "We use essential technologies to operate the website, including cart storage in your browser and secure upload sessions. Optional analytics uses a pseudonymous cookie (print8_vid) to count page views. Details are in our Cookie Policy. Non-essential analytics runs only after you accept cookies in the banner."
+        "body": "We use essential technologies to operate the website, including cart storage in your browser, secure upload sessions, and authenticated customer sessions. Optional analytics uses a pseudonymous cookie (print8_vid) to count page views. Details are in our Cookie Policy. Non-essential analytics runs only after you accept cookies in the banner."
       },
       {
         "title": "6. Who we share data with",
         "body": "We may share personal data only when necessary:",
         "items": [
           "Hosting, database, email delivery, and file storage providers that help us operate the website and process orders.",
+          "Supabase (authentication and database hosting) and Brevo (transactional email delivery).",
+          "Google only if you choose “Sign in with Google” (Google processes sign-in under its own terms).",
           "Courier or delivery partners to deliver your order.",
           "Professional advisers or authorities when required by law.",
           "We do not sell your personal data to third parties."
@@ -94,7 +99,17 @@
         "body": "Our services are not directed at children under 16. We do not knowingly collect personal data from children. If you believe a child has provided us data, contact us and we will delete it."
       },
       {
-        "title": "11. Changes",
+        "title": "11. Accounts, sign-in, and loyalty points",
+        "body": "You may order as a guest or create a free account on print8.mk.",
+        "items": [
+          "Sign-in with email and password or with Google (when enabled).",
+          "Passwords are handled by our authentication platform; we do not store them in readable form.",
+          "Loyalty points are awarded under the rules published on the website; they are not cash and have no guaranteed value beyond those rules.",
+          "You may request account deletion; some data may remain for legal retention (orders, accounting)."
+        ]
+      },
+      {
+        "title": "12. Changes",
         "body": "We may update this policy from time to time. The latest version will always be published on this page with an updated date."
       }
     ]
@@ -102,7 +117,7 @@
   "terms": {
     "title": "Terms & Conditions",
     "subtitle": "Rules for using print8.mk and placing orders with Print 8.",
-    "lastUpdated": "Last updated: 15 June 2026",
+    "lastUpdated": "Last updated: 26 July 2026",
     "metaDescription": "Print 8 terms and conditions for online orders, customized products, and delivery.",
     "intro": "By accessing print8.mk or placing an order, you agree to these Terms & Conditions. Please read them carefully before ordering. If you do not agree, do not use the website.",
     "sections": [
@@ -155,7 +170,17 @@
         "body": "You must not misuse the website, attempt unauthorized access, upload malware, scrape content excessively, or interfere with other users. We may suspend access for abuse or security reasons."
       },
       {
-        "title": "13. Governing law and disputes",
+        "title": "13. Accounts, sign-in, and loyalty points",
+        "body": "A free print8.mk account is optional. By creating an account you agree to provide accurate email details and keep your password secure.",
+        "items": [
+          "You may sign in with email and password or with Google where available.",
+          "Loyalty points are earned, used, and may change according to rules published on the website; Print 8 may update the programme with notice on the site.",
+          "Abuse of accounts, points, or promotions is prohibited.",
+          "We may suspend or close accounts for abuse or unlawful activity."
+        ]
+      },
+      {
+        "title": "14. Governing law and disputes",
         "body": "These terms are governed by the laws of North Macedonia. Courts in North Macedonia have jurisdiction unless mandatory consumer rules require otherwise. We encourage you to contact us first to resolve disputes amicably."
       }
     ]
@@ -163,7 +188,7 @@
   "cookies": {
     "title": "Cookie Policy",
     "subtitle": "What cookies and similar technologies we use on print8.mk.",
-    "lastUpdated": "Last updated: 15 June 2026",
+    "lastUpdated": "Last updated: 26 July 2026",
     "metaDescription": "Print 8 cookie policy — essential and analytics cookies used on print8.mk.",
     "intro": "This policy explains how Print 8 uses cookies and similar browser technologies. Essential technologies are required for the site to function. Analytics cookies are optional and used only with your consent.",
     "sections": [
@@ -177,6 +202,7 @@
         "items": [
           "Shopping cart contents stored in your browser so items remain while you browse.",
           "Upload session token for securely attaching files to an order.",
+          "Logged-in customer session (Supabase authentication), short-lived print8_oauth_next cookie during Google sign-in, and similar security session cookies.",
           "Admin session cookie for authorized staff access to the admin area (not set for regular customers).",
           "Language preference as part of normal site navigation."
         ]
@@ -191,7 +217,7 @@
       },
       {
         "title": "5. Third-party cookies",
-        "body": "We aim to minimize third-party tracking. If embedded content or service providers set their own cookies in the future, we will update this policy."
+        "body": "If you choose Sign in with Google, Google may set cookies in your browser under its own policies. We do not use third-party advertising or tracking cookies for analytics."
       },
       {
         "title": "6. Contact",
@@ -202,7 +228,7 @@
   "returns": {
     "title": "Returns & Complaints",
     "subtitle": "Our policy for defective items, order issues, and complaints.",
-    "lastUpdated": "Last updated: 15 June 2026",
+    "lastUpdated": "Last updated: 26 July 2026",
     "metaDescription": "Print 8 returns, refunds, and complaints policy for printed and personalized products.",
     "intro": "We want you to be satisfied with your order. Because many of our products are made to your specifications, standard return rules for off-the-shelf goods often do not apply. This policy explains what you can expect.",
     "sections": [
@@ -239,7 +265,7 @@
   "legal-notice": {
     "title": "Legal Notice",
     "subtitle": "Company identification and website operator information.",
-    "lastUpdated": "Last updated: 15 June 2026",
+    "lastUpdated": "Last updated: 26 July 2026",
     "metaDescription": "Print 8 legal notice and company identification for print8.mk.",
     "intro": "This page provides legally required business identification information for users of print8.mk.",
     "sections": [
