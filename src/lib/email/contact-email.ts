@@ -1,8 +1,9 @@
 import {
   escapeHtml,
+  getBrevoClient,
   getEmailFromAddress,
-  getResendClient,
-} from '@/lib/email/resend-client';
+  sendTransactionalEmail,
+} from '@/lib/email/email-client';
 
 export async function sendContactMessageEmail(input: {
   name: string;
@@ -10,11 +11,10 @@ export async function sendContactMessageEmail(input: {
   message: string;
   locale?: string | null;
 }): Promise<void> {
-  const resend = getResendClient();
   const adminEmail = process.env.ORDER_NOTIFICATION_EMAIL;
 
-  if (!resend) {
-    console.warn('[email] RESEND_API_KEY not set — skipping contact email');
+  if (!getBrevoClient()) {
+    console.warn('[email] BREVO_API_KEY not set — skipping contact email');
     return;
   }
   if (!adminEmail) {
@@ -29,7 +29,7 @@ export async function sendContactMessageEmail(input: {
   const safeMessage = escapeHtml(input.message).replace(/\n/g, '<br/>');
   const locale = input.locale === 'en' ? 'en' : 'mk';
 
-  await resend.emails.send({
+  const result = await sendTransactionalEmail({
     from: getEmailFromAddress(),
     to: adminEmail,
     replyTo: input.email,
@@ -46,4 +46,8 @@ export async function sendContactMessageEmail(input: {
     `,
     text: `Name: ${input.name}\nEmail: ${input.email}\nLocale: ${locale}\n\n${input.message}`,
   });
+
+  if (!result.ok) {
+    console.error('[email] contact message failed:', result.error);
+  }
 }

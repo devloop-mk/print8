@@ -14,8 +14,9 @@ import { HelpNavDropdown } from "@/components/layout/HelpNavDropdown";
 import { OngoingDesignsNav } from "@/components/drafts/OngoingDesignsNav";
 import { GlobalSearchButton } from "@/components/search/GlobalSearchButton";
 import { Logo } from "@/components/brand/Logo";
-import { Menu, ShoppingCart } from "lucide-react";
+import { Menu, ShoppingCart, User } from "lucide-react";
 import { usePathname } from "@/i18n/navigation";
+import { useOptionalAuth } from "@/components/auth/AuthProvider";
 
 const GlobalSearch = dynamic(
   () =>
@@ -36,6 +37,7 @@ export function Header() {
   const t = useTranslations("nav");
   const pathname = usePathname();
   const { itemCount } = useCart();
+  const auth = useOptionalAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [menuMounted, setMenuMounted] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -111,6 +113,19 @@ export function Header() {
             </div>
 
             <OngoingDesignsNav />
+
+            <Link
+              href={auth?.customer ? "/account" : "/account/login"}
+              className="relative border-2 border-transparent p-2 text-ink-600 transition hover:border-ink-200 hover:bg-ink-50"
+              aria-label={t("account")}
+            >
+              <User className="h-5 w-5" />
+              {auth?.customer && auth.customer.pointsBalance > 0 ? (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center border border-brand-800 bg-brand-600 px-1 text-[10px] font-bold text-white">
+                  {auth.customer.pointsBalance > 99 ? "99+" : auth.customer.pointsBalance}
+                </span>
+              ) : null}
+            </Link>
 
             <Link
               href="/cart"

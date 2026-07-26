@@ -28,6 +28,12 @@ export interface OrderRecord {
   subtotalAmount?: number | null;
   discountAmount?: number | null;
   couponCode?: string | null;
+  customerId?: string | null;
+  pointsRedeemed?: number;
+  pointsDiscountAmount?: number;
+  pointsEarned?: number | null;
+  pointsAwardedAt?: string | null;
+  pointsFirstOrderBonus?: number;
   createdAt: string;
 }
 
@@ -117,6 +123,12 @@ type OrderRow = {
   subtotal_amount?: number | string | null;
   discount_amount?: number | string | null;
   coupon_code?: string | null;
+  customer_id?: string | null;
+  points_redeemed?: number | string | null;
+  points_discount_amount?: number | string | null;
+  points_earned?: number | string | null;
+  points_awarded_at?: string | null;
+  points_first_order_bonus?: number | string | null;
   created_at: string;
 };
 
@@ -143,6 +155,17 @@ function mapOrderRow(row: OrderRow): OrderRecord {
     discountAmount:
       row.discount_amount == null ? null : Number(row.discount_amount),
     couponCode: row.coupon_code ?? null,
+    customerId: row.customer_id ?? null,
+    pointsRedeemed:
+      row.points_redeemed == null ? 0 : Number(row.points_redeemed),
+    pointsDiscountAmount:
+      row.points_discount_amount == null
+        ? 0
+        : Number(row.points_discount_amount),
+    pointsEarned:
+      row.points_earned == null ? null : Number(row.points_earned),
+    pointsAwardedAt: row.points_awarded_at ?? null,
+    pointsFirstOrderBonus: Number(row.points_first_order_bonus ?? 0),
     createdAt: row.created_at,
   };
 }
@@ -243,6 +266,13 @@ export const db = {
       if (value.subtotalAmount != null) payload.subtotal_amount = value.subtotalAmount;
       if (value.discountAmount != null) payload.discount_amount = value.discountAmount;
       if (value.couponCode) payload.coupon_code = value.couponCode;
+      if (value.customerId) payload.customer_id = value.customerId;
+      if (value.pointsRedeemed != null && value.pointsRedeemed > 0) {
+        payload.points_redeemed = value.pointsRedeemed;
+      }
+      if (value.pointsDiscountAmount != null && value.pointsDiscountAmount > 0) {
+        payload.points_discount_amount = value.pointsDiscountAmount;
+      }
 
       const { error } = await getSupabaseAdmin().from('orders').insert(payload);
       if (!error) return;
@@ -254,6 +284,9 @@ export const db = {
         message.includes('coupon_code') ||
         message.includes('discount_amount') ||
         message.includes('subtotal_amount') ||
+        message.includes('customer_id') ||
+        message.includes('points_redeemed') ||
+        message.includes('points_discount_amount') ||
         message.includes('schema cache')
       ) {
         const {

@@ -1,11 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
+import { resolveCursorAssetsDir } from './lib/cursor-assets.mjs';
 
-const ASSETS = path.join(
-  process.env.USERPROFILE ?? '',
-  '.cursor/projects/c-Users-Viktor-Karabar-Desktop-print8-mk/assets',
-);
+const ASSETS = resolveCursorAssetsDir();
 
 const MUG_OUT = path.join(process.cwd(), 'public/NEW_DESIGNS/drinkware');
 const CAP_OUT = path.join(process.cwd(), 'public/NEW_DESIGNS/caps');

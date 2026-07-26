@@ -327,6 +327,7 @@ export type CheckoutOrderPayload = Pick<
   | 'uploadToken'
   | 'newsletterOptIn'
   | 'couponCode'
+  | 'pointsToRedeem'
 >;
 
 export async function prepareCheckoutPayload(input: {
@@ -343,6 +344,7 @@ export async function prepareCheckoutPayload(input: {
   uploadToken?: string | null;
   newsletterOptIn?: boolean;
   couponCode?: string | null;
+  pointsToRedeem?: number;
 }): Promise<CheckoutOrderPayload> {
   const items = await Promise.all(
     input.items.map((item) => prepareCheckoutItem(item, input.uploadToken)),
@@ -363,6 +365,7 @@ export async function prepareCheckoutPayload(input: {
     ...(input.uploadToken ? { uploadToken: input.uploadToken } : {}),
     newsletterOptIn: Boolean(input.newsletterOptIn),
     ...(couponCode ? { couponCode } : {}),
+    pointsToRedeem: Math.max(0, Math.floor(input.pointsToRedeem ?? 0)),
   };
 
   const parsed = checkoutSchema.safeParse(payload);

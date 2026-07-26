@@ -8,9 +8,10 @@ import {
 import {
   EMAIL_BRAND as BRAND,
   escapeHtml,
+  getBrevoClient,
   getEmailFromAddress,
-  getResendClient,
-} from '@/lib/email/resend-client';
+  sendTransactionalEmail,
+} from '@/lib/email/email-client';
 
 export function buildNewsletterUnsubscribeUrl(
   token: string,
@@ -207,9 +208,9 @@ async function mapPool<T, R>(
 export async function sendNewsletterBroadcast(
   input: NewsletterBroadcastInput,
 ): Promise<{ sent: number; failed: number }> {
-  const resend = getResendClient();
-  if (!resend) {
-    throw new Error('RESEND_API_KEY is not configured');
+  const brevo = getBrevoClient();
+  if (!brevo) {
+    throw new Error('BREVO_API_KEY is not configured');
   }
 
   const outcomes = await mapPool(
@@ -234,7 +235,7 @@ export async function sendNewsletterBroadcast(
       });
 
       try {
-        await resend.emails.send({
+        const result = await sendTransactionalEmail({
           from: getEmailFromAddress(),
           to: recipient.email,
           subject: copy.subject,
@@ -243,7 +244,7 @@ export async function sendNewsletterBroadcast(
             'List-Unsubscribe': `<${unsubscribeUrl}>`,
           },
         });
-        return true;
+        return result.ok;
       } catch (error) {
         console.error('[newsletter] send failed for', recipient.email, error);
         return false;

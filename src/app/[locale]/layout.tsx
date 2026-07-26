@@ -7,6 +7,7 @@ import { routing, type Locale } from "@/i18n/routing";
 import { Header } from "@/components/layout/Header";
 import { FooterGate } from "@/components/layout/FooterGate";
 import { CartProvider } from "@/components/cart/CartProvider";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 import { OngoingDesignsProvider } from "@/components/drafts/OngoingDesignsProvider";
 import { SiteAnalytics } from "@/components/analytics/SiteAnalytics";
 import { CookieConsent } from "@/components/legal/CookieConsent";
@@ -74,6 +75,7 @@ export default async function LocaleLayout({
       >
         <NextIntlClientProvider locale={locale} messages={messages}>
           <CartProvider>
+            <AuthProvider>
             <OngoingDesignsProvider>
             <ScrollToTop />
             <NavigationProgress />
@@ -86,6 +88,7 @@ export default async function LocaleLayout({
             </main>
             <FooterGate />
             </OngoingDesignsProvider>
+            </AuthProvider>
           </CartProvider>
         </NextIntlClientProvider>
       </body>

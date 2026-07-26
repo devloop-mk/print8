@@ -1,13 +1,10 @@
 import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
+import { resolveCursorAssetsDir } from './lib/cursor-assets.mjs';
 
 const ASSETS =
-  process.env.BABY_RAW_DIR ??
-  path.join(
-    process.env.USERPROFILE ?? '',
-    '.cursor/projects/c-Users-Viktor-Karabar-Desktop-print8-mk/assets',
-  );
+  process.env.BABY_RAW_DIR ?? resolveCursorAssetsDir();
 const OUT = path.join(process.cwd(), 'public/NEW_DESIGNS/baby');
 
 const FILES = [

@@ -24,6 +24,10 @@ import {
   pickBestRewardTier,
   recordCouponRedemption,
 } from '@/lib/db/coupons';
+import { createSupabaseRequestClient } from '@/lib/supabase/server-auth';
+import { customersDb } from '@/lib/db/customers';
+import { validatePointsRedemptionForCheckout } from '@/lib/loyalty/validate-redemption';
+import { redeemPointsForOrder, reservePendingPointsForOrder } from '@/lib/loyalty/order-loyalty';
 
 const MAX_ORDER_BODY_BYTES = 6_000_000;
 
@@ -115,6 +119,20 @@ export async function POST(request: NextRequest) {
     let totalAmount = subtotalAmount;
     let appliedCouponCode: string | null = null;
     let appliedCouponId: string | null = null;
+    let pointsCharged = 0;
+    let pointsDiscountAmount = 0;
+    let customerId: string | null = null;
+
+    const supabase = createSupabaseRequestClient(request);
+    const { data: authData } = await supabase.auth.getUser();
+    let customer = null;
+    if (authData.user?.id && authData.user.email) {
+      customer = await customersDb.ensureProfile({
+        id: authData.user.id,
+        email: authData.user.email,
+      });
+      customerId = customer.id;
+    }
 
     if (data.couponCode) {
       const couponResult = await validateCouponForCheckout({
@@ -137,6 +155,26 @@ export async function POST(request: NextRequest) {
       appliedCouponCode = couponResult.coupon.code;
       appliedCouponId = couponResult.coupon.id;
     }
+
+    const subtotalAfterCoupon = Math.max(0, subtotalAmount - discountAmount);
+    const pointsValidation = validatePointsRedemptionForCheckout({
+      customer,
+      orderEmail: data.email,
+      pointsToRedeem: data.pointsToRedeem ?? 0,
+      subtotalAfterCouponMkd: subtotalAfterCoupon,
+    });
+    if (!pointsValidation.ok) {
+      return NextResponse.json(
+        {
+          error: pointsValidation.message,
+          code: `points_${pointsValidation.code}`,
+        },
+        { status: 400 },
+      );
+    }
+    pointsCharged = pointsValidation.redemption.pointsCharged;
+    pointsDiscountAmount = pointsValidation.redemption.pointsDiscountAmount;
+    totalAmount = Math.max(0, subtotalAfterCoupon - pointsDiscountAmount);
 
     const orderId = nanoid();
     const orderNumber = generateOrderNumber();
@@ -178,6 +216,9 @@ export async function POST(request: NextRequest) {
       subtotalAmount,
       discountAmount,
       couponCode: appliedCouponCode,
+      customerId,
+      pointsRedeemed: pointsCharged,
+      pointsDiscountAmount,
       createdAt: now,
     });
 
@@ -242,6 +283,77 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    if (pointsCharged > 0 && customerId) {
+      try {
+        await redeemPointsForOrder({
+          customerId,
+          orderId,
+          pointsCharged,
+          discountMkd: pointsDiscountAmount,
+        });
+      } catch (redeemError) {
+        await db.orders.updateStatus(orderId, 'cancelled');
+        try {
+          const { availabilityChanged } = await syncExclusiveDesignsForOrderStatus(
+            orderId,
+            'cancelled',
+            itemsForStorage,
+          );
+          if (availabilityChanged) {
+            revalidateDesignCatalogCache();
+          }
+        } catch (releaseError) {
+          console.error(
+            '[orders] exclusive release after points fail:',
+            releaseError,
+          );
+        }
+        console.error('[orders] points redemption failed:', redeemError);
+        return NextResponse.json(
+          {
+            error: 'Points could not be applied',
+            code: 'points_redeem_failed',
+          },
+          { status: 409 },
+        );
+      }
+    }
+
+    let pointsEarnedThisOrder = 0;
+    if (customerId) {
+      try {
+        const reserved = await reservePendingPointsForOrder({
+          customerId,
+          orderId,
+          cashPaidMkd: totalAmount,
+        });
+        pointsEarnedThisOrder = reserved.total;
+      } catch (pendingError) {
+        console.error('[orders] pending points reserve failed:', pendingError);
+      }
+    }
+
+    let loyaltyForEmail:
+      | {
+          pointsEarnedThisOrder: number;
+          pointsBalance: number;
+          pointsPendingBalance: number;
+        }
+      | undefined;
+    const accountCustomer =
+      customer ??
+      (data.email ? await customersDb.findByEmailNormalized(data.email) : null);
+    if (accountCustomer) {
+      const freshCustomer = await customersDb.findById(accountCustomer.id);
+      if (freshCustomer) {
+        loyaltyForEmail = {
+          pointsEarnedThisOrder,
+          pointsBalance: freshCustomer.pointsBalance,
+          pointsPendingBalance: freshCustomer.pointsPendingBalance,
+        };
+      }
+    }
+
     let rewardCoupon: { code: string; amount: number; endsAt: string | null } | null =
       null;
     try {
@@ -275,6 +387,7 @@ export async function POST(request: NextRequest) {
           subtotalAmount,
           couponCode: appliedCouponCode,
           rewardCoupon,
+          loyalty: loyaltyForEmail,
         });
       } catch (emailError) {
         console.error('[orders] email delivery failed:', emailError);
@@ -298,6 +411,8 @@ export async function POST(request: NextRequest) {
       totalAmount,
       discountAmount,
       subtotalAmount,
+      pointsDiscountAmount,
+      pointsRedeemed: pointsCharged,
       rewardCoupon,
     });
   } catch (err) {

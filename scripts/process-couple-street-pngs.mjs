@@ -1,11 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
+import { resolveCursorAssetsDir } from './lib/cursor-assets.mjs';
 
-const ASSETS = path.join(
-  process.env.USERPROFILE ?? '',
-  '.cursor/projects/c-Users-Viktor-Karabar-Desktop-print8-mk/assets',
-);
+const ASSETS = resolveCursorAssetsDir();
 const OUT = path.join(process.cwd(), 'public/NEW_DESIGNS/couple-street');
 const DESKTOP = path.join(
   process.env.USERPROFILE ?? '',

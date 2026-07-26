@@ -1,10 +1,9 @@
 import sharp from 'sharp';
 import fs from 'fs';
 import path from 'path';
+import { resolveCursorAssetsDir } from './lib/cursor-assets.mjs';
 
-const assets = path.resolve(
-  'C:/Users/Viktor Karabar/.cursor/projects/c-Users-Viktor-Karabar-Desktop-print8-mk/assets',
-);
+const assets = resolveCursorAssetsDir();
 const dest = path.resolve('public/banners');
 
 const files = fs

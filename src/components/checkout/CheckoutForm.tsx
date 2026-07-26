@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter, Link } from "@/i18n/navigation";
 import { useCart } from "@/components/cart/CartProvider";
@@ -25,6 +25,10 @@ import {
 } from "@/lib/orders/prepare-checkout-payload";
 import { cartHasInlinePrintPngs } from "@/lib/cart/print-png-cart";
 import { SPIN_PENDING_COUPON_KEY } from "@/lib/rewards/spin-config";
+import { PointsRedemption } from "@/components/checkout/PointsRedemption";
+import { PointsEarnPreview } from "@/components/checkout/PointsEarnPreview";
+import { CheckoutAccountPrompt } from "@/components/checkout/CheckoutAccountPrompt";
+import { useOptionalAuth } from "@/components/auth/AuthProvider";
 import type { CheckoutInput } from "@/lib/validations/order";
 
 export function CheckoutForm() {
@@ -32,6 +36,7 @@ export function CheckoutForm() {
   const locale = useLocale();
   const router = useRouter();
   const { items, total, hydrated } = useCart();
+  const auth = useOptionalAuth();
   const { token, loading: uploadLoading, error: uploadSessionError, refreshSession } = useUploadSession();
 
   const [form, setForm] = useState({
@@ -50,13 +55,39 @@ export function CheckoutForm() {
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [couponMessage, setCouponMessage] = useState<string | null>(null);
   const [couponChecking, setCouponChecking] = useState(false);
+  const [pointsToRedeem, setPointsToRedeem] = useState(0);
+  const [pointsDiscount, setPointsDiscount] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [processing, setProcessing] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
   const pendingCouponAutoApply = useRef(false);
   const pendingCouponEmail = useRef<string | undefined>(undefined);
 
-  const payableTotal = Math.max(0, total - couponDiscount);
+  const payableTotal = Math.max(0, total - couponDiscount - pointsDiscount);
+
+  const handlePointsChange = useCallback(
+    (value: {
+      pointsToRedeem: number;
+      pointsDiscount: number;
+      payableTotal: number;
+    }) => {
+      setPointsToRedeem(value.pointsToRedeem);
+      setPointsDiscount(value.pointsDiscount);
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (!auth?.customer) return;
+    setForm((prev) => ({
+      ...prev,
+      fullName: prev.fullName || auth.customer?.fullName || prev.fullName,
+      phone: prev.phone || auth.customer?.phone || prev.phone,
+      email: prev.email || auth.customer?.email || prev.email,
+      city: prev.city || auth.customer?.defaultCity || prev.city,
+      address: prev.address || auth.customer?.defaultAddress || prev.address,
+    }));
+  }, [auth?.customer]);
 
   useEffect(() => {
     try {
@@ -302,6 +333,7 @@ export function CheckoutForm() {
         uploadToken,
         newsletterOptIn,
         couponCode: couponCode.trim() || null,
+        pointsToRedeem,
       });
 
       const res = await fetch("/api/orders", {
@@ -360,6 +392,18 @@ export function CheckoutForm() {
           setProcessing(false);
           return;
         }
+        if (typeof data.code === "string" && data.code.startsWith("points_")) {
+          setErrors({ form: t("pointsInvalid") });
+          setPointsToRedeem(0);
+          setPointsDiscount(0);
+          setProcessing(false);
+          return;
+        }
+        if (data.code === "points_redeem_failed") {
+          setErrors({ form: t("pointsInvalid") });
+          setProcessing(false);
+          return;
+        }
         if (
           data.code === "invalid_price" ||
           data.code === "upload_token_required" ||
@@ -399,6 +443,9 @@ export function CheckoutForm() {
 
       setRedirecting(true);
       sessionStorage.removeItem("print8-upload-token");
+      if (auth?.refresh) {
+        await auth.refresh();
+      }
       router.push(`/order/success?number=${data.orderNumber}`);
     } catch (err) {
       if (err instanceof CheckoutPrepareError) {
@@ -435,6 +482,7 @@ export function CheckoutForm() {
       <CheckoutSteps current="checkout" />
       <form onSubmit={handleSubmit} className="grid gap-8 lg:grid-cols-[1fr_360px]">
       <div className="space-y-6">
+        <CheckoutAccountPrompt />
         <Card>
           <h2 className="mb-4 text-lg font-semibold text-ink-900">
             {t("customerInfo")}
@@ -644,10 +692,26 @@ export function CheckoutForm() {
             ) : null}
           </div>
 
+          <div className="mt-4">
+            <PointsRedemption
+              subtotal={total}
+              couponDiscount={couponDiscount}
+              onChange={handlePointsChange}
+            />
+            <PointsEarnPreview payableTotal={payableTotal} />
+          </div>
+
           {couponDiscount > 0 ? (
             <div className="mt-3 flex justify-between text-sm text-ink-600">
               <span>{t("discount")}</span>
               <span>−{formatPrice(couponDiscount, locale)}</span>
+            </div>
+          ) : null}
+
+          {pointsDiscount > 0 ? (
+            <div className="mt-3 flex justify-between text-sm text-ink-600">
+              <span>{t("pointsDiscount")}</span>
+              <span>−{formatPrice(pointsDiscount, locale)}</span>
             </div>
           ) : null}
 

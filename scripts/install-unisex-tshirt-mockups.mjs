@@ -1,16 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
+import { resolveCursorAssetsDir } from './lib/cursor-assets.mjs';
 
 const assets = path.resolve(
-  process.env.UNISEX_MOCKUP_ASSETS ??
-    path.join(
-      process.env.USERPROFILE ?? '',
-      '.cursor',
-      'projects',
-      'c-Users-Viktor-Karabar-Desktop-print8-mk',
-      'assets',
-    ),
+  process.env.UNISEX_MOCKUP_ASSETS ?? resolveCursorAssetsDir(),
 );
 const outDir = path.join(process.cwd(), 'public', 't-shirts', 'unisex');
 const slugs = [

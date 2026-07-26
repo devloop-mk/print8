@@ -19,24 +19,23 @@ import {
   sanitizeOrderItemFilename,
   type OrderItem,
 } from "@/lib/orders/order-item-previews";
+import { attachHostedPreviewUrls } from "@/lib/email/attach-hosted-preview-urls";
+import type { OrderPreviewEmbed } from "@/lib/email/order-email-types";
+import { getSiteUrl, localePath } from "@/lib/seo/site";
 import {
   EMAIL_BRAND,
   escapeHtml,
+  getBrevoClient,
   getEmailFromAddress,
-  getResendClient,
-} from "@/lib/email/resend-client";
+  sendTransactionalEmail,
+  type TransactionalEmailAttachment,
+} from "@/lib/email/email-client";
 
 interface EmailAttachment {
   filename: string;
   content: Buffer;
   contentType: string;
 }
-
-type OrderPreviewEmbed = EmailAttachment & {
-  contentId: string;
-  itemIndex: number;
-  label: string;
-};
 
 const BRAND = {
   primary: EMAIL_BRAND.primary,
@@ -238,19 +237,41 @@ function buildOrderPreviewEmbeds(data: CheckoutInput): OrderPreviewEmbed[] {
     const safeName = sanitizeOrderItemFilename(item.name, `item-${itemIndex + 1}`);
 
     previews.forEach(({ src, label }) => {
-      if (!src.startsWith("data:")) return;
-      const parsed = parseDataUrl(src);
-      if (!parsed) return;
-
       const slug = label.toLowerCase().replace(/\s+/g, "-");
-      embeds.push({
-        contentId: `preview-${itemIndex}-${slug}`,
-        itemIndex,
-        label,
-        filename: `item-${itemIndex + 1}-${safeName}-${slug}.${parsed.ext}`,
-        content: parsed.buffer,
-        contentType: parsed.mimeType,
-      });
+      const filename = `item-${itemIndex + 1}-${safeName}-${slug}`;
+
+      if (src.startsWith("data:")) {
+        const parsed = parseDataUrl(src);
+        if (!parsed) return;
+
+        embeds.push({
+          contentId: `preview-${itemIndex}-${slug}`,
+          itemIndex,
+          label,
+          filename: `${filename}.${parsed.ext}`,
+          content: parsed.buffer,
+          contentType: parsed.mimeType,
+          sourceSrc: src,
+        });
+        return;
+      }
+
+      if (src.startsWith("http") || src.startsWith("/")) {
+        const ext = src.includes(".webp")
+          ? "webp"
+          : src.includes(".jpg") || src.includes(".jpeg")
+            ? "jpg"
+            : "png";
+        embeds.push({
+          contentId: `preview-${itemIndex}-${slug}`,
+          itemIndex,
+          label,
+          filename: `${filename}.${ext}`,
+          content: Buffer.alloc(0),
+          contentType: mimeTypeFromFilename(`${filename}.${ext}`, "image/png"),
+          sourceSrc: src,
+        });
+      }
     });
   });
 
@@ -266,14 +287,18 @@ function buildOrderItemPreviewImagesHtml(
   if (itemEmbeds.length === 0) return "";
 
   const cells = itemEmbeds
-    .map(
-      (embed) =>
-        `<td style="padding:0 12px 12px 0;vertical-align:top;">
+    .map((embed) => {
+      const src = embed.imageUrl;
+      if (!src) return "";
+      return `<td style="padding:0 12px 12px 0;vertical-align:top;">
           <p style="margin:0 0 8px;font-size:11px;font-weight:700;color:${BRAND.muted};text-transform:uppercase;letter-spacing:0.06em;">${escapeHtml(embed.label)}</p>
-          <img src="cid:${embed.contentId}" alt="${escapeHtml(item.name)} ${escapeHtml(embed.label)}" width="240" style="width:240px;max-width:100%;height:auto;border:1px solid ${BRAND.border};display:block;background:${BRAND.white};" />
-        </td>`,
-    )
+          <img src="${escapeHtml(src)}" alt="${escapeHtml(item.name)} ${escapeHtml(embed.label)}" width="240" style="width:240px;max-width:100%;height:auto;border:1px solid ${BRAND.border};display:block;background:${BRAND.white};" />
+        </td>`;
+    })
+    .filter(Boolean)
     .join("");
+
+  if (!cells) return "";
 
   return `<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-top:4px;"><tr>${cells}</tr></table>`;
 }
@@ -541,21 +566,68 @@ function buildTotalRow(total: string, isMk: boolean): string {
 }
 
 function buildDesignPreviewAttachments(embeds: OrderPreviewEmbed[]): EmailAttachment[] {
-  return embeds.map(({ filename, content, contentType }) => ({
-    filename,
-    content,
-    contentType,
-  }));
+  return embeds
+    .filter((embed) => embed.content.length > 0)
+    .map(({ filename, content, contentType }) => ({
+      filename,
+      content,
+      contentType,
+    }));
 }
 
-function toResendAttachment(
-  attachment: EmailAttachment & { contentId?: string },
-) {
+function buildLoyaltySummaryHtml(
+  loyalty: OrderEmailExtras["loyalty"],
+  locale: CheckoutInput["locale"],
+): string {
+  if (!loyalty) return "";
+
+  const isMk = locale === "mk";
+  const accountUrl = `${getSiteUrl()}${localePath(locale, "/account")}`;
+
+  const rows: string[] = [];
+
+  if (loyalty.pointsEarnedThisOrder > 0) {
+    rows.push(
+      detailRow(
+        isMk ? "Поени од нарачка" : "Points from this order",
+        `<strong style="color:${BRAND.primary};">+${loyalty.pointsEarnedThisOrder}</strong> ${isMk ? "(на чекање до испорака)" : "(pending until delivery)"}`,
+      ),
+    );
+  }
+
+  rows.push(
+    detailRow(
+      isMk ? "Достапни поени" : "Ready to use",
+      String(loyalty.pointsBalance),
+    ),
+  );
+
+  if (loyalty.pointsPendingBalance > 0) {
+    rows.push(
+      detailRow(
+        isMk ? "На чекање" : "Pending",
+        String(loyalty.pointsPendingBalance),
+      ),
+    );
+  }
+
+  const ctaLabel = isMk ? "Моја сметка" : "My account";
+
+  return `<tr>
+    <td style="padding:20px 32px 8px;">
+      <p style="margin:0 0 12px;font-size:13px;font-weight:700;color:${BRAND.ink};text-transform:uppercase;letter-spacing:0.06em;">${isMk ? "Поени за лојалност" : "Loyalty points"}</p>
+      ${detailTable(rows)}
+      <p style="margin:14px 0 0;">
+        <a href="${escapeHtml(accountUrl)}" style="display:inline-block;background:${BRAND.primary};color:${BRAND.white};text-decoration:none;font-size:13px;font-weight:700;padding:10px 18px;border-radius:6px;">${ctaLabel}</a>
+      </p>
+    </td>
+  </tr>`;
+}
+
+function toEmailAttachment(attachment: EmailAttachment): TransactionalEmailAttachment {
   return {
     filename: attachment.filename,
     content: attachment.content,
-    contentType: attachment.contentType,
-    ...(attachment.contentId ? { contentId: attachment.contentId } : {}),
   };
 }
 
@@ -609,6 +681,11 @@ export type OrderEmailExtras = {
   subtotalAmount?: number;
   couponCode?: string | null;
   rewardCoupon?: { code: string; amount: number; endsAt: string | null } | null;
+  loyalty?: {
+    pointsEarnedThisOrder: number;
+    pointsBalance: number;
+    pointsPendingBalance: number;
+  };
 };
 
 export async function sendOrderEmails(
@@ -617,18 +694,19 @@ export async function sendOrderEmails(
   totalAmount: number,
   extras: OrderEmailExtras = {},
 ) {
-  const resend = getResendClient();
-  const from = getEmailFromAddress("Print 8 <onboarding@resend.dev>");
+  const brevo = getBrevoClient();
+  const from = getEmailFromAddress();
   const adminEmail = process.env.ORDER_NOTIFICATION_EMAIL;
 
-  if (!resend) {
-    console.warn("[email] RESEND_API_KEY not set — skipping order emails");
+  if (!brevo) {
+    console.warn("[email] BREVO_API_KEY not set — skipping order emails");
     return { sent: false as const, reason: "missing_api_key" };
   }
 
   const fileIds = collectOrderFileIds(data);
   const stickerRefs = collectOrderStickers(data.items);
-  const previewEmbeds = buildOrderPreviewEmbeds(data);
+  const rawPreviewEmbeds = buildOrderPreviewEmbeds(data);
+  const previewEmbeds = await attachHostedPreviewUrls(orderNumber, rawPreviewEmbeds);
   const designAttachments = buildDesignPreviewAttachments(previewEmbeds);
   const svgPrintAttachments = await buildSvgPrintAttachments(data);
   const stickerAttachments = await buildStickerAttachments(stickerRefs);
@@ -647,7 +725,7 @@ export async function sendOrderEmails(
         designDetails: "Design preview",
       };
   const itemsHtml = buildOrderItemsEmailHtml(data, itemLabels, previewEmbeds);
-  const inlinePreviewAttachments = previewEmbeds.map(toResendAttachment);
+  const previewFileAttachments = buildDesignPreviewAttachments(previewEmbeds);
 
   const discountRows: string[] = [];
   if (extras.couponCode && extras.discountAmount && extras.discountAmount > 0) {
@@ -693,6 +771,7 @@ export async function sendOrderEmails(
       buildSummaryBanner(orderNumber, total, isMk),
       buildCustomerMessage(isMk, data.fulfillmentMethod === "pickup"),
       buildDeliverySection(data, isMk),
+      buildLoyaltySummaryHtml(extras.loyalty, data.locale),
       itemsHtml,
       ...discountRows,
       buildTotalRow(total, isMk),
@@ -705,29 +784,27 @@ export async function sendOrderEmails(
   const results: { customer?: boolean; admin?: boolean } = {};
 
   if (data.email) {
-    const { error } = await resend.emails.send({
+    const result = await sendTransactionalEmail({
       from,
       to: data.email,
       subject: isMk
         ? `Потврда на нарачка ${orderNumber} — Print 8`
         : `Order confirmation ${orderNumber} — Print 8`,
       html: customerHtml,
-      attachments:
-        inlinePreviewAttachments.length > 0
-          ? inlinePreviewAttachments
-          : undefined,
     });
-    results.customer = !error;
-    if (error) console.error("[email] customer confirmation failed:", error);
+    results.customer = result.ok;
+    if (!result.ok) {
+      console.error("[email] customer confirmation failed:", result.error);
+    }
   }
 
   if (adminEmail) {
     const adminAttachments = [
-      ...inlinePreviewAttachments,
-      ...svgPrintAttachments.map(toResendAttachment),
-      ...stickerAttachments.map(toResendAttachment),
+      ...previewFileAttachments.map(toEmailAttachment),
+      ...svgPrintAttachments.map(toEmailAttachment),
+      ...stickerAttachments.map(toEmailAttachment),
       ...originalAttachments.map((a) =>
-        toResendAttachment({ ...a, filename: `original-${a.filename}` }),
+        toEmailAttachment({ ...a, filename: `original-${a.filename}` }),
       ),
     ];
 
@@ -755,7 +832,7 @@ export async function sendOrderEmails(
         "Print 8 admin notification · Open the attachments for print-ready files and originals.",
     });
 
-    const { error } = await resend.emails.send({
+    const result = await sendTransactionalEmail({
       from,
       to: adminEmail,
       subject: `New order ${orderNumber} — Print 8`,
@@ -763,8 +840,10 @@ export async function sendOrderEmails(
       attachments:
         adminAttachments.length > 0 ? adminAttachments : undefined,
     });
-    results.admin = !error;
-    if (error) console.error("[email] admin notification failed:", error);
+    results.admin = result.ok;
+    if (!result.ok) {
+      console.error("[email] admin notification failed:", result.error);
+    }
   } else {
     console.warn("[email] ORDER_NOTIFICATION_EMAIL not set — admin email skipped");
   }

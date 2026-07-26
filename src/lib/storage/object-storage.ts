@@ -9,6 +9,7 @@ import {
 const UPLOAD_PREFIX = 'uploads/';
 const CATALOG_PREFIX = 'catalog/';
 const ORDER_PRINT_PREFIX = 'order-prints/';
+const EMAIL_PREVIEW_PREFIX = 'email-previews/';
 
 function getSupabaseBucket() {
   const bucket = process.env.SUPABASE_STORAGE_BUCKET;
@@ -38,6 +39,12 @@ function orderPrintObjectKey(storedName: string) {
     .replace(/^\/+/, '')
     .replace(/^order-prints\//, '');
   return `${ORDER_PRINT_PREFIX}${normalized}`;
+}
+
+function emailPreviewObjectKey(orderNumber: string, filename: string) {
+  const safeOrder = orderNumber.replace(/[^\w-]/g, '');
+  const safeFile = filename.replace(/[^\w.\-]/g, '_');
+  return `${EMAIL_PREVIEW_PREFIX}${safeOrder}/${safeFile}`;
 }
 
 export async function putUploadObject(
@@ -154,6 +161,58 @@ export async function getOrderPrintObject(storedName: string): Promise<{
   contentType: string | undefined;
 }> {
   const key = orderPrintObjectKey(storedName);
+
+  if (isR2Configured()) {
+    return r2GetObject(key);
+  }
+
+  const { data, error } = await getSupabaseAdmin().storage
+    .from(getSupabaseBucket())
+    .download(key);
+
+  if (error || !data) {
+    throw new Error(error?.message ?? 'Download failed');
+  }
+
+  const buffer = Buffer.from(await data.arrayBuffer());
+  return { body: buffer, contentType: undefined };
+}
+
+export async function putEmailPreviewObject(
+  orderNumber: string,
+  filename: string,
+  body: Buffer,
+  contentType: string,
+) {
+  const key = emailPreviewObjectKey(orderNumber, filename);
+
+  if (isR2Configured()) {
+    await r2PutObject(key, body, contentType, {
+      cacheControl: 'private, max-age=2592000',
+    });
+    return key;
+  }
+
+  const { error } = await getSupabaseAdmin().storage
+    .from(getSupabaseBucket())
+    .upload(key, body, {
+      contentType,
+      cacheControl: '2592000',
+      upsert: true,
+    });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return key;
+}
+
+export async function getEmailPreviewObject(
+  orderNumber: string,
+  filename: string,
+): Promise<{ body: Buffer; contentType: string | undefined }> {
+  const key = emailPreviewObjectKey(orderNumber, filename);
 
   if (isR2Configured()) {
     return r2GetObject(key);

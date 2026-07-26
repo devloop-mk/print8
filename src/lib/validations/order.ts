@@ -85,6 +85,7 @@ export const checkoutSchema = z
       .max(40)
       .optional()
       .transform((value) => (value && value.length > 0 ? value : undefined)),
+    pointsToRedeem: z.number().int().min(0).max(1_000_000).optional().default(0),
   })
   .superRefine((data, ctx) => {
     if (data.fulfillmentMethod !== 'cargo') return;

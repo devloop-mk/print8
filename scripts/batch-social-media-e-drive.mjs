@@ -9,17 +9,19 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
+import { resolveCursorAssetsDir } from './lib/cursor-assets.mjs';
 
 const OUT = 'E:/print8-social-media';
 const LOGO_LIGHT = path.join(OUT, 'logos/logo-horizontal-light.png');
 const LOGO_DARK = path.join(OUT, 'logos/logo-horizontal-dark.png');
 const LOGO_MARK = path.join(OUT, 'logos/logo-mark.png');
 const RAW = path.join(OUT, 'raw');
-const ASSETS = path.resolve(
-  'C:/Users/Viktor Karabar/.cursor/projects/c-Users-Viktor-Karabar-Desktop-print8-mk/assets',
+const ASSETS = resolveCursorAssetsDir();
+const home = process.env.USERPROFILE ?? process.env.HOME ?? '';
+const PREV_IG = path.resolve(
+  process.env.PRINT8_IG_RAW ?? path.join(home, 'Desktop', 'print8-instagram-posts', 'raw'),
 );
-const PREV_IG = path.resolve('C:/Users/Viktor Karabar/Desktop/print8-instagram-posts/raw');
-const BANNERS = path.resolve('C:/Users/Viktor Karabar/Desktop/print8.mk/public/banners');
+const BANNERS = path.join(process.cwd(), 'public/banners');
 
 const FORMATS = [
   { id: 'square', dir: 'final/square', w: 1080, h: 1080 },

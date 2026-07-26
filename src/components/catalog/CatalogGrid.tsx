@@ -2,17 +2,22 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from 'react';
 import { useTranslations } from 'next-intl';
+import {
+  readCatalogGridPreferences,
+  writeCatalogGridPreferences,
+  type DesktopColumns,
+  type MobileColumns,
+} from '@/lib/storage/catalog-grid-preferences';
 import { cn } from '@/lib/utils';
 import { Columns2, Columns3, Columns4, Square } from 'lucide-react';
-
-type MobileColumns = 1 | 2;
-type DesktopColumns = 3 | 4;
 
 type CatalogGridContextValue = {
   mobileColumns: MobileColumns;
@@ -120,10 +125,32 @@ export function CatalogGridProvider({
   mobileColumnToggle?: boolean;
   defaultMobileColumns?: MobileColumns;
 }) {
-  const [mobileColumns, setMobileColumns] =
+  const [mobileColumns, setMobileColumnsState] =
     useState<MobileColumns>(defaultMobileColumns);
-  const [desktopColumns, setDesktopColumns] =
+  const [desktopColumns, setDesktopColumnsState] =
     useState<DesktopColumns>(defaultDesktopColumns);
+
+  useEffect(() => {
+    const saved = readCatalogGridPreferences();
+    if (!saved) return;
+
+    if (saved.mobileColumns !== undefined) {
+      setMobileColumnsState(saved.mobileColumns);
+    }
+    if (saved.desktopColumns !== undefined) {
+      setDesktopColumnsState(saved.desktopColumns);
+    }
+  }, []);
+
+  const setMobileColumns = useCallback((columns: MobileColumns) => {
+    setMobileColumnsState(columns);
+    writeCatalogGridPreferences({ mobileColumns: columns });
+  }, []);
+
+  const setDesktopColumns = useCallback((columns: DesktopColumns) => {
+    setDesktopColumnsState(columns);
+    writeCatalogGridPreferences({ desktopColumns: columns });
+  }, []);
 
   const value = useMemo(
     () => ({
@@ -139,6 +166,8 @@ export function CatalogGridProvider({
       desktopColumns,
       mobileColumnToggle,
       mobileColumns,
+      setDesktopColumns,
+      setMobileColumns,
     ],
   );
 

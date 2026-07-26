@@ -6,6 +6,7 @@ import {
 import type { CheckoutInput } from '@/lib/validations/order';
 import { collectOrderFileIds } from '@/lib/orders/order-assets';
 import { syncExclusiveDesignsForOrderStatus } from '@/lib/designs/design-reservations';
+import { handleOrderLoyaltyStatusChange } from '@/lib/loyalty/order-loyalty';
 
 export { collectOrderFileIds };
 
@@ -83,6 +84,19 @@ export async function updateAdminOrderStatus(id: string, status: OrderStatus) {
   }
 
   const updated = await db.orders.updateStatus(id, status);
+
+  await handleOrderLoyaltyStatusChange(existing.status, status, {
+    id: existing.id,
+    status: updated.status,
+    customerId: existing.customerId ?? null,
+    totalAmount: existing.totalAmount,
+    pointsRedeemed: existing.pointsRedeemed ?? 0,
+    pointsDiscountAmount: existing.pointsDiscountAmount ?? 0,
+    pointsEarned: existing.pointsEarned ?? null,
+    pointsAwardedAt: existing.pointsAwardedAt ?? null,
+    pointsFirstOrderBonus: existing.pointsFirstOrderBonus ?? 0,
+  });
+
   const { availabilityChanged } = await syncExclusiveDesignsForOrderStatus(
     id,
     status,

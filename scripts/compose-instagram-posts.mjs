@@ -6,11 +6,13 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
+import { resolveCursorAssetsDir } from './lib/cursor-assets.mjs';
 
-const ROOT = path.resolve('C:/Users/Viktor Karabar/Desktop/print8-instagram-posts');
-const ASSETS = path.resolve(
-  'C:/Users/Viktor Karabar/.cursor/projects/c-Users-Viktor-Karabar-Desktop-print8-mk/assets',
+const home = process.env.USERPROFILE ?? process.env.HOME ?? '';
+const ROOT = path.resolve(
+  process.env.PRINT8_IG_ROOT ?? path.join(home, 'Desktop', 'print8-instagram-posts'),
 );
+const ASSETS = resolveCursorAssetsDir();
 const LOGO_LIGHT = path.join(ROOT, 'logos/logo-horizontal-light.png');
 const LOGO_DARK = path.join(ROOT, 'logos/logo-horizontal-dark.png');
 const RAW_DIR = path.join(ROOT, 'raw');

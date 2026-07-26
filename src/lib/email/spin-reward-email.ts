@@ -3,9 +3,10 @@ import type { Locale } from '@/i18n/routing';
 import {
   EMAIL_BRAND as BRAND,
   escapeHtml,
+  getBrevoClient,
   getEmailFromAddress,
-  getResendClient,
-} from '@/lib/email/resend-client';
+  sendTransactionalEmail,
+} from '@/lib/email/email-client';
 
 export async function sendSpinRewardEmail(input: {
   to: string;
@@ -15,8 +16,8 @@ export async function sendSpinRewardEmail(input: {
   minOrderAmount: number;
   validDays: number;
 }): Promise<{ ok: boolean; error?: string }> {
-  const resend = getResendClient();
-  if (!resend) {
+  const brevo = getBrevoClient();
+  if (!brevo) {
     return { ok: false, error: 'Email not configured' };
   }
 
@@ -92,19 +93,19 @@ export async function sendSpinRewardEmail(input: {
 
   try {
     const result = await Promise.race([
-      resend.emails.send({
+      sendTransactionalEmail({
         from: getEmailFromAddress(),
         to: input.to,
         subject,
         html,
       }),
-      new Promise<{ error: { message: string } }>((resolve) =>
-        setTimeout(() => resolve({ error: { message: 'Email timeout' } }), 8000),
+      new Promise<{ ok: false; error: string }>((resolve) =>
+        setTimeout(() => resolve({ ok: false, error: 'Email timeout' }), 8000),
       ),
     ]);
 
-    if ('error' in result && result.error) {
-      return { ok: false, error: result.error.message };
+    if (!result.ok) {
+      return { ok: false, error: result.error };
     }
     return { ok: true };
   } catch (error) {
