@@ -2205,7 +2205,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   );
 
   return (
-    <>
+    <div className="flex min-h-0 flex-1 flex-col">
       <OutOfPrintAreaToast />
       <CustomizerShell
       topBar={
@@ -2523,7 +2523,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         onCancel={unsavedWorkGuard.cancelNavigation}
         onLeaveWithoutSaving={unsavedWorkGuard.handleLeaveWithoutSaving}
       />
-    </>
+    </div>
   );
 }
 

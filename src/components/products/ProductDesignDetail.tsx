@@ -195,7 +195,7 @@ export function ProductDesignDetail({
     design: design.id,
     color: previewColor,
     size: size || undefined,
-    fit: garmentFit,
+    ...(applicableFits.length > 0 ? { fit: garmentFit } : {}),
   });
 
   async function handleAddToCart() {

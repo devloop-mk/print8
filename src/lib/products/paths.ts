@@ -44,7 +44,9 @@ export function buildCustomizerUrl(
   if (options?.edit) params.set('edit', options.edit);
   if (options?.color) params.set('color', options.color);
   if (options?.size) params.set('size', options.size);
-  if (options?.fit) params.set('fit', options.fit);
+  if (options?.fit && productType === 't-shirt') {
+    params.set('fit', options.fit);
+  }
   if (options?.resume) params.set('resume', '1');
   return `/products/customize/${productType}?${params.toString()}`;
 }

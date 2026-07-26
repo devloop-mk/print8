@@ -4,7 +4,7 @@ export default function ProductCustomizeLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+    <div className="flex h-[calc(100dvh-4.5rem)] max-h-[calc(100dvh-4.5rem)] min-h-0 flex-col overflow-hidden">
       {children}
     </div>
   );

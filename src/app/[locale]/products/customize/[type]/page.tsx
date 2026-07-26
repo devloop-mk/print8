@@ -36,17 +36,19 @@ export default async function CustomizeProductPage({
   const isMagnet = type === "magnet";
 
   return (
-    <Suspense fallback={<LocalePageLoading />}>
-      {isMagnet ? (
-        <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
-          <h1 className="mb-6 text-2xl font-bold text-ink-900">
-            {tm("title")}
-          </h1>
-          <MagnetOrderForm />
-        </div>
-      ) : (
-        <ProductCustomizer type={type as ProductType} />
-      )}
-    </Suspense>
+    <div className="flex min-h-0 flex-1 flex-col">
+      <Suspense fallback={<LocalePageLoading />}>
+        {isMagnet ? (
+          <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+            <h1 className="mb-6 text-2xl font-bold text-ink-900">
+              {tm("title")}
+            </h1>
+            <MagnetOrderForm />
+          </div>
+        ) : (
+          <ProductCustomizer type={type as ProductType} />
+        )}
+      </Suspense>
+    </div>
   );
 }

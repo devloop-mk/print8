@@ -12,6 +12,7 @@ type PageTransitionProps = {
 export function PageTransition({ children }: PageTransitionProps) {
   const pathname = usePathname();
   const reducedMotion = useReducedMotion();
+  const isCustomizerRoute = pathname.includes('/products/customize/');
   const isFirstRender = useRef(true);
   const [visible, setVisible] = useState(true);
 
@@ -35,9 +36,13 @@ export function PageTransition({ children }: PageTransitionProps) {
     return () => cancelAnimationFrame(frame);
   }, [pathname, reducedMotion]);
 
+  const shellClass = isCustomizerRoute
+    ? 'flex min-h-0 flex-1 flex-col'
+    : 'flex min-h-[calc(100dvh-4.5rem)] min-w-0 flex-1 flex-col';
+
   if (reducedMotion) {
     return (
-      <div className="flex min-h-[calc(100dvh-4.5rem)] min-w-0 flex-1 flex-col">
+      <div className={shellClass}>
         {children}
       </div>
     );
@@ -46,7 +51,8 @@ export function PageTransition({ children }: PageTransitionProps) {
   return (
     <div
       className={cn(
-        'flex min-h-[calc(100dvh-4.5rem)] min-w-0 flex-1 flex-col transition-opacity duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)]',
+        shellClass,
+        'transition-opacity duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)]',
         visible ? 'opacity-100' : 'opacity-0',
       )}
     >
