@@ -1298,7 +1298,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     activeSide,
     color,
     type,
-    product.id,
+    product?.id,
     canvasZoom,
     isDrinkware,
     isLargeCustomizerViewport,

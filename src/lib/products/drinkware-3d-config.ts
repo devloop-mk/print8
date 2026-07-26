@@ -1,4 +1,5 @@
 import type { ProductType } from '@/lib/data/catalog';
+import type { PrintAreaInsets } from '@/lib/products/print-area';
 
 export type Drinkware3DMaterial = 'ceramic' | 'glass';
 

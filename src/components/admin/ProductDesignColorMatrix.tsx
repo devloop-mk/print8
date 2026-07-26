@@ -120,6 +120,7 @@ export function ProductDesignColorMatrix({
 
   const enabledCount = useMemo(() => {
     if (applicableColors.length === 0) return colorOptions.length;
+    if (!previewProduct) return 0;
     return colorOptions.filter((option) =>
       isColorEnabled(
         option.hex,
