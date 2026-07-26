@@ -21,8 +21,17 @@ export function LoginForm({ redirectTo = '/account' }: { redirectTo?: string }) 
 
   useEffect(() => {
     const oauth = searchParams.get('oauth');
-    if (oauth === 'failed' || oauth === 'missing_code') {
-      setError(t('googleSignInFailed'));
+    const reason = searchParams.get('reason');
+    if (oauth === 'failed') {
+      if (reason === 'pkce') {
+        setError(t('googleSignInPkceFailed'));
+      } else if (reason === 'provider') {
+        setError(t('googleSignInProviderFailed'));
+      } else {
+        setError(t('googleSignInFailed'));
+      }
+    } else if (oauth === 'missing_code') {
+      setError(t('googleSignInRedirectFailed'));
     }
   }, [searchParams, t]);
 

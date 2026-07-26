@@ -10,10 +10,11 @@
    - Paste Client ID and Client Secret from Google
 3. **Supabase** → Authentication → **URL configuration**
    - Site URL: `https://print8.mk` (no trailing slash)
-   - Redirect URLs:
-     - `https://print8.mk/**`
-     - `https://www.print8.mk/**`
-     - `http://localhost:3000/**`
+   - Redirect URLs (add each exactly — no query strings needed):
+     - `https://print8.mk/auth/callback`
+     - `https://www.print8.mk/auth/callback`
+     - `http://localhost:3000/auth/callback`
+     - Or wildcards: `https://print8.mk/**`, `https://www.print8.mk/**`
 4. App callback route: `https://print8.mk/auth/callback` (handled by Next.js)
 
 Users sign in on **Login** and **Register** via “Continue with Google”. Loyalty `customers` rows are created by the auth trigger (run `add-customer-on-auth-signup-trigger.sql` if not already).

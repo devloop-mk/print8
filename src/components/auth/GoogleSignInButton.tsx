@@ -2,11 +2,7 @@
 
 import { useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import {
-  buildLocalizedAccountPath,
-  buildOAuthCallbackUrl,
-} from '@/lib/auth/oauth';
-import { createSupabaseBrowserClient } from '@/lib/supabase/browser-auth';
+import { buildLocalizedAccountPath } from '@/lib/auth/oauth';
 import { Button } from '@/components/ui/Button';
 import type { Locale } from '@/i18n/routing';
 
@@ -42,45 +38,16 @@ type GoogleSignInButtonProps = {
   redirectTo?: string;
 };
 
-/** Must match the page origin — PKCE verifier cookie is scoped to this host. */
-function getOAuthOrigin(): string {
-  return window.location.origin.replace(/\/$/, '');
-}
-
 export function GoogleSignInButton({ redirectTo = '/account' }: GoogleSignInButtonProps) {
   const t = useTranslations('account');
   const locale = useLocale() as Locale;
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  async function handleGoogleSignIn() {
+  function handleGoogleSignIn() {
     setLoading(true);
-    setError(null);
-
-    try {
-      const supabase = createSupabaseBrowserClient();
-      const nextPath = buildLocalizedAccountPath(locale, redirectTo);
-      const callbackUrl = buildOAuthCallbackUrl(getOAuthOrigin(), nextPath);
-
-      const { error: oauthError } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: callbackUrl,
-          queryParams: {
-            access_type: 'online',
-            prompt: 'select_account',
-          },
-        },
-      });
-
-      if (oauthError) {
-        setError(t('googleSignInFailed'));
-        setLoading(false);
-      }
-    } catch {
-      setError(t('googleSignInFailed'));
-      setLoading(false);
-    }
+    const nextPath = buildLocalizedAccountPath(locale, redirectTo);
+    const params = new URLSearchParams({ next: nextPath });
+    window.location.assign(`/api/auth/oauth/google?${params.toString()}`);
   }
 
   return (
@@ -98,15 +65,13 @@ export function GoogleSignInButton({ redirectTo = '/account' }: GoogleSignInButt
         type="button"
         variant="outline"
         className="w-full gap-2 normal-case tracking-normal"
-        onClick={() => void handleGoogleSignIn()}
+        onClick={handleGoogleSignIn}
         loading={loading}
         disabled={loading}
       >
         <GoogleIcon className="h-5 w-5 shrink-0" />
         {t('googleSignIn')}
       </Button>
-
-      {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
     </div>
   );
 }
