@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { EmailConfirmedNotice } from '@/components/auth/EmailConfirmedNotice';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { formatPrice } from '@/lib/utils';
@@ -60,6 +61,9 @@ export function AccountDashboard() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 px-4 py-8 sm:px-6">
+      <Suspense fallback={null}>
+        <EmailConfirmedNotice />
+      </Suspense>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl font-bold text-ink-900">{t('title')}</h1>

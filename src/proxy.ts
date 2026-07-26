@@ -8,6 +8,36 @@ const intlMiddleware = createMiddleware(routing);
 
 const LOGIN_PATHS = new Set(['/admin/login', '/api/admin/login']);
 
+function redirectAuthTokensToCallback(request: NextRequest): NextResponse | null {
+  const { pathname, searchParams } = request.nextUrl;
+
+  if (
+    pathname.startsWith('/auth/callback') ||
+    pathname.startsWith('/api/') ||
+    pathname.startsWith('/admin')
+  ) {
+    return null;
+  }
+
+  const code = searchParams.get('code');
+  const tokenHash = searchParams.get('token_hash');
+  if (!code && !tokenHash) return null;
+
+  const callback = new URL('/auth/callback', request.url);
+  searchParams.forEach((value, key) => {
+    callback.searchParams.set(key, value);
+  });
+
+  if (
+    searchParams.get('type') === 'signup' &&
+    !callback.searchParams.has('auth')
+  ) {
+    callback.searchParams.set('auth', 'signup');
+  }
+
+  return NextResponse.redirect(callback);
+}
+
 async function refreshSupabaseSession(
   request: NextRequest,
   response: NextResponse,
@@ -51,6 +81,12 @@ export async function proxy(request: NextRequest) {
     const response = NextResponse.next({ request });
     await refreshSupabaseSession(request, response);
     return response;
+  }
+
+  const authCallbackRedirect = redirectAuthTokensToCallback(request);
+  if (authCallbackRedirect) {
+    await refreshSupabaseSession(request, authCallbackRedirect);
+    return authCallbackRedirect;
   }
 
   const response = intlMiddleware(request);

@@ -45,6 +45,8 @@ Customize them in the dashboard:
 3. Copy the HTML from `confirm-signup.html` into the **Body (HTML)** field
 4. Keep Supabase variables: `{{ .ConfirmationURL }}`, `{{ .SiteURL }}`, `{{ .Email }}`
 
+Signup from the site sets `emailRedirectTo` to `/auth/callback?auth=signup`, so verified users land on the account page with a confirmation notice. If older emails still redirect to the homepage, the app forwards `?code=` / `?token_hash=` to `/auth/callback` automatically.
+
 ## Reset password
 
 1. Open **Reset password** (sometimes labeled **Recovery** in older dashboards)

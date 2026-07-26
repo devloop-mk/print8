@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { Link, useRouter } from '@/i18n/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { EmailConfirmedNotice } from '@/components/auth/EmailConfirmedNotice';
 import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -32,6 +33,8 @@ export function LoginForm({ redirectTo = '/account' }: { redirectTo?: string }) 
       }
     } else if (oauth === 'missing_code') {
       setError(t('googleSignInRedirectFailed'));
+    } else if (searchParams.get('email') === 'confirm_failed') {
+      setError(t('emailConfirmFailed'));
     }
   }, [searchParams, t]);
 
@@ -62,6 +65,9 @@ export function LoginForm({ redirectTo = '/account' }: { redirectTo?: string }) 
 
   return (
     <Card className="mx-auto max-w-md p-6">
+      <Suspense fallback={null}>
+        <EmailConfirmedNotice />
+      </Suspense>
       <h1 className="font-display text-2xl font-bold text-ink-900">{t('loginTitle')}</h1>
       <p className="mt-2 text-sm text-ink-600">{t('loginSubtitle')}</p>
       <GoogleSignInButton redirectTo={redirectTo} />

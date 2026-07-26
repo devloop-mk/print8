@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { getRequestOrigin } from '@/lib/auth/oauth';
 import { createSupabaseRouteHandlerClient } from '@/lib/supabase/server-auth';
 import { formatSupabaseError } from '@/lib/supabase/client';
 import { customersDb } from '@/lib/db/customers';
@@ -24,11 +25,13 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createSupabaseRouteHandlerClient();
     const { email, password, fullName } = parsed.data;
+    const origin = getRequestOrigin(request);
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: { full_name: fullName },
+        emailRedirectTo: `${origin}/auth/callback?auth=signup`,
       },
     });
 
