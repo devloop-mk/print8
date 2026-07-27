@@ -49,9 +49,12 @@ export function ProductTypeDesignCategories({
           >
           {categories.map((category) => {
             const title = t(`${category.id}.title`);
-            const preview =
+            const rawPreview =
               categoryPreviews?.[category.id] ??
               resolveCategoryMockupPreview(category, type);
+            const preview = rawPreview
+              ? resolveCategoryMockupPreview(category, type, rawPreview.design)
+              : null;
 
             return (
               <li

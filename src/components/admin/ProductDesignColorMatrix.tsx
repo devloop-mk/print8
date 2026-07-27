@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import type {
+  GarmentFit,
   Product,
   ProductDesignTemplate,
   ProductType,
@@ -14,7 +15,12 @@ import {
   AdminDesignColorPreview,
   resolveAdminPreviewProduct,
 } from '@/components/admin/AdminDesignColorPreview';
-import { getDesignApplicableColors } from '@/lib/products/design-applicable-colors';
+import {
+  getDesignApplicableColors,
+  getDesignFitPalette,
+  getDesignProductTypePalette,
+} from '@/lib/products/design-applicable-colors';
+import { getDesignApplicableFits } from '@/lib/products/garment-fit';
 import { getProductColorLabelKey } from '@/lib/products/product-color-labels';
 import { normalizeHex } from '@/lib/products/design-overlay';
 import { TSHIRT_UNISEX_COLORS } from '@/lib/products/tshirt-unisex-colors';
@@ -25,11 +31,26 @@ const ADMIN_COLOR_LABELS_MK: Record<string, string> = Object.fromEntries(
   TSHIRT_UNISEX_COLORS.map((color) => [normalizeHex(color.hex), color.labelKey]),
 );
 
+const FIT_LABELS: Record<GarmentFit, string> = {
+  unisex: 'Унисекс',
+  women: 'Женски',
+  kids: 'Детски',
+};
+
 type ProductDesignColorMatrixProps = {
   template: ProductDesignTemplate;
   applicableColors: string[];
+  applicableColorsByFit?: Partial<Record<GarmentFit, string[]>>;
+  applicableColorsByProductType?: Partial<Record<ProductType, string[]>>;
+  applicableFits: GarmentFit[];
   overlayColorVariants: Record<string, string>;
   onApplicableColorsChange: (colors: string[]) => void;
+  onApplicableColorsByFitChange: (
+    colorsByFit: Partial<Record<GarmentFit, string[]>>,
+  ) => void;
+  onApplicableColorsByProductTypeChange: (
+    colorsByType: Partial<Record<ProductType, string[]>>,
+  ) => void;
   onVariantsChange: (variants: Record<string, string>) => void;
   uploadFolder: string;
 };
@@ -59,31 +80,54 @@ function getColorLabelMk(hex: string): string {
   return hex;
 }
 
-function isColorEnabled(
-  hex: string,
-  applicableColors: string[],
+function buildDesignForColorPreview(
   template: ProductDesignTemplate,
-  previewProduct: Product,
-): boolean {
-  if (applicableColors.length === 0) return true;
+  colors: string[],
+  productType: ProductType,
+  fit?: GarmentFit,
+): ProductDesignTemplate {
+  if (productType === 't-shirt' && fit) {
+    return {
+      ...template,
+      applicableColors: undefined,
+      applicableColorsByFit: {
+        ...template.applicableColorsByFit,
+        [fit]: colors,
+      },
+      applicableColorsByProductType: undefined,
+    };
+  }
 
-  const applicableForProduct = getDesignApplicableColors(
-    { ...template, applicableColors },
-    previewProduct,
-  );
+  if (productType !== 't-shirt') {
+    return {
+      ...template,
+      applicableColors: undefined,
+      applicableColorsByFit: undefined,
+      applicableColorsByProductType: {
+        ...template.applicableColorsByProductType,
+        [productType]: colors,
+      },
+    };
+  }
 
-  // Saved palette may be from another garment (e.g. unisex tee hex on bodysuit).
-  if (applicableForProduct.length === 0) return true;
-
-  const key = normalizeHex(hex);
-  return applicableForProduct.some((color) => normalizeHex(color) === key);
+  return {
+    ...template,
+    applicableColorsByFit: undefined,
+    applicableColorsByProductType: undefined,
+    applicableColors: colors,
+  };
 }
 
 export function ProductDesignColorMatrix({
   template,
   applicableColors,
+  applicableColorsByFit = {},
+  applicableColorsByProductType = {},
+  applicableFits,
   overlayColorVariants,
   onApplicableColorsChange,
+  onApplicableColorsByFitChange,
+  onApplicableColorsByProductTypeChange,
   onVariantsChange,
   uploadFolder,
 }: ProductDesignColorMatrixProps) {
@@ -95,22 +139,82 @@ export function ProductDesignColorMatrix({
         : (['t-shirt'] as ProductType[]),
     [previewTypesKey],
   );
+  const teeFits = useMemo(
+    () =>
+      template.productTypes.includes('t-shirt')
+        ? getDesignApplicableFits({ ...template, applicableFits })
+        : [],
+    [applicableFits, template],
+  );
+
   const [previewType, setPreviewType] = useState<ProductType>(
     () => previewTypes[0],
+  );
+  const [previewFit, setPreviewFit] = useState<GarmentFit>(
+    () => teeFits[0] ?? 'unisex',
   );
 
   useEffect(() => {
     setPreviewType(previewTypes[0]);
   }, [previewTypesKey, previewTypes]);
 
+  useEffect(() => {
+    if (!teeFits.includes(previewFit)) {
+      setPreviewFit(teeFits[0] ?? 'unisex');
+    }
+  }, [teeFits, previewFit]);
+
+  const designForColors = useMemo(
+    () => ({
+      ...template,
+      applicableColors,
+      applicableColorsByFit,
+      applicableColorsByProductType,
+      applicableFits,
+    }),
+    [
+      applicableColors,
+      applicableColorsByFit,
+      applicableColorsByProductType,
+      applicableFits,
+      template,
+    ],
+  );
+
+  const usesFitPalettes = previewType === 't-shirt' && teeFits.length > 0;
+  const usesTypePalettes = previewType !== 't-shirt';
+  const activeFit = usesFitPalettes ? previewFit : undefined;
+
+  const activeApplicableColors = useMemo(() => {
+    if (usesFitPalettes && activeFit) {
+      const palette = getDesignFitPalette(designForColors, activeFit);
+      if (palette !== null) return palette;
+      // Per-fit tab — never read shared applicableColors (women-only edits used to pollute it).
+      return [];
+    }
+    if (usesTypePalettes) {
+      const palette = getDesignProductTypePalette(designForColors, previewType);
+      if (palette !== null) return palette;
+      return [];
+    }
+    return applicableColors;
+  }, [
+    activeFit,
+    designForColors,
+    previewType,
+    usesFitPalettes,
+    usesTypePalettes,
+    applicableColors,
+  ]);
+
   const colorOptions = useMemo(
-    () => getAdminDesignColorOptions(template, previewType),
-    [template, previewType],
+    () => getAdminDesignColorOptions(template, previewType, activeFit),
+    [activeFit, previewType, template],
   );
 
   const previewProduct = useMemo(
-    () => resolveAdminPreviewProduct(template, previewType),
-    [template, previewType],
+    () => resolveAdminPreviewProduct(template, previewType, activeFit),
+    [activeFit, previewType, template],
   );
 
   const allHexes = useMemo(
@@ -118,27 +222,136 @@ export function ProductDesignColorMatrix({
     [colorOptions],
   );
 
-  const enabledCount = useMemo(() => {
-    if (applicableColors.length === 0) return colorOptions.length;
-    if (!previewProduct) return 0;
-    return colorOptions.filter((option) =>
-      isColorEnabled(
-        option.hex,
-        applicableColors,
-        template,
+  const enabledCanonicalHexes = useMemo(() => {
+    if (!previewProduct) return new Set<string>();
+    if (activeApplicableColors.length === 0) {
+      return new Set(allHexes);
+    }
+    return new Set(
+      getDesignApplicableColors(
+        buildDesignForColorPreview(
+          designForColors,
+          activeApplicableColors,
+          previewType,
+          activeFit,
+        ),
         previewProduct,
-      ),
+      ).map(normalizeHex),
+    );
+  }, [
+    activeApplicableColors,
+    activeFit,
+    allHexes,
+    designForColors,
+    previewProduct,
+    previewType,
+  ]);
+
+  const enabledCount = useMemo(() => {
+    if (activeApplicableColors.length === 0) return colorOptions.length;
+    return colorOptions.filter((option) =>
+      enabledCanonicalHexes.has(normalizeHex(option.hex)),
     ).length;
-  }, [applicableColors, colorOptions, previewProduct, template]);
+  }, [activeApplicableColors, colorOptions, enabledCanonicalHexes]);
 
   const applicablePaletteMismatch = useMemo(() => {
-    if (!previewProduct || applicableColors.length === 0) return false;
+    if (!previewProduct || activeApplicableColors.length === 0) return false;
     const applicableForProduct = getDesignApplicableColors(
-      { ...template, applicableColors },
+      buildDesignForColorPreview(
+        designForColors,
+        activeApplicableColors,
+        previewType,
+        activeFit,
+      ),
       previewProduct,
     );
     return applicableForProduct.length === 0;
-  }, [applicableColors, previewProduct, template]);
+  }, [
+    activeApplicableColors,
+    activeFit,
+    designForColors,
+    previewProduct,
+    previewType,
+  ]);
+
+  function persistApplicableColors(colors: string[]) {
+    if (usesFitPalettes && activeFit) {
+      const isFirstFitCustomization =
+        Object.keys(applicableColorsByFit).length === 0;
+      const next: Partial<Record<GarmentFit, string[]>> = {
+        ...applicableColorsByFit,
+        [activeFit]: colors,
+      };
+
+      // First per-fit edit: snapshot legacy palette onto other fits so they
+      // stay independent (e.g. women's black must not shrink unisex).
+      if (isFirstFitCustomization) {
+        for (const fit of teeFits) {
+          if (fit !== activeFit && next[fit] === undefined) {
+            next[fit] =
+              applicableColors.length > 0 ? [...applicableColors] : [];
+          }
+        }
+      }
+
+      onApplicableColorsByFitChange(next);
+      return;
+    }
+    if (usesTypePalettes) {
+      const isFirstTypeCustomization =
+        Object.keys(applicableColorsByProductType).length === 0;
+      const next: Partial<Record<ProductType, string[]>> = {
+        ...applicableColorsByProductType,
+        [previewType]: colors,
+      };
+
+      if (isFirstTypeCustomization) {
+        for (const type of previewTypes) {
+          if (
+            type !== previewType &&
+            type !== 't-shirt' &&
+            next[type] === undefined
+          ) {
+            next[type] =
+              applicableColors.length > 0 ? [...applicableColors] : [];
+          }
+        }
+      }
+
+      onApplicableColorsByProductTypeChange(next);
+      return;
+    }
+    onApplicableColorsChange(colors);
+  }
+
+  // Migrate legacy hex keys to supplier palette for the active fit / type.
+  useEffect(() => {
+    if (!previewProduct || activeApplicableColors.length === 0) return;
+
+    const canonical = colorOptions
+      .filter((option) =>
+        enabledCanonicalHexes.has(normalizeHex(option.hex)),
+      )
+      .map((option) => option.hex);
+
+    const storedKeys = new Set(activeApplicableColors.map(normalizeHex));
+    const canonicalKeys = new Set(canonical.map(normalizeHex));
+    const alreadyCanonical =
+      storedKeys.size === canonicalKeys.size &&
+      [...storedKeys].every((key) => canonicalKeys.has(key));
+
+    if (!alreadyCanonical) {
+      persistApplicableColors(canonical);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- persist only when stored palette drifts
+  }, [
+    activeApplicableColors,
+    colorOptions,
+    enabledCanonicalHexes,
+    previewProduct,
+    activeFit,
+    previewType,
+  ]);
 
   const hasDesignOverlay = Boolean(
     template.printMasterImage || template.overlayImage || template.overlaySvg,
@@ -146,19 +359,18 @@ export function ProductDesignColorMatrix({
 
   function setEnabledColors(next: Set<string>) {
     if (next.size === allHexes.length) {
-      onApplicableColorsChange([]);
+      persistApplicableColors([]);
       return;
     }
-    onApplicableColorsChange([...next]);
+    const saved = colorOptions
+      .filter((option) => next.has(normalizeHex(option.hex)))
+      .map((option) => option.hex);
+    persistApplicableColors(saved);
   }
 
   function toggleColor(hex: string) {
     const normalized = normalizeHex(hex);
-    const current = new Set(
-      applicableColors.length === 0
-        ? allHexes
-        : applicableColors.map(normalizeHex),
-    );
+    const current = new Set(enabledCanonicalHexes);
 
     if (current.has(normalized)) {
       if (current.size <= 1) return;
@@ -171,7 +383,7 @@ export function ProductDesignColorMatrix({
   }
 
   function selectAllColors() {
-    onApplicableColorsChange([]);
+    persistApplicableColors([]);
   }
 
   function updateVariant(hex: string, value: string) {
@@ -201,7 +413,12 @@ export function ProductDesignColorMatrix({
     <div className="space-y-4">
       {previewTypes.length > 1 ? (
         <div className="flex flex-wrap gap-1 rounded-lg border border-ink-200 p-1">
-          {previewTypes.map((type) => (
+          {previewTypes.map((type) => {
+            const customized =
+              type === 't-shirt'
+                ? Object.keys(applicableColorsByFit).length > 0
+                : applicableColorsByProductType[type] !== undefined;
+            return (
             <button
               key={type}
               type="button"
@@ -214,8 +431,50 @@ export function ProductDesignColorMatrix({
               )}
             >
               {PRODUCT_TYPE_LABELS_MK[type] ?? type}
+              {customized ? (
+                <span
+                  className={cn(
+                    'ml-1 inline-block h-1.5 w-1.5 rounded-full',
+                    previewType === type ? 'bg-white' : 'bg-brand-500',
+                  )}
+                  title="Прилагодени бои за овој тип"
+                />
+              ) : null}
             </button>
-          ))}
+            );
+          })}
+        </div>
+      ) : null}
+
+      {usesFitPalettes && teeFits.length > 1 ? (
+        <div className="flex flex-wrap gap-1 rounded-lg border border-ink-200 p-1">
+          {teeFits.map((fit) => {
+            const customized = applicableColorsByFit[fit] !== undefined;
+            return (
+              <button
+                key={fit}
+                type="button"
+                onClick={() => setPreviewFit(fit)}
+                className={cn(
+                  'rounded-md px-2.5 py-1.5 text-xs font-medium',
+                  previewFit === fit
+                    ? 'bg-brand-700 text-white'
+                    : 'text-ink-600 hover:bg-ink-50',
+                )}
+              >
+                {FIT_LABELS[fit]}
+                {customized ? (
+                  <span
+                    className={cn(
+                      'ml-1 inline-block h-1.5 w-1.5 rounded-full',
+                      previewFit === fit ? 'bg-white' : 'bg-brand-500',
+                    )}
+                    title="Прилагодени бои за овој крој"
+                  />
+                ) : null}
+              </button>
+            );
+          })}
         </div>
       ) : null}
 
@@ -225,7 +484,8 @@ export function ProductDesignColorMatrix({
           бои се достапни на страницата.
           {previewProduct ? (
             <span className="ml-1 text-ink-400">
-              (преглед: {PRODUCT_TYPE_LABELS_MK[previewType] ?? previewType})
+              (преглед: {PRODUCT_TYPE_LABELS_MK[previewType] ?? previewType}
+              {activeFit ? ` · ${FIT_LABELS[activeFit]}` : ''})
             </span>
           ) : null}
         </p>
@@ -253,24 +513,23 @@ export function ProductDesignColorMatrix({
       {applicablePaletteMismatch ? (
         <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
           Избраните бои не одговараат на палетата за{' '}
-          {PRODUCT_TYPE_LABELS_MK[previewType] ?? previewType}. Кликнете на боите
-          подоле за да ги прилагодите за овој тип.
+          {PRODUCT_TYPE_LABELS_MK[previewType] ?? previewType}
+          {activeFit ? ` (${FIT_LABELS[activeFit]})` : ''}. Кликнете на боите
+          подоле за да ги прилагодите.
         </p>
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {colorOptions.map((option) => {
-          const enabled = isColorEnabled(
-            option.hex,
-            applicableColors,
-            template,
-            previewProduct,
-          );
-          const variant = overlayColorVariants[normalizeHex(option.hex)] ?? '';
+          const normalized = normalizeHex(option.hex);
+          const enabled =
+            activeApplicableColors.length === 0 ||
+            enabledCanonicalHexes.has(normalized);
+          const variant = overlayColorVariants[normalized] ?? '';
 
           return (
             <div
-              key={option.hex}
+              key={`${previewType}-${activeFit ?? 'default'}-${normalized}`}
               className={cn(
                 'overflow-hidden rounded-xl border bg-white transition',
                 enabled
@@ -289,28 +548,41 @@ export function ProductDesignColorMatrix({
                   design={template}
                   color={option.hex}
                 />
-              </button>
 
-              <div className="flex items-center justify-between gap-2 border-t border-ink-100 px-3 py-2">
-                <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={enabled}
-                    onChange={() => toggleColor(option.hex)}
-                    className="h-4 w-4 shrink-0 rounded border-ink-300 text-brand-600"
-                  />
-                  <span
-                    className="h-5 w-5 shrink-0 rounded-full border border-ink-200"
-                    style={{ backgroundColor: option.hex }}
-                  />
-                  <span className="truncate text-sm font-medium text-ink-800">
-                    {getColorLabelMk(option.hex)}
+                <div className="flex items-center justify-between gap-2 border-t border-ink-100 px-3 py-2">
+                  <span className="flex min-w-0 flex-1 items-center gap-2">
+                    <span
+                      className={cn(
+                        'flex h-4 w-4 shrink-0 items-center justify-center rounded border border-ink-300',
+                        enabled && 'border-brand-600 bg-brand-600 text-white',
+                      )}
+                      aria-hidden
+                    >
+                      {enabled ? (
+                        <svg viewBox="0 0 12 12" className="h-3 w-3" fill="none">
+                          <path
+                            d="M2.5 6l2.5 2.5L9.5 4"
+                            stroke="currentColor"
+                            strokeWidth="1.75"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      ) : null}
+                    </span>
+                    <span
+                      className="h-5 w-5 shrink-0 rounded-full border border-ink-200"
+                      style={{ backgroundColor: option.hex }}
+                    />
+                    <span className="truncate text-sm font-medium text-ink-800">
+                      {getColorLabelMk(option.hex)}
+                    </span>
                   </span>
-                </label>
-                <span className="shrink-0 text-[11px] text-ink-400">
-                  {option.hex}
-                </span>
-              </div>
+                  <span className="shrink-0 text-[11px] text-ink-400">
+                    {option.hex}
+                  </span>
+                </div>
+              </button>
 
               <details className="border-t border-ink-100 px-3 py-2 text-xs text-ink-500">
                 <summary className="cursor-pointer font-medium text-ink-600">

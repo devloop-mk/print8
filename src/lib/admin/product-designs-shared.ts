@@ -153,6 +153,7 @@ export function getAdminKidsTshirtColorOptions(
 export function getAdminDesignColorOptions(
   template: ProductDesignTemplate,
   productType?: ProductType,
+  garmentFit?: GarmentFit,
 ): AdminDesignColorOption[] {
   const type =
     productType && template.productTypes.includes(productType)
@@ -161,17 +162,16 @@ export function getAdminDesignColorOptions(
 
   if (type === 't-shirt') {
     const fits = getDesignApplicableFits(template);
+    const fit = garmentFit && fits.includes(garmentFit)
+      ? garmentFit
+      : (fits[0] ?? 'unisex');
 
-    if (fits.includes('unisex')) {
-      return getAdminUnisexTshirtColorOptions('tshirt-basic-white');
-    }
-    if (fits.includes('kids')) {
-      return getAdminKidsTshirtColorOptions('tshirt-kids');
-    }
-    if (fits.includes('women')) {
+    if (fit === 'women') {
       return getAdminWomenTshirtColorOptions('tshirt-women-fitted');
     }
-
+    if (fit === 'kids') {
+      return getAdminKidsTshirtColorOptions('tshirt-kids');
+    }
     return getAdminUnisexTshirtColorOptions('tshirt-basic-white');
   }
 

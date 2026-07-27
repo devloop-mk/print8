@@ -34,10 +34,15 @@ import {
 } from '@/lib/products/product-mockup-layout';
 import {
   clampElementCenterToPrintArea,
+  expandPrintAreaInsets,
   getPrintAreaCenter,
 } from '@/lib/products/print-area';
 import { clampPhotoScale } from '@/lib/products/crop-image';
-import { PRODUCT_PHOTO_MIN_SCALE } from '@/lib/products/customizer-constants';
+import {
+  ADMIN_OVERLAY_PRINT_AREA_BLEED_PERCENT,
+  getAdminOverlayMaxScale,
+  PRODUCT_PHOTO_MIN_SCALE,
+} from '@/lib/products/customizer-constants';
 import { resolveAssetUrl } from '@/lib/storage/asset-url';
 import {
   useDraggableOverlayPosition,
@@ -223,11 +228,23 @@ export function ProductDesignOverlayPlacementEditor({
         ? resolveAssetUrl(sideOverlay.overlaySvg)
         : null);
 
-  const aspectMaxScale = usePrintAreaMaxScale(
+  const printAreaFitMaxScale = usePrintAreaMaxScale(
     frameRef,
     printBounds,
     overlaySrc ?? undefined,
     mockupLayout.overlayMaxScale,
+  );
+  const aspectMaxScale = useMemo(
+    () => getAdminOverlayMaxScale(printAreaFitMaxScale),
+    [printAreaFitMaxScale],
+  );
+  const editorPrintBounds = useMemo(
+    () =>
+      expandPrintAreaInsets(
+        printBounds,
+        ADMIN_OVERLAY_PRINT_AREA_BLEED_PERCENT,
+      ),
+    [printBounds],
   );
 
   const commitPlacement = useCallback(
@@ -247,17 +264,17 @@ export function ProductDesignOverlayPlacementEditor({
       const reclamped = clampElementCenterToPrintArea(
         containerRef.current,
         containerRef.current.parentElement,
-        printBounds,
+        editorPrintBounds,
         placement.position,
         { width: clamped, height: clamped },
       );
       commitPlacement({ scale: clamped, position: reclamped });
     },
-    [aspectMaxScale, commitPlacement, placement.position, printBounds],
+    [aspectMaxScale, commitPlacement, editorPrintBounds, placement.position],
   );
 
   const fitToPrintArea = useCallback(() => {
-    const scale = clampPhotoScale(aspectMaxScale, aspectMaxScale);
+    const scale = clampPhotoScale(printAreaFitMaxScale, printAreaFitMaxScale);
     const center = getPrintAreaCenter(printBounds);
     if (!containerRef.current?.parentElement) {
       commitPlacement({ scale, position: center });
@@ -271,13 +288,13 @@ export function ProductDesignOverlayPlacementEditor({
       { width: scale, height: scale },
     );
     commitPlacement({ scale, position: reclamped });
-  }, [aspectMaxScale, commitPlacement, printBounds]);
+  }, [commitPlacement, printAreaFitMaxScale, printBounds]);
 
   const drag = useDraggableOverlayPosition(
     placement.position,
     (nextPosition) =>
       commitPlacement({ scale: placement.scale, position: nextPosition }),
-    printBounds,
+    editorPrintBounds,
     containerRef,
   );
 
@@ -313,7 +330,7 @@ export function ProductDesignOverlayPlacementEditor({
     'customizer',
   );
 
-  const isOversized = placement.scale > aspectMaxScale;
+  const isOversized = placement.scale > printAreaFitMaxScale;
   const sliderValue = Math.min(placement.scale, aspectMaxScale);
 
   return (
@@ -453,7 +470,7 @@ export function ProductDesignOverlayPlacementEditor({
               Скала
               {isOversized ? (
                 <span className="ml-1 font-normal text-amber-700">
-                  (преголема — намалете или сместете)
+                  (над print area — дозволено малку над зоната)
                 </span>
               ) : null}
             </label>

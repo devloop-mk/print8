@@ -15,9 +15,13 @@ import {
 } from '@/lib/cms/display-order';
 import { getMergedProductDesignTemplates } from '@/lib/products/merged-product-designs';
 import { sortByDisplayOrder } from '@/lib/products/sort-by-display-order';
+import {
+  buildPrintDesignOrderItems,
+  getPrintDesignCategoryLabelsMk,
+} from '@/lib/admin/print-design-display-order';
 import mkMessages from '../../../../../messages/mk.json';
 
-const COLLECTION_LABELS_MK: Record<string, string> = {
+const MERCH_COLLECTION_LABELS_MK: Record<string, string> = {
   basketball: 'Кошарка',
   anime: 'Јапонско аниме',
   typography: 'Стритвер типографија',
@@ -45,11 +49,13 @@ export default async function AdminOrderingPage() {
   const typeLabels = productLabels.types as Record<string, string>;
   const itemLabels = productLabels.items as Record<string, string>;
 
-  const [productOrder, designOrder, productDesigns] = await Promise.all([
-    getProductDisplayOrderRecord(),
-    getDesignDisplayOrderRecord(),
-    getMergedProductDesignTemplates(),
-  ]);
+  const [productOrder, designOrder, productDesigns, printDesigns] =
+    await Promise.all([
+      getProductDisplayOrderRecord(),
+      getDesignDisplayOrderRecord(),
+      getMergedProductDesignTemplates(),
+      buildPrintDesignOrderItems(),
+    ]);
 
   const productItems: DisplayOrderItem[] = sortByDisplayOrder(
     getBrowsableProducts(),
@@ -66,13 +72,13 @@ export default async function AdminOrderingPage() {
     };
   });
 
-  const designItems: DisplayOrderItem[] = sortByDisplayOrder(
+  const merchDesignItems: DisplayOrderItem[] = sortByDisplayOrder(
     productDesigns.map((template) => ({
       id: template.id,
       title: template.titleMk || template.titleEn || template.nameKey || template.id,
       image: designImage(template),
       meta: template.collection
-        ? `${template.id} · ${COLLECTION_LABELS_MK[template.collection] ?? template.collection}`
+        ? `${template.id} · ${MERCH_COLLECTION_LABELS_MK[template.collection] ?? template.collection}`
         : template.id,
       collection: template.collection ?? null,
     })),
@@ -90,8 +96,10 @@ export default async function AdminOrderingPage() {
 
       <DisplayOrderAdminPanel
         products={productItems}
-        designs={designItems}
-        collectionLabels={COLLECTION_LABELS_MK}
+        merchDesigns={merchDesignItems}
+        printDesigns={printDesigns}
+        merchCollectionLabels={MERCH_COLLECTION_LABELS_MK}
+        printCategoryLabels={getPrintDesignCategoryLabelsMk()}
       />
     </div>
   );

@@ -15,8 +15,9 @@ import { DRINKWARE_FLAT_CANVAS_HEIGHT_PX } from '@/lib/products/drinkware-3d-con
 export type DrinkwarePreviewMode = 'flat' | '3d';
 
 /** `floating` = fixed-size card used by the mobile/tablet flat↔3D toggle.
+ *  `stacked` = full-width below the flat unwrap on mobile.
  *  `pane` = fills its parent (the desktop side-by-side preview column). */
-export type DrinkwarePreviewVariant = 'floating' | 'pane';
+export type DrinkwarePreviewVariant = 'floating' | 'stacked' | 'pane';
 
 type Drinkware3DPreviewProps = {
   productType: ProductType;
@@ -59,7 +60,9 @@ export function Drinkware3DPreview({
         'relative overflow-hidden bg-[#eef2f6]',
         variant === 'pane'
           ? 'h-full w-full'
-          : 'aspect-[4/5] w-[min(18rem,78vw)] rounded-sm shadow-[0_8px_40px_rgba(15,23,42,0.12)] md:w-[min(28rem,46vh)] lg:w-[min(32rem,52vh)] xl:w-[min(36rem,58vh)]',
+          : variant === 'stacked'
+            ? 'w-[min(94vw,48rem)] h-[min(calc(min(94vw,48rem)*1.25),clamp(14rem,38vh,24rem))] rounded-sm shadow-[0_8px_40px_rgba(15,23,42,0.12)]'
+            : 'aspect-[4/5] w-[min(18rem,78vw)] rounded-sm shadow-[0_8px_40px_rgba(15,23,42,0.12)] md:w-[min(28rem,46vh)] lg:w-[min(32rem,52vh)] xl:w-[min(36rem,58vh)]',
         className,
       )}
     >

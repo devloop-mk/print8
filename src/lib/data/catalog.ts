@@ -881,6 +881,10 @@ export interface ProductDesignTemplate {
   recommendedColor?: string;
   /** Shirt colors this design supports — omit to infer from variants / contrast */
   applicableColors?: string[];
+  /** Per t-shirt fit palette — overrides applicableColors for that fit when set */
+  applicableColorsByFit?: Partial<Record<GarmentFit, string[]>>;
+  /** Per product-type palette (hoodie, bodysuit, …) — overrides applicableColors when set */
+  applicableColorsByProductType?: Partial<Record<ProductType, string[]>>;
   /** T-shirt garment fits this design supports — omit defaults to unisex only */
   applicableFits?: GarmentFit[];
   /** Styled Macedonian text layout — used for `text` kind */

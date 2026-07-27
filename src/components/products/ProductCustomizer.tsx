@@ -2536,6 +2536,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       canvasZoom={canvasZoom}
       onZoomChange={setCanvasZoom}
       sidePreview={drinkwareSidePreviewNode}
+      mobileStackedPreview={isDrinkware && !isDesktopSplitPreview}
       mobileBottomBar={
         <div
           className="fixed inset-x-0 bottom-0 z-[55] border-t border-ink-200 bg-white/95 px-3 pt-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] shadow-[0_-4px_24px_rgba(15,23,42,0.08)] backdrop-blur md:hidden"
@@ -3429,7 +3430,7 @@ function InteractivePreview({
     </div>
 
     {showStacked3dPreview ? (
-      <div className="flex w-full max-w-[min(48rem,94vw)] flex-col items-center gap-2">
+      <div className="flex w-full max-w-[min(48rem,94vw)] flex-col items-center pb-2">
         <DrinkwareDesignPreview3D
           productType={productType}
           productId={product.id}
@@ -3438,13 +3439,9 @@ function InteractivePreview({
           designTemplate={designTemplate}
           printBounds={overlayPrintBounds}
           textLayers={live3DTextLayers}
-          variant="floating"
-          className="w-[min(18rem,78vw)] shadow-[0_8px_40px_rgba(15,23,42,0.12)] sm:w-[min(22rem,40vh)]"
+          variant="stacked"
           canvasHeightPx={drinkwareCanvasHeightPx}
         />
-        <p className="max-w-[min(18rem,78vw)] text-center text-[11px] leading-snug text-ink-500 sm:max-w-[min(22rem,40vh)]">
-          {t('preview3dEditHint')}
-        </p>
       </div>
     ) : null}
 

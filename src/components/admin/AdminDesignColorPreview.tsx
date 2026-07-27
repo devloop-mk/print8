@@ -7,6 +7,7 @@ import {
   type Product,
   type ProductDesignTemplate,
   type ProductType,
+  type GarmentFit,
 } from '@/lib/data/catalog';
 import {
   DESIGN_OVERLAY_LAYER_CLASS,
@@ -108,6 +109,7 @@ export function AdminDesignColorPreview({
 export function resolveAdminPreviewProduct(
   template: ProductDesignTemplate,
   productType?: ProductType,
+  garmentFit?: GarmentFit,
 ): Product | null {
   const type =
     productType && template.productTypes.includes(productType)
@@ -117,7 +119,11 @@ export function resolveAdminPreviewProduct(
   if (type === 't-shirt') {
     try {
       const fits = getDesignApplicableFits(template);
-      return resolveTshirtProductForDesign(template, fits[0] ?? 'unisex');
+      const fit =
+        garmentFit && fits.includes(garmentFit)
+          ? garmentFit
+          : (fits[0] ?? 'unisex');
+      return resolveTshirtProductForDesign(template, fit);
     } catch {
       // Fall through to linked-product lookup.
     }

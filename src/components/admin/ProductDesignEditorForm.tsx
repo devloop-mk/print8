@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import type {
+  GarmentFit,
   ProductDesignSideOverlay,
   ProductDesignTemplate,
   ProductType,
@@ -17,6 +18,7 @@ import {
   PRODUCT_TYPE_LABELS_MK,
   productTypes,
 } from '@/lib/admin/product-designs-shared';
+import { formatAdminDate } from '@/lib/admin/strings';
 import {
   designSideModeToConfig,
   getDesignSideMode,
@@ -96,6 +98,25 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
 
   function patchTemplate(patch: Partial<ProductDesignTemplate>) {
     setTemplate((current) => ({ ...current, ...patch }));
+  }
+
+  function handleApplicableFitsChange(fits: GarmentFit[]) {
+    const prev = template.applicableFits ?? ['unisex'];
+    const added = fits.filter((fit) => !prev.includes(fit));
+    const byFit = { ...template.applicableColorsByFit };
+
+    for (const fit of added) {
+      if (byFit[fit] !== undefined) continue;
+      // Re-enabled fit: restore from legacy palette, not from another fit's colors.
+      byFit[fit] = template.applicableColors?.length
+        ? [...template.applicableColors]
+        : [];
+    }
+
+    patchTemplate({
+      applicableFits: fits,
+      ...(added.length > 0 ? { applicableColorsByFit: byFit } : {}),
+    });
   }
 
   function toggleProductType(type: ProductType) {
@@ -433,7 +454,7 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
           )}
           {design.managed ? (
             <p className="mt-2 text-xs text-ink-500">
-              Последна измена: {new Date(design.managed.updatedAt).toLocaleString('mk-MK')}
+              Последна измена: {formatAdminDate(design.managed.updatedAt, 'long')}
             </p>
           ) : null}
         </div>
@@ -933,9 +954,20 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
             <ProductDesignColorMatrix
               template={template}
               applicableColors={template.applicableColors ?? []}
+              applicableColorsByFit={template.applicableColorsByFit ?? {}}
+              applicableColorsByProductType={
+                template.applicableColorsByProductType ?? {}
+              }
+              applicableFits={template.applicableFits ?? ['unisex']}
               overlayColorVariants={template.overlayColorVariants ?? {}}
               onApplicableColorsChange={(colors) =>
                 patchTemplate({ applicableColors: colors })
+              }
+              onApplicableColorsByFitChange={(colorsByFit) =>
+                patchTemplate({ applicableColorsByFit: colorsByFit })
+              }
+              onApplicableColorsByProductTypeChange={(colorsByType) =>
+                patchTemplate({ applicableColorsByProductType: colorsByType })
               }
               onVariantsChange={(variants) =>
                 patchTemplate({ overlayColorVariants: variants })
@@ -952,9 +984,7 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
           <div className="mt-4">
             <ProductDesignFitMatrix
               applicableFits={template.applicableFits ?? ['unisex']}
-              onApplicableFitsChange={(fits) =>
-                patchTemplate({ applicableFits: fits })
-              }
+              onApplicableFitsChange={handleApplicableFitsChange}
               productTypes={template.productTypes}
             />
           </div>

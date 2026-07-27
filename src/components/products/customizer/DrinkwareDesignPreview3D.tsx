@@ -6,6 +6,7 @@ import type { PlacedTextLayer } from '@/lib/products/text-layers';
 import type { PrintAreaInsets } from '@/lib/products/print-area';
 import { useDrinkwareDesignImageLayers } from '@/hooks/useDrinkwareDesignImageLayers';
 import { Drinkware3DPreviewLazy } from '@/components/products/customizer/Drinkware3DPreviewLazy';
+import type { DrinkwarePreviewVariant } from '@/components/products/customizer/Drinkware3DPreview';
 
 /**
  * Builds the drinkware wrap image layers from the current side design and
@@ -32,7 +33,7 @@ export function DrinkwareDesignPreview3D({
   designTemplate: ProductDesignTemplate | null | undefined;
   printBounds: PrintAreaInsets;
   textLayers: PlacedTextLayer[];
-  variant?: 'floating' | 'pane';
+  variant?: DrinkwarePreviewVariant;
   className?: string;
   canvasHeightPx?: number;
 }) {

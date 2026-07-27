@@ -115,10 +115,17 @@ export function resolveDesignProduct(
     );
     if (typedCatalog) return typedCatalog;
 
-    const firstListed = design.productIds
-      .map((id) => products.find((product) => product.id === id))
-      .find((product): product is Product => Boolean(product));
-    if (firstListed) return firstListed;
+    const prefersTypedGarment =
+      preferredType &&
+      design.productTypes.includes(preferredType) &&
+      productType === preferredType;
+
+    if (!prefersTypedGarment) {
+      const firstListed = design.productIds
+        .map((id) => products.find((product) => product.id === id))
+        .find((product): product is Product => Boolean(product));
+      if (firstListed) return firstListed;
+    }
   }
 
   const matched =

@@ -165,6 +165,23 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
 
+/**
+ * Shrink insets so placement clamps allow content slightly past the dashed
+ * print-area guide (admin authoring / customizer overshoot).
+ */
+export function expandPrintAreaInsets(
+  insets: PrintAreaInsets,
+  bleedPercent: number,
+): PrintAreaInsets {
+  if (bleedPercent <= 0) return insets;
+  return {
+    top: Math.max(0, insets.top - bleedPercent),
+    right: Math.max(0, insets.right - bleedPercent),
+    bottom: Math.max(0, insets.bottom - bleedPercent),
+    left: Math.max(0, insets.left - bleedPercent),
+  };
+}
+
 export function getUniformPrintAreaInsets(
   insetPercent: number,
 ): PrintAreaInsets {

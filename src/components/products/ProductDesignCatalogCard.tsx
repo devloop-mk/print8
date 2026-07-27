@@ -286,12 +286,15 @@ export function ProductDesignCatalogCard({
         >
           <div className="flex flex-1 flex-col gap-3 p-4 pb-3">
             <div className="flex flex-wrap gap-1.5">
-              {design.productTypes.map((type) => (
+              {(preferredProductType
+                ? design.productTypes.filter((productType) => productType === preferredProductType)
+                : design.productTypes
+              ).map((productType) => (
                 <span
-                  key={type}
+                  key={productType}
                   className="rounded-full bg-ink-100 px-2 py-0.5 text-[11px] font-medium text-ink-700"
                 >
-                  {tp(type)}
+                  {tp(productType)}
                 </span>
               ))}
               {!isDualSided ? (

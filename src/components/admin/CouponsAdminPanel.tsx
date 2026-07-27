@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { adminStrings } from '@/lib/admin/strings';
+import { adminStrings, formatAdminDate } from '@/lib/admin/strings';
 import { Button } from '@/components/ui/Button';
 
 type CouponRow = {
@@ -438,7 +438,7 @@ export function CouponsAdminPanel() {
                       {spin.couponCode ?? '—'}
                     </td>
                     <td className="py-2 text-ink-500">
-                      {new Date(spin.createdAt).toLocaleString('mk-MK')}
+                      {formatAdminDate(spin.createdAt, 'long')}
                     </td>
                   </tr>
                 ))}

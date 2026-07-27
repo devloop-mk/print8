@@ -16,7 +16,7 @@ export type DisplayOrderItem = {
   collection?: string | null;
 };
 
-type Tab = 'products' | 'designs';
+type Tab = 'products' | 'merchDesigns' | 'printDesigns';
 
 const SEARCH_RESULT_LIMIT = 12;
 
@@ -274,43 +274,75 @@ function ReorderList({
 
 export function DisplayOrderAdminPanel({
   products,
-  designs,
-  collectionLabels,
+  merchDesigns,
+  printDesigns,
+  merchCollectionLabels,
+  printCategoryLabels,
 }: {
   products: DisplayOrderItem[];
-  designs: DisplayOrderItem[];
-  collectionLabels: Record<string, string>;
+  merchDesigns: DisplayOrderItem[];
+  printDesigns: DisplayOrderItem[];
+  merchCollectionLabels: Record<string, string>;
+  printCategoryLabels: Record<string, string>;
 }) {
   const [tab, setTab] = useState<Tab>('products');
   const [productItems, setProductItems] = useState(products);
-  const [designItems, setDesignItems] = useState(designs);
-  const [collectionFilter, setCollectionFilter] = useState<string>('all');
+  const [merchDesignItems, setMerchDesignItems] = useState(merchDesigns);
+  const [printDesignItems, setPrintDesignItems] = useState(printDesigns);
+  const [merchCollectionFilter, setMerchCollectionFilter] = useState<string>('all');
+  const [printCategoryFilter, setPrintCategoryFilter] = useState<string>('all');
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const collections = useMemo(() => {
+  const merchCollections = useMemo(() => {
     const set = new Set<string>();
-    for (const design of designItems) {
+    for (const design of merchDesignItems) {
       if (design.collection) set.add(design.collection);
     }
     return [...set].sort((a, b) =>
-      (collectionLabels[a] ?? a).localeCompare(collectionLabels[b] ?? b, 'mk'),
+      (merchCollectionLabels[a] ?? a).localeCompare(
+        merchCollectionLabels[b] ?? b,
+        'mk',
+      ),
     );
-  }, [collectionLabels, designItems]);
+  }, [merchCollectionLabels, merchDesignItems]);
 
-  const scopedDesigns = useMemo(() => {
-    if (collectionFilter === 'all') return designItems;
-    return designItems.filter((design) => design.collection === collectionFilter);
-  }, [collectionFilter, designItems]);
+  const printCategories = useMemo(() => {
+    const set = new Set<string>();
+    for (const design of printDesignItems) {
+      if (design.collection) set.add(design.collection);
+    }
+    return [...set].sort((a, b) =>
+      (printCategoryLabels[a] ?? a).localeCompare(
+        printCategoryLabels[b] ?? b,
+        'mk',
+      ),
+    );
+  }, [printCategoryLabels, printDesignItems]);
+
+  const scopedMerchDesigns = useMemo(() => {
+    if (merchCollectionFilter === 'all') return merchDesignItems;
+    return merchDesignItems.filter(
+      (design) => design.collection === merchCollectionFilter,
+    );
+  }, [merchCollectionFilter, merchDesignItems]);
+
+  const scopedPrintDesigns = useMemo(() => {
+    if (printCategoryFilter === 'all') return printDesignItems;
+    return printDesignItems.filter(
+      (design) => design.collection === printCategoryFilter,
+    );
+  }, [printCategoryFilter, printDesignItems]);
 
   function mapScopedDesigns(
     prev: DisplayOrderItem[],
     nextScoped: DisplayOrderItem[],
+    activeFilter: string,
   ): DisplayOrderItem[] {
     let scopedIndex = 0;
     return prev.map((item) => {
-      if (collectionFilter !== 'all' && item.collection !== collectionFilter) {
+      if (activeFilter !== 'all' && item.collection !== activeFilter) {
         return item;
       }
       const next = nextScoped[scopedIndex];
@@ -319,15 +351,27 @@ export function DisplayOrderAdminPanel({
     });
   }
 
-  function applyDesignScoped(
+  function applyMerchDesignScoped(
     transform: (scoped: DisplayOrderItem[]) => DisplayOrderItem[],
   ) {
-    setDesignItems((prev) => {
+    setMerchDesignItems((prev) => {
       const scoped =
-        collectionFilter === 'all'
+        merchCollectionFilter === 'all'
           ? prev
-          : prev.filter((design) => design.collection === collectionFilter);
-      return mapScopedDesigns(prev, transform(scoped));
+          : prev.filter((design) => design.collection === merchCollectionFilter);
+      return mapScopedDesigns(prev, transform(scoped), merchCollectionFilter);
+    });
+  }
+
+  function applyPrintDesignScoped(
+    transform: (scoped: DisplayOrderItem[]) => DisplayOrderItem[],
+  ) {
+    setPrintDesignItems((prev) => {
+      const scoped =
+        printCategoryFilter === 'all'
+          ? prev
+          : prev.filter((design) => design.collection === printCategoryFilter);
+      return mapScopedDesigns(prev, transform(scoped), printCategoryFilter);
     });
   }
 
@@ -358,14 +402,15 @@ export function DisplayOrderAdminPanel({
     }
   }
 
-  async function saveDesigns() {
+  async function saveMerchDesigns() {
     setSaving(true);
     setMessage(null);
     setError(null);
     try {
-      const scope = designItems.filter(
+      const scope = merchDesignItems.filter(
         (design) =>
-          collectionFilter === 'all' || design.collection === collectionFilter,
+          merchCollectionFilter === 'all' ||
+          design.collection === merchCollectionFilter,
       );
       const response = await fetch('/api/admin/display-order/designs', {
         method: 'PUT',
@@ -381,7 +426,39 @@ export function DisplayOrderAdminPanel({
         const data = await response.json().catch(() => ({}));
         throw new Error(data.error ?? adminStrings.ordering.saveError);
       }
-      setMessage(adminStrings.ordering.designsSaved);
+      setMessage(adminStrings.ordering.merchDesignsSaved);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : adminStrings.ordering.saveError);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function savePrintDesigns() {
+    setSaving(true);
+    setMessage(null);
+    setError(null);
+    try {
+      const scope = printDesignItems.filter(
+        (design) =>
+          printCategoryFilter === 'all' ||
+          design.collection === printCategoryFilter,
+      );
+      const response = await fetch('/api/admin/display-order/print-designs', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          entries: scope.map((item, index) => ({
+            id: item.id,
+            sortOrder: index,
+          })),
+        }),
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error ?? adminStrings.ordering.saveError);
+      }
+      setMessage(adminStrings.ordering.printDesignsSaved);
     } catch (err) {
       setError(err instanceof Error ? err.message : adminStrings.ordering.saveError);
     } finally {
@@ -402,15 +479,28 @@ export function DisplayOrderAdminPanel({
     setError(null);
   }
 
-  function setDesignFirst(id: string) {
-    const target = scopedDesigns.find((item) => item.id === id);
+  function setMerchDesignFirst(id: string) {
+    const target = scopedMerchDesigns.find((item) => item.id === id);
     if (!target) return;
-    const index = scopedDesigns.findIndex((item) => item.id === id);
+    const index = scopedMerchDesigns.findIndex((item) => item.id === id);
     if (index === 0) {
       setMessage(adminStrings.ordering.alreadyFirst);
       return;
     }
-    applyDesignScoped((scoped) => setItemFirst(scoped, id));
+    applyMerchDesignScoped((scoped) => setItemFirst(scoped, id));
+    setMessage(adminStrings.ordering.setFirstDone(target.title));
+    setError(null);
+  }
+
+  function setPrintDesignFirst(id: string) {
+    const target = scopedPrintDesigns.find((item) => item.id === id);
+    if (!target) return;
+    const index = scopedPrintDesigns.findIndex((item) => item.id === id);
+    if (index === 0) {
+      setMessage(adminStrings.ordering.alreadyFirst);
+      return;
+    }
+    applyPrintDesignScoped((scoped) => setItemFirst(scoped, id));
     setMessage(adminStrings.ordering.setFirstDone(target.title));
     setError(null);
   }
@@ -433,14 +523,26 @@ export function DisplayOrderAdminPanel({
         <Button
           type="button"
           size="sm"
-          variant={tab === 'designs' ? 'primary' : 'outline'}
+          variant={tab === 'merchDesigns' ? 'primary' : 'outline'}
           onClick={() => {
-            setTab('designs');
+            setTab('merchDesigns');
             setMessage(null);
             setError(null);
           }}
         >
-          {adminStrings.ordering.tabDesigns}
+          {adminStrings.ordering.tabMerchDesigns}
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant={tab === 'printDesigns' ? 'primary' : 'outline'}
+          onClick={() => {
+            setTab('printDesigns');
+            setMessage(null);
+            setError(null);
+          }}
+        >
+          {adminStrings.ordering.tabPrintDesigns}
         </Button>
       </div>
 
@@ -472,45 +574,94 @@ export function DisplayOrderAdminPanel({
             {saving ? adminStrings.ordering.saving : adminStrings.ordering.saveProducts}
           </Button>
         </div>
-      ) : (
+      ) : tab === 'merchDesigns' ? (
         <div className="space-y-4">
-          <p className="text-sm text-ink-500">{adminStrings.ordering.designsHelp}</p>
+          <p className="text-sm text-ink-500">
+            {adminStrings.ordering.merchDesignsHelp}
+          </p>
           <label className="block text-sm sm:max-w-sm">
             <span className="font-medium text-ink-900">
               {adminStrings.ordering.collectionFilter}
             </span>
             <select
-              value={collectionFilter}
-              onChange={(event) => setCollectionFilter(event.target.value)}
+              value={merchCollectionFilter}
+              onChange={(event) => setMerchCollectionFilter(event.target.value)}
               className="mt-1 w-full border border-ink-200 bg-white px-3 py-2 text-sm"
             >
               <option value="all">{adminStrings.ordering.allCollections}</option>
-              {collections.map((collection) => (
+              {merchCollections.map((collection) => (
                 <option key={collection} value={collection}>
-                  {collectionLabels[collection] ?? collection}
+                  {merchCollectionLabels[collection] ?? collection}
                 </option>
               ))}
             </select>
           </label>
-          <SetFirstSearch items={scopedDesigns} onSetFirst={setDesignFirst} />
+          <SetFirstSearch items={scopedMerchDesigns} onSetFirst={setMerchDesignFirst} />
           <p className="text-xs text-ink-500">
-            {adminStrings.ordering.visibleCount(scopedDesigns.length)}
+            {adminStrings.ordering.visibleCount(scopedMerchDesigns.length)}
           </p>
           <ReorderList
-            items={scopedDesigns}
+            items={scopedMerchDesigns}
             onMove={(id, direction) =>
-              applyDesignScoped((scoped) => moveItem(scoped, id, direction))
+              applyMerchDesignScoped((scoped) => moveItem(scoped, id, direction))
             }
             onDragReorder={(fromId, toId) =>
-              applyDesignScoped((scoped) => reorderByDrag(scoped, fromId, toId))
+              applyMerchDesignScoped((scoped) => reorderByDrag(scoped, fromId, toId))
             }
           />
           <Button
             type="button"
-            onClick={saveDesigns}
-            disabled={saving || scopedDesigns.length === 0}
+            onClick={saveMerchDesigns}
+            disabled={saving || scopedMerchDesigns.length === 0}
           >
-            {saving ? adminStrings.ordering.saving : adminStrings.ordering.saveDesigns}
+            {saving
+              ? adminStrings.ordering.saving
+              : adminStrings.ordering.saveMerchDesigns}
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <p className="text-sm text-ink-500">
+            {adminStrings.ordering.printDesignsHelp}
+          </p>
+          <label className="block text-sm sm:max-w-sm">
+            <span className="font-medium text-ink-900">
+              {adminStrings.ordering.categoryFilter}
+            </span>
+            <select
+              value={printCategoryFilter}
+              onChange={(event) => setPrintCategoryFilter(event.target.value)}
+              className="mt-1 w-full border border-ink-200 bg-white px-3 py-2 text-sm"
+            >
+              <option value="all">{adminStrings.ordering.allCategories}</option>
+              {printCategories.map((category) => (
+                <option key={category} value={category}>
+                  {printCategoryLabels[category] ?? category}
+                </option>
+              ))}
+            </select>
+          </label>
+          <SetFirstSearch items={scopedPrintDesigns} onSetFirst={setPrintDesignFirst} />
+          <p className="text-xs text-ink-500">
+            {adminStrings.ordering.visibleCount(scopedPrintDesigns.length)}
+          </p>
+          <ReorderList
+            items={scopedPrintDesigns}
+            onMove={(id, direction) =>
+              applyPrintDesignScoped((scoped) => moveItem(scoped, id, direction))
+            }
+            onDragReorder={(fromId, toId) =>
+              applyPrintDesignScoped((scoped) => reorderByDrag(scoped, fromId, toId))
+            }
+          />
+          <Button
+            type="button"
+            onClick={savePrintDesigns}
+            disabled={saving || scopedPrintDesigns.length === 0}
+          >
+            {saving
+              ? adminStrings.ordering.saving
+              : adminStrings.ordering.savePrintDesigns}
           </Button>
         </div>
       )}

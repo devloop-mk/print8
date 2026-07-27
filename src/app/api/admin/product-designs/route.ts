@@ -43,6 +43,10 @@ const templateSchema = z.object({
   backOverlay: z.record(z.unknown()).optional(),
   recommendedColor: z.string().optional(),
   applicableColors: z.array(z.string()).optional(),
+  applicableColorsByFit: z
+    .record(z.enum(['unisex', 'women', 'kids']), z.array(z.string()))
+    .optional(),
+  applicableColorsByProductType: z.record(z.string(), z.array(z.string())).optional(),
   applicableFits: z.array(z.enum(['unisex', 'women', 'kids'])).optional(),
   titleEn: z.string().optional(),
   titleMk: z.string().optional(),

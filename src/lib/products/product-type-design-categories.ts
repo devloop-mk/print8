@@ -1,4 +1,5 @@
 import {
+  products,
   type Product,
   type ProductDesignTemplate,
   type ProductType,
@@ -34,7 +35,7 @@ const TYPE_DESIGN_CATEGORIES: Partial<
   't-shirt': [
     {
       id: 'kidsTee',
-      href: '/products/tshirt-kids',
+      href: PRODUCT_OFFERING_PATHS.kidsReadyDesigns,
       previewDesignId: 'tee-kids-gen-dino-party',
     },
     {
@@ -104,9 +105,21 @@ function resolveCategoryPreviewProduct(
   design: ProductDesignTemplate,
   preferredType: ProductType,
 ): Product {
-  // Prefer the type-page garment (hoodie/bodysuit/…) over productTypes[0]
-  // (usually t-shirt). Kids designs may lock productIds to a tee while still
-  // listing hoodie — resolveDesignProduct handles that fallback.
+  const staticBase = resolveStaticProductDesignTemplate(design.id);
+  const supportedTypes = new Set<ProductType>([
+    ...design.productTypes,
+    ...(staticBase?.productTypes ?? []),
+  ]);
+
+  // Type-page category cards must preview the page garment when the design
+  // supports it — ignore productIds locks and admin productTypes narrowing.
+  if (supportedTypes.has(preferredType)) {
+    const pageGarment = products.find((product) => product.type === preferredType);
+    if (pageGarment) {
+      return pageGarment;
+    }
+  }
+
   return resolveDesignProduct(design, undefined, preferredType);
 }
 

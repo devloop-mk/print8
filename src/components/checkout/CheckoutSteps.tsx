@@ -22,7 +22,7 @@ export function CheckoutSteps({ current }: { current: StepId }) {
   return (
     <nav
       aria-label={t('ariaLabel')}
-      className="mb-8 flex items-center justify-center gap-2 sm:gap-4"
+      className="mb-8 flex min-w-0 max-w-full items-center justify-center gap-2 overflow-x-clip sm:gap-4"
     >
       {steps.map((step, index) => {
         const isComplete = index < currentIndex;

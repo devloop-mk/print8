@@ -42,6 +42,7 @@ import {
   isBrandingPackCartItem,
 } from "@/lib/products/branding-pack-cart";
 import { buildDesignEditUrl } from "@/lib/cart/design-cart";
+import { isCylindricalDrinkwareType } from "@/lib/products/product-mockup-layout";
 
 
 
@@ -153,9 +154,9 @@ export function CartPageContent() {
 
       <CheckoutSteps current="cart" />
 
-      <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
+      <div className="grid min-w-0 gap-8 lg:grid-cols-[1fr_360px]">
 
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
 
           {items.map((item) => {
 
@@ -201,16 +202,24 @@ export function CartPageContent() {
                 : null;
             const isWideDesign = Boolean(designAspect && designAspect > 1.1);
             const multiSidePreviews = !isMagnet && previewImages.length > 2;
+            const dualPreviewLayout =
+              !isWideDesign && previewImages.length === 2;
+            const isDualDrinkwarePreviews =
+              dualPreviewLayout &&
+              product &&
+              isCylindricalDrinkwareType(product.type);
 
             return (
 
               <Card
                 key={item.id}
                 className={cn(
-                  "flex gap-4",
+                  "min-w-0 max-w-full flex gap-3 overflow-x-clip p-4 sm:gap-4 sm:p-6",
                   multiSidePreviews
-                    ? "flex-col sm:flex-row sm:items-start"
-                    : "flex-row",
+                    ? "flex-col lg:flex-row lg:items-start"
+                    : dualPreviewLayout
+                      ? "flex-col sm:flex-row sm:items-start"
+                      : "flex-row items-start",
                 )}
               >
 
@@ -219,8 +228,10 @@ export function CartPageContent() {
                   <div
                     className={cn(
                       multiSidePreviews
-                        ? "grid w-full max-w-xs grid-cols-2 items-start gap-1.5 sm:max-w-none sm:flex sm:shrink-0 sm:gap-1"
-                        : "flex shrink-0 gap-1",
+                        ? "grid w-full grid-cols-2 items-start gap-1.5 lg:flex lg:shrink-0 lg:gap-1"
+                        : dualPreviewLayout
+                          ? "grid w-full grid-cols-2 gap-2 sm:flex sm:shrink-0 sm:gap-1"
+                          : "flex shrink-0 gap-1",
                     )}
                   >
 
@@ -241,10 +252,17 @@ export function CartPageContent() {
                         className={cn(
                           "group relative flex items-center justify-center overflow-hidden rounded-lg border border-ink-200 bg-ink-50 transition hover:border-brand-400 hover:ring-2 hover:ring-brand-200",
                           multiSidePreviews
-                            ? "aspect-square w-full sm:h-20 sm:w-20"
-                            : isWideDesign
-                              ? "h-20 w-[7.5rem] shrink-0"
-                              : "h-20 w-20 shrink-0",
+                            ? "aspect-square w-full lg:h-20 lg:w-20"
+                            : dualPreviewLayout
+                              ? cn(
+                                  "w-full sm:h-20 sm:w-20 sm:shrink-0 sm:aspect-auto",
+                                  isDualDrinkwarePreviews
+                                    ? "aspect-[4/3] max-h-36 sm:max-h-none"
+                                    : "aspect-square",
+                                )
+                              : isWideDesign
+                                ? "h-16 w-[6rem] shrink-0 sm:h-20 sm:w-[7.5rem]"
+                                : "h-16 w-16 shrink-0 sm:h-20 sm:w-20",
                         )}
 
                         aria-label={t("zoomPreview")}
@@ -472,7 +490,7 @@ export function CartPageContent() {
 
 
 
-        <Card className="h-fit">
+        <Card className="h-fit p-4 sm:p-6">
 
           <div className="flex justify-between text-sm">
 

@@ -16,6 +16,8 @@ import {
 } from '@/lib/db/catalog-designs';
 import { unstable_cache } from 'next/cache';
 import { CATALOG_CACHE_SECONDS } from '@/lib/cache/catalog-cache';
+import { getPrintDesignDisplayOrderRecord } from '@/lib/cms/display-order';
+import { sortByDisplayOrder } from '@/lib/products/sort-by-display-order';
 
 export const CATALOG_DESIGNS_CACHE_TAG = 'catalog-designs';
 /** Homepage featured strip only — not busted by exclusive order reservations. */
@@ -159,11 +161,15 @@ function resolveDesignFromRecords(
 
 function buildPublishedDesignTemplates(
   managedRecords: CatalogDesignRecord[],
+  printDisplayOrder: Record<string, number> = {},
 ): ResolvedDesignTemplate[] {
   const managed = managedRecords.map(mapRecordToTemplate);
   const publishedExclusive = getPublishedExclusiveBusinessCards(managedRecords);
 
   const managedById = new Map(managed.map((design) => [design.id, design]));
+  const sortOrderById = new Map(
+    managedRecords.map((record) => [record.id, record.sortOrder]),
+  );
   const staticById = new Map(designTemplates.map((design) => [design.id, design]));
 
   const publishedManaged = managed
@@ -198,7 +204,18 @@ function buildPublishedDesignTemplates(
         : design;
     });
 
-  return [...staticPublished, ...publishedManaged, ...publishedExclusive];
+  const published = [...staticPublished, ...publishedManaged, ...publishedExclusive];
+
+  if (Object.keys(printDisplayOrder).length > 0) {
+    return sortByDisplayOrder(published, printDisplayOrder);
+  }
+
+  return published.sort((a, b) => {
+    const orderA = sortOrderById.get(a.id) ?? 1_000_000;
+    const orderB = sortOrderById.get(b.id) ?? 1_000_000;
+    if (orderA !== orderB) return orderA - orderB;
+    return a.id.localeCompare(b.id);
+  });
 }
 
 export async function getCachedCatalogDesignRecords(): Promise<CatalogDesignRecord[]> {
@@ -211,13 +228,16 @@ export async function getManagedDesignTemplates(): Promise<ManagedDesignTemplate
 }
 
 async function fetchPublishedDesignTemplates(): Promise<ResolvedDesignTemplate[]> {
-  const managedRecords = await getCatalogDesignRecordsCached();
-  return buildPublishedDesignTemplates(managedRecords);
+  const [managedRecords, printDisplayOrder] = await Promise.all([
+    getCatalogDesignRecordsCached(),
+    getPrintDesignDisplayOrderRecord(),
+  ]);
+  return buildPublishedDesignTemplates(managedRecords, printDisplayOrder);
 }
 
 export const getPublishedDesignTemplates = unstable_cache(
   fetchPublishedDesignTemplates,
-  ['published-design-templates-v3'],
+  ['published-design-templates-v4'],
   {
     revalidate: CATALOG_CACHE_SECONDS,
     tags: [CATALOG_DESIGNS_CACHE_TAG],
@@ -231,9 +251,11 @@ export const getPublishedDesignTemplates = unstable_cache(
  */
 const getHomeFeaturedDesignTemplatesCached = unstable_cache(
   async (): Promise<ResolvedDesignTemplate[]> => {
-    // Bypass tagged catalog Data Cache — read DB directly for this shell.
-    const managedRecords = await catalogDesignsDb.list();
-    return buildPublishedDesignTemplates(managedRecords).slice(
+    const [managedRecords, printDisplayOrder] = await Promise.all([
+      catalogDesignsDb.list(),
+      getPrintDesignDisplayOrderRecord(),
+    ]);
+    return buildPublishedDesignTemplates(managedRecords, printDisplayOrder).slice(
       0,
       HOME_FEATURED_DESIGNS_COUNT,
     );
@@ -257,8 +279,11 @@ export async function getHomeFeaturedDesignTemplates(): Promise<
  */
 const getDesignCategoryCountsCached = unstable_cache(
   async (): Promise<Partial<Record<DesignCategory, number>>> => {
-    const managedRecords = await catalogDesignsDb.list();
-    const designs = buildPublishedDesignTemplates(managedRecords);
+    const [managedRecords, printDisplayOrder] = await Promise.all([
+      catalogDesignsDb.list(),
+      getPrintDesignDisplayOrderRecord(),
+    ]);
+    const designs = buildPublishedDesignTemplates(managedRecords, printDisplayOrder);
     const counts: Partial<Record<DesignCategory, number>> = {};
     for (const design of designs) {
       counts[design.category] = (counts[design.category] ?? 0) + 1;

@@ -1,4 +1,4 @@
-import type { Product, ProductDesignTemplate } from '@/lib/data/catalog';
+import type { GarmentFit, Product, ProductDesignTemplate, ProductType } from '@/lib/data/catalog';
 import {
   isImageDesignTemplate,
   isOverlayDesignTemplate,
@@ -9,6 +9,7 @@ import {
   contrastRatio,
   normalizeHex,
 } from '@/lib/products/design-overlay';
+import { getProductGarmentFit, getDesignApplicableFits } from '@/lib/products/garment-fit';
 import { resolveProductColorImageKey } from '@/lib/products/product-color-images';
 
 const MIN_TEXT_CONTRAST = 2.8;
@@ -60,6 +61,79 @@ function intersectWithProductColors(
   );
 }
 
+/**
+ * Stored admin palette for one t-shirt fit before product intersection.
+ * `null` = use legacy `applicableColors`; `[]` = all colors for this fit.
+ */
+export function getDesignFitPalette(
+  design: ProductDesignTemplate,
+  garmentFit: GarmentFit,
+): string[] | null {
+  if (design.applicableColorsByFit?.[garmentFit] !== undefined) {
+    return design.applicableColorsByFit[garmentFit] ?? [];
+  }
+
+  const hasAnyFitCustomization =
+    design.applicableColorsByFit &&
+    Object.keys(design.applicableColorsByFit).length > 0;
+  const fits = getDesignApplicableFits(design);
+
+  if (hasAnyFitCustomization || fits.length > 1) {
+    return [];
+  }
+
+  return null;
+}
+
+/**
+ * Stored admin palette for one non-tee product type before intersection.
+ * `null` = use legacy `applicableColors`; `[]` = all colors for this type.
+ */
+export function getDesignProductTypePalette(
+  design: ProductDesignTemplate,
+  productType: ProductType,
+): string[] | null {
+  if (productType === 't-shirt') return null;
+
+  if (design.applicableColorsByProductType?.[productType] !== undefined) {
+    return design.applicableColorsByProductType[productType] ?? [];
+  }
+
+  const hasAnyTypeCustomization =
+    design.applicableColorsByProductType &&
+    Object.keys(design.applicableColorsByProductType).length > 0;
+
+  if (hasAnyTypeCustomization || design.productTypes.length > 1) {
+    return [];
+  }
+
+  return null;
+}
+
+/** Admin / storefront stored palette before product intersection. */
+export function getDesignStoredApplicableColors(
+  design: ProductDesignTemplate,
+  productType?: ProductType | null,
+  garmentFit?: GarmentFit | null,
+): string[] | undefined {
+  if (productType === 't-shirt' && garmentFit) {
+    const palette = getDesignFitPalette(design, garmentFit);
+    if (palette !== null) return palette;
+    return design.applicableColors;
+  }
+
+  if (
+    productType &&
+    productType !== 't-shirt'
+  ) {
+    const palette = getDesignProductTypePalette(design, productType);
+    if (palette !== null) return palette;
+    return design.applicableColors;
+  }
+
+  return design.applicableColors;
+}
+
 export function getDesignApplicableColors(
   design: ProductDesignTemplate,
   product: Product,
@@ -67,7 +141,32 @@ export function getDesignApplicableColors(
   const productColors = product.colors ?? [];
   if (productColors.length === 0) return [];
 
-  if (design.applicableColors?.length) {
+  const garmentFit = getProductGarmentFit(product);
+  const productType = product.type;
+
+  if (productType !== 't-shirt') {
+    const typePalette = getDesignProductTypePalette(design, productType);
+    if (typePalette !== null) {
+      if (typePalette.length > 0) {
+        return intersectWithProductColors(product, typePalette);
+      }
+      // Explicit empty per-type list = all colors (fall through).
+    } else if (design.applicableColors?.length) {
+      return intersectWithProductColors(product, design.applicableColors);
+    }
+  }
+
+  if (productType === 't-shirt' && garmentFit) {
+    const fitPalette = getDesignFitPalette(design, garmentFit);
+    if (fitPalette !== null) {
+      if (fitPalette.length > 0) {
+        return intersectWithProductColors(product, fitPalette);
+      }
+      // Explicit empty per-fit list = all colors (fall through).
+    } else if (design.applicableColors?.length) {
+      return intersectWithProductColors(product, design.applicableColors);
+    }
+  } else if (design.applicableColors?.length) {
     return intersectWithProductColors(product, design.applicableColors);
   }
 

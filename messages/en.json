@@ -1454,7 +1454,7 @@
         "subtitle": "Browse ready designs and product groups by theme.",
         "kidsTee": {
           "title": "Kids t-shirts",
-          "description": "Blank kids tee — pick a color and size."
+          "description": "Ready-made designs for kids tees — pick a motif and color."
         },
         "kidsBirthday": {
           "title": "Kids birthday designs",
@@ -1805,7 +1805,6 @@
       "previewMode3d": "3D",
       "preview3dLoading": "Building 3D preview…",
       "preview3dDragHint": "Drag to rotate · scroll to zoom",
-      "preview3dEditHint": "Switch to Flat view to move and resize your design.",
       "preview3dPaneTitle": "3D preview",
       "drinkwareHandleHint": "Handle",
       "drinkwareCenterOfMug": "Center of mug",

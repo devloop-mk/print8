@@ -45,6 +45,7 @@ export function CustomizerShell({
   mobileBottomBar,
   mobileSheet,
   sidePreview,
+  mobileStackedPreview = false,
 }: {
   topBar: React.ReactNode;
   contextBar: React.ReactNode;
@@ -65,6 +66,8 @@ export function CustomizerShell({
   onZoomChange: (zoom: number) => void;
   mobileBottomBar: React.ReactNode;
   mobileSheet: React.ReactNode;
+  /** Drinkware flat + 3D stack on mobile — needs taller scroll padding, no zoom bar. */
+  mobileStackedPreview?: boolean;
   /** Live 3D preview shown beside the canvas on wide desktop (drinkware). */
   sidePreview?: React.ReactNode;
 }) {
@@ -138,9 +141,17 @@ export function CustomizerShell({
         <div className="pointer-events-auto">{contextBar}</div>
       </div>
 
-      <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto p-2 md:p-3">
+      <div
+        className={cn(
+          'min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain p-2 [-webkit-overflow-scrolling:touch] md:p-3',
+          !sidePreview && 'md:flex md:items-center md:justify-center',
+        )}
+      >
         <div
-          className="origin-center transition-transform duration-150"
+          className={cn(
+            'mx-auto w-full min-h-min shrink-0 origin-center transition-transform duration-150',
+            !sidePreview && 'md:flex md:min-h-full md:items-center md:justify-center',
+          )}
           style={{ transform: `scale(${canvasZoom / 100})` }}
         >
           {canvas}
@@ -150,7 +161,14 @@ export function CustomizerShell({
   );
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-white pb-[7.75rem] md:pb-0">
+    <div
+      className={cn(
+        'flex h-full min-h-0 flex-col overflow-hidden bg-white md:pb-0',
+        mobileStackedPreview
+          ? 'pb-[max(10.5rem,calc(9rem+env(safe-area-inset-bottom,0px)))]'
+          : 'pb-[max(7.75rem,calc(6.5rem+env(safe-area-inset-bottom,0px)))]',
+      )}
+    >
       <div className="shrink-0">{topBar}</div>
 
       <div className="flex min-h-0 flex-1 overflow-hidden">
@@ -291,7 +309,10 @@ export function CustomizerShell({
           )}
 
           <div
-            className="flex h-12 shrink-0 items-center justify-center gap-3 border-t border-ink-200/70 bg-white px-4"
+            className={cn(
+              'h-12 shrink-0 items-center justify-center gap-3 border-t border-ink-200/70 bg-white px-4',
+              mobileStackedPreview ? 'hidden md:flex' : 'flex',
+            )}
             data-customizer-editor-chrome
           >
             <button

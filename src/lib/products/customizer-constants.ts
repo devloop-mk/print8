@@ -53,6 +53,22 @@ export function getCustomizerImageMaxScale(printAreaFitMax: number): number {
   );
 }
 
+/** Extra margin (%) beyond the dashed print guide in admin overlay placement. */
+export const ADMIN_OVERLAY_PRINT_AREA_BLEED_PERCENT = 8;
+
+/** Admin overlay max scale as a multiple of strict print-area fit. */
+export const ADMIN_OVERLAY_SCALE_OVERSHOOT = 1.35;
+
+export function getAdminOverlayMaxScale(printAreaFitMax: number): number {
+  const overshootMax = Math.floor(
+    printAreaFitMax * ADMIN_OVERLAY_SCALE_OVERSHOOT,
+  );
+  return Math.min(
+    PRODUCT_CUSTOMIZER_IMAGE_ABSOLUTE_MAX_SCALE,
+    Math.max(PRODUCT_PHOTO_MIN_SCALE, overshootMax),
+  );
+}
+
 export const PRODUCT_PHOTO_CROP_ASPECT = 1;
 
 export const PRODUCT_PHOTO_CROP_ASPECT_OPTIONS = [

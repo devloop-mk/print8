@@ -32,6 +32,15 @@ export function mergeProductDesignTemplate(
       ? { ...base.textStyle, ...override.textStyle }
       : base.textStyle,
     applicableColors: override.applicableColors ?? base.applicableColors,
+    applicableColorsByFit: override.applicableColorsByFit
+      ? { ...base.applicableColorsByFit, ...override.applicableColorsByFit }
+      : base.applicableColorsByFit,
+    applicableColorsByProductType: override.applicableColorsByProductType
+      ? {
+          ...base.applicableColorsByProductType,
+          ...override.applicableColorsByProductType,
+        }
+      : base.applicableColorsByProductType,
     applicableFits: override.applicableFits ?? base.applicableFits,
     productTypes: override.productTypes?.length
       ? override.productTypes

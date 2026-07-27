@@ -12,15 +12,20 @@ export const adminStrings = {
     nav: 'Редослед',
     title: 'Редослед на приказ',
     subtitle:
-      'Поставете кој производ или дизајн се прикажува прв во каталогот. Потребна е миграцијата add-display-order.sql.',
+      'Поставете кој производ или дизајн се прикажува прв во каталогот. Потребни миграции: add-display-order.sql и add-print-design-display-order.sql.',
     tabProducts: 'Производи',
-    tabDesigns: 'Дизајни за производи',
+    tabMerchDesigns: 'Дизајни за производи',
+    tabPrintDesigns: 'Печатени дизајни',
     productsHelp:
       'Редоследот важи за листи на производи (категории, прилагодување, типови). Пребарајте и поставете прв, или влечете редови. Потоа Зачувај.',
-    designsHelp:
-      'Редоследот важи за готови дизајни (архиви, колекции). Филтрирајте по колекција, пребарајте и поставете прв, или влечете редови.',
+    merchDesignsHelp:
+      'Редоследот важи за готови дизајни на маици, дуксери и сл. (архиви, колекции). Филтрирајте по колекција, пребарајте и поставете прв, или влечете редови.',
+    printDesignsHelp:
+      'Редоследот важи за печатени дизајни (визитници, свадби, менија, родендени). Филтрирајте по категорија, пребарајте и поставете прв, или влечете редови.',
     collectionFilter: 'Колекција',
     allCollections: 'Сите колекции',
+    categoryFilter: 'Категорија',
+    allCategories: 'Сите категории',
     searchLabel: 'Пребарај и постави прв',
     searchPlaceholder: 'ID или име…',
     searchNoResults: 'Нема резултати.',
@@ -36,10 +41,12 @@ export const adminStrings = {
     moveDown: 'Долу',
     dragHandle: 'Влечи за преуредување',
     saveProducts: 'Зачувај редослед на производи',
-    saveDesigns: 'Зачувај редослед на дизајни',
+    saveMerchDesigns: 'Зачувај редослед на дизајни за производи',
+    savePrintDesigns: 'Зачувај редослед на печатени дизајни',
     saving: 'Се зачувува…',
     productsSaved: 'Редоследот на производи е зачуван.',
-    designsSaved: 'Редоследот на дизајни е зачуван.',
+    merchDesignsSaved: 'Редоследот на дизајни за производи е зачуван.',
+    printDesignsSaved: 'Редоследот на печатени дизајни е зачуван.',
     saveError: 'Неуспешно зачувување на редоследот.',
   },
   content: 'Содржина',
@@ -297,11 +304,23 @@ export const adminStrings = {
 export function formatAdminDate(
   value: string,
   style: 'short' | 'long' = 'short',
-) {
-  return new Intl.DateTimeFormat('mk-MK', {
-    dateStyle: style === 'long' ? 'full' : 'medium',
-    timeStyle: 'short',
-  }).format(new Date(value));
+): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  // Manual pattern — Node SSR and browsers format mk-MK differently (hydration mismatch).
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+
+  if (style === 'long') {
+    return `${day}.${month}.${year}. г., ${hours}:${minutes}:${seconds}`;
+  }
+
+  return `${day}.${month}.${year} ${hours}:${minutes}`;
 }
 
 export function getOrderStatusLabel(status: OrderStatus) {

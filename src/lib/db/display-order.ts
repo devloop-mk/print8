@@ -12,7 +12,10 @@ function isMissingTable(message: string, table: string) {
 }
 
 async function listOrderTable(
-  table: 'cms_product_display_order' | 'cms_design_display_order',
+  table:
+    | 'cms_product_display_order'
+    | 'cms_design_display_order'
+    | 'cms_print_design_display_order',
   idColumn: 'product_id' | 'design_id',
 ): Promise<DisplayOrderRecord[]> {
   try {
@@ -35,7 +38,10 @@ async function listOrderTable(
 }
 
 async function replaceOrderTable(
-  table: 'cms_product_display_order' | 'cms_design_display_order',
+  table:
+    | 'cms_product_display_order'
+    | 'cms_design_display_order'
+    | 'cms_print_design_display_order',
   idColumn: 'product_id' | 'design_id',
   entries: Array<{ id: string; sortOrder: number }>,
 ): Promise<DisplayOrderRecord[]> {
@@ -66,7 +72,10 @@ async function replaceOrderTable(
 }
 
 async function upsertOrderEntries(
-  table: 'cms_product_display_order' | 'cms_design_display_order',
+  table:
+    | 'cms_product_display_order'
+    | 'cms_design_display_order'
+    | 'cms_print_design_display_order',
   idColumn: 'product_id' | 'design_id',
   entries: Array<{ id: string; sortOrder: number }>,
 ): Promise<DisplayOrderRecord[]> {
@@ -98,6 +107,14 @@ export const displayOrderDb = {
       upsertOrderEntries('cms_design_display_order', 'design_id', entries),
     replaceAll: (entries: Array<{ id: string; sortOrder: number }>) =>
       replaceOrderTable('cms_design_display_order', 'design_id', entries),
+  },
+  printDesigns: {
+    list: () => listOrderTable('cms_print_design_display_order', 'design_id'),
+    /** Upsert only the provided designs so other categories keep their order. */
+    upsertMany: (entries: Array<{ id: string; sortOrder: number }>) =>
+      upsertOrderEntries('cms_print_design_display_order', 'design_id', entries),
+    replaceAll: (entries: Array<{ id: string; sortOrder: number }>) =>
+      replaceOrderTable('cms_print_design_display_order', 'design_id', entries),
   },
 };
 

@@ -18,6 +18,18 @@ function isRewardsPath(pathname: string | null): boolean {
   return /\/rewards\/?$/.test(pathname);
 }
 
+function isCustomizerPath(pathname: string | null): boolean {
+  if (!pathname) return false;
+  return (
+    /\/products\/customize\//.test(pathname) ||
+    /\/designs\/[^/]+\/customize(?:\/|$)/.test(pathname)
+  );
+}
+
+function isSpinPromoExcludedPath(pathname: string | null): boolean {
+  return isRewardsPath(pathname) || isCustomizerPath(pathname);
+}
+
 function wasDismissedRecently(): boolean {
   try {
     const raw = localStorage.getItem(SPIN_PROMO_DISMISS_KEY);
@@ -44,7 +56,12 @@ export function SpinWheelPromoPopup() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (isRewardsPath(pathname) || wasDismissedRecently() || hasClaimed()) {
+    if (isSpinPromoExcludedPath(pathname)) {
+      setVisible(false);
+      return;
+    }
+
+    if (wasDismissedRecently() || hasClaimed()) {
       return;
     }
 
@@ -78,7 +95,7 @@ export function SpinWheelPromoPopup() {
     setVisible(false);
   }
 
-  if (!visible || isRewardsPath(pathname)) return null;
+  if (!visible || isSpinPromoExcludedPath(pathname)) return null;
 
   return (
     <div className="fixed inset-0 z-[45] flex items-center justify-center bg-ink-950/40 p-3 sm:p-6">

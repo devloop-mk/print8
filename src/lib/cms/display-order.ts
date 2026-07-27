@@ -7,6 +7,7 @@ import {
 
 export const PRODUCT_DISPLAY_ORDER_CACHE_TAG = 'cms-product-display-order';
 export const DESIGN_DISPLAY_ORDER_CACHE_TAG = 'cms-design-display-order';
+export const PRINT_DESIGN_DISPLAY_ORDER_CACHE_TAG = 'cms-print-design-display-order';
 
 const getProductDisplayOrderRowsCached = unstable_cache(
   async (): Promise<DisplayOrderRecord[]> => displayOrderDb.products.list(),
@@ -26,6 +27,15 @@ const getDesignDisplayOrderRowsCached = unstable_cache(
   },
 );
 
+const getPrintDesignDisplayOrderRowsCached = unstable_cache(
+  async (): Promise<DisplayOrderRecord[]> => displayOrderDb.printDesigns.list(),
+  ['cms-print-design-display-order-rows'],
+  {
+    revalidate: 1800,
+    tags: [PRINT_DESIGN_DISPLAY_ORDER_CACHE_TAG],
+  },
+);
+
 export async function getProductDisplayOrderRecord(): Promise<Record<string, number>> {
   return toOrderRecord(await getProductDisplayOrderRowsCached());
 }
@@ -34,10 +44,18 @@ export async function getDesignDisplayOrderRecord(): Promise<Record<string, numb
   return toOrderRecord(await getDesignDisplayOrderRowsCached());
 }
 
+export async function getPrintDesignDisplayOrderRecord(): Promise<Record<string, number>> {
+  return toOrderRecord(await getPrintDesignDisplayOrderRowsCached());
+}
+
 export async function getProductDisplayOrderEntries(): Promise<DisplayOrderRecord[]> {
   return getProductDisplayOrderRowsCached();
 }
 
 export async function getDesignDisplayOrderEntries(): Promise<DisplayOrderRecord[]> {
   return getDesignDisplayOrderRowsCached();
+}
+
+export async function getPrintDesignDisplayOrderEntries(): Promise<DisplayOrderRecord[]> {
+  return getPrintDesignDisplayOrderRowsCached();
 }
