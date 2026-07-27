@@ -11,6 +11,7 @@ import {
 import type { ManagedProductDesignRecord } from '@/lib/db/managed-product-designs';
 
 import type { DesignSideMode } from '@/lib/products/design-sides';
+import type { GarmentFit } from '@/lib/products/garment-fit';
 
 export const PRODUCT_DESIGN_KIND_OPTIONS: ProductDesignKind[] = [
   'image',
