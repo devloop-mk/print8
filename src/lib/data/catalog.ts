@@ -1,6 +1,8 @@
 import { drinkwarePackTemplates } from '@/lib/data/drinkware-pack';
 import { babyPackTemplates } from '@/lib/data/baby-pack';
 import { trendingMkPackTemplates } from '@/lib/data/trending-mk-pack';
+import { chemistryDramaPackTemplates } from '@/lib/data/chemistry-drama-pack';
+import { trendingCollectionsPackTemplates } from '@/lib/data/trending-collections-pack';
 import { familyPackTemplates } from '@/lib/data/family-pack';
 import { kidsBirthdayPackTemplates } from '@/lib/data/kids-birthday-pack';
 import { kidsGeneratedPackTemplates } from '@/lib/data/kids-generated-pack';
@@ -1223,6 +1225,8 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
   ...bagPackTemplates,
   ...babyPackTemplates,
   ...trendingMkPackTemplates,
+  ...chemistryDramaPackTemplates,
+  ...trendingCollectionsPackTemplates,
   ...familyPackTemplates,
   ...kidsBirthdayPackTemplates,
   ...kidsGeneratedPackTemplates,

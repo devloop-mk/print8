@@ -31,6 +31,12 @@ const MERCH_COLLECTION_LABELS_MK: Record<string, string> = {
   'couple-packs': 'Парски пакети',
   family: 'Семејни',
   'trending-mk': 'Тренд МК',
+  'chemistry-drama': 'Кемија драма',
+  'stranger-80s': 'Странџер 80-ти',
+  'peaky-era': 'Пики ера',
+  'zombie-survival': 'Зомби преживување',
+  'cartel-crime': 'Картел криминал',
+  'biker-rebel': 'Бајкер бунтовник',
   caps: 'Капи',
   drinkware: 'Шолји / чаши',
 };

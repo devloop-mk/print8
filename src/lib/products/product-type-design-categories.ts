@@ -16,6 +16,10 @@ export type ProductTypeDesignCategoryId =
   | 'family'
   | 'streetwear'
   | 'trendingMk'
+  | 'chemistryDrama'
+  | 'stranger80s'
+  | 'zombieSurvival'
+  | 'cartelCrime'
   | 'babyMilestones';
 
 export type ProductTypeDesignCategory = {
@@ -58,6 +62,26 @@ const TYPE_DESIGN_CATEGORIES: Partial<
       href: `${PRODUCT_OFFERING_PATHS.readyDesigns}?collection=streetwear&type=t-shirt`,
       previewDesignId: 'tee-sw-streetwear-377',
     },
+    {
+      id: 'chemistryDrama',
+      href: `${PRODUCT_OFFERING_PATHS.readyDesigns}?collection=chemistry-drama&type=t-shirt`,
+      previewDesignId: 'tee-chem-walter-heisenberg',
+    },
+    {
+      id: 'stranger80s',
+      href: `${PRODUCT_OFFERING_PATHS.readyDesigns}?collection=stranger-80s&type=t-shirt`,
+      previewDesignId: 'tee-str80-demogorgon',
+    },
+    {
+      id: 'zombieSurvival',
+      href: `${PRODUCT_OFFERING_PATHS.readyDesigns}?collection=zombie-survival&type=t-shirt`,
+      previewDesignId: 'tee-zombie-zombie-horde',
+    },
+    {
+      id: 'cartelCrime',
+      href: `${PRODUCT_OFFERING_PATHS.readyDesigns}?collection=cartel-crime&type=t-shirt`,
+      previewDesignId: 'tee-cartel-kingpin-portrait',
+    },
   ],
   hoodie: [
     {
@@ -79,6 +103,11 @@ const TYPE_DESIGN_CATEGORIES: Partial<
       id: 'trendingMk',
       href: `${PRODUCT_OFFERING_PATHS.readyDesigns}?collection=trending-mk&type=hoodie`,
       previewDesignId: 'tee-trend-skopje-1963',
+    },
+    {
+      id: 'chemistryDrama',
+      href: `${PRODUCT_OFFERING_PATHS.readyDesigns}?collection=chemistry-drama&type=hoodie`,
+      previewDesignId: 'tee-chem-walter-heisenberg',
     },
   ],
   bodysuit: [

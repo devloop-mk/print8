@@ -1,0 +1,301 @@
+{
+  "collections": [
+    {
+      "slug": "stranger-80s",
+      "packId": "stranger80s",
+      "prefix": "tee-str80",
+      "labelEn": "Stranger 80s",
+      "labelMk": "Странџер 80-ти",
+      "items": [
+        {
+          "asset": "stranger-80s-demogorgon.png",
+          "out": "demogorgon",
+          "id": "demogorgon",
+          "titleEn": "Demogorgon Beast",
+          "titleMk": "Демогоргон"
+        },
+        {
+          "asset": "stranger-80s-kids-bikes.png",
+          "out": "kids-bikes",
+          "id": "kids-bikes",
+          "titleEn": "Kids on Bikes",
+          "titleMk": "Деца на бајци"
+        },
+        {
+          "asset": "stranger-80s-upside-portal.png",
+          "out": "upside-portal",
+          "id": "upside-portal",
+          "titleEn": "Upside Down Portal",
+          "titleMk": "Портал на другата страна"
+        },
+        {
+          "asset": "stranger-80s-neon-title.png",
+          "out": "neon-title",
+          "id": "neon-title",
+          "titleEn": "Neon Retro Title",
+          "titleMk": "Неон наслов"
+        },
+        {
+          "asset": "stranger-80s-lab-door.png",
+          "out": "lab-door",
+          "id": "lab-door",
+          "titleEn": "Secret Lab Door",
+          "titleMk": "Тајна лабораторија"
+        },
+        {
+          "asset": "stranger-80s-walkie.png",
+          "out": "walkie-talkie",
+          "id": "walkie-talkie",
+          "titleEn": "Walkie Talkie",
+          "titleMk": "Рација"
+        },
+        {
+          "asset": "stranger-80s-arcade.png",
+          "out": "arcade-cabinet",
+          "id": "arcade-cabinet",
+          "titleEn": "Retro Arcade",
+          "titleMk": "Ретро аркада"
+        },
+        {
+          "asset": "stranger-80s-flipper.png",
+          "out": "mind-flipper",
+          "id": "mind-flipper",
+          "titleEn": "Mind Flayer Shadow",
+          "titleMk": "Сенка на Mind Flayer"
+        }
+      ]
+    },
+    {
+      "slug": "peaky-era",
+      "packId": "peakyEra",
+      "prefix": "tee-peaky",
+      "labelEn": "Peaky Era",
+      "labelMk": "Пики ера",
+      "items": [
+        {
+          "asset": "peaky-era-flat-cap.png",
+          "out": "flat-cap-boss",
+          "id": "flat-cap-boss",
+          "titleEn": "Flat Cap Boss",
+          "titleMk": "Шеф со капа"
+        },
+        {
+          "asset": "peaky-era-razor.png",
+          "out": "razor-blade",
+          "id": "razor-blade",
+          "titleEn": "Razor Blade",
+          "titleMk": "Бритва"
+        },
+        {
+          "asset": "peaky-era-gang-walk.png",
+          "out": "gang-walk",
+          "id": "gang-walk",
+          "titleEn": "Gang Walk",
+          "titleMk": "Одење на бандата"
+        },
+        {
+          "asset": "peaky-era-order-typo.png",
+          "out": "order-typo",
+          "id": "order-typo",
+          "titleEn": "By Order Of",
+          "titleMk": "По наредба"
+        },
+        {
+          "asset": "peaky-era-factory.png",
+          "out": "factory-smoke",
+          "id": "factory-smoke",
+          "titleEn": "Factory Smoke",
+          "titleMk": "Фабрички дим"
+        },
+        {
+          "asset": "peaky-era-three-caps.png",
+          "out": "three-caps",
+          "id": "three-caps",
+          "titleEn": "Three Peaked Caps",
+          "titleMk": "Три капи"
+        },
+        {
+          "asset": "peaky-era-horse.png",
+          "out": "horse-race",
+          "id": "horse-race",
+          "titleEn": "Horse Race Night",
+          "titleMk": "Ноќно тркање"
+        }
+      ]
+    },
+    {
+      "slug": "zombie-survival",
+      "packId": "zombieSurvival",
+      "prefix": "tee-zombie",
+      "labelEn": "Zombie Survival",
+      "labelMk": "Зомби преживување",
+      "items": [
+        {
+          "asset": "zombie-survival-horde.png",
+          "out": "zombie-horde",
+          "id": "zombie-horde",
+          "titleEn": "Zombie Horde",
+          "titleMk": "Зомби орда"
+        },
+        {
+          "asset": "zombie-survival-crossbow.png",
+          "out": "crossbow-hunter",
+          "id": "crossbow-hunter",
+          "titleEn": "Crossbow Hunter",
+          "titleMk": "Арбалет ловец"
+        },
+        {
+          "asset": "zombie-survival-gasmask.png",
+          "out": "gas-mask",
+          "id": "gas-mask",
+          "titleEn": "Gas Mask Survivor",
+          "titleMk": "Гас маска"
+        },
+        {
+          "asset": "zombie-survival-highway.png",
+          "out": "dead-highway",
+          "id": "dead-highway",
+          "titleEn": "Dead Highway",
+          "titleMk": "Мртва автопат"
+        },
+        {
+          "asset": "zombie-survival-barricade.png",
+          "out": "barricade",
+          "id": "barricade",
+          "titleEn": "Barricade Zone",
+          "titleMk": "Барикада"
+        },
+        {
+          "asset": "zombie-survival-door.png",
+          "out": "keep-out-door",
+          "id": "keep-out-door",
+          "titleEn": "Keep Out Door",
+          "titleMk": "Не отворај"
+        },
+        {
+          "asset": "zombie-survival-skull.png",
+          "out": "survivor-skull",
+          "id": "survivor-skull",
+          "titleEn": "Survivor Skull",
+          "titleMk": "Череп преживувач"
+        }
+      ]
+    },
+    {
+      "slug": "cartel-crime",
+      "packId": "cartelCrime",
+      "prefix": "tee-cartel",
+      "labelEn": "Cartel Crime",
+      "labelMk": "Картел криминал",
+      "items": [
+        {
+          "asset": "cartel-crime-kingpin.png",
+          "out": "kingpin-portrait",
+          "id": "kingpin-portrait",
+          "titleEn": "Kingpin Portrait",
+          "titleMk": "Крал на криминал"
+        },
+        {
+          "asset": "cartel-crime-mansion.png",
+          "out": "tropical-mansion",
+          "id": "tropical-mansion",
+          "titleEn": "Tropical Mansion",
+          "titleMk": "Тропична палата"
+        },
+        {
+          "asset": "cartel-crime-cash.png",
+          "out": "cash-stacks",
+          "id": "cash-stacks",
+          "titleEn": "Cash Stacks",
+          "titleMk": "Парични купчиња"
+        },
+        {
+          "asset": "cartel-crime-car.png",
+          "out": "vintage-car",
+          "id": "vintage-car",
+          "titleEn": "Vintage Crime Car",
+          "titleMk": "Винтиџ автомобил"
+        },
+        {
+          "asset": "cartel-crime-plane.png",
+          "out": "jungle-plane",
+          "id": "jungle-plane",
+          "titleEn": "Jungle Plane",
+          "titleMk": "Авион во џунгла"
+        },
+        {
+          "asset": "cartel-crime-roses.png",
+          "out": "roses-pistol",
+          "id": "roses-pistol",
+          "titleEn": "Roses & Pistol",
+          "titleMk": "Рози и пиштол"
+        },
+        {
+          "asset": "cartel-crime-gold.png",
+          "out": "gold-luxury",
+          "id": "gold-luxury",
+          "titleEn": "Gold Luxury",
+          "titleMk": "Златен луксуз"
+        }
+      ]
+    },
+    {
+      "slug": "biker-rebel",
+      "packId": "bikerRebel",
+      "prefix": "tee-biker",
+      "labelEn": "Biker Rebel",
+      "labelMk": "Бајкер бунтовник",
+      "items": [
+        {
+          "asset": "biker-rebel-skull.png",
+          "out": "skull-bandana",
+          "id": "skull-bandana",
+          "titleEn": "Skull Bandana",
+          "titleMk": "Череп со бандана"
+        },
+        {
+          "asset": "biker-rebel-chopper.png",
+          "out": "chopper-flames",
+          "id": "chopper-flames",
+          "titleEn": "Chopper Flames",
+          "titleMk": "Чопер со пламоци"
+        },
+        {
+          "asset": "biker-rebel-patch.png",
+          "out": "club-patch",
+          "id": "club-patch",
+          "titleEn": "Club Patch",
+          "titleMk": "Клубски знак"
+        },
+        {
+          "asset": "biker-rebel-highway.png",
+          "out": "open-highway",
+          "id": "open-highway",
+          "titleEn": "Open Highway",
+          "titleMk": "Отворен пат"
+        },
+        {
+          "asset": "biker-rebel-fist.png",
+          "out": "rebel-fist",
+          "id": "rebel-fist",
+          "titleEn": "Rebel Fist",
+          "titleMk": "Бунтовнички подигнат прст"
+        },
+        {
+          "asset": "biker-rebel-vest.png",
+          "out": "leather-vest",
+          "id": "leather-vest",
+          "titleEn": "Leather Vest",
+          "titleMk": "Кожен дукс"
+        },
+        {
+          "asset": "biker-rebel-rider.png",
+          "out": "night-rider",
+          "id": "night-rider",
+          "titleEn": "Night Rider",
+          "titleMk": "Ноќен возач"
+        }
+      ]
+    }
+  ]
+}
