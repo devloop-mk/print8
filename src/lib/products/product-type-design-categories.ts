@@ -20,6 +20,9 @@ export type ProductTypeDesignCategoryId =
   | 'stranger80s'
   | 'zombieSurvival'
   | 'cartelCrime'
+  | 'dailyGrind'
+  | 'mkSlang'
+  | 'mkRetroPlates'
   | 'babyMilestones';
 
 export type ProductTypeDesignCategory = {
@@ -81,6 +84,16 @@ const TYPE_DESIGN_CATEGORIES: Partial<
       id: 'cartelCrime',
       href: `${PRODUCT_OFFERING_PATHS.readyDesigns}?collection=cartel-crime&type=t-shirt`,
       previewDesignId: 'tee-cartel-kingpin-portrait',
+    },
+    {
+      id: 'mkSlang',
+      href: `${PRODUCT_OFFERING_PATHS.readyDesigns}?collection=mk-slang&type=t-shirt`,
+      previewDesignId: 'tee-mk-mangupka',
+    },
+    {
+      id: 'mkRetroPlates',
+      href: `${PRODUCT_OFFERING_PATHS.readyDesigns}?collection=mk-retro-plates&type=t-shirt`,
+      previewDesignId: 'tee-retro-klasika-skopje',
     },
   ],
   hoodie: [

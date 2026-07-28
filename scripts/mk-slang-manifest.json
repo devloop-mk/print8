@@ -1,0 +1,111 @@
+{
+  "collections": [
+    {
+      "slug": "mk-slang",
+      "packId": "mkSlang",
+      "prefix": "tee-mk",
+      "labelEn": "MK Slang",
+      "labelMk": "МК сленг",
+      "items": [
+        {
+          "dual": true,
+          "id": "mangupka",
+          "titleEn": "Mangupka — Heart",
+          "titleMk": "Мангупка — срце",
+          "front": {
+            "asset": "mk-slang-mangupka-front.png",
+            "out": "mangupka-front"
+          },
+          "back": {
+            "asset": "mk-slang-mangupka-back.png",
+            "out": "mangupka-back"
+          }
+        },
+        {
+          "dual": true,
+          "id": "mangup",
+          "titleEn": "Mangup — Heart",
+          "titleMk": "Мангуп — срце",
+          "front": {
+            "asset": "mk-slang-mangup-front.png",
+            "out": "mangup-front"
+          },
+          "back": {
+            "asset": "mk-slang-mangup-back.png",
+            "out": "mangup-back"
+          }
+        },
+        {
+          "dual": true,
+          "id": "strawberry-cream",
+          "titleEn": "Strawberry & Cream",
+          "titleMk": "Јаготка и шлаг",
+          "front": {
+            "asset": "mk-slang-strawberry-front.png",
+            "out": "strawberry-front"
+          },
+          "back": {
+            "asset": "mk-slang-strawberry-back.png",
+            "out": "strawberry-back"
+          }
+        },
+        {
+          "dual": true,
+          "id": "ne-mi-se-zboruva",
+          "titleEn": "Don't Talk to Me",
+          "titleMk": "Не ми се зборува",
+          "front": {
+            "asset": "mk-slang-zboruva-front.png",
+            "out": "zboruva-front"
+          },
+          "back": {
+            "asset": "mk-slang-zboruva-back.png",
+            "out": "zboruva-back"
+          }
+        },
+        {
+          "asset": "mk-slang-klasna-retro.png",
+          "out": "klasna-retro",
+          "id": "klasna-retro",
+          "titleEn": "Classic Retro Collage",
+          "titleMk": "Класика — ретро"
+        },
+        {
+          "asset": "mk-slang-kje-bide-dobro.png",
+          "out": "kje-bide-dobro",
+          "id": "kje-bide-dobro",
+          "titleEn": "It Will Be OK",
+          "titleMk": "Ќе биде добро"
+        },
+        {
+          "asset": "mk-slang-bez-kafe.png",
+          "out": "bez-kafe",
+          "id": "bez-kafe",
+          "titleEn": "No Coffee No Life",
+          "titleMk": "Без кафе — нема живот"
+        },
+        {
+          "asset": "mk-slang-100-mangup.png",
+          "out": "100-mangup",
+          "id": "100-mangup",
+          "titleEn": "100% Mangup",
+          "titleMk": "100% мангуп"
+        },
+        {
+          "asset": "mk-slang-lips-cmok.png",
+          "out": "lips-cmok",
+          "id": "lips-cmok",
+          "titleEn": "Kiss — Retro Lips",
+          "titleMk": "Цмок — ретро усни"
+        },
+        {
+          "asset": "mk-slang-samo-ti.png",
+          "out": "samo-ti",
+          "id": "samo-ti",
+          "titleEn": "Only You",
+          "titleMk": "Само ти"
+        }
+      ]
+    }
+  ]
+}

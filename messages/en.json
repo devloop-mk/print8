@@ -1500,6 +1500,30 @@
           "title": "Biker rebel",
           "description": "MC rebel culture — choppers, skulls, leather, and open highway."
         },
+        "neonRetro": {
+          "title": "Neon retro",
+          "description": "Original synthwave & 80s neon art — safe for commercial print."
+        },
+        "scienceCore": {
+          "title": "Science core",
+          "description": "Original science graphics — molecules, lab gear, and periodic art."
+        },
+        "wildOutdoors": {
+          "title": "Wild outdoors",
+          "description": "Mountains, camping, and trail art for adventure lovers."
+        },
+        "dailyGrind": {
+          "title": "Daily grind",
+          "description": "Coffee, focus, and workspace vibes — original phrases only."
+        },
+        "mkSlang": {
+          "title": "MK slang",
+          "description": "Macedonian street phrases — mangupka hearts, strawberry idiom, dual-sided tees."
+        },
+        "mkRetroPlates": {
+          "title": "MK retro plates",
+          "description": "Класика retro collage tees with Macedonian city plates — Skopje, Ohrid, Štip, and more."
+        },
         "babyMilestones": {
           "title": "Baby milestones",
           "description": "Sweet designs for bodysuits and first moments."

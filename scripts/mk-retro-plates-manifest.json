@@ -1,0 +1,251 @@
+{
+  "collections": [
+    {
+      "slug": "mk-retro-plates",
+      "packId": "mkRetroPlates",
+      "prefix": "tee-retro",
+      "labelEn": "MK Retro Plates",
+      "labelMk": "МК ретро таблици",
+      "items": [
+        {
+          "asset": "mk-retro-klasika-skopje.png",
+          "out": "klasika-skopje",
+          "id": "klasika-skopje",
+          "titleEn": "Klasika — Skopje",
+          "titleMk": "Класика — Скопје"
+        },
+        {
+          "asset": "mk-retro-klasika-ohrid.png",
+          "out": "klasika-ohrid",
+          "id": "klasika-ohrid",
+          "titleEn": "Klasika — Ohrid",
+          "titleMk": "Класика — Охрид"
+        },
+        {
+          "asset": "mk-retro-klasika-shtip.png",
+          "out": "klasika-shtip",
+          "id": "klasika-shtip",
+          "titleEn": "Klasika — Shtip",
+          "titleMk": "Класика — Штип"
+        },
+        {
+          "asset": "mk-retro-klasika-bitola.png",
+          "out": "klasika-bitola",
+          "id": "klasika-bitola",
+          "titleEn": "Klasika — Bitola",
+          "titleMk": "Класика — Битола"
+        },
+        {
+          "asset": "mk-retro-klasika-tetovo.png",
+          "out": "klasika-tetovo",
+          "id": "klasika-tetovo",
+          "titleEn": "Klasika — Tetovo",
+          "titleMk": "Класика — Тетово"
+        },
+        {
+          "asset": "mk-retro-klasika-struga.png",
+          "out": "klasika-struga",
+          "id": "klasika-struga",
+          "titleEn": "Klasika — Struga",
+          "titleMk": "Класика — Струга"
+        },
+        {
+          "asset": "mk-retro-klasika-prilep.png",
+          "out": "klasika-prilep",
+          "id": "klasika-prilep",
+          "titleEn": "Klasika — Prilep",
+          "titleMk": "Класика — Прилеп"
+        },
+        {
+          "asset": "mk-retro-klasika-kumanovo.png",
+          "out": "klasika-kumanovo",
+          "id": "klasika-kumanovo",
+          "titleEn": "Klasika — Kumanovo",
+          "titleMk": "Класика — Куманово"
+        },
+        {
+          "asset": "mk-retro-highway-night.png",
+          "out": "highway-night",
+          "id": "highway-night",
+          "titleEn": "Night Highway",
+          "titleMk": "Ноќен пат"
+        },
+        {
+          "asset": "mk-retro-garage-classic.png",
+          "out": "garage-classic",
+          "id": "garage-classic",
+          "titleEn": "Garage Classic",
+          "titleMk": "Гаража — класик"
+        },
+        {
+          "asset": "mk-retro-klasika-gevgelija.png",
+          "out": "klasika-gevgelija",
+          "id": "klasika-gevgelija",
+          "titleEn": "Klasika — Gevgelija",
+          "titleMk": "Класика — Гевгелија"
+        },
+        {
+          "asset": "mk-retro-klasika-veles.png",
+          "out": "klasika-veles",
+          "id": "klasika-veles",
+          "titleEn": "Klasika — Veles",
+          "titleMk": "Класика — Велес"
+        },
+        {
+          "asset": "mk-retro-lakeside-ohrid.png",
+          "out": "lakeside-ohrid",
+          "id": "lakeside-ohrid",
+          "titleEn": "Lakeside — Ohrid Dawn",
+          "titleMk": "Класика — Охрид зора"
+        },
+        {
+          "asset": "mk-retro-mavrovo-road.png",
+          "out": "mavrovo-road",
+          "id": "mavrovo-road",
+          "titleEn": "Mavrovo Mountain Road",
+          "titleMk": "Маврово — планински пат"
+        },
+        {
+          "asset": "mk-retro-fico-skopje.png",
+          "out": "fico-skopje",
+          "id": "fico-skopje",
+          "titleEn": "Fićo — Skopje",
+          "titleMk": "Фиќо — Скопје"
+        },
+        {
+          "asset": "mk-retro-rainy-skopje.png",
+          "out": "rainy-skopje",
+          "id": "rainy-skopje",
+          "titleEn": "Rainy Skopje Night",
+          "titleMk": "Дождлив Скопје"
+        },
+        {
+          "asset": "mk-retro-tikvesh-vines.png",
+          "out": "tikvesh-vines",
+          "id": "tikvesh-vines",
+          "titleEn": "Tikveš Vineyards",
+          "titleMk": "Тиквеш — виногради"
+        },
+        {
+          "asset": "mk-retro-highway-shtip.png",
+          "out": "highway-shtip",
+          "id": "highway-shtip",
+          "titleEn": "Highway — Štip",
+          "titleMk": "Пат — Штип"
+        },
+        {
+          "asset": "mk-retro-klasika-strumica.png",
+          "out": "klasika-strumica",
+          "id": "klasika-strumica",
+          "titleEn": "Klasika — Strumica",
+          "titleMk": "Класика — Струмица"
+        },
+        {
+          "asset": "mk-retro-garage-meet.png",
+          "out": "garage-meet",
+          "id": "garage-meet",
+          "titleEn": "Garage Meet",
+          "titleMk": "Гаража — сусрет"
+        },
+        {
+          "asset": "mk-retro-ohrid-evening.png",
+          "out": "ohrid-evening",
+          "id": "ohrid-evening",
+          "titleEn": "Ohrid Evening",
+          "titleMk": "Охрид — вечер"
+        },
+        {
+          "asset": "mk-retro-tunnel-drive.png",
+          "out": "tunnel-drive",
+          "id": "tunnel-drive",
+          "titleEn": "Tunnel Drive",
+          "titleMk": "Тунел — возење"
+        },
+        {
+          "asset": "mk-retro-mercedes-skopje.png",
+          "out": "mercedes-skopje",
+          "id": "mercedes-skopje",
+          "titleEn": "Mercedes W123 — Skopje",
+          "titleMk": "Mercedes W123 — Скопје"
+        },
+        {
+          "asset": "mk-retro-bmw-ohrid.png",
+          "out": "bmw-ohrid",
+          "id": "bmw-ohrid",
+          "titleEn": "BMW E30 — Ohrid",
+          "titleMk": "BMW E30 — Охрид"
+        },
+        {
+          "asset": "mk-retro-yugo-shtip.png",
+          "out": "yugo-shtip",
+          "id": "yugo-shtip",
+          "titleEn": "Yugo 45 — Štip",
+          "titleMk": "Yugo 45 — Штип"
+        },
+        {
+          "asset": "mk-retro-zastava-bitola.png",
+          "out": "zastava-bitola",
+          "id": "zastava-bitola",
+          "titleEn": "Zastava 101 — Bitola",
+          "titleMk": "Zastava 101 — Битола"
+        },
+        {
+          "asset": "mk-retro-mercedes-tetovo.png",
+          "out": "mercedes-tetovo",
+          "id": "mercedes-tetovo",
+          "titleEn": "Mercedes W124 — Tetovo",
+          "titleMk": "Mercedes W124 — Тетово"
+        },
+        {
+          "asset": "mk-retro-bmw-prilep.png",
+          "out": "bmw-prilep",
+          "id": "bmw-prilep",
+          "titleEn": "BMW E21 — Prilep",
+          "titleMk": "BMW E21 — Прилеп"
+        },
+        {
+          "asset": "mk-retro-zastava-kumanovo.png",
+          "out": "zastava-kumanovo",
+          "id": "zastava-kumanovo",
+          "titleEn": "Zastava Skala — Kumanovo",
+          "titleMk": "Zastava Skala — Куманово"
+        },
+        {
+          "asset": "mk-retro-yugo-struga.png",
+          "out": "yugo-struga",
+          "id": "yugo-struga",
+          "titleEn": "Yugo 55 — Struga",
+          "titleMk": "Yugo 55 — Струга"
+        },
+        {
+          "asset": "mk-retro-mercedes-highway.png",
+          "out": "mercedes-highway",
+          "id": "mercedes-highway",
+          "titleEn": "Mercedes W123 — Highway",
+          "titleMk": "Mercedes W123 — пат"
+        },
+        {
+          "asset": "mk-retro-bmw-mavrovo.png",
+          "out": "bmw-mavrovo",
+          "id": "bmw-mavrovo",
+          "titleEn": "BMW E30 — Mavrovo",
+          "titleMk": "BMW E30 — Маврово"
+        },
+        {
+          "asset": "mk-retro-fico-gevgelija.png",
+          "out": "fico-gevgelija",
+          "id": "fico-gevgelija",
+          "titleEn": "Fićo — Gevgelija",
+          "titleMk": "Фиќо — Гевгелија"
+        },
+        {
+          "asset": "mk-retro-mercedes-bmw-garage.png",
+          "out": "mercedes-bmw-garage",
+          "id": "mercedes-bmw-garage",
+          "titleEn": "Mercedes & BMW — Garage",
+          "titleMk": "Mercedes & BMW — гаража"
+        }
+      ]
+    }
+  ]
+}

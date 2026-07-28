@@ -1,0 +1,236 @@
+import type { ProductDesignTemplate } from '@/lib/data/catalog';
+
+const OVERLAY_BASE = {
+  overlayScale: 42,
+  overlayPosition: { x: 50, y: 52 },
+  overlayByProductType: {
+    hoodie: { scale: 36, position: { x: 50, y: 56 } },
+  },
+  recommendedColor: '#ffffff',
+  applicableFits: ['unisex', 'women'] as const,
+  defaultSide: 'front' as const,
+  kind: 'overlay' as const,
+  category: 'image-designs' as const,
+  productTypes: ['t-shirt', 'hoodie'] as const,
+};
+
+const mkRetroPlatesItems = [
+  {
+    id: 'klasika-skopje',
+    file: 'klasika-skopje.png',
+    titleEn: 'Klasika — Skopje',
+    titleMk: 'Класика — Скопје',
+  },
+  {
+    id: 'klasika-ohrid',
+    file: 'klasika-ohrid.png',
+    titleEn: 'Klasika — Ohrid',
+    titleMk: 'Класика — Охрид',
+  },
+  {
+    id: 'klasika-shtip',
+    file: 'klasika-shtip.png',
+    titleEn: 'Klasika — Shtip',
+    titleMk: 'Класика — Штип',
+  },
+  {
+    id: 'klasika-bitola',
+    file: 'klasika-bitola.png',
+    titleEn: 'Klasika — Bitola',
+    titleMk: 'Класика — Битола',
+  },
+  {
+    id: 'klasika-tetovo',
+    file: 'klasika-tetovo.png',
+    titleEn: 'Klasika — Tetovo',
+    titleMk: 'Класика — Тетово',
+  },
+  {
+    id: 'klasika-struga',
+    file: 'klasika-struga.png',
+    titleEn: 'Klasika — Struga',
+    titleMk: 'Класика — Струга',
+  },
+  {
+    id: 'klasika-prilep',
+    file: 'klasika-prilep.png',
+    titleEn: 'Klasika — Prilep',
+    titleMk: 'Класика — Прилеп',
+  },
+  {
+    id: 'klasika-kumanovo',
+    file: 'klasika-kumanovo.png',
+    titleEn: 'Klasika — Kumanovo',
+    titleMk: 'Класика — Куманово',
+  },
+  {
+    id: 'highway-night',
+    file: 'highway-night.png',
+    titleEn: 'Night Highway',
+    titleMk: 'Ноќен пат',
+  },
+  {
+    id: 'garage-classic',
+    file: 'garage-classic.png',
+    titleEn: 'Garage Classic',
+    titleMk: 'Гаража — класик',
+  },
+  {
+    id: 'klasika-gevgelija',
+    file: 'klasika-gevgelija.png',
+    titleEn: 'Klasika — Gevgelija',
+    titleMk: 'Класика — Гевгелија',
+  },
+  {
+    id: 'klasika-veles',
+    file: 'klasika-veles.png',
+    titleEn: 'Klasika — Veles',
+    titleMk: 'Класика — Велес',
+  },
+  {
+    id: 'lakeside-ohrid',
+    file: 'lakeside-ohrid.png',
+    titleEn: 'Lakeside — Ohrid Dawn',
+    titleMk: 'Класика — Охрид зора',
+  },
+  {
+    id: 'mavrovo-road',
+    file: 'mavrovo-road.png',
+    titleEn: 'Mavrovo Mountain Road',
+    titleMk: 'Маврово — планински пат',
+  },
+  {
+    id: 'fico-skopje',
+    file: 'fico-skopje.png',
+    titleEn: 'Fićo — Skopje',
+    titleMk: 'Фиќо — Скопје',
+  },
+  {
+    id: 'rainy-skopje',
+    file: 'rainy-skopje.png',
+    titleEn: 'Rainy Skopje Night',
+    titleMk: 'Дождлив Скопје',
+  },
+  {
+    id: 'tikvesh-vines',
+    file: 'tikvesh-vines.png',
+    titleEn: 'Tikveš Vineyards',
+    titleMk: 'Тиквеш — виногради',
+  },
+  {
+    id: 'highway-shtip',
+    file: 'highway-shtip.png',
+    titleEn: 'Highway — Štip',
+    titleMk: 'Пат — Штип',
+  },
+  {
+    id: 'klasika-strumica',
+    file: 'klasika-strumica.png',
+    titleEn: 'Klasika — Strumica',
+    titleMk: 'Класика — Струмица',
+  },
+  {
+    id: 'garage-meet',
+    file: 'garage-meet.png',
+    titleEn: 'Garage Meet',
+    titleMk: 'Гаража — сусрет',
+  },
+  {
+    id: 'ohrid-evening',
+    file: 'ohrid-evening.png',
+    titleEn: 'Ohrid Evening',
+    titleMk: 'Охрид — вечер',
+  },
+  {
+    id: 'tunnel-drive',
+    file: 'tunnel-drive.png',
+    titleEn: 'Tunnel Drive',
+    titleMk: 'Тунел — возење',
+  },
+  {
+    id: 'mercedes-skopje',
+    file: 'mercedes-skopje.png',
+    titleEn: 'Mercedes W123 — Skopje',
+    titleMk: 'Mercedes W123 — Скопје',
+  },
+  {
+    id: 'bmw-ohrid',
+    file: 'bmw-ohrid.png',
+    titleEn: 'BMW E30 — Ohrid',
+    titleMk: 'BMW E30 — Охрид',
+  },
+  {
+    id: 'yugo-shtip',
+    file: 'yugo-shtip.png',
+    titleEn: 'Yugo 45 — Štip',
+    titleMk: 'Yugo 45 — Штип',
+  },
+  {
+    id: 'zastava-bitola',
+    file: 'zastava-bitola.png',
+    titleEn: 'Zastava 101 — Bitola',
+    titleMk: 'Zastava 101 — Битола',
+  },
+  {
+    id: 'mercedes-tetovo',
+    file: 'mercedes-tetovo.png',
+    titleEn: 'Mercedes W124 — Tetovo',
+    titleMk: 'Mercedes W124 — Тетово',
+  },
+  {
+    id: 'bmw-prilep',
+    file: 'bmw-prilep.png',
+    titleEn: 'BMW E21 — Prilep',
+    titleMk: 'BMW E21 — Прилеп',
+  },
+  {
+    id: 'zastava-kumanovo',
+    file: 'zastava-kumanovo.png',
+    titleEn: 'Zastava Skala — Kumanovo',
+    titleMk: 'Zastava Skala — Куманово',
+  },
+  {
+    id: 'yugo-struga',
+    file: 'yugo-struga.png',
+    titleEn: 'Yugo 55 — Struga',
+    titleMk: 'Yugo 55 — Струга',
+  },
+  {
+    id: 'mercedes-highway',
+    file: 'mercedes-highway.png',
+    titleEn: 'Mercedes W123 — Highway',
+    titleMk: 'Mercedes W123 — пат',
+  },
+  {
+    id: 'bmw-mavrovo',
+    file: 'bmw-mavrovo.png',
+    titleEn: 'BMW E30 — Mavrovo',
+    titleMk: 'BMW E30 — Маврово',
+  },
+  {
+    id: 'fico-gevgelija',
+    file: 'fico-gevgelija.png',
+    titleEn: 'Fićo — Gevgelija',
+    titleMk: 'Фиќо — Гевгелија',
+  },
+  {
+    id: 'mercedes-bmw-garage',
+    file: 'mercedes-bmw-garage.png',
+    titleEn: 'Mercedes & BMW — Garage',
+    titleMk: 'Mercedes & BMW — гаража',
+  },
+];
+
+export const mkRetroPlatesPackTemplates: ProductDesignTemplate[] =
+  mkRetroPlatesItems.map((item) => ({
+    id: `tee-retro-${item.id}`,
+    nameKey: `tee-retro-${item.id}`,
+    titleEn: item.titleEn,
+    titleMk: item.titleMk,
+    overlayImage: `/NEW_DESIGNS/mk-retro-plates/${item.file}`,
+    printMasterImage: `masters/mk-retro-plates/${item.file}`,
+    collection: 'mk-retro-plates',
+    ...OVERLAY_BASE,
+    productTypes: [...OVERLAY_BASE.productTypes],
+    applicableFits: [...OVERLAY_BASE.applicableFits],
+  }));

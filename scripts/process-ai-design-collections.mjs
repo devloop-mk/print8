@@ -20,15 +20,20 @@ const ASSETS_DIR =
 const WEB_WIDTH = 1400;
 const PRINT_WIDTH = 4500;
 
-const MANIFEST_PATH = path.join(
-  process.cwd(),
-  'scripts/trending-collections-manifest.json',
-);
+const manifestArg = process.argv.find((arg) => arg.startsWith('--manifest='));
+const MANIFEST_PATH = manifestArg
+  ? path.resolve(process.cwd(), manifestArg.split('=')[1])
+  : path.join(process.cwd(), 'scripts/trending-collections-manifest.json');
 
 async function removeNearWhiteBackground(buffer, options = {}) {
-  const threshold = options.threshold ?? 248;
-  const soft = options.soft ?? 18;
-  const image = sharp(buffer).ensureAlpha();
+  const threshold = options.threshold ?? 252;
+  const soft = options.soft ?? 10;
+  const haloLum = options.haloLum ?? 236;
+  const trimmed = await sharp(buffer)
+    .trim({ threshold: 12, background: '#ffffff' })
+    .toBuffer();
+
+  const image = sharp(trimmed).ensureAlpha();
   const { data, info } = await image.raw().toBuffer({ resolveWithObject: true });
   const pixels = data;
   const { width, height, channels } = info;
@@ -39,6 +44,7 @@ async function removeNearWhiteBackground(buffer, options = {}) {
       const r = pixels[i];
       const g = pixels[i + 1];
       const b = pixels[i + 2];
+      const a = pixels[i + 3];
       const min = Math.min(r, g, b);
       const max = Math.max(r, g, b);
       const lum = (r + g + b) / 3;
@@ -48,9 +54,15 @@ async function removeNearWhiteBackground(buffer, options = {}) {
         continue;
       }
 
-      if (lum >= threshold - soft && max - min < 24) {
+      if (lum >= threshold - soft && max - min < 28) {
         const fade = Math.max(0, threshold - lum) / soft;
-        pixels[i + 3] = Math.round(pixels[i + 3] * fade);
+        pixels[i + 3] = Math.round(a * fade);
+        continue;
+      }
+
+      // Remove white halo leaks on semi-transparent edge pixels.
+      if (a > 0 && lum >= haloLum && max - min < 32) {
+        pixels[i + 3] = 0;
       }
     }
   }
@@ -109,12 +121,35 @@ for (const col of manifest.collections) {
   console.log(`\n${col.slug} (${col.items.length} items)`);
   let ok = 0;
   for (const item of col.items) {
+    if (item.dual) {
+      process.stdout.write(`  ${item.front.out} (front)… `);
+      const frontOk = await processItem(col.slug, {
+        asset: item.front.asset,
+        out: item.front.out,
+      });
+      console.log(frontOk ? 'ok' : 'skip');
+      if (frontOk) ok += 1;
+
+      process.stdout.write(`  ${item.back.out} (back)… `);
+      const backOk = await processItem(col.slug, {
+        asset: item.back.asset,
+        out: item.back.out,
+      });
+      console.log(backOk ? 'ok' : 'skip');
+      if (backOk) ok += 1;
+      continue;
+    }
+
     process.stdout.write(`  ${item.out}… `);
     const success = await processItem(col.slug, item);
     console.log(success ? 'ok' : 'skip');
     if (success) ok += 1;
   }
-  console.log(`  → ${ok}/${col.items.length} processed`);
+  const expected = col.items.reduce(
+    (n, item) => n + (item.dual ? 2 : 1),
+    0,
+  );
+  console.log(`  → ${ok}/${expected} processed`);
 }
 
 console.log('\nDone.');

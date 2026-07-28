@@ -1,0 +1,259 @@
+{
+  "collections": [
+    {
+      "slug": "neon-retro",
+      "packId": "neonRetro",
+      "prefix": "tee-neon",
+      "labelEn": "Neon Retro",
+      "labelMk": "Неон ретро",
+      "items": [
+        {
+          "asset": "neon-retro-grid-sunset.png",
+          "out": "grid-sunset",
+          "id": "grid-sunset",
+          "titleEn": "Neon Grid Sunset",
+          "titleMk": "Неон мрежа зајдисонце"
+        },
+        {
+          "asset": "neon-retro-cassette.png",
+          "out": "cassette",
+          "id": "cassette",
+          "titleEn": "Retro Cassette",
+          "titleMk": "Ретро касета"
+        },
+        {
+          "asset": "neon-retro-arcade-heart.png",
+          "out": "arcade-heart",
+          "id": "arcade-heart",
+          "titleEn": "Arcade Pixel Heart",
+          "titleMk": "Аркаден пиксел срце"
+        },
+        {
+          "asset": "neon-retro-palm-drive.png",
+          "out": "palm-drive",
+          "id": "palm-drive",
+          "titleEn": "Palm Drive Night",
+          "titleMk": "Ноќно палми"
+        },
+        {
+          "asset": "neon-retro-synth-mountain.png",
+          "out": "synth-mountain",
+          "id": "synth-mountain",
+          "titleEn": "Synthwave Mountain",
+          "titleMk": "Синтвејв планина"
+        },
+        {
+          "asset": "neon-retro-diner.png",
+          "out": "neon-diner",
+          "id": "neon-diner",
+          "titleEn": "Neon Diner Sign",
+          "titleMk": "Неон ресторан"
+        }
+      ]
+    },
+    {
+      "slug": "vintage-dapper",
+      "packId": "vintageDapper",
+      "prefix": "tee-dapper",
+      "labelEn": "Vintage Dapper",
+      "labelMk": "Винтиџ стил",
+      "items": [
+        {
+          "asset": "vintage-dapper-flat-cap.png",
+          "out": "flat-cap-art",
+          "id": "flat-cap-art",
+          "titleEn": "Flat Cap Pattern",
+          "titleMk": "Муста со капа"
+        },
+        {
+          "asset": "vintage-dapper-pocket-watch.png",
+          "out": "pocket-watch",
+          "id": "pocket-watch",
+          "titleEn": "Pocket Watch",
+          "titleMk": "Джепен часовник"
+        },
+        {
+          "asset": "vintage-dapper-razor-kit.png",
+          "out": "razor-kit",
+          "id": "razor-kit",
+          "titleEn": "Barber Razor Kit",
+          "titleMk": "Берберски сет"
+        },
+        {
+          "asset": "vintage-dapper-factory-skyline.png",
+          "out": "factory-skyline",
+          "id": "factory-skyline",
+          "titleEn": "Factory Skyline",
+          "titleMk": "Фабрички хоризонт"
+        },
+        {
+          "asset": "vintage-dapper-suit-silhouette.png",
+          "out": "suit-silhouette",
+          "id": "suit-silhouette",
+          "titleEn": "Classic Suit",
+          "titleMk": "Класичен костум"
+        },
+        {
+          "asset": "vintage-dapper-moto-1920.png",
+          "out": "vintage-moto",
+          "id": "vintage-moto",
+          "titleEn": "Vintage Motorcycle",
+          "titleMk": "Винтиџ мотор"
+        }
+      ]
+    },
+    {
+      "slug": "science-core",
+      "packId": "scienceCore",
+      "prefix": "tee-science",
+      "labelEn": "Science Core",
+      "labelMk": "Наука",
+      "items": [
+        {
+          "asset": "science-core-periodic-creative.png",
+          "out": "periodic-creative",
+          "id": "periodic-creative",
+          "titleEn": "Creative Periodic Table",
+          "titleMk": "Периоден систем"
+        },
+        {
+          "asset": "science-core-caffeine.png",
+          "out": "caffeine-molecule",
+          "id": "caffeine-molecule",
+          "titleEn": "Caffeine Molecule",
+          "titleMk": "Кофеин молекул"
+        },
+        {
+          "asset": "science-core-beaker.png",
+          "out": "beaker-bubbles",
+          "id": "beaker-bubbles",
+          "titleEn": "Beaker Bubbles",
+          "titleMk": "Шише со меурчиња"
+        },
+        {
+          "asset": "science-core-dna.png",
+          "out": "dna-helix",
+          "id": "dna-helix",
+          "titleEn": "DNA Helix Art",
+          "titleMk": "ДНК хеликса"
+        },
+        {
+          "asset": "science-core-microscope.png",
+          "out": "vintage-microscope",
+          "id": "vintage-microscope",
+          "titleEn": "Vintage Microscope",
+          "titleMk": "Винтиџ микроскоп"
+        },
+        {
+          "asset": "science-core-atom.png",
+          "out": "atomic-orbit",
+          "id": "atomic-orbit",
+          "titleEn": "Atomic Orbits",
+          "titleMk": "Атомски орбити"
+        }
+      ]
+    },
+    {
+      "slug": "wild-outdoors",
+      "packId": "wildOutdoors",
+      "prefix": "tee-outdoor",
+      "labelEn": "Wild Outdoors",
+      "labelMk": "Авантура надвор",
+      "items": [
+        {
+          "asset": "wild-outdoors-mountain.png",
+          "out": "mountain-peak",
+          "id": "mountain-peak",
+          "titleEn": "Mountain Peak",
+          "titleMk": "Планински врв"
+        },
+        {
+          "asset": "wild-outdoors-camp-stars.png",
+          "out": "camp-stars",
+          "id": "camp-stars",
+          "titleEn": "Camp Under Stars",
+          "titleMk": "Камп под ѕвезди"
+        },
+        {
+          "asset": "wild-outdoors-compass.png",
+          "out": "compass-rose",
+          "id": "compass-rose",
+          "titleEn": "Compass Rose",
+          "titleMk": "Компас роза"
+        },
+        {
+          "asset": "wild-outdoors-trail.png",
+          "out": "hiking-trail",
+          "id": "hiking-trail",
+          "titleEn": "Hiking Trail",
+          "titleMk": "Планинарска патека"
+        },
+        {
+          "asset": "wild-outdoors-lake-sunrise.png",
+          "out": "lake-sunrise",
+          "id": "lake-sunrise",
+          "titleEn": "Lake Sunrise",
+          "titleMk": "Изгрејсонце на езеро"
+        },
+        {
+          "asset": "wild-outdoors-pine.png",
+          "out": "pine-forest",
+          "id": "pine-forest",
+          "titleEn": "Pine Forest",
+          "titleMk": "Борова шума"
+        }
+      ]
+    },
+    {
+      "slug": "daily-grind",
+      "packId": "dailyGrind",
+      "prefix": "tee-grind",
+      "labelEn": "Daily Grind",
+      "labelMk": "Дневен ритам",
+      "items": [
+        {
+          "asset": "daily-grind-coffee-first.png",
+          "out": "coffee-first",
+          "id": "coffee-first",
+          "titleEn": "Coffee First",
+          "titleMk": "Прво кафе"
+        },
+        {
+          "asset": "daily-grind-focus.png",
+          "out": "stay-focused",
+          "id": "stay-focused",
+          "titleEn": "Stay Focused",
+          "titleMk": "Остани фокусиран"
+        },
+        {
+          "asset": "daily-grind-hustle.png",
+          "out": "hustle-bolt",
+          "id": "hustle-bolt",
+          "titleEn": "Hustle Bolt",
+          "titleMk": "Енергија молња"
+        },
+        {
+          "asset": "daily-grind-books-coffee.png",
+          "out": "books-coffee",
+          "id": "books-coffee",
+          "titleEn": "Books & Coffee",
+          "titleMk": "Книги и кафе"
+        },
+        {
+          "asset": "daily-grind-workspace.png",
+          "out": "desk-setup",
+          "id": "desk-setup",
+          "titleEn": "Desk Setup",
+          "titleMk": "Работна маса"
+        },
+        {
+          "asset": "daily-grind-weekend.png",
+          "out": "weekend-mode",
+          "id": "weekend-mode",
+          "titleEn": "Weekend Mode",
+          "titleMk": "Викенд мод"
+        }
+      ]
+    }
+  ]
+}

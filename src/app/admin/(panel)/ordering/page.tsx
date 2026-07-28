@@ -37,6 +37,13 @@ const MERCH_COLLECTION_LABELS_MK: Record<string, string> = {
   'zombie-survival': 'Зомби преживување',
   'cartel-crime': 'Картел криминал',
   'biker-rebel': 'Бајкер бунтовник',
+  'neon-retro': 'Неон ретро',
+  'vintage-dapper': 'Винтиџ стил',
+  'science-core': 'Наука',
+  'wild-outdoors': 'Авантура надвор',
+  'daily-grind': 'Дневен ритам',
+  'mk-slang': 'МК сленг',
+  'mk-retro-plates': 'МК ретро таблици',
   caps: 'Капи',
   drinkware: 'Шолји / чаши',
 };
