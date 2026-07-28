@@ -19,6 +19,7 @@ export const DESIGN_COLLECTION_LABELS: Record<string, { en: string; mk: string }
   'daily-grind': { en: 'Daily Grind', mk: 'Дневен ритам' },
   'mk-slang': { en: 'MK Slang', mk: 'МК сленг' },
   'mk-retro-plates': { en: 'MK Retro Plates', mk: 'МК ретро таблици' },
+  'mk-mugs': { en: 'MK Mugs', mk: 'МК шолји' },
   family: { en: 'Family', mk: 'Семејство' },
   'kids-birthday': { en: 'Kids & birthday', mk: 'Деца и роденден' },
   'local-mk': { en: 'Local designs', mk: 'Локални дизајни' },

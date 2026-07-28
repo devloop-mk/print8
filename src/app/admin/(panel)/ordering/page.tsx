@@ -44,6 +44,7 @@ const MERCH_COLLECTION_LABELS_MK: Record<string, string> = {
   'daily-grind': 'Дневен ритам',
   'mk-slang': 'МК сленг',
   'mk-retro-plates': 'МК ретро таблици',
+  'mk-mugs': 'МК шолји',
   caps: 'Капи',
   drinkware: 'Шолји / чаши',
 };

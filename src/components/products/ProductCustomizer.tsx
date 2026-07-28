@@ -43,7 +43,11 @@ import {
   getProductGarmentFit,
   resolveDesignProduct,
 } from '@/lib/products/garment-fit';
+import {
+  getCompatibleDrinkwareProducts,
+} from '@/lib/products/drinkware-product-options';
 import { GarmentFitSelector } from '@/components/products/GarmentFitSelector';
+import { DrinkwareProductSelector } from '@/components/products/DrinkwareProductSelector';
 import { DesignColorPicker } from '@/components/products/DesignColorPicker';
 import {
   evaluateCartAssetLimits,
@@ -967,6 +971,11 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     return getDesignApplicableColors(designTemplateForFit, product);
   }, [product, designTemplateForFit]);
 
+  const compatibleDrinkwareProducts = useMemo(() => {
+    if (!isDrinkware) return [];
+    return getCompatibleDrinkwareProducts(designTemplateForFit);
+  }, [designTemplateForFit, isDrinkware]);
+
   const [color, setColor] = useState(() => {
     const palette = product?.colors ?? [];
     const fromParam = colorParam
@@ -978,6 +987,51 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     const sizes = product?.sizes ?? [];
     return sizeParam && sizes.includes(sizeParam) ? sizeParam : (sizes[0] ?? '');
   });
+
+  const handleDrinkwareProductChange = useCallback(
+    (nextProductId: string) => {
+      if (!product || nextProductId === product.id) return;
+      const nextProduct = products.find((p) => p.id === nextProductId);
+      if (!nextProduct) return;
+
+      const nextColors = designTemplateForFit
+        ? getDesignApplicableColors(designTemplateForFit, nextProduct)
+        : (nextProduct.colors ?? []);
+
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('id', nextProduct.id);
+
+      const resolvedColor = nextColors.includes(color)
+        ? color
+        : (nextColors[0] ?? nextProduct.colors?.[0]);
+      if (resolvedColor) {
+        params.set('color', resolvedColor);
+        setColor(resolvedColor);
+      }
+
+      if (nextProduct.sizes?.length) {
+        const resolvedSize = nextProduct.sizes.includes(size)
+          ? size
+          : nextProduct.sizes[0];
+        params.set('size', resolvedSize);
+        setSize(resolvedSize);
+      } else {
+        params.delete('size');
+      }
+
+      router.replace(
+        `/products/customize/${nextProduct.type}?${params.toString()}`,
+      );
+    },
+    [
+      color,
+      designTemplateForFit,
+      product,
+      router,
+      searchParams,
+      size,
+    ],
+  );
 
   const handleGarmentFitChange = useCallback(
     (nextFit: GarmentFit) => {
@@ -2420,6 +2474,9 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       garmentFit={garmentFit}
       onGarmentFitChange={handleGarmentFitChange}
       selectableColors={selectableColors}
+      isDrinkware={isDrinkware}
+      compatibleDrinkwareProducts={compatibleDrinkwareProducts}
+      onDrinkwareProductChange={handleDrinkwareProductChange}
     />
   );
 
@@ -3560,6 +3617,9 @@ function EditorPanelContent({
   garmentFit,
   onGarmentFitChange,
   selectableColors,
+  isDrinkware,
+  compatibleDrinkwareProducts,
+  onDrinkwareProductChange,
 }: {
   panel: EditorPanel;
   currentDesign: SideDesign;
@@ -3599,6 +3659,9 @@ function EditorPanelContent({
   garmentFit: GarmentFit;
   onGarmentFitChange: (fit: GarmentFit) => void;
   selectableColors: string[];
+  isDrinkware?: boolean;
+  compatibleDrinkwareProducts?: Product[];
+  onDrinkwareProductChange?: (productId: string) => void;
 }) {
   const t = useTranslations('products.customizer');
   const tProducts = useTranslations('products');
@@ -3628,6 +3691,9 @@ function EditorPanelContent({
           garmentFit={garmentFit}
           onGarmentFitChange={onGarmentFitChange}
           selectableColors={selectableColors}
+          isDrinkware={isDrinkware}
+          compatibleDrinkwareProducts={compatibleDrinkwareProducts}
+          onDrinkwareProductChange={onDrinkwareProductChange}
         />
       </div>
     );
@@ -3974,6 +4040,9 @@ function ProductOptions({
   garmentFit,
   onGarmentFitChange,
   selectableColors,
+  isDrinkware,
+  compatibleDrinkwareProducts,
+  onDrinkwareProductChange,
 }: {
   product: (typeof products)[number];
   color: string;
@@ -3989,12 +4058,24 @@ function ProductOptions({
   garmentFit?: GarmentFit;
   onGarmentFitChange?: (fit: GarmentFit) => void;
   selectableColors?: string[];
+  isDrinkware?: boolean;
+  compatibleDrinkwareProducts?: Product[];
+  onDrinkwareProductChange?: (productId: string) => void;
 }) {
   const t = useTranslations('products.customizer');
   const colors = selectableColors?.length ? selectableColors : product.colors;
 
   return (
     <>
+      {isDrinkware &&
+      compatibleDrinkwareProducts?.length &&
+      onDrinkwareProductChange ? (
+        <DrinkwareProductSelector
+          products={compatibleDrinkwareProducts}
+          value={product.id}
+          onChange={onDrinkwareProductChange}
+        />
+      ) : null}
       {isTshirt && printPackage ? (
         <div>
           <label className="mb-2 block text-sm font-medium text-ink-700">

@@ -1,0 +1,109 @@
+{
+  "collections": [
+    {
+      "slug": "mk-mugs",
+      "packId": "mkMugs",
+      "prefix": "mug-mk",
+      "labelEn": "MK Mug Designs",
+      "labelMk": "МК шолји",
+      "items": [
+        {
+          "asset": "mug-wrap-kafe-duh.png",
+          "out": "wrap-kafe-duh",
+          "id": "wrap-kafe-duh",
+          "layout": "wrap",
+          "titleEn": "Coffee Is My Spirit",
+          "titleMk": "Кафе е мој дух"
+        },
+        {
+          "asset": "mug-wrap-dobro-utro.png",
+          "out": "wrap-dobro-utro",
+          "id": "wrap-dobro-utro",
+          "layout": "wrap",
+          "titleEn": "Good Morning, Macedonia",
+          "titleMk": "Добро утро, Македонија"
+        },
+        {
+          "asset": "mug-wrap-od-makedonija.png",
+          "out": "wrap-od-makedonija",
+          "id": "wrap-od-makedonija",
+          "layout": "wrap",
+          "titleEn": "From Macedonia with Love",
+          "titleMk": "Од Македонија со љубов"
+        },
+        {
+          "asset": "mug-wrap-gradovi-mk.png",
+          "out": "wrap-gradovi-mk",
+          "id": "wrap-gradovi-mk",
+          "layout": "wrap",
+          "titleEn": "MK Cities Wrap",
+          "titleMk": "МК градови — wrap"
+        },
+        {
+          "asset": "mug-wrap-nastavnica.png",
+          "out": "wrap-nastavnica",
+          "id": "wrap-nastavnica",
+          "layout": "wrap",
+          "titleEn": "Best Teacher",
+          "titleMk": "Најдобра наставничка"
+        },
+        {
+          "asset": "mug-wrap-print8-brand.png",
+          "out": "wrap-print8-brand",
+          "id": "wrap-print8-brand",
+          "layout": "wrap",
+          "titleEn": "Print8 Brand Wrap",
+          "titleMk": "Print8 — печати со стил"
+        },
+        {
+          "asset": "mug-spot-najdobra-baba.png",
+          "out": "spot-najdobra-baba",
+          "id": "spot-najdobra-baba",
+          "layout": "spot",
+          "titleEn": "Best Grandma",
+          "titleMk": "Најдобра баба"
+        },
+        {
+          "asset": "mug-spot-najposебna-majka.png",
+          "out": "spot-najposebna-majka",
+          "id": "spot-najposebna-majka",
+          "layout": "spot",
+          "titleEn": "Most Special Mom",
+          "titleMk": "Најпосебна мајка"
+        },
+        {
+          "asset": "mug-spot-najdobar-tatko.png",
+          "out": "spot-najdobar-tatko",
+          "id": "spot-najdobar-tatko",
+          "layout": "spot",
+          "titleEn": "Best Dad",
+          "titleMk": "Најдобар татко"
+        },
+        {
+          "asset": "mug-spot-kade-kafe.png",
+          "out": "spot-kade-kafe",
+          "id": "spot-kade-kafe",
+          "layout": "spot",
+          "titleEn": "Where Is My Coffee?",
+          "titleMk": "Каде е моето кафе?"
+        },
+        {
+          "asset": "mug-spot-rodenden-kralica.png",
+          "out": "spot-rodenden-kralica",
+          "id": "spot-rodenden-kralica",
+          "layout": "spot",
+          "titleEn": "Birthday Queen",
+          "titleMk": "Роденденска кралица"
+        },
+        {
+          "asset": "mug-spot-najdobri-prijateli.png",
+          "out": "spot-najdobri-prijateli",
+          "id": "spot-najdobri-prijateli",
+          "layout": "spot",
+          "titleEn": "Best Friends Forever",
+          "titleMk": "Најдобри пријатели засекогаш"
+        }
+      ]
+    }
+  ]
+}

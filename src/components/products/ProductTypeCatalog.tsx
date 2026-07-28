@@ -38,7 +38,9 @@ export function ProductTypeCatalog({
   const parentCategory = getCategoryForProductType(type);
   const searchParams = useSearchParams();
   const catalogPage = parseCatalogPage(searchParams.get('page'));
-  const showPlainProducts = catalogPage <= 1;
+  const hasCollectionFilter = Boolean(searchParams.get('collection')?.trim());
+  // When browsing a thematic collection, focus the ready-designs grid only.
+  const showPlainProducts = catalogPage <= 1 && !hasCollectionFilter;
 
   return (
     <div className="w-full min-w-0 max-w-full space-y-8">
