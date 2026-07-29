@@ -13,6 +13,8 @@ import type { OrderItem } from '@/lib/orders/product-order-assets';
 export type PremadeMasterAssetRef = {
   side: ProductSide;
   filename: string;
+  /** Storage key path (masters/… or /NEW_DESIGNS/…). */
+  masterStoragePath: string;
   /** Public CDN / catalog URL for the untouched premade master. */
   masterUrl: string;
   /** User only moved/resized the premade art — prefer this file for print. */
@@ -82,6 +84,7 @@ export function listPremadeMasterRefsFromOrderMetadata(
     refs.push({
       side,
       filename: safeMasterFilename(item.name, side),
+      masterStoragePath: masterPath.trim(),
       masterUrl: masterPathToPublicUrl(masterPath.trim()),
       originalArtworkOnly:
         item.metadata[`${prefix}PremadeOriginalArtworkOnly`] === true,
@@ -121,19 +124,27 @@ export async function listPremadeMasterAssetRefsFromItem(
       continue;
     }
 
-    const masterPath = await resolveMasterPathForSide(item, side);
-    if (!masterPath) continue;
+    try {
+      const masterPath = await resolveMasterPathForSide(item, side);
+      if (!masterPath) continue;
 
-    refs.push({
-      side,
-      filename: safeMasterFilename(item.name, side),
-      masterUrl: masterPathToPublicUrl(masterPath),
-      originalArtworkOnly: originalOnly === true,
-      productionUsesMaster: orderItemSideUsesPremadeMasterForProduction(
-        item.metadata,
+      refs.push({
         side,
-      ),
-    });
+        filename: safeMasterFilename(item.name, side),
+        masterStoragePath: masterPath,
+        masterUrl: masterPathToPublicUrl(masterPath),
+        originalArtworkOnly: originalOnly === true,
+        productionUsesMaster: orderItemSideUsesPremadeMasterForProduction(
+          item.metadata,
+          side,
+        ),
+      });
+    } catch (error) {
+      console.warn('[premade-master] template lookup failed', {
+        side,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
 
   return refs;

@@ -202,7 +202,7 @@ export function OrderItemDesignAssets({
                     ) : null}
                   </div>
                   <a
-                    href={`/api/admin/orders/${orderId}/print/${itemIndex}/${file.side}?format=master`}
+                    href={`/api/admin/orders/${orderId}/print/${itemIndex}/${file.side}?format=master&download=1`}
                     className="inline-flex shrink-0 items-center gap-1 rounded-md border border-brand-300 px-2 py-1 text-xs font-medium text-brand-800 transition hover:bg-brand-50"
                   >
                     <Download className="h-3.5 w-3.5" aria-hidden="true" />
@@ -211,7 +211,7 @@ export function OrderItemDesignAssets({
                 </div>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={file.masterUrl}
+                  src={`/api/admin/orders/${orderId}/print/${itemIndex}/${file.side}?format=master`}
                   alt={file.filename}
                   className="max-h-56 w-full rounded border border-ink-100 bg-[repeating-conic-gradient(#e5e7eb_0%_25%,#fff_0%_50%)] bg-[length:16px_16px] object-contain"
                 />

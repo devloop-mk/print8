@@ -102,6 +102,238 @@
           "layout": "spot",
           "titleEn": "Best Friends Forever",
           "titleMk": "Најдобри пријатели засекогаш"
+        },
+        {
+          "asset": "mug-spot-tato-heroj.png",
+          "out": "spot-tato-heroj",
+          "id": "spot-tato-heroj",
+          "layout": "spot",
+          "titleEn": "Dad Is My Hero",
+          "titleMk": "Тато е мој херој"
+        },
+        {
+          "asset": "mug-spot-mama-heroina.png",
+          "out": "spot-mama-heroina",
+          "id": "spot-mama-heroina",
+          "layout": "spot",
+          "titleEn": "Mom Is My Heroine",
+          "titleMk": "Мама е моја хероина"
+        },
+        {
+          "asset": "mug-spot-baba-heroina.png",
+          "out": "spot-baba-heroina",
+          "id": "spot-baba-heroina",
+          "layout": "spot",
+          "titleEn": "Grandma Is My Heroine",
+          "titleMk": "Баба е моја хероина"
+        },
+        {
+          "asset": "mug-spot-dedo-heroj.png",
+          "out": "spot-dedo-heroj",
+          "id": "spot-dedo-heroj",
+          "layout": "spot",
+          "titleEn": "Grandpa Is My Hero",
+          "titleMk": "Дедо е мој херој"
+        },
+        {
+          "asset": "mug-spot-sakam-tetka.png",
+          "out": "spot-sakam-tetka",
+          "id": "spot-sakam-tetka",
+          "layout": "spot",
+          "titleEn": "I Love My Aunt",
+          "titleMk": "Ја сакам тетка ми"
+        },
+        {
+          "asset": "mug-spot-vujche-kral.png",
+          "out": "spot-vujche-kral",
+          "id": "spot-vujche-kral",
+          "layout": "spot",
+          "titleEn": "Uncle Is King",
+          "titleMk": "Вујче е крал"
+        },
+        {
+          "asset": "mug-spot-par-kral.png",
+          "out": "spot-par-kral",
+          "id": "spot-par-kral",
+          "layout": "spot",
+          "titleEn": "King — Couple Mug",
+          "titleMk": "Крал — парска шолја"
+        },
+        {
+          "asset": "mug-spot-par-kralica.png",
+          "out": "spot-par-kralica",
+          "id": "spot-par-kralica",
+          "layout": "spot",
+          "titleEn": "Queen — Couple Mug",
+          "titleMk": "Кралица — парска шолја"
+        },
+        {
+          "asset": "mug-spot-par-polovina.png",
+          "out": "spot-par-polovina",
+          "id": "spot-par-polovina",
+          "layout": "spot",
+          "titleEn": "My Other Half",
+          "titleMk": "Моја половина"
+        },
+        {
+          "asset": "mug-spot-par-zasekogas.png",
+          "out": "spot-par-zasekogas",
+          "id": "spot-par-zasekogas",
+          "layout": "spot",
+          "titleEn": "Together Forever",
+          "titleMk": "Заедно засекогаш"
+        },
+        {
+          "asset": "mug-spot-makedonija-zasekogas.png",
+          "out": "spot-makedonija-zasekogas",
+          "id": "spot-makedonija-zasekogas",
+          "layout": "spot",
+          "titleEn": "Macedonia Forever",
+          "titleMk": "Македонија засекогаш"
+        },
+        {
+          "asset": "mug-spot-sakam-makedonija.png",
+          "out": "spot-sakam-makedonija",
+          "id": "spot-sakam-makedonija",
+          "layout": "spot",
+          "titleEn": "I Love Macedonia",
+          "titleMk": "Ја сакам Македонија"
+        },
+        {
+          "asset": "mug-spot-sekoj-den-pocetok.png",
+          "out": "spot-sekoj-den-pocetok",
+          "id": "spot-sekoj-den-pocetok",
+          "layout": "spot",
+          "titleEn": "Every Day Is a New Start",
+          "titleMk": "Секој ден е нов почеток"
+        },
+        {
+          "asset": "mug-spot-veruvaj-sebe.png",
+          "out": "spot-veruvaj-sebe",
+          "id": "spot-veruvaj-sebe",
+          "layout": "spot",
+          "titleEn": "Believe in Yourself",
+          "titleMk": "Верувај во себе"
+        },
+        {
+          "asset": "mug-spot-dovolen-si.png",
+          "out": "spot-dovolen-si",
+          "id": "spot-dovolen-si",
+          "layout": "spot",
+          "titleEn": "You Are Enough",
+          "titleMk": "Доволен си"
+        },
+        {
+          "asset": "mug-spot-dovolna-si.png",
+          "out": "spot-dovolna-si",
+          "id": "spot-dovolna-si",
+          "layout": "spot",
+          "titleEn": "You Are Enough",
+          "titleMk": "Доволна си"
+        },
+        {
+          "asset": "mug-spot-samo-napred.png",
+          "out": "spot-samo-napred",
+          "id": "spot-samo-napred",
+          "layout": "spot",
+          "titleEn": "Keep Moving Forward",
+          "titleMk": "Само напред"
+        },
+        {
+          "asset": "mug-spot-srekata-mali.png",
+          "out": "spot-srekata-mali",
+          "id": "spot-srekata-mali",
+          "layout": "spot",
+          "titleEn": "Happiness in Small Things",
+          "titleMk": "Среќата е во малите работи"
+        },
+        {
+          "asset": "mug-wrap-par-kafe-ljubov.png",
+          "out": "wrap-par-kafe-ljubov",
+          "id": "wrap-par-kafe-ljubov",
+          "layout": "wrap",
+          "titleEn": "Coffee & Love — Couple Wrap",
+          "titleMk": "Кафе & љубов — пар wrap"
+        },
+        {
+          "asset": "mug-wrap-mkd-zasekogas.png",
+          "out": "wrap-mkd-zasekogas",
+          "id": "wrap-mkd-zasekogas",
+          "layout": "wrap",
+          "titleEn": "MKD Forever — Wrap",
+          "titleMk": "МКД — засекогаш wrap"
+        },
+        {
+          "asset": "mug-wrap-den-nasmeska.png",
+          "out": "wrap-den-nasmeska",
+          "id": "wrap-den-nasmeska",
+          "layout": "wrap",
+          "titleEn": "Start the Day with a Smile",
+          "titleMk": "Започни го денот со насмевка"
+        },
+        {
+          "asset": "mug-spot-par-gospodin.png",
+          "out": "spot-par-gospodin",
+          "id": "spot-par-gospodin",
+          "layout": "spot",
+          "titleEn": "Mr — Couple Mug",
+          "titleMk": "Господин — парска шолја"
+        },
+        {
+          "asset": "mug-spot-par-gospodja.png",
+          "out": "spot-par-gospodja",
+          "id": "spot-par-gospodja",
+          "layout": "spot",
+          "titleEn": "Mrs — Couple Mug",
+          "titleMk": "Госпоѓа — парска шолја"
+        },
+        {
+          "asset": "mug-spot-par-kompletira-srce.png",
+          "out": "spot-par-kompletira-srce",
+          "id": "spot-par-kompletira-srce",
+          "layout": "spot",
+          "titleEn": "You Complete My Heart",
+          "titleMk": "Ти го комплетираш моето срце"
+        },
+        {
+          "asset": "mug-spot-par-kompletira-svet.png",
+          "out": "spot-par-kompletira-svet",
+          "id": "spot-par-kompletira-svet",
+          "layout": "spot",
+          "titleEn": "You Complete My World",
+          "titleMk": "Ти го комплетираш мојот свет"
+        },
+        {
+          "asset": "mug-spot-mojot-chovek.png",
+          "out": "spot-mojot-chovek",
+          "id": "spot-mojot-chovek",
+          "layout": "spot",
+          "titleEn": "You Are My Person",
+          "titleMk": "Ти си мојот човек"
+        },
+        {
+          "asset": "mug-spot-srekjna-godishnina.png",
+          "out": "spot-srekjna-godishnina",
+          "id": "spot-srekjna-godishnina",
+          "layout": "spot",
+          "titleEn": "Happy Anniversary",
+          "titleMk": "Среќна годишнина"
+        },
+        {
+          "asset": "mug-spot-sonishta-kafe.png",
+          "out": "spot-sonishta-kafe",
+          "id": "spot-sonishta-kafe",
+          "layout": "spot",
+          "titleEn": "Build Dreams with Coffee",
+          "titleMk": "Гради ги соништата со кафе"
+        },
+        {
+          "asset": "mug-spot-mali-promeni.png",
+          "out": "spot-mali-promeni",
+          "id": "spot-mali-promeni",
+          "layout": "spot",
+          "titleEn": "Small Changes, Big Difference",
+          "titleMk": "Малите промени прават голема разлика"
         }
       ]
     }
