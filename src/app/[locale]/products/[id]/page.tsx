@@ -1,5 +1,6 @@
 import { ProductDetail } from '@/components/products/ProductDetail';
 import { products } from '@/lib/data/catalog';
+import { isProductVisibleOnStorefront } from '@/lib/cms/product-visibility';
 import { buildProductMetadata } from '@/lib/seo/page-metadata';
 import type { Locale } from '@/i18n/routing';
 import { notFound } from 'next/navigation';
@@ -11,6 +12,9 @@ export async function generateMetadata({
   params: Promise<{ locale: string; id: string }>;
 }): Promise<Metadata> {
   const { locale, id } = await params;
+  if (!(await isProductVisibleOnStorefront(id))) {
+    notFound();
+  }
   const metadata = await buildProductMetadata(locale as Locale, id);
   if (!metadata) notFound();
   return metadata;
@@ -24,6 +28,10 @@ export default async function ProductDetailPage({
   const { id } = await params;
 
   if (!products.some((p) => p.id === id)) {
+    notFound();
+  }
+
+  if (!(await isProductVisibleOnStorefront(id))) {
     notFound();
   }
 

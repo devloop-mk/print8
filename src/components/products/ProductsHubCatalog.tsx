@@ -26,6 +26,8 @@ import { filterProductsBySearchQuery } from '@/lib/catalog/catalog-search';
 import { useCatalogSearchLabels } from '@/hooks/useCatalogSearchLabels';
 import { CatalogPagination } from '@/components/catalog/CatalogPagination';
 import { useCatalogPagination } from '@/hooks/useCatalogPagination';
+import { filterProductsByInactiveIds } from '@/lib/cms/product-visibility';
+import { useVisibleProductTypes } from '@/components/layout/ProductVisibilityProvider';
 import { Reveal } from '@/components/motion/Reveal';
 
 type ProductFilter = ProductType | 'all';
@@ -42,8 +44,10 @@ function buildProductsHubHref(category: ProductNavCategoryId | 'all'): string {
  */
 export function ProductsHubCatalog({
   displayOrder,
+  inactiveProductIds = [],
 }: {
   displayOrder?: Record<string, number>;
+  inactiveProductIds?: readonly string[];
 } = {}) {
   const t = useTranslations('products');
   const tCatalog = useTranslations('products.catalog');
@@ -59,6 +63,10 @@ export function ProductsHubCatalog({
   const [typeFilter, setTypeFilter] = useState<ProductFilter>(() =>
     parseProductTypeFilter(searchParams.get('type')),
   );
+  const visibleProductTypes = useVisibleProductTypes();
+  const visibleTypeSet = visibleProductTypes
+    ? new Set(visibleProductTypes)
+    : null;
 
   useEffect(() => {
     const typeParam = searchParams.get('type');
@@ -71,8 +79,12 @@ export function ProductsHubCatalog({
   }, [searchParams, router]);
 
   const browsableProducts = useMemo(
-    () => sortByDisplayOrder(getBrowsableProducts(), displayOrder),
-    [displayOrder],
+    () =>
+      sortByDisplayOrder(
+        filterProductsByInactiveIds(getBrowsableProducts(), inactiveProductIds),
+        displayOrder,
+      ),
+    [displayOrder, inactiveProductIds],
   );
 
   const scopedProducts = useMemo(() => {
@@ -98,14 +110,23 @@ export function ProductsHubCatalog({
       type === 'all' ? t('allTypes') : t(`typesPlural.${type}`),
     );
 
-    if (categoryFilter === 'all') return built;
+    const typeFiltered = visibleTypeSet
+      ? {
+          allOption: built.allOption,
+          options: built.options.filter((option) =>
+            visibleTypeSet.has(option.value),
+          ),
+        }
+      : built;
+
+    if (categoryFilter === 'all') return typeFiltered;
 
     const allowed = new Set(getProductNavCategory(categoryFilter).types);
     return {
-      allOption: built.allOption,
-      options: built.options.filter((option) => allowed.has(option.value)),
+      allOption: typeFiltered.allOption,
+      options: typeFiltered.options.filter((option) => allowed.has(option.value)),
     };
-  }, [categoryFilter, t]);
+  }, [categoryFilter, t, visibleTypeSet]);
 
   const filteredByType =
     typeFilter === 'all'

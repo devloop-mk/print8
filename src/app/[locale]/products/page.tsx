@@ -7,6 +7,7 @@ import { SectionLoading } from "@/components/ui/SectionLoading";
 import { PageIntro } from "@/components/brand/PageIntro";
 import { buildSectionMetadata } from "@/lib/seo/page-metadata";
 import { getProductDisplayOrderRecord } from "@/lib/cms/display-order";
+import { getInactiveProductIds } from "@/lib/cms/product-visibility";
 import type { Locale } from "@/i18n/routing";
 
 export const revalidate = 86400;
@@ -23,14 +24,20 @@ export async function generateMetadata({
 
 export default async function ProductsPage() {
   const t = await getTranslations("products");
-  const displayOrder = await getProductDisplayOrderRecord();
+  const [displayOrder, inactiveProductIds] = await Promise.all([
+    getProductDisplayOrderRecord(),
+    getInactiveProductIds(),
+  ]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <PageIntro title={t("title")} subtitle={t("subtitle")} />
       <Suspense fallback={<SectionLoading />}>
         <ProductsHubRedirects />
-        <ProductsHubCatalog displayOrder={displayOrder} />
+        <ProductsHubCatalog
+          displayOrder={displayOrder}
+          inactiveProductIds={inactiveProductIds}
+        />
       </Suspense>
     </div>
   );

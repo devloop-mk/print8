@@ -4,14 +4,14 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { ArrowLeft } from 'lucide-react';
-import type { ProductType } from '@/lib/data/catalog';
+import type { Product, ProductType } from '@/lib/data/catalog';
 import {
   getProductNavCategory,
   productCategoryHref,
   productNavCategories,
   type ProductNavCategoryId,
 } from '@/lib/products/product-nav';
-import { getProductsForCategory } from '@/lib/products/product-nav-catalog';
+import { useVisibleProductTypes } from '@/components/layout/ProductVisibilityProvider';
 import { sortByDisplayOrder } from '@/lib/products/sort-by-display-order';
 import { getProductTypeIcon } from '@/lib/products/product-type-icons';
 import { ProductCardGrid } from '@/components/products/ProductCardGrid';
@@ -36,10 +36,12 @@ export function ProductCategoryCatalog({
   categoryId,
   variant = 'browse',
   displayOrder,
+  categoryProducts,
 }: {
   categoryId: ProductNavCategoryId;
   variant?: ProductCategoryCatalogVariant;
   displayOrder?: Record<string, number>;
+  categoryProducts: Product[];
 }) {
   const t = useTranslations('products');
   const tcat = useTranslations('products.catalog');
@@ -48,9 +50,13 @@ export function ProductCategoryCatalog({
   const ts = useTranslations('search');
   const searchLabels = useCatalogSearchLabels();
   const category = getProductNavCategory(categoryId);
-  const categoryProducts = useMemo(
-    () => sortByDisplayOrder(getProductsForCategory(categoryId), displayOrder),
-    [categoryId, displayOrder],
+  const visibleProductTypes = useVisibleProductTypes();
+  const visibleTypeSet = visibleProductTypes
+    ? new Set(visibleProductTypes)
+    : null;
+  const sortedCategoryProducts = useMemo(
+    () => sortByDisplayOrder(categoryProducts, displayOrder),
+    [categoryProducts, displayOrder],
   );
   const [typeFilter, setTypeFilter] = useState<CategoryTypeFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -63,18 +69,20 @@ export function ProductCategoryCatalog({
 
   const filterOptions = useMemo(
     () =>
-      category.types.map((type) => ({
-        value: type,
-        label: t(`typesPlural.${type}`),
-        icon: getProductTypeIcon(type),
-      })),
-    [category.types, t],
+      category.types
+        .filter((type) => !visibleTypeSet || visibleTypeSet.has(type))
+        .map((type) => ({
+          value: type,
+          label: t(`typesPlural.${type}`),
+          icon: getProductTypeIcon(type),
+        })),
+    [category.types, t, visibleTypeSet],
   );
 
   const filteredByType =
     typeFilter === 'all'
-      ? categoryProducts
-      : categoryProducts.filter((product) => product.type === typeFilter);
+      ? sortedCategoryProducts
+      : sortedCategoryProducts.filter((product) => product.type === typeFilter);
 
   const filtered = useMemo(
     () =>

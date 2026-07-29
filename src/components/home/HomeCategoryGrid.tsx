@@ -10,6 +10,7 @@ import {
   productTypeHref,
 } from '@/lib/products/product-nav';
 import type { ProductType } from '@/lib/data/catalog';
+import { useVisibleProductTypes } from '@/components/layout/ProductVisibilityProvider';
 import {
   DESIGN_OVERLAY_LAYER_CLASS,
   getDesignOverlayLayerStyle,
@@ -154,6 +155,15 @@ export function HomeCategoryGrid({ productCount }: { productCount: number }) {
   const t = useTranslations('home.categoryGrid');
   const tp = useTranslations('products.typesPlural');
   const tNav = useTranslations('home.categoryStrip.items');
+  const visibleProductTypes = useVisibleProductTypes();
+  const visibleTypeSet = visibleProductTypes
+    ? new Set(visibleProductTypes)
+    : null;
+  const tiles = visibleTypeSet
+    ? categoryTiles.filter(
+        (tile) => tile.kind !== 'type' || visibleTypeSet.has(tile.type),
+      )
+    : categoryTiles;
 
   return (
     <section className="border-b border-ink-200/80 bg-white py-10 sm:py-12">
@@ -198,7 +208,7 @@ export function HomeCategoryGrid({ productCount }: { productCount: number }) {
             </span>
           </Link>
 
-          {categoryTiles.map((tile) => {
+          {tiles.map((tile) => {
             const label =
               tile.kind === 'type'
                 ? tp(tileLabelKey(tile) as ProductType)

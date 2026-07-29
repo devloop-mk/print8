@@ -6,6 +6,8 @@ import { Inter, Space_Grotesk } from "next/font/google";
 import { routing, type Locale } from "@/i18n/routing";
 import { Header } from "@/components/layout/Header";
 import { FooterGate } from "@/components/layout/FooterGate";
+import { ProductVisibilityProvider } from "@/components/layout/ProductVisibilityProvider";
+import { getVisibleProductTypes } from "@/lib/cms/product-visibility";
 import { CartProvider } from "@/components/cart/CartProvider";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { OngoingDesignsProvider } from "@/components/drafts/OngoingDesignsProvider";
@@ -66,6 +68,7 @@ export default async function LocaleLayout({
 
   setRequestLocale(locale);
   const messages = await getMessages();
+  const visibleProductTypes = await getVisibleProductTypes();
 
   return (
     <html lang={locale} suppressHydrationWarning>
@@ -74,6 +77,7 @@ export default async function LocaleLayout({
         suppressHydrationWarning
       >
         <NextIntlClientProvider locale={locale} messages={messages}>
+          <ProductVisibilityProvider visibleProductTypes={visibleProductTypes}>
           <CartProvider>
             <AuthProvider>
             <OngoingDesignsProvider>
@@ -90,6 +94,7 @@ export default async function LocaleLayout({
             </OngoingDesignsProvider>
             </AuthProvider>
           </CartProvider>
+          </ProductVisibilityProvider>
         </NextIntlClientProvider>
       </body>
     </html>

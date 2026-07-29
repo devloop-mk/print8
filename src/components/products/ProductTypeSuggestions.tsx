@@ -1,18 +1,16 @@
 'use client';
 
-import { useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import type { ProductType } from '@/lib/data/catalog';
-import { getSuggestedProductsForType } from '@/lib/products/product-nav-catalog';
+import type { Product } from '@/lib/data/catalog';
 import { ProductCardGrid } from '@/components/products/ProductCardGrid';
 import { Reveal } from '@/components/motion/Reveal';
 
-export function ProductTypeSuggestions({ type }: { type: ProductType }) {
+export function ProductTypeSuggestions({
+  suggestions,
+}: {
+  suggestions: Product[];
+}) {
   const t = useTranslations('products.typePages');
-  const suggestions = useMemo(
-    () => getSuggestedProductsForType(type),
-    [type],
-  );
 
   if (suggestions.length === 0) return null;
 

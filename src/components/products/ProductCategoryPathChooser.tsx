@@ -1,6 +1,5 @@
 'use client';
 
-import { useMemo } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
@@ -13,7 +12,7 @@ import {
   productCategoryTextTemplatesHref,
   type ProductNavCategoryId,
 } from '@/lib/products/product-nav';
-import { getCategoryOffering } from '@/lib/products/offering';
+import type { CategoryOffering } from '@/lib/products/offering';
 import {
   getCategoryPathImage,
   type CategoryPathId,
@@ -23,6 +22,7 @@ import {
   getDesignOverlayLayerStyle,
 } from '@/lib/products/design-overlay';
 import { PRODUCT_OFFERING_PATHS } from '@/lib/products/paths';
+import { useVisibleProductTypes } from '@/components/layout/ProductVisibilityProvider';
 import { cn } from '@/lib/utils';
 
 const primaryCta =
@@ -32,14 +32,19 @@ const secondaryCta =
 
 export function ProductCategoryPathChooser({
   categoryId,
+  offering,
 }: {
   categoryId: ProductNavCategoryId;
+  offering: CategoryOffering;
 }) {
   const t = useTranslations('products.categoryPages');
   const tNav = useTranslations('nav.productsMenu.categories');
   const tp = useTranslations('products.typesPlural');
   const category = getProductNavCategory(categoryId);
-  const offering = useMemo(() => getCategoryOffering(categoryId), [categoryId]);
+  const visibleProductTypes = useVisibleProductTypes();
+  const visibleTypes = visibleProductTypes
+    ? category.types.filter((type) => visibleProductTypes.includes(type))
+    : category.types;
 
   const pathOptions = [
     {
@@ -216,9 +221,9 @@ export function ProductCategoryPathChooser({
         </div>
       </Reveal>
 
-      {category.types.length > 1 ? (
+      {visibleTypes.length > 1 ? (
         <div className="flex flex-wrap gap-2 border-t border-ink-100 pt-8">
-          {category.types.map((type) => (
+          {visibleTypes.map((type) => (
             <Link
               key={type}
               href={`/products/type/${encodeURIComponent(type)}`}

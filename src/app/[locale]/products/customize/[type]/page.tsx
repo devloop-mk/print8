@@ -7,6 +7,7 @@ import { LocalePageLoading } from "@/components/ui/LocalePageLoading";
 import type { ProductType } from "@/lib/data/catalog";
 import { notFound } from "next/navigation";
 import { productTypes } from "@/lib/data/catalog";
+import { getVisibleProductTypes } from '@/lib/cms/product-visibility';
 import { buildProductCustomizeMetadata } from "@/lib/seo/page-metadata";
 import type { Locale } from "@/i18n/routing";
 
@@ -17,6 +18,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale, type } = await params;
   if (!productTypes.includes(type as ProductType)) notFound();
+  const visibleTypes = await getVisibleProductTypes();
+  if (!visibleTypes.includes(type as ProductType)) notFound();
   return buildProductCustomizeMetadata(locale as Locale, type as ProductType);
 }
 
@@ -30,6 +33,11 @@ export default async function CustomizeProductPage({
   const tm = await getTranslations("products.magnetOrder");
 
   if (!productTypes.includes(type as ProductType)) {
+    notFound();
+  }
+
+  const visibleTypes = await getVisibleProductTypes();
+  if (!visibleTypes.includes(type as ProductType)) {
     notFound();
   }
 

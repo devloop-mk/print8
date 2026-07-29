@@ -7,6 +7,10 @@ import {
 } from '@/lib/data/catalog';
 import { getProductDisplayOrderRecord } from '@/lib/cms/display-order';
 import {
+  filterProductsByStorefrontVisibility,
+  getProductVisibilityRecord,
+} from '@/lib/cms/product-visibility';
+import {
   buildProductDesignCatalogEntries,
   filterDesignCatalogEntries,
   type ProductDesignCatalogEntry,
@@ -33,8 +37,15 @@ export const getProductsByType = cache((type: ProductType): Product[] =>
 
 export const getOrderedProductsByType = cache(
   async (type: ProductType): Promise<Product[]> => {
-    const orderMap = await getProductDisplayOrderRecord();
-    return sortByDisplayOrder(getProductsByType(type), orderMap);
+    const [orderMap, visibility] = await Promise.all([
+      getProductDisplayOrderRecord(),
+      getProductVisibilityRecord(),
+    ]);
+    const visible = filterProductsByStorefrontVisibility(
+      getProductsByType(type),
+      visibility,
+    );
+    return sortByDisplayOrder(visible, orderMap);
   },
 );
 

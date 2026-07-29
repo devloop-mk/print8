@@ -24,6 +24,7 @@ type ProductTypeCatalogProps = {
   products: Product[];
   readyDesignEntries: ProductDesignCatalogEntry[];
   categoryPreviews?: Record<string, CategoryMockupPreview>;
+  suggestions: Product[];
 };
 
 export function ProductTypeCatalog({
@@ -31,6 +32,7 @@ export function ProductTypeCatalog({
   products,
   readyDesignEntries,
   categoryPreviews,
+  suggestions,
 }: ProductTypeCatalogProps) {
   const t = useTranslations('products');
   const tt = useTranslations('products.typePages');
@@ -114,7 +116,9 @@ export function ProductTypeCatalog({
         entries={readyDesignEntries}
       />
 
-      {showPlainProducts ? <ProductTypeSuggestions type={type} /> : null}
+      {showPlainProducts ? (
+        <ProductTypeSuggestions suggestions={suggestions} />
+      ) : null}
     </div>
   );
 }

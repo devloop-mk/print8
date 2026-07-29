@@ -9,6 +9,7 @@ import {
   categoryHasPremadeDesigns,
   getCategoryOffering,
 } from '@/lib/products/offering';
+import { getProductsForCategory } from '@/lib/products/product-nav-catalog';
 import {
   isProductNavCategoryId,
   productNavCategoryIds,
@@ -43,22 +44,28 @@ export default async function ProductCategoryPage({
     notFound();
   }
 
-  const offering = getCategoryOffering(category);
+  const [offering, displayOrder, categoryProducts] = await Promise.all([
+    getCategoryOffering(category),
+    getProductDisplayOrderRecord(),
+    getProductsForCategory(category),
+  ]);
   const showPremadeCatalog = categoryHasPremadeDesigns(offering);
-  const displayOrder = showPremadeCatalog
-    ? undefined
-    : await getProductDisplayOrderRecord();
+  const resolvedDisplayOrder = showPremadeCatalog ? undefined : displayOrder;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <Suspense fallback={<SectionLoading />}>
         {showPremadeCatalog ? (
-          <ProductCategoryPathChooser categoryId={category} />
+          <ProductCategoryPathChooser
+            categoryId={category}
+            offering={offering}
+          />
         ) : (
           <ProductCategoryCatalog
             categoryId={category}
             variant="landing"
-            displayOrder={displayOrder}
+            displayOrder={resolvedDisplayOrder}
+            categoryProducts={categoryProducts}
           />
         )}
       </Suspense>

@@ -14,6 +14,8 @@ export type DisplayOrderItem = {
   image?: string;
   meta?: string;
   collection?: string | null;
+  /** Storefront visibility — products tab only. */
+  active?: boolean;
 };
 
 type Tab = 'products' | 'merchDesigns' | 'printDesigns';
@@ -149,10 +151,12 @@ function ReorderList({
   items,
   onMove,
   onDragReorder,
+  onToggleActive,
 }: {
   items: DisplayOrderItem[];
   onMove: (id: string, direction: -1 | 1) => void;
   onDragReorder: (fromId: string, toId: string) => void;
+  onToggleActive?: (id: string, active: boolean) => void;
 }) {
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
@@ -243,6 +247,18 @@ function ReorderList({
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-ink-900">{item.title}</p>
             <p className="truncate text-xs text-ink-500">{item.meta ?? item.id}</p>
+            {onToggleActive ? (
+              <label className="mt-1.5 flex items-center gap-2 text-xs text-ink-600">
+                <input
+                  type="checkbox"
+                  checked={item.active !== false}
+                  onChange={(event) =>
+                    onToggleActive(item.id, event.target.checked)
+                  }
+                />
+                {adminStrings.ordering.visibleOnSite}
+              </label>
+            ) : null}
           </div>
           <div className="flex shrink-0 gap-1">
             <Button
@@ -399,6 +415,43 @@ export function DisplayOrderAdminPanel({
       setError(err instanceof Error ? err.message : adminStrings.ordering.saveError);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function toggleProductVisibility(productId: string, active: boolean) {
+    setProductItems((prev) =>
+      prev.map((item) =>
+        item.id === productId ? { ...item, active } : item,
+      ),
+    );
+    setMessage(null);
+    setError(null);
+    try {
+      const response = await fetch('/api/admin/product-visibility', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId, active }),
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error ?? adminStrings.ordering.visibilitySaveError);
+      }
+      setMessage(
+        active
+          ? adminStrings.ordering.productShown
+          : adminStrings.ordering.productHidden,
+      );
+    } catch (err) {
+      setProductItems((prev) =>
+        prev.map((item) =>
+          item.id === productId ? { ...item, active: !active } : item,
+        ),
+      );
+      setError(
+        err instanceof Error
+          ? err.message
+          : adminStrings.ordering.visibilitySaveError,
+      );
     }
   }
 
@@ -569,6 +622,7 @@ export function DisplayOrderAdminPanel({
             onDragReorder={(fromId, toId) =>
               setProductItems((prev) => reorderByDrag(prev, fromId, toId))
             }
+            onToggleActive={toggleProductVisibility}
           />
           <Button type="button" onClick={saveProducts} disabled={saving}>
             {saving ? adminStrings.ordering.saving : adminStrings.ordering.saveProducts}

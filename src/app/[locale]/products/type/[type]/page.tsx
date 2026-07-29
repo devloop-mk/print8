@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation';
 import { ProductTypeCatalog } from '@/components/products/ProductTypeCatalog';
 import { SectionLoading } from '@/components/ui/SectionLoading';
 import { getProductTypeCatalogData } from '@/lib/cache/catalog-cache';
+import { getSuggestedProductsForType } from '@/lib/products/product-nav-catalog';
+import { getVisibleProductTypes } from '@/lib/cms/product-visibility';
 import { slimProductDesignCatalogEntries } from '@/lib/products/slim-catalog-entry';
 import { productTypes } from '@/lib/data/catalog';
 import { buildProductTypePageMetadata } from '@/lib/seo/page-metadata';
@@ -42,8 +44,16 @@ export default async function ProductTypePage({
     notFound();
   }
 
-  const { products, readyDesignEntries, categoryPreviews } =
-    await getProductTypeCatalogData(type);
+  const visibleTypes = await getVisibleProductTypes();
+  if (!visibleTypes.includes(type)) {
+    notFound();
+  }
+
+  const [{ products, readyDesignEntries, categoryPreviews }, suggestions] =
+    await Promise.all([
+      getProductTypeCatalogData(type),
+      getSuggestedProductsForType(type),
+    ]);
   const slimReadyDesignEntries =
     slimProductDesignCatalogEntries(readyDesignEntries);
 
@@ -55,6 +65,7 @@ export default async function ProductTypePage({
           products={products}
           readyDesignEntries={slimReadyDesignEntries}
           categoryPreviews={categoryPreviews}
+          suggestions={suggestions}
         />
       </Suspense>
     </div>

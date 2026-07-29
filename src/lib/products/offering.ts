@@ -4,7 +4,10 @@ import {
   type Product,
 } from '@/lib/data/catalog';
 import type { ProductNavCategoryId } from '@/lib/products/product-nav';
-import { getProductsForCategory } from '@/lib/products/product-nav-catalog';
+import { getProductVisibilityRecord } from '@/lib/cms/product-visibility';
+import {
+  getProductsForCategoryWithVisibility,
+} from '@/lib/products/product-nav-catalog';
 
 export type ProductOffering = {
   imageDesignCount: number;
@@ -43,13 +46,17 @@ export type CategoryOffering = {
   hasTextTemplates: boolean;
 };
 
-export function getCategoryOffering(
+export function getCategoryOfferingWithVisibility(
   categoryId: ProductNavCategoryId,
+  visibility: Record<string, boolean>,
 ): CategoryOffering {
   let imageDesignCount = 0;
   let textDesignCount = 0;
 
-  for (const product of getProductsForCategory(categoryId)) {
+  for (const product of getProductsForCategoryWithVisibility(
+    categoryId,
+    visibility,
+  )) {
     const offering = getProductOffering(product);
     imageDesignCount += offering.imageDesignCount;
     textDesignCount += offering.textDesignCount;
@@ -61,6 +68,13 @@ export function getCategoryOffering(
     hasPhotoDesigns: imageDesignCount > 0,
     hasTextTemplates: textDesignCount > 0,
   };
+}
+
+export async function getCategoryOffering(
+  categoryId: ProductNavCategoryId,
+): Promise<CategoryOffering> {
+  const visibility = await getProductVisibilityRecord();
+  return getCategoryOfferingWithVisibility(categoryId, visibility);
 }
 
 export function categoryHasPremadeDesigns(offering: CategoryOffering): boolean {

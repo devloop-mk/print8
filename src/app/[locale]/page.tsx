@@ -8,7 +8,7 @@ import {
   type CmsLocale,
 } from '@/lib/cms/public-content';
 import { getHomeTrendingProductDesigns } from '@/lib/cms/home-trending';
-import { getBrowsableProducts } from '@/lib/data/catalog';
+import { getStorefrontBrowsableProducts } from '@/lib/cms/product-visibility';
 import { TrendingDesignsSection } from '@/components/home/TrendingDesignsSection';
 import { HomeShowcaseCarousel } from '@/components/home/HomeShowcaseCarousel';
 import { SectionHeader } from '@/components/ui/SectionHeader';
@@ -70,7 +70,7 @@ export default async function HomePage({
 
   const featuredDesignCards = toGalleryDesignTemplates(featuredDesigns);
 
-  const productCount = getBrowsableProducts().length;
+  const productCount = (await getStorefrontBrowsableProducts()).length;
 
   return (
     <>

@@ -11,6 +11,7 @@ import {
 } from '@/lib/products/product-nav';
 import { getProductTypeIcon } from '@/lib/products/product-type-icons';
 import type { ProductType } from '@/lib/data/catalog';
+import { useVisibleProductTypes } from '@/components/layout/ProductVisibilityProvider';
 import { ChevronRight } from 'lucide-react';
 
 type ProductsNavMenuProps = {
@@ -55,6 +56,10 @@ export function ProductsNavMenu({
 }: ProductsNavMenuProps) {
   const t = useTranslations('nav.productsMenu');
   const isMobile = variant === 'mobile';
+  const visibleProductTypes = useVisibleProductTypes();
+  const visibleTypeSet = visibleProductTypes
+    ? new Set(visibleProductTypes)
+    : null;
 
   return (
     <div
@@ -68,6 +73,11 @@ export function ProductsNavMenu({
         </p>
         <div className={cn('mt-3 space-y-4', isMobile && 'space-y-3')}>
           {productNavCategories.map((category) => {
+            const visibleTypes = visibleTypeSet
+              ? category.types.filter((type) => visibleTypeSet.has(type))
+              : category.types;
+            if (visibleTypes.length === 0) return null;
+
             const CategoryIcon = category.icon;
             return (
               <div key={category.id}>
@@ -90,7 +100,7 @@ export function ProductsNavMenu({
                     isMobile ? 'grid-cols-1' : 'grid-cols-1',
                   )}
                 >
-                  {category.types.map((type) => (
+                  {visibleTypes.map((type) => (
                     <TypeLink
                       key={type}
                       type={type}

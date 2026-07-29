@@ -5,7 +5,7 @@ import {
   type DisplayOrderItem,
 } from '@/components/admin/DisplayOrderAdminPanel';
 import {
-  getBrowsableProducts,
+  products,
   getProductNameKey,
   type ProductDesignTemplate,
 } from '@/lib/data/catalog';
@@ -13,6 +13,7 @@ import {
   getDesignDisplayOrderRecord,
   getProductDisplayOrderRecord,
 } from '@/lib/cms/display-order';
+import { getProductVisibilityRecord } from '@/lib/cms/product-visibility';
 import { getMergedProductDesignTemplates } from '@/lib/products/merged-product-designs';
 import { sortByDisplayOrder } from '@/lib/products/sort-by-display-order';
 import {
@@ -63,16 +64,17 @@ export default async function AdminOrderingPage() {
   const typeLabels = productLabels.types as Record<string, string>;
   const itemLabels = productLabels.items as Record<string, string>;
 
-  const [productOrder, designOrder, productDesigns, printDesigns] =
+  const [productOrder, designOrder, productDesigns, printDesigns, productVisibility] =
     await Promise.all([
       getProductDisplayOrderRecord(),
       getDesignDisplayOrderRecord(),
       getMergedProductDesignTemplates(),
       buildPrintDesignOrderItems(),
+      getProductVisibilityRecord(),
     ]);
 
   const productItems: DisplayOrderItem[] = sortByDisplayOrder(
-    getBrowsableProducts(),
+    products,
     productOrder,
   ).map((product) => {
     const nameKey = getProductNameKey(product);
@@ -83,6 +85,7 @@ export default async function AdminOrderingPage() {
       title,
       image: product.image,
       meta: `${product.id} · ${typeLabels[product.type] ?? product.type}`,
+      active: productVisibility[product.id] !== false,
     };
   });
 
