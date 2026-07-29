@@ -9,6 +9,17 @@ import {
 import type { ProductType } from '@/lib/data/catalog';
 import type { PlacedTextLayer } from '@/lib/products/text-layers';
 import type { PrintAreaInsets } from '@/lib/products/print-area';
+import { rasterizeSvgSource } from '@/lib/products/render-print-area-design';
+import {
+  getStickerById,
+  type PlacedSticker,
+} from '@/lib/products/sticker-library';
+import { resolveAssetUrl } from '@/lib/storage/asset-url';
+import {
+  getDrinkwareSublimationPatch,
+  paintSublimationPatch,
+  traceSublimationPatchPath,
+} from '@/lib/products/drinkware-sublimation-patch';
 
 export type DrinkwareImageLayer = {
   src: string;
@@ -24,6 +35,7 @@ export type BuildDrinkwareWrapTextureInput = {
   printBounds: PrintAreaInsets;
   images?: DrinkwareImageLayer[];
   textLayers?: PlacedTextLayer[];
+  stickers?: PlacedSticker[];
   /** Measured 2D canvas height (CSS px) so text size matches the flat editor. */
   canvasHeightPx?: number;
 };
@@ -179,6 +191,23 @@ export async function buildDrinkwareWrapTexture(
 
   paintBaseColor(ctx, input.productColor, textureSize.width, textureSize.height);
 
+  const sublimationPatch = getDrinkwareSublimationPatch(input.productId);
+  const seamColor = sublimationPatch?.bodyColor ?? input.productColor;
+  if (sublimationPatch) {
+    paintBaseColor(
+      ctx,
+      sublimationPatch.bodyColor,
+      textureSize.width,
+      textureSize.height,
+    );
+    paintSublimationPatch(
+      ctx,
+      sublimationPatch,
+      textureSize.width,
+      textureSize.height,
+    );
+  }
+
   const loadedImages = await Promise.all(
     (input.images ?? []).map(async (layer) => ({
       layer,
@@ -187,6 +216,16 @@ export async function buildDrinkwareWrapTexture(
   );
 
   for (const { layer, img } of loadedImages) {
+    if (sublimationPatch) {
+      ctx.save();
+      traceSublimationPatchPath(
+        ctx,
+        sublimationPatch,
+        textureSize.width,
+        textureSize.height,
+      );
+      ctx.clip();
+    }
     drawImageLayer(
       ctx,
       img,
@@ -195,10 +234,21 @@ export async function buildDrinkwareWrapTexture(
       textureSize.width,
       textureSize.height,
     );
+    if (sublimationPatch) ctx.restore();
   }
 
   const canvasHeightPx = input.canvasHeightPx ?? DRINKWARE_FLAT_CANVAS_HEIGHT_PX;
   for (const textLayer of input.textLayers ?? []) {
+    if (sublimationPatch) {
+      ctx.save();
+      traceSublimationPatchPath(
+        ctx,
+        sublimationPatch,
+        textureSize.width,
+        textureSize.height,
+      );
+      ctx.clip();
+    }
     drawTextLayer(
       ctx,
       textLayer,
@@ -206,11 +256,51 @@ export async function buildDrinkwareWrapTexture(
       textureSize.height,
       canvasHeightPx,
     );
+    if (sublimationPatch) ctx.restore();
+  }
+
+  const loadedStickers = await Promise.all(
+    (input.stickers ?? []).map(async (sticker) => {
+      const definition = getStickerById(sticker.stickerId);
+      if (!definition) return null;
+      try {
+        const src =
+          resolveAssetUrl(definition.src) ?? definition.src;
+        const img = await rasterizeSvgSource(src, 3);
+        return { sticker, img };
+      } catch {
+        return null;
+      }
+    }),
+  );
+
+  for (const entry of loadedStickers) {
+    if (!entry) continue;
+    const { sticker, img } = entry;
+    if (sublimationPatch) {
+      ctx.save();
+      traceSublimationPatchPath(
+        ctx,
+        sublimationPatch,
+        textureSize.width,
+        textureSize.height,
+      );
+      ctx.clip();
+    }
+    drawImageLayer(
+      ctx,
+      img,
+      sticker.scale,
+      sticker.position,
+      textureSize.width,
+      textureSize.height,
+    );
+    if (sublimationPatch) ctx.restore();
   }
 
   clearHandleGap(
     ctx,
-    input.productColor,
+    seamColor,
     textureSize.width,
     textureSize.height,
     getHandleGapEdgeFraction(input.productType, input.productId),

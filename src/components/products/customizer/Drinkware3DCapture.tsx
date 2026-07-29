@@ -205,6 +205,12 @@ function DrinkwareCaptureBootstrap({
         `${layer.instanceId}|${layer.text}|${layer.size}|${layer.color}|${layer.position.x}|${layer.position.y}|${layer.fontFamily}|${layer.fontWeight}`,
     )
     .join(';');
+  const stickerKey = sideDesign.stickers
+    .map(
+      (sticker) =>
+        `${sticker.instanceId}|${sticker.stickerId}|${sticker.scale}|${sticker.position.x}|${sticker.position.y}`,
+    )
+    .join(';');
 
   useEffect(() => {
     if (!ready) return;
@@ -217,6 +223,7 @@ function DrinkwareCaptureBootstrap({
       printBounds,
       images,
       textLayers,
+      stickers: sideDesign.stickers,
       canvasHeightPx,
     })
       .then((canvas) => {
@@ -232,8 +239,8 @@ function DrinkwareCaptureBootstrap({
       return () => {
         cancelled = true;
       };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- imageKey/textKey capture the real deps
-  }, [ready, productType, productId, productColor, imageKey, textKey, canvasHeightPx, printBounds]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- imageKey/textKey/stickerKey capture the real deps
+  }, [ready, productType, productId, productColor, imageKey, textKey, stickerKey, canvasHeightPx, printBounds]);
 
   if (!ready || !textureCanvas || failedRef.current) return null;
 

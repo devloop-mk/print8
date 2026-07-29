@@ -12,17 +12,40 @@ export function CustomizerPrintAreaLayers({
   isCapturing,
   printAreaInsets,
   useDimOutsideMask,
+  clipPathOverride,
+  patchFillColor,
   children,
 }: {
   isCapturing: boolean;
   printAreaInsets: PrintAreaInsets;
   /** Apparel mockups dim overflow; drinkware keeps a single unmasked stack. */
   useDimOutsideMask: boolean;
+  /** Irregular patch outline (e.g. mug-red-patch sublimation field). */
+  clipPathOverride?: string;
+  /** White sublimation fill painted inside clipPathOverride (same layer as designs). */
+  patchFillColor?: string;
   children: ReactNode;
 }) {
   const maskId = useId().replace(/:/g, '');
-  const clipPath = getPrintAreaClipPath(printAreaInsets);
-  const clipStyle: CSSProperties = { clipPath };
+  const clipPath =
+    clipPathOverride ?? getPrintAreaClipPath(printAreaInsets);
+  const clipStyle: CSSProperties = {
+    clipPath,
+    ...(patchFillColor ? { backgroundColor: patchFillColor } : null),
+  };
+
+  if (clipPathOverride) {
+    return (
+      <div
+        className="absolute inset-0 z-[1] overflow-hidden pointer-events-auto"
+        data-print-area-content
+        data-print-area-insets={JSON.stringify(printAreaInsets)}
+        style={clipStyle}
+      >
+        {children}
+      </div>
+    );
+  }
 
   if (isCapturing && useDimOutsideMask) {
     return (

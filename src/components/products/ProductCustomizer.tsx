@@ -176,6 +176,12 @@ import {
   CustomizerPrintAreaLayers,
 } from '@/components/products/customizer/CustomizerPrintAreaLayers';
 import { DrinkwareWrapHint } from '@/components/products/customizer/DrinkwarePrintAreaGuide';
+import { DrinkwareSublimationPatchGuide } from '@/components/products/customizer/DrinkwareSublimationPatchGuide';
+import {
+  getDrinkwareBodyColor,
+  getDrinkwareSublimationPatch,
+  getSublimationPatchCssClipPath,
+} from '@/lib/products/drinkware-sublimation-patch';
 import { UnsavedWorkDialog } from '@/components/shared/UnsavedWorkDialog';
 import { useDirtySnapshot } from '@/hooks/useDirtySnapshot';
 import { useUndoRedo } from '@/hooks/useUndoRedo';
@@ -2406,11 +2412,16 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   const drinkwareSidePreviewNode =
     isDrinkware && isDesktopSplitPreview && !isCapturing ? (
       <div className="flex min-h-0 flex-1 flex-col">
-        <div className="flex shrink-0 items-center gap-2 border-b border-ink-100 px-4 py-3">
-          <Rotate3d className="h-4 w-4 text-brand-600" aria-hidden />
-          <h2 className="text-sm font-semibold text-ink-900">
-            {t('preview3dPaneTitle')}
-          </h2>
+        <div className="flex shrink-0 flex-col gap-0.5 border-b border-ink-100 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <Rotate3d className="h-4 w-4 text-brand-600" aria-hidden />
+            <h2 className="text-sm font-semibold text-ink-900">
+              {t('preview3dPaneTitle')}
+            </h2>
+          </div>
+          <p className="pl-6 text-xs leading-snug text-ink-500">
+            {t('drinkwarePreviewApproximateNote')}
+          </p>
         </div>
         <div className="flex min-h-0 flex-1 items-center justify-center bg-[#f4f6f8] p-4 md:p-6">
           <DrinkwareDesignPreview3D
@@ -3224,6 +3235,11 @@ function InteractivePreview({
   const drinkwareFlatSize = isDrinkware
     ? getDrinkwareFlatCanvasSize(productType, product.id)
     : null;
+  const drinkwareBodyColor = getDrinkwareBodyColor(product.id, shirtColor);
+  const sublimationPatch = getDrinkwareSublimationPatch(product.id);
+  const sublimationPatchClipPath = sublimationPatch
+    ? getSublimationPatchCssClipPath(sublimationPatch)
+    : undefined;
   const live3DTextLayers = preview3DTextLayers ?? textLayers;
   const live3DSideDesign = preview3DSideDesign ?? sideDesign;
   const showStacked3dPreview =
@@ -3285,7 +3301,7 @@ function InteractivePreview({
                 ? '100%'
                 : `min(${drinkwareFlatSize.width}px, 94vw)`,
               aspectRatio: String(drinkwareFlatSize.aspect),
-              backgroundColor: shirtColor,
+              backgroundColor: drinkwareBodyColor,
             }
           : undefined
       }
@@ -3314,11 +3330,13 @@ function InteractivePreview({
           style={isDrinkware ? undefined : shirtMockupStyle}
         >
         {isDrinkware ? (
-          <div
-            className="pointer-events-none absolute inset-0"
-            style={{ backgroundColor: shirtColor }}
-            aria-hidden
-          />
+          <>
+            <div
+              className="pointer-events-none absolute inset-0 z-0"
+              style={{ backgroundColor: drinkwareBodyColor }}
+              aria-hidden
+            />
+          </>
         ) : shirtImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -3339,22 +3357,33 @@ function InteractivePreview({
         )}
 
         {!isCapturing ? (
-          <PrintAreaGuideSwitch
-            layout={mockupLayout}
-            label={t('printAreaGuide')}
-            wrapLabel={t('drinkwareWrapArea')}
-            frontLabel={t('drinkwareFrontPreview')}
-            showHandleHint={drinkwareHasHandle}
-            showCenterGuide={isDrinkware && !drinkwareHasHandle}
-            handleHintLabel={t('drinkwareHandleHint')}
-            centerLabel={t('drinkwareCenterOfMug')}
-          />
+          <>
+            {sublimationPatch ? (
+              <DrinkwareSublimationPatchGuide
+                productId={product.id}
+                label={t('drinkwareWrapArea')}
+              />
+            ) : null}
+            <PrintAreaGuideSwitch
+              layout={mockupLayout}
+              label={t('printAreaGuide')}
+              wrapLabel={t('drinkwareWrapArea')}
+              frontLabel={t('drinkwareFrontPreview')}
+              showHandleHint={drinkwareHasHandle}
+              showCenterGuide={isDrinkware && !drinkwareHasHandle}
+              handleHintLabel={t('drinkwareHandleHint')}
+              centerLabel={t('drinkwareCenterOfMug')}
+              showWrapFrame={!sublimationPatch}
+            />
+          </>
         ) : null}
 
         <CustomizerPrintAreaLayers
           isCapturing={Boolean(isCapturing)}
           printAreaInsets={mockupLayout.printArea}
           useDimOutsideMask={!isDrinkware}
+          clipPathOverride={sublimationPatchClipPath}
+          patchFillColor={sublimationPatch?.patchColor}
         >
           <>
             {hasTemplateOverlay ? (

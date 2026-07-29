@@ -51,6 +51,7 @@ export function DrinkwareDesignPreview3D({
       printBounds={printBounds}
       images={images}
       textLayers={textLayers}
+      stickers={sideDesign.stickers}
       variant={variant}
       className={className}
       canvasHeightPx={canvasHeightPx}

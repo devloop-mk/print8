@@ -7,6 +7,7 @@ import {
 } from '@/lib/products/build-drinkware-wrap-texture';
 import type { ProductType } from '@/lib/data/catalog';
 import type { PlacedTextLayer } from '@/lib/products/text-layers';
+import type { PlacedSticker } from '@/lib/products/sticker-library';
 import type { PrintAreaInsets } from '@/lib/products/print-area';
 
 export function useDrinkwareWrapTexture({
@@ -16,6 +17,7 @@ export function useDrinkwareWrapTexture({
   printBounds,
   images,
   textLayers,
+  stickers,
   canvasHeightPx,
 }: {
   productType: ProductType;
@@ -24,6 +26,7 @@ export function useDrinkwareWrapTexture({
   printBounds: PrintAreaInsets;
   images: DrinkwareImageLayer[];
   textLayers: PlacedTextLayer[];
+  stickers?: PlacedSticker[];
   /** Measured flat-editor height so text px maps 1:1 into the wrap texture. */
   canvasHeightPx?: number;
 }) {
@@ -54,6 +57,17 @@ export function useDrinkwareWrapTexture({
     [textLayers],
   );
 
+  const stickerKey = useMemo(
+    () =>
+      (stickers ?? [])
+        .map(
+          (sticker) =>
+            `${sticker.instanceId}|${sticker.stickerId}|${sticker.scale}|${sticker.position.x}|${sticker.position.y}`,
+        )
+        .join(';'),
+    [stickers],
+  );
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -65,6 +79,7 @@ export function useDrinkwareWrapTexture({
       printBounds,
       images,
       textLayers,
+      stickers,
       canvasHeightPx,
     })
       .then((canvas) => {
@@ -90,8 +105,10 @@ export function useDrinkwareWrapTexture({
     printBounds,
     imageKey,
     textKey,
+    stickerKey,
     images,
     textLayers,
+    stickers,
     canvasHeightPx,
   ]);
 

@@ -14,6 +14,7 @@ type PrintAreaGuideSwitchProps = {
   showCenterGuide?: boolean;
   handleHintLabel?: string;
   centerLabel?: string;
+  showWrapFrame?: boolean;
 };
 
 export function PrintAreaGuideSwitch({
@@ -26,6 +27,7 @@ export function PrintAreaGuideSwitch({
   showCenterGuide,
   handleHintLabel,
   centerLabel,
+  showWrapFrame,
 }: PrintAreaGuideSwitchProps) {
   if (layout.wrapPrintArea) {
     return (
@@ -39,6 +41,7 @@ export function PrintAreaGuideSwitch({
         showCenterGuide={showCenterGuide}
         handleHintLabel={handleHintLabel}
         centerLabel={centerLabel}
+        showWrapFrame={showWrapFrame}
       />
     );
   }

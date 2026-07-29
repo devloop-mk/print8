@@ -17,6 +17,8 @@ type DrinkwarePrintAreaGuideProps = {
   showCenterGuide?: boolean;
   handleHintLabel?: string;
   centerLabel?: string;
+  /** Hide rectangular dimming / dashed frame (sublimation patch mugs draw their own). */
+  showWrapFrame?: boolean;
 };
 
 function MugIconHandleLeft({ className }: { className?: string }) {
@@ -63,6 +65,7 @@ export function DrinkwarePrintAreaGuide({
   showCenterGuide = false,
   handleHintLabel,
   centerLabel,
+  showWrapFrame = true,
 }: DrinkwarePrintAreaGuideProps) {
   if (hidden) return null;
 
@@ -77,43 +80,47 @@ export function DrinkwarePrintAreaGuide({
 
   return (
     <div className="pointer-events-none absolute inset-0 z-[4]" aria-hidden>
-      <div
-        className="absolute inset-x-0 top-0 bg-ink-900/[0.04]"
-        style={{ height: wrapFrame.top }}
-      />
-      <div
-        className="absolute inset-x-0 bottom-0 bg-ink-900/[0.04]"
-        style={{ height: wrapFrame.bottom }}
-      />
-      {wrapInsets.left > 0 ? (
-        <div
-          className="absolute left-0 bg-ink-900/[0.04]"
-          style={{
-            top: wrapFrame.top,
-            bottom: wrapFrame.bottom,
-            width: wrapFrame.left,
-          }}
-        />
-      ) : null}
-      {wrapInsets.right > 0 ? (
-        <div
-          className="absolute right-0 bg-ink-900/[0.04]"
-          style={{
-            top: wrapFrame.top,
-            bottom: wrapFrame.bottom,
-            width: wrapFrame.right,
-          }}
-        />
-      ) : null}
+      {showWrapFrame ? (
+        <>
+          <div
+            className="absolute inset-x-0 top-0 bg-ink-900/[0.04]"
+            style={{ height: wrapFrame.top }}
+          />
+          <div
+            className="absolute inset-x-0 bottom-0 bg-ink-900/[0.04]"
+            style={{ height: wrapFrame.bottom }}
+          />
+          {wrapInsets.left > 0 ? (
+            <div
+              className="absolute left-0 bg-ink-900/[0.04]"
+              style={{
+                top: wrapFrame.top,
+                bottom: wrapFrame.bottom,
+                width: wrapFrame.left,
+              }}
+            />
+          ) : null}
+          {wrapInsets.right > 0 ? (
+            <div
+              className="absolute right-0 bg-ink-900/[0.04]"
+              style={{
+                top: wrapFrame.top,
+                bottom: wrapFrame.bottom,
+                width: wrapFrame.right,
+              }}
+            />
+          ) : null}
 
-      <div
-        className="absolute rounded-sm border-2 border-dashed border-ink-400/55 bg-transparent"
-        style={wrapFrame}
-      >
-        <span className="absolute left-1.5 top-1.5 hidden rounded bg-white/95 px-1.5 py-0.5 text-[10px] font-medium text-ink-600 shadow-sm md:inline">
-          {wrapLabel}
-        </span>
-      </div>
+          <div
+            className="absolute rounded-sm border-2 border-dashed border-ink-400/55 bg-transparent"
+            style={wrapFrame}
+          >
+            <span className="absolute left-1.5 top-1.5 hidden rounded bg-white/95 px-1.5 py-0.5 text-[10px] font-medium text-ink-600 shadow-sm md:inline">
+              {wrapLabel}
+            </span>
+          </div>
+        </>
+      ) : null}
 
       {showHandleHint ? (
         <>

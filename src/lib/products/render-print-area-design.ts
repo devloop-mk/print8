@@ -48,7 +48,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-async function rasterizeSvgSource(
+export async function rasterizeSvgSource(
   src: string,
   scale: number,
 ): Promise<HTMLImageElement> {

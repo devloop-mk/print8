@@ -9,6 +9,7 @@ import { Drinkware3DScene } from '@/components/products/customizer/Drinkware3DSc
 import { useDrinkwareWrapTexture } from '@/hooks/useDrinkwareWrapTexture';
 import type { DrinkwareImageLayer } from '@/lib/products/build-drinkware-wrap-texture';
 import type { PlacedTextLayer } from '@/lib/products/text-layers';
+import type { PlacedSticker } from '@/lib/products/sticker-library';
 import type { PrintAreaInsets } from '@/lib/products/print-area';
 import { DRINKWARE_FLAT_CANVAS_HEIGHT_PX } from '@/lib/products/drinkware-3d-config';
 
@@ -26,6 +27,7 @@ type Drinkware3DPreviewProps = {
   printBounds: PrintAreaInsets;
   images: DrinkwareImageLayer[];
   textLayers?: PlacedTextLayer[];
+  stickers?: PlacedSticker[];
   variant?: DrinkwarePreviewVariant;
   className?: string;
   /** Flat editor canvas height — keeps text scale matched in the wrap texture. */
@@ -39,6 +41,7 @@ export function Drinkware3DPreview({
   printBounds,
   images,
   textLayers = [],
+  stickers = [],
   variant = 'floating',
   className,
   canvasHeightPx,
@@ -51,6 +54,7 @@ export function Drinkware3DPreview({
     printBounds,
     images,
     textLayers,
+    stickers,
     canvasHeightPx: canvasHeightPx ?? DRINKWARE_FLAT_CANVAS_HEIGHT_PX,
   });
 

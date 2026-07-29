@@ -2,6 +2,8 @@ import type { ProductType } from '@/lib/data/catalog';
 import type { PrintAreaInsets } from '@/lib/products/print-area';
 
 export type Drinkware3DMaterial = 'ceramic' | 'glass';
+export type DrinkwareHandleType = 'c' | 'd' | 'heart';
+export type DrinkwareHandleMaterial = 'ceramic' | 'chrome' | 'gold';
 
 export type Drinkware3DConfig = {
   radiusTop: number;
@@ -31,6 +33,16 @@ export type Drinkware3DConfig = {
    */
   wrapUvBottomInset?: number;
   wrapUvTopInset?: number;
+  /** Handle silhouette — defaults to C for ceramic mugs, D for glass beer. */
+  handleType?: DrinkwareHandleType;
+  /** Handle surface — chrome/gold stay metallic even when the body is white ceramic. */
+  handleMaterial?: DrinkwareHandleMaterial;
+  /** Override handle glaze (e.g. purple interior mug). */
+  handleColor?: string;
+  /** Override interior glaze visible at the rim. */
+  interiorColor?: string;
+  /** Matte frosted glass look (mug-frosted). */
+  glassFrosted?: boolean;
 };
 
 /**
@@ -106,6 +118,36 @@ const configs: Partial<Record<ProductType, Drinkware3DConfig>> = {
 
 const productConfigs: Record<string, Drinkware3DConfig> = {
   'cup-glass-beer': GLASS_BEER_CUP_CONFIG,
+  'mug-heart-handle': {
+    ...MUG_CONFIG,
+    handleType: 'heart',
+    handleGapFraction: 0.13,
+  },
+  'mug-chrome-handle': {
+    ...MUG_CONFIG,
+    handleMaterial: 'chrome',
+  },
+  'mug-gold-handle': {
+    ...MUG_CONFIG,
+    handleMaterial: 'gold',
+  },
+  'mug-frosted': {
+    ...MUG_CONFIG,
+    material: 'glass',
+    glassFrosted: true,
+    wallThickness: 0.022,
+    baseHeight: 0.014,
+    handleType: 'c',
+  },
+  'mug-purple-interior': {
+    ...MUG_CONFIG,
+    interiorColor: '#5b21b6',
+    handleColor: '#5b21b6',
+  },
+  'mug-red-patch': {
+    ...MUG_CONFIG,
+    handleGapFraction: 0.1,
+  },
 };
 
 export function getDrinkware3DConfig(

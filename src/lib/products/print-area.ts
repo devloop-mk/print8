@@ -111,6 +111,13 @@ export const DRINKWARE_UNWRAP_PRINT_INSETS_BY_PRODUCT_ID: Record<
   PrintAreaInsets
 > = {
   'cup-glass-beer': GLASS_BEER_CUP_UNWRAP_PRINT_AREA_INSETS,
+  /** Red mug — white sublimation patch only (centre of unwrap, away from handle seams). */
+  'mug-red-patch': {
+    top: 12,
+    right: 29,
+    bottom: 16,
+    left: 29,
+  },
 };
 
 const DRINKWARE_UNWRAP_BY_TYPE: Partial<Record<ProductType, PrintAreaInsets>> =

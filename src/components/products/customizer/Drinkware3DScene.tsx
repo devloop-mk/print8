@@ -9,6 +9,7 @@ import {
   getDrinkware3DConfig,
   type Drinkware3DConfig,
 } from '@/lib/products/drinkware-3d-config';
+import { getDrinkwareBodyColor } from '@/lib/products/drinkware-sublimation-patch';
 
 /**
  * Remap cylinder UVs so:
@@ -114,38 +115,134 @@ function GlassMaterial({
   );
 }
 
+function FrostedGlassMaterial({
+  color,
+  map,
+  side,
+}: {
+  color: string;
+  map?: THREE.Texture | null;
+  side?: THREE.Side;
+}) {
+  const hasMap = Boolean(map);
+  return (
+    <meshPhysicalMaterial
+      color={hasMap ? '#f6f7f8' : color}
+      map={map ?? undefined}
+      transmission={hasMap ? 0.58 : 0.94}
+      transparent
+      opacity={1}
+      roughness={0.94}
+      metalness={0}
+      ior={1.52}
+      thickness={hasMap ? 0.42 : 0.72}
+      clearcoat={0}
+      specularIntensity={0.15}
+      envMapIntensity={0.12}
+      attenuationColor="#e4e8ec"
+      attenuationDistance={0.28}
+      side={side ?? THREE.FrontSide}
+    />
+  );
+}
+
+function MetallicHandleMaterial({
+  variant,
+}: {
+  variant: 'chrome' | 'gold';
+}) {
+  const isGold = variant === 'gold';
+  return (
+    <meshPhysicalMaterial
+      color={isGold ? '#d4af37' : '#c5cad1'}
+      roughness={isGold ? 0.22 : 0.16}
+      metalness={isGold ? 0.9 : 0.94}
+      clearcoat={0.85}
+      clearcoatRoughness={0.12}
+      envMapIntensity={1.35}
+    />
+  );
+}
+
+function buildClassicMugHandleCurve(bodyRadius: number, bodyHeight: number) {
+  const attachX = bodyRadius * 0.98;
+  const reach = bodyRadius * 0.78;
+  const half = bodyHeight * 0.2;
+  return new THREE.CubicBezierCurve3(
+    new THREE.Vector3(attachX, half, 0),
+    new THREE.Vector3(attachX + reach, half * 1.08, 0),
+    new THREE.Vector3(attachX + reach, -half * 1.08, 0),
+    new THREE.Vector3(attachX, -half, 0),
+  );
+}
+
+/**
+ * Closed heart-handle loop: outer lobes + bottom point, with the cleft pulled
+ * toward the mug so the opening reads as a heart (not a plain C).
+ */
+function buildHeartHandleCurve(bodyRadius: number, bodyHeight: number) {
+  const attachX = bodyRadius * 0.985;
+  const reach = bodyRadius * 0.9;
+  const topY = bodyHeight * 0.205;
+  const bottomY = -bodyHeight * 0.195;
+
+  const points = [
+    new THREE.Vector3(attachX, topY, 0),
+    new THREE.Vector3(attachX + reach * 0.52, topY + bodyHeight * 0.062, 0),
+    new THREE.Vector3(attachX + reach * 0.78, bodyHeight * 0.125, 0),
+    new THREE.Vector3(attachX + reach * 0.16, bodyHeight * 0.095, 0),
+    new THREE.Vector3(attachX + reach * 0.7, topY * 0.38, 0),
+    new THREE.Vector3(attachX + reach * 1.1, -bodyHeight * 0.018, 0),
+    new THREE.Vector3(attachX + reach * 0.38, bottomY * 0.78, 0),
+    new THREE.Vector3(attachX, bottomY, 0),
+    new THREE.Vector3(attachX, (topY + bottomY) * 0.5, 0),
+  ];
+
+  return new THREE.CatmullRomCurve3(points, true, 'catmullrom', 0.42);
+}
+
 function MugHandle({
   color,
   bodyRadius,
   bodyHeight,
   material = 'ceramic',
+  handleType = 'c',
+  handleMaterial = 'ceramic',
+  handleColor,
 }: {
   color: string;
   bodyRadius: number;
   bodyHeight: number;
   material?: Drinkware3DConfig['material'];
+  handleType?: Drinkware3DConfig['handleType'];
+  handleMaterial?: Drinkware3DConfig['handleMaterial'];
+  handleColor?: string;
 }) {
   const curve = useMemo(() => {
-    const attachX = bodyRadius * 0.98;
-    const reach = bodyRadius * 0.78;
-    const half = bodyHeight * 0.2;
-    return new THREE.CubicBezierCurve3(
-      new THREE.Vector3(attachX, half, 0),
-      new THREE.Vector3(attachX + reach, half * 1.08, 0),
-      new THREE.Vector3(attachX + reach, -half * 1.08, 0),
-      new THREE.Vector3(attachX, -half, 0),
-    );
-  }, [bodyRadius, bodyHeight]);
+    if (handleType === 'heart') {
+      return buildHeartHandleCurve(bodyRadius, bodyHeight);
+    }
+    return buildClassicMugHandleCurve(bodyRadius, bodyHeight);
+  }, [bodyRadius, bodyHeight, handleType]);
 
-  const radius = Math.min(0.042, bodyRadius * 0.1);
+  const radius =
+    handleType === 'heart'
+      ? Math.min(0.036, bodyRadius * 0.082)
+      : Math.min(0.042, bodyRadius * 0.1);
+  const tubularSegments = handleType === 'heart' ? 96 : 56;
+  const radialSegments = handleType === 'heart' ? 16 : 14;
+
+  const glazeColor = handleColor ?? color;
 
   return (
-    <mesh>
-      <tubeGeometry args={[curve, 56, radius, 14, false]} />
-      {material === 'glass' ? (
-        <GlassMaterial color={color} />
+    <mesh key={handleType}>
+      <tubeGeometry args={[curve, tubularSegments, radius, radialSegments, false]} />
+      {handleMaterial === 'chrome' || handleMaterial === 'gold' ? (
+        <MetallicHandleMaterial variant={handleMaterial} />
+      ) : material === 'glass' ? (
+        <FrostedGlassMaterial color={glazeColor} />
       ) : (
-        <CeramicMaterial color={color} roughness={0.32} clearcoat={0.4} />
+        <CeramicMaterial color={glazeColor} roughness={0.32} clearcoat={0.4} />
       )}
     </mesh>
   );
@@ -265,11 +362,16 @@ function OuterBody({
 
   const matte = productType === 'thermos';
   const isGlass = config.material === 'glass';
+  const isFrosted = Boolean(config.glassFrosted);
 
   return (
     <mesh geometry={geometry}>
       {isGlass ? (
-        <GlassMaterial color={productColor} map={texture} />
+        isFrosted ? (
+          <FrostedGlassMaterial color={productColor} map={texture} />
+        ) : (
+          <GlassMaterial color={productColor} map={texture} />
+        )
       ) : (
         <CeramicMaterial
           color={productColor}
@@ -299,7 +401,12 @@ export function DrinkwareBody({
   productId?: string;
 }) {
   const config = getDrinkware3DConfig(productType, productId);
+  const bodyGlaze = getDrinkwareBodyColor(productId, productColor);
   const isGlass = config.material === 'glass';
+  const isFrosted = Boolean(config.glassFrosted);
+  const handleType =
+    config.handleType ?? (isGlass && !isFrosted ? 'd' : 'c');
+  const handleGlaze = config.handleColor ?? bodyGlaze;
 
   const texture = useMemo(() => {
     if (!textureCanvas) return null;
@@ -337,10 +444,12 @@ export function DrinkwareBody({
   const baseHeight = config.baseHeight ?? 0.022;
 
   const interiorColor = useMemo(() => {
+    if (config.interiorColor) return config.interiorColor;
+    if (isFrosted) return '#e6eaee';
     const c = new THREE.Color(productColor);
     c.multiplyScalar(isGlass ? 0.98 : 0.92);
     return `#${c.getHexString()}`;
-  }, [isGlass, productColor]);
+  }, [config.interiorColor, isFrosted, isGlass, productColor]);
 
   return (
     <group
@@ -349,7 +458,7 @@ export function DrinkwareBody({
     >
       <OuterBody
         config={config}
-        productColor={productColor}
+        productColor={bodyGlaze}
         texture={texture}
         productType={productType}
       />
@@ -378,6 +487,19 @@ export function DrinkwareBody({
             />
           </mesh>
         </>
+      ) : isFrosted ? (
+        <>
+          <mesh>
+            <cylinderGeometry
+              args={[innerTop, innerBottom, innerHeight, 64, 1, true]}
+            />
+            <FrostedGlassMaterial color={interiorColor} side={THREE.BackSide} />
+          </mesh>
+          <mesh position={[0, floorY, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <circleGeometry args={[innerBottom * 0.98, 48]} />
+            <FrostedGlassMaterial color={interiorColor} />
+          </mesh>
+        </>
       ) : (
         <mesh>
           <cylinderGeometry
@@ -390,9 +512,13 @@ export function DrinkwareBody({
       <mesh position={[0, rimY, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[innerTop, config.radiusTop * 1.012, 64]} />
         {isGlass ? (
-          <GlassMaterial color={productColor} />
+          isFrosted ? (
+            <FrostedGlassMaterial color={bodyGlaze} />
+          ) : (
+            <GlassMaterial color={bodyGlaze} />
+          )
         ) : (
-          <CeramicMaterial color={productColor} roughness={0.22} clearcoat={0.75} />
+          <CeramicMaterial color={bodyGlaze} roughness={0.22} clearcoat={0.75} />
         )}
       </mesh>
 
@@ -406,25 +532,34 @@ export function DrinkwareBody({
           ]}
         />
         {isGlass ? (
-          <GlassMaterial color={productColor} />
+          isFrosted ? (
+            <FrostedGlassMaterial color={bodyGlaze} />
+          ) : (
+            <GlassMaterial color={bodyGlaze} />
+          )
         ) : (
-          <CeramicMaterial color={productColor} roughness={0.4} clearcoat={0.3} />
+          <CeramicMaterial color={bodyGlaze} roughness={0.4} clearcoat={0.3} />
         )}
       </mesh>
 
       {config.hasHandle ? (
-        isGlass ? (
+        handleType === 'd' ? (
           <BeerGlassHandle
-            color={productColor}
+            key={productId ?? 'cup-glass'}
+            color={bodyGlaze}
             bodyRadius={(config.radiusTop + config.radiusBottom) / 2}
             bodyHeight={config.height}
           />
         ) : (
           <MugHandle
-            color={productColor}
+            key={`${productId ?? 'mug'}-${handleType}-${config.handleMaterial ?? 'ceramic'}`}
+            color={bodyGlaze}
+            handleColor={handleGlaze}
             bodyRadius={(config.radiusTop + config.radiusBottom) / 2}
             bodyHeight={config.height}
             material={config.material}
+            handleType={handleType}
+            handleMaterial={config.handleMaterial}
           />
         )
       ) : null}
@@ -456,6 +591,7 @@ export function Drinkware3DScene({
 
   return (
     <Canvas
+      key={productId ?? productType}
       camera={{ position: [0.65, 0.14, config.cameraZ], fov: 32 }}
       gl={{ antialias: true, alpha: true }}
       dpr={[1, 2]}
