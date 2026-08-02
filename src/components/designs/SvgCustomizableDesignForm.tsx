@@ -67,12 +67,22 @@ import {
   cartItemMatchesDesignTemplate,
   parseSvgStateFromCartMetadata,
 } from '@/lib/cart/design-cart';
+import { BusinessCardPrintOptions } from '@/components/designs/BusinessCardPrintOptions';
+import {
+  businessCardPrintMetadata,
+  DEFAULT_BUSINESS_CARD_LAMINATION,
+  DEFAULT_BUSINESS_CARD_PAPER,
+  parseBusinessCardPrintOptions,
+  type BusinessCardLamination,
+  type BusinessCardPaper,
+} from '@/lib/designs/business-card-print-options';
 import { cn } from '@/lib/utils';
-import { ChevronLeft, ChevronRight, FileText, Layers, Palette, ShoppingCart, Info } from 'lucide-react';
+import { ChevronLeft, ChevronRight, FileText, Layers, Palette, ShoppingCart, Info, Layers2 } from 'lucide-react';
 
-type EditorStep = 'front' | 'back' | 'colors' | 'review';
+type EditorStep = 'print' | 'front' | 'back' | 'colors' | 'review';
 
 const stepIcons: Record<EditorStep, typeof FileText> = {
+  print: Layers2,
   front: FileText,
   back: Layers,
   colors: Palette,
@@ -103,13 +113,18 @@ export function SvgCustomizableDesignForm({
   const mobileFieldBarRef = useRef<DesignCustomizerMobileFieldBarHandle>(null);
 
   const hasBack = Boolean(svgTemplate.sides.back);
-  const steps = useMemo<EditorStep[]>(
-    () => (hasBack ? ['front', 'back', 'colors', 'review'] : ['front', 'colors', 'review']),
-    [hasBack],
-  );
+  const isBusinessCard = template.category === 'business-cards';
+  const steps = useMemo<EditorStep[]>(() => {
+    const core: EditorStep[] = hasBack
+      ? ['front', 'back', 'colors', 'review']
+      : ['front', 'colors', 'review'];
+    return isBusinessCard ? ['print', ...core] : core;
+  }, [hasBack, isBusinessCard]);
 
   const price = designCategoryPrices[template.category];
-  const [step, setStep] = useState<EditorStep>('front');
+  const [step, setStep] = useState<EditorStep>(
+    template.category === 'business-cards' ? 'print' : 'front',
+  );
   const [previewSide, setPreviewSide] = useState<'front' | 'back'>('front');
   const {
     present: state,
@@ -123,6 +138,10 @@ export function SvgCustomizableDesignForm({
     buildMergedDefaultSvgTemplateState(svgTemplate, svgLocale, managedDefaults),
   );
   const [quantity, setQuantity] = useState(1);
+  const [paper, setPaper] = useState<BusinessCardPaper>(DEFAULT_BUSINESS_CARD_PAPER);
+  const [lamination, setLamination] = useState<BusinessCardLamination>(
+    DEFAULT_BUSINESS_CARD_LAMINATION,
+  );
   const [capturing, setCapturing] = useState(false);
   const [draftHydrated, setDraftHydrated] = useState(false);
   const [activeFieldKey, setActiveFieldKey] = useState<string | null>(null);
@@ -167,6 +186,11 @@ export function SvgCustomizableDesignForm({
       if (editingItem.quantity > 0) {
         setQuantity(editingItem.quantity);
       }
+      if (template.category === 'business-cards') {
+        const options = parseBusinessCardPrintOptions(editingItem.metadata);
+        setPaper(options.paper);
+        setLamination(options.lamination);
+      }
       setDraftHydrated(true);
       return;
     }
@@ -192,6 +216,7 @@ export function SvgCustomizableDesignForm({
         resetEditorState(defaults);
       }
       if (
+        payload.step === 'print' ||
         payload.step === 'front' ||
         payload.step === 'back' ||
         payload.step === 'colors' ||
@@ -442,6 +467,9 @@ export function SvgCustomizableDesignForm({
         svgTemplateId: svgTemplate.id,
         svgState: JSON.stringify(state),
         ...svgFields,
+        ...(isBusinessCard
+          ? businessCardPrintMetadata({ paper, lamination })
+          : {}),
       };
 
       for (const [key, value] of Object.entries(state.texts)) {
@@ -819,6 +847,14 @@ export function SvgCustomizableDesignForm({
                     'lg:grid-cols-2 lg:gap-4',
                 )}
               >
+                {step === 'print' && isBusinessCard ? (
+                  <BusinessCardPrintOptions
+                    paper={paper}
+                    lamination={lamination}
+                    onPaperChange={setPaper}
+                    onLaminationChange={setLamination}
+                  />
+                ) : null}
                 {step === 'front' && renderLogoFields('front')}
                 {step === 'back' && renderLogoFields('back')}
                 {step === 'front' && !editOnCanvas && renderTextFields('front')}

@@ -7,8 +7,24 @@ import {
   type ProductType,
 } from '@/lib/data/catalog';
 import { productVisibilityDb } from '@/lib/db/product-visibility';
+import { isProductTypeHiddenFromStorefront } from '@/lib/products/storefront-hidden-types';
+
+export {
+  STOREFONT_HIDDEN_PRODUCT_TYPES,
+  filterProductsByInactiveIds,
+  filterStorefrontHiddenProductTypes,
+  isProductTypeHiddenFromStorefront,
+} from '@/lib/products/storefront-hidden-types';
 
 export const PRODUCT_VISIBILITY_CACHE_TAG = 'cms-product-visibility';
+
+function isStorefrontProductVisible(
+  product: Product,
+  visibility: Record<string, boolean>,
+): boolean {
+  if (isProductTypeHiddenFromStorefront(product.type)) return false;
+  return isProductActiveOnStorefront(product.id, visibility);
+}
 
 const getProductVisibilityRowsCached = unstable_cache(
   async () => productVisibilityDb.list(),
@@ -44,13 +60,17 @@ export function filterProductsByStorefrontVisibility(
   visibility: Record<string, boolean>,
 ): Product[] {
   return list.filter((product) =>
-    isProductActiveOnStorefront(product.id, visibility),
+    isStorefrontProductVisible(product, visibility),
   );
 }
 
 export async function isProductVisibleOnStorefront(
   productId: string,
 ): Promise<boolean> {
+  const product = products.find((item) => item.id === productId);
+  if (product && isProductTypeHiddenFromStorefront(product.type)) {
+    return false;
+  }
   const visibility = await getProductVisibilityRecord();
   return isProductActiveOnStorefront(productId, visibility);
 }
@@ -61,15 +81,6 @@ export async function getStorefrontBrowsableProducts(): Promise<Product[]> {
     products.filter(isBrowsableProduct),
     visibility,
   );
-}
-
-export function filterProductsByInactiveIds(
-  list: Product[],
-  inactiveProductIds: readonly string[],
-): Product[] {
-  if (inactiveProductIds.length === 0) return list;
-  const hidden = new Set(inactiveProductIds);
-  return list.filter((product) => !hidden.has(product.id));
 }
 
 export async function getVisibleProductTypes(): Promise<ProductType[]> {
@@ -83,5 +94,7 @@ export async function getVisibleProductTypes(): Promise<ProductType[]> {
       visible.add(product.type);
     }
   }
-  return productTypes.filter((type) => visible.has(type));
+  return productTypes.filter(
+    (type) => visible.has(type) && !isProductTypeHiddenFromStorefront(type),
+  );
 }

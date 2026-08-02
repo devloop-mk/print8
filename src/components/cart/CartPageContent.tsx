@@ -43,6 +43,10 @@ import {
 } from "@/lib/products/branding-pack-cart";
 import { buildDesignEditUrl } from "@/lib/cart/design-cart";
 import { isCylindricalDrinkwareType } from "@/lib/products/product-mockup-layout";
+import { isStudentPrintCartItem } from "@/lib/students/student-print-cart";
+import { StudentPrintCartDetails } from "@/components/students/StudentPrintCartDetails";
+import { BusinessCardCartDetails } from "@/components/designs/BusinessCardCartDetails";
+import { isBusinessCardCartItem } from "@/lib/designs/business-card-print-options";
 
 
 
@@ -351,6 +355,13 @@ export function CartPageContent() {
                         {formatPrice(item.price, locale)} × {item.quantity}
 
                       </p>
+
+                      {isStudentPrintCartItem(item) ? (
+                        <StudentPrintCartDetails item={item} />
+                      ) : null}
+                      {isBusinessCardCartItem(item) ? (
+                        <BusinessCardCartDetails item={item} />
+                      ) : null}
 
                     </div>
 

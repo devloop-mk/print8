@@ -212,6 +212,11 @@
           "subtitle": "T-shirts, hoodies, and caps — your design, professional print.",
           "cta": "View the offer"
         },
+        "students": {
+          "title": "Big student discounts",
+          "subtitle": "Printing for scripts, books, seminar papers, and thesis works — professional quality at student-friendly prices.",
+          "cta": "Start your order"
+        },
         "branding": {
           "title": "Your brand on products",
           "subtitle": "Upload your logo and build a pack — tee, hoodie, mug, cap, and more.",
@@ -636,6 +641,101 @@
       }
     }
   },
+  "students": {
+    "print": {
+      "title": "Student printing",
+      "subtitle": "Choose a service, upload your PDF, and configure binding — step by step.",
+      "back": "Back to services",
+      "steps": {
+        "service": "Service",
+        "upload": "File",
+        "binding": "Binding",
+        "review": "Review"
+      },
+      "serviceTitle": "Choose a service type",
+      "serviceHint": "Select what you need printed — book, script, seminar paper, or thesis.",
+      "startingFrom": "from {price}",
+      "services": {
+        "book": {
+          "title": "Book",
+          "description": "Printing and binding for books and larger materials."
+        },
+        "script": {
+          "title": "Script",
+          "description": "Printing for scripts and course materials — color or black & white."
+        },
+        "seminar": {
+          "title": "Seminar paper",
+          "description": "Seminar papers with professional spiral binding."
+        },
+        "thesis": {
+          "title": "Thesis / master's",
+          "description": "Undergraduate and master's theses with hard or spiral covers."
+        }
+      },
+      "uploadTitle": "Upload your file",
+      "uploadStepHint": "Upload a PDF — page count is calculated automatically.",
+      "uploadHint": "Allowed format: PDF. Maximum size: {max}.",
+      "uploadCta": "Choose a PDF file",
+      "uploadFormats": "PDF only",
+      "uploadAnalyzing": "Analyzing file…",
+      "uploadPdfOnly": "Only PDF files are allowed.",
+      "uploadTooLarge": "File is too large. Maximum: {max}.",
+      "uploadPageCountFailed": "We could not read the PDF. Please check the file.",
+      "uploadSummary": "{pages, plural, one {# page} other {# pages}} · {size}",
+      "uploadRemove": "Remove",
+      "bindingTitle": "Binding options",
+      "bindingHint": "Choose spiral type and front PVC / back cover colors.",
+      "bindingTypeLabel": "Spiral type",
+      "bindingTypes": {
+        "metal-spiral": {
+          "title": "Metal spiral",
+          "description": "Durable metal spiral — ideal for larger documents."
+        },
+        "plastic-spiral": {
+          "title": "Plastic spiral",
+          "description": "Classic plastic spiral — economical choice."
+        }
+      },
+      "frontCoverLabel": "Front PVC cover color",
+      "frontCoverHint": "Clear or colored PVC front cover.",
+      "backCoverLabel": "Back cover color",
+      "backCoverHint": "Paper with a leather-like texture.",
+      "coverColors": {
+        "black": "Black",
+        "white": "White",
+        "navy": "Navy",
+        "blue": "Blue",
+        "red": "Red",
+        "clear": "Clear",
+        "brown": "Brown",
+        "burgundy": "Burgundy"
+      },
+      "reviewTitle": "Order summary",
+      "reviewHint": "Review your choices before adding to cart.",
+      "reviewService": "Service",
+      "reviewFile": "File",
+      "reviewFileSummary": "{name} ({pages, plural, one {# page} other {# pages}})",
+      "reviewBinding": "Binding",
+      "reviewFrontCover": "Front cover",
+      "reviewBackCover": "Back cover",
+      "priceNote": "The price shown is indicative. Final pricing may be confirmed after we review your file.",
+      "total": "Total",
+      "next": "Next",
+      "backStep": "Back",
+      "addToCart": "Add to cart",
+      "adding": "Adding…",
+      "addedToCartTitle": "Added to cart",
+      "addedToCartBody": "Your student print order was added. Continue here or open your cart.",
+      "cartItemName": "Student printing — {service}",
+      "errors": {
+        "serviceRequired": "Select a service type to continue.",
+        "uploadRequired": "Upload a PDF file to continue.",
+        "bindingRequired": "Choose binding and cover colors.",
+        "addToCartFailed": "Could not add the order. Please try again."
+      }
+    }
+  },
   "designs": {
     "title": "Print designs",
     "subtitle": "Choose a template for business cards, invitations, menus, and more — send your details or personalize online with live preview.",
@@ -1018,6 +1118,11 @@
       "menuInsideNote": "The price shown is for the front and back cover only. It does not include the interior menu pages, food photos, extra sections, or other add-ons. After you place your order, our team will contact you to collect your dishes, prices, and any photos, then prepare a quote for the inside pages.",
       "menuPriceNote": "Price is for front & back cover only — not interior pages, photos, or extras.",
       "steps": {
+        "print": {
+          "title": "Paper & lamination",
+          "hint": "Weight & finish",
+          "desc": "Choose paper weight and whether to laminate your business cards."
+        },
         "front": {
           "title": "Front side",
           "hint": "Main details",
@@ -1085,6 +1190,39 @@
       "studioTitle": "Prefer to design it yourself?",
       "studioHint": "Open the full design studio to add text, images, and fine-tune the layout.",
       "openStudio": "Open design studio",
+      "stepsNav": "Order steps",
+      "steps": {
+        "print": "Paper & lamination",
+        "details": "Your details"
+      },
+      "printStepTitle": "Paper & lamination",
+      "printStepSubtitle": "First choose paper weight and lamination for your business cards.",
+      "nextStep": "Next",
+      "prevStep": "Back",
+      "printOptions": {
+        "paperLabel": "Paper",
+        "paperHint": "Choose the paper weight for your business cards.",
+        "paper": {
+          "240gsm": "240 gsm",
+          "300gsm": "300 gsm"
+        },
+        "laminationLabel": "Lamination",
+        "laminationHint": "Choose whether to laminate the cards.",
+        "lamination": {
+          "none": {
+            "title": "No lamination",
+            "description": "Classic paper finish without a protective layer."
+          },
+          "matte": {
+            "title": "Matte lamination",
+            "description": "Soft matte finish with less glare."
+          },
+          "glossy": {
+            "title": "Glossy lamination",
+            "description": "Glossy finish with stronger protection."
+          }
+        }
+      },
       "fields": {
         "fullName": "Full name",
         "companyName": "Company name",
@@ -1164,7 +1302,7 @@
         "print-only": "Print-ready files only",
         "t-shirt": "T-shirt",
         "hoodie": "Hoodie",
-        "mug": "Mug",
+        "mug": "Cup",
         "cup": "Cup",
         "thermos": "Thermos",
         "bag": "Bag",
@@ -1542,10 +1680,10 @@
         "subtitle": "Branded caps — great for teams, events, and promotions."
       },
       "mug": {
-        "subtitle": "Mugs with your photo or text — a popular gift for home and office."
+        "subtitle": "Ceramic mugs and glass cups with your design — popular for home, office, events, and promo."
       },
       "cup": {
-        "subtitle": "Cups with custom printing — for cafés, events, and promos."
+        "subtitle": "Ceramic mugs and glass cups with your design — popular for home, office, events, and promo."
       },
       "bag": {
         "subtitle": "Bags with your design — practical and visible for your brand."
@@ -1660,6 +1798,7 @@
     },
     "designPdp": {
       "backToReadyDesigns": "Back to ready designs",
+      "backToType": "Back to {type}",
       "addToCart": "Add to cart",
       "customizeButton": "Customize design",
       "sideSwitcherLabel": "Preview side",
@@ -1757,7 +1896,7 @@
       "hoodie": "Hoodie",
       "bodysuit": "Baby bodysuit",
       "cap": "Cap",
-      "mug": "Mug",
+      "mug": "Cup",
       "cup": "Cup",
       "bag": "Bag",
       "thermos": "Thermos",
@@ -1769,7 +1908,7 @@
       "hoodie": "Hoodies",
       "bodysuit": "Baby bodysuits",
       "cap": "Caps",
-      "mug": "Mugs",
+      "mug": "Cups",
       "cup": "Cups",
       "bag": "Bags",
       "thermos": "Thermoses",
@@ -1809,7 +1948,8 @@
       "addPhoto": "Add photo",
       "title": "Customize product",
       "selectColor": "Select color",
-      "selectDrinkware": "Select mug / cup",
+      "tabColor": "Color",
+      "selectDrinkware": "Select cup",
       "selectSize": "Select size",
       "printPackage": "Print package",
       "printPackageAutoNote": "Calculated automatically from your design",
@@ -2123,6 +2263,10 @@
     "empty": "Your cart is empty.",
     "loading": "Loading cart...",
     "continueShopping": "Continue shopping",
+    "viewCart": "View cart",
+    "addedTitle": "Added to cart",
+    "addedBody": "Your item has been added. What would you like to do next?",
+    "addedClose": "Close",
     "quantity": "Qty",
     "remove": "Remove",
     "subtotal": "Subtotal",
@@ -2145,6 +2289,20 @@
       "service": "Service",
       "design": "Design",
       "product": "Product"
+    },
+    "studentPrint": {
+      "service": "Service",
+      "file": "File",
+      "pages": "Pages",
+      "pageCount": "{count, plural, one {# page} other {# pages}}",
+      "fileSize": "File size",
+      "binding": "Binding",
+      "frontCover": "Front cover",
+      "backCover": "Back cover"
+    },
+    "businessCard": {
+      "paper": "Paper",
+      "lamination": "Lamination"
     }
   },
   "checkout": {

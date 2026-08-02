@@ -45,6 +45,7 @@ import {
 } from '@/lib/products/garment-fit';
 import {
   getCompatibleDrinkwareProducts,
+  getDrinkwareBodyColorOptions,
 } from '@/lib/products/drinkware-product-options';
 import { GarmentFitSelector } from '@/components/products/GarmentFitSelector';
 import { DrinkwareProductSelector } from '@/components/products/DrinkwareProductSelector';
@@ -930,6 +931,16 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   const isLargeCustomizerViewport = useMediaQuery('(min-width: 1024px)');
 
   const productId = searchParams.get('id');
+  /** Immediate drinkware SKU while router.replace flushes ?id= to searchParams. */
+  const [pendingDrinkwareProductId, setPendingDrinkwareProductId] = useState<
+    string | null
+  >(null);
+
+  useEffect(() => {
+    setPendingDrinkwareProductId(null);
+  }, [productId]);
+
+  const activeProductId = pendingDrinkwareProductId ?? productId ?? undefined;
   const designId = searchParams.get('design');
   const editCartItemId = searchParams.get('edit');
   const colorParam = searchParams.get('color');
@@ -945,7 +956,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   const product = useMemo(
     () => {
       const base =
-        products.find((p) => p.id === productId) ||
+        products.find((p) => p.id === activeProductId) ||
         products.find((p) => p.type === type);
       if (!base || base.type !== 't-shirt' || !designTemplateForFit) {
         return base;
@@ -961,7 +972,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
 
       return resolveDesignProduct(designTemplateForFit, resolvedFit);
     },
-    [productId, type, designTemplateForFit, fitParam],
+    [activeProductId, type, designTemplateForFit, fitParam],
   );
 
   const garmentFits = designTemplateForFit
@@ -982,6 +993,11 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     return getCompatibleDrinkwareProducts(designTemplateForFit);
   }, [designTemplateForFit, isDrinkware]);
 
+  const drinkwareBodyColors = useMemo(() => {
+    if (!isDrinkware || !product) return [];
+    return getDrinkwareBodyColorOptions(product);
+  }, [isDrinkware, product]);
+
   const [color, setColor] = useState(() => {
     const palette = product?.colors ?? [];
     const fromParam = colorParam
@@ -996,13 +1012,15 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
 
   const handleDrinkwareProductChange = useCallback(
     (nextProductId: string) => {
-      if (!product || nextProductId === product.id) return;
+      if (nextProductId === activeProductId) return;
       const nextProduct = products.find((p) => p.id === nextProductId);
       if (!nextProduct) return;
 
+      setPendingDrinkwareProductId(nextProductId);
+
       const nextColors = designTemplateForFit
         ? getDesignApplicableColors(designTemplateForFit, nextProduct)
-        : (nextProduct.colors ?? []);
+        : getDrinkwareBodyColorOptions(nextProduct);
 
       const params = new URLSearchParams(searchParams.toString());
       params.set('id', nextProduct.id);
@@ -1030,14 +1048,39 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       );
     },
     [
+      activeProductId,
       color,
       designTemplateForFit,
-      product,
       router,
       searchParams,
       size,
     ],
   );
+
+  const handleColorChange = useCallback(
+    (nextColor: string) => {
+      setColor(nextColor);
+      if (!isDrinkware || !product) return;
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('color', nextColor);
+      if (product.id) params.set('id', product.id);
+      router.replace(`/products/customize/${type}?${params.toString()}`, {
+        scroll: false,
+      });
+    },
+    [isDrinkware, product, router, searchParams, type],
+  );
+
+  useEffect(() => {
+    if (!isDrinkware || !product?.colors?.length) return;
+    const palette = getDrinkwareBodyColorOptions(product);
+    if (
+      palette.length > 0 &&
+      !palette.some((value) => normalizeHex(value) === normalizeHex(color))
+    ) {
+      setColor(palette[0]!);
+    }
+  }, [color, isDrinkware, product]);
 
   const handleGarmentFitChange = useCallback(
     (nextFit: GarmentFit) => {
@@ -2448,7 +2491,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       shirtColor={color}
       product={product}
       color={color}
-      setColor={setColor}
+      setColor={handleColorChange}
       size={size}
       setSize={setSize}
       quantity={quantity}
@@ -2486,6 +2529,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       onGarmentFitChange={handleGarmentFitChange}
       selectableColors={selectableColors}
       isDrinkware={isDrinkware}
+      drinkwareBodyColors={drinkwareBodyColors}
       compatibleDrinkwareProducts={compatibleDrinkwareProducts}
       onDrinkwareProductChange={handleDrinkwareProductChange}
     />
@@ -2593,6 +2637,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       activePanel={activePanel}
       onPanelChange={setActivePanel}
       showDesignPanel={hasRecolorableOverlay}
+      showColorPanel={isDrinkware && drinkwareBodyColors.length > 1}
       sides={sides}
       activeSide={activeSide}
       onSideChange={setActiveSide}
@@ -2685,6 +2730,15 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
             {(
               [
                 ['product', <Shirt key="p" className="h-5 w-5" />, t('tabProduct')],
+                ...(isDrinkware && drinkwareBodyColors.length > 1
+                  ? [
+                      [
+                        'color',
+                        <Palette key="c" className="h-5 w-5" />,
+                        t('tabColor'),
+                      ] as const,
+                    ]
+                  : []),
                 ['text', <Type key="t" className="h-5 w-5" />, t('tabText')],
                 ['photo', <ImageIcon key="i" className="h-5 w-5" />, t('tabUpload')],
                 ['stickers', <Sparkles key="s" className="h-5 w-5" />, t('tabElements')],
@@ -2731,7 +2785,9 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
                 <h3 className="font-semibold text-ink-900">
                   {activePanel === 'product'
                     ? t('tabProduct')
-                    : activePanel === 'text'
+                    : activePanel === 'color'
+                      ? t('tabColor')
+                      : activePanel === 'text'
                       ? t('tabText')
                       : activePanel === 'photo'
                         ? t('tabUpload')
@@ -3262,6 +3318,7 @@ function InteractivePreview({
     >
     <div
       ref={containerRef}
+      key={isDrinkware ? product.id : undefined}
       className={cn(
         'relative flex items-center justify-center rounded-sm touch-pan-y',
         compact
@@ -3647,6 +3704,7 @@ function EditorPanelContent({
   onGarmentFitChange,
   selectableColors,
   isDrinkware,
+  drinkwareBodyColors = [],
   compatibleDrinkwareProducts,
   onDrinkwareProductChange,
 }: {
@@ -3689,6 +3747,7 @@ function EditorPanelContent({
   onGarmentFitChange: (fit: GarmentFit) => void;
   selectableColors: string[];
   isDrinkware?: boolean;
+  drinkwareBodyColors?: string[];
   compatibleDrinkwareProducts?: Product[];
   onDrinkwareProductChange?: (productId: string) => void;
 }) {
@@ -3701,6 +3760,18 @@ function EditorPanelContent({
   const lowContrastPrimary = inksHaveLowContrast(primaryInk, shirtColor);
   const lowContrastSecondary =
     hasSecondaryInk && inksHaveLowContrast(secondaryInk, shirtColor);
+
+  if (panel === 'color') {
+    return (
+      <div className="space-y-4">
+        <DesignColorPicker
+          colors={drinkwareBodyColors}
+          value={color}
+          onChange={setColor}
+        />
+      </div>
+    );
+  }
 
   if (panel === 'product') {
     return (
@@ -4092,7 +4163,11 @@ function ProductOptions({
   onDrinkwareProductChange?: (productId: string) => void;
 }) {
   const t = useTranslations('products.customizer');
-  const colors = selectableColors?.length ? selectableColors : product.colors;
+  const colors = isDrinkware
+    ? getDrinkwareBodyColorOptions(product)
+    : selectableColors?.length
+      ? selectableColors
+      : product.colors;
 
   return (
     <>
@@ -4132,7 +4207,7 @@ function ProductOptions({
           onChange={onGarmentFitChange}
         />
       ) : null}
-      {colors && colors.length > 1 ? (
+      {!isDrinkware && colors && colors.length > 1 ? (
         <DesignColorPicker
           colors={colors}
           value={color}

@@ -5,6 +5,11 @@ import {
   type ProductType,
 } from '@/lib/data/catalog';
 import { isCylindricalDrinkwareType } from '@/lib/products/product-mockup-layout';
+import { getDrinkwareSublimationPatch } from '@/lib/products/drinkware-sublimation-patch';
+import {
+  DRINKWARE_GLASS_NAV_TYPE,
+  isDrinkwareGlassType,
+} from '@/lib/products/drinkware-type-groups';
 
 export function isDrinkwareProduct(product: Product): boolean {
   return isCylindricalDrinkwareType(product.type);
@@ -37,11 +42,29 @@ export type DrinkwareProductGroup = {
 export function groupDrinkwareProducts(
   items: Product[],
 ): DrinkwareProductGroup[] {
-  const order: ProductType[] = ['mug', 'cup', 'thermos'];
-  return order
-    .map((type) => ({
-      type,
-      products: items.filter((product) => product.type === type),
-    }))
-    .filter((group) => group.products.length > 0);
+  const glass = items.filter((product) => isDrinkwareGlassType(product.type));
+  const thermos = items.filter((product) => product.type === 'thermos');
+  const groups: DrinkwareProductGroup[] = [];
+
+  if (glass.length > 0) {
+    groups.push({ type: DRINKWARE_GLASS_NAV_TYPE, products: glass });
+  }
+  if (thermos.length > 0) {
+    groups.push({ type: 'thermos', products: thermos });
+  }
+
+  return groups;
+}
+
+/**
+ * Body-glaze swatches for the product sidebar.
+ * Patch mugs use a fixed body colour; other SKUs expose their full palette even
+ * when a loaded design only recommends one shirt/mug colour.
+ */
+export function getDrinkwareBodyColorOptions(product: Product): string[] {
+  const productColors = product.colors ?? [];
+  if (getDrinkwareSublimationPatch(product.id)) {
+    return productColors;
+  }
+  return productColors;
 }

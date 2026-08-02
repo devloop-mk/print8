@@ -27,8 +27,9 @@ import { useCart } from '@/components/cart/CartProvider';
 import { useRouter } from '@/i18n/navigation';
 import { DesignTemplatePreview } from '@/components/products/DesignTemplatePreview';
 import { DesignColorPicker } from '@/components/products/DesignColorPicker';
-import { CatalogGridLayout } from '@/components/catalog/CatalogGrid';
+import { CatalogGridLayout, getCatalogItemClassName, useOptionalCatalogGrid } from '@/components/catalog/CatalogGrid';
 import { resolveProductDesignDisplayName } from '@/lib/products/design-display-name';
+import { cn } from '@/lib/utils';
 import Image from 'next/image';
 
 type ProductDesignSectionProps = {
@@ -165,11 +166,17 @@ function DesignCard({
     t(key),
   );
 
+  const grid = useOptionalCatalogGrid();
   const canQuickOrder =
     isImageDesignTemplate(design) || isOverlayDesignTemplate(design);
 
   return (
-    <Card className="overflow-hidden p-0">
+    <Card
+      className={cn(
+        'overflow-hidden p-0',
+        getCatalogItemClassName(grid),
+      )}
+    >
       <div ref={previewRef}>
         {isTextDesignTemplate(design) || isOverlayDesignTemplate(design) ? (
           <DesignTemplatePreview

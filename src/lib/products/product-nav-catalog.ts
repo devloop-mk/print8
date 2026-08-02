@@ -12,8 +12,12 @@ import {
 import {
   getCategoryForProductType,
   getProductNavCategory,
+  getNavProductTypes,
   type ProductNavCategoryId,
 } from '@/lib/products/product-nav';
+import {
+  catalogTypesAreSameGroup,
+} from '@/lib/products/drinkware-type-groups';
 
 export async function getProductsForCategory(categoryId: ProductNavCategoryId) {
   const category = getProductNavCategory(categoryId);
@@ -49,10 +53,12 @@ export async function getSuggestedProductsForType(
 ): Promise<Product[]> {
   const visibility = await getProductVisibilityRecord();
   const parentCategory = getCategoryForProductType(currentType);
-  const siblingTypes = (parentCategory?.types ?? []).filter(
-    (type) => type !== currentType,
+  const siblingTypes = getNavProductTypes(parentCategory?.types ?? []).filter(
+    (type) => !catalogTypesAreSameGroup(type, currentType),
   );
-  const otherTypes = productTypes.filter((type) => type !== currentType);
+  const otherTypes = getNavProductTypes(productTypes).filter(
+    (type) => !catalogTypesAreSameGroup(type, currentType),
+  );
   const orderedTypes = [
     ...siblingTypes,
     ...otherTypes.filter((type) => !siblingTypes.includes(type)),

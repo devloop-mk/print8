@@ -11,7 +11,9 @@ import {
   ShoppingBag,
   type LucideIcon,
 } from 'lucide-react';
-import { productTypes, type ProductType } from '@/lib/data/catalog';
+import { type ProductType } from '@/lib/data/catalog';
+import { isProductTypeHiddenFromStorefront } from '@/lib/products/storefront-hidden-types';
+import { getStorefrontProductTypes } from '@/lib/products/drinkware-type-groups';
 
 export type ProductTypeFilterValue = ProductType | 'all';
 
@@ -42,7 +44,9 @@ export function buildProductTypeFilterOptions(
       label: label('all'),
       icon: getProductTypeIcon('all'),
     },
-    options: productTypes.map((type) => ({
+    options: getStorefrontProductTypes()
+      .filter((type) => !isProductTypeHiddenFromStorefront(type))
+      .map((type) => ({
       value: type,
       label: label(type),
       icon: getProductTypeIcon(type),

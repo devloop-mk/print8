@@ -29,7 +29,11 @@ export function DesignCustomizerStepNav<T extends string>({
       <ol
         className={cn(
           'grid w-full min-w-0 max-w-full gap-2',
-          steps.length === 4 ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-3 md:grid-cols-3',
+          steps.length >= 5
+            ? 'grid-cols-2 md:grid-cols-5'
+            : steps.length === 4
+              ? 'grid-cols-2 md:grid-cols-4'
+              : 'grid-cols-3 md:grid-cols-3',
         )}
       >
         {steps.map((item, index) => {

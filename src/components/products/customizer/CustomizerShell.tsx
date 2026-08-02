@@ -32,6 +32,7 @@ export function CustomizerShell({
   activePanel,
   onPanelChange,
   showDesignPanel,
+  showColorPanel,
   sides,
   activeSide,
   onSideChange,
@@ -54,6 +55,8 @@ export function CustomizerShell({
   activePanel: EditorPanel;
   onPanelChange: (panel: EditorPanel) => void;
   showDesignPanel: boolean;
+  /** Drinkware body-glaze swatches (classic mug white / blue / black). */
+  showColorPanel?: boolean;
   sides: ProductSide[];
   activeSide: ProductSide;
   onSideChange: (side: ProductSide) => void;
@@ -81,6 +84,12 @@ export function CustomizerShell({
       id: 'product' as const,
       label: t('tabProduct'),
       icon: <Shirt className="h-5 w-5" />,
+    },
+    {
+      id: 'color' as const,
+      label: t('tabColor'),
+      icon: <Palette className="h-5 w-5" />,
+      show: showColorPanel,
     },
     {
       id: 'text' as const,

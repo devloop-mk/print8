@@ -16,6 +16,7 @@ import {
   productBelongsToCategory,
   type ProductNavCategoryId,
 } from '@/lib/products/product-nav';
+import { productMatchesCatalogType } from '@/lib/products/drinkware-type-groups';
 import { resolveDesignProduct as resolveDesignProductByFit } from '@/lib/products/garment-fit';
 
 export type ProductDesignCatalogEntry = {
@@ -152,7 +153,9 @@ function matchesProductFilters(
   product: Product,
   filters: DesignCatalogFilters,
 ): boolean {
-  if (filters.type !== 'all' && product.type !== filters.type) return false;
+  if (filters.type !== 'all' && !productMatchesCatalogType(product, filters.type)) {
+    return false;
+  }
   if (
     filters.color !== 'all' &&
     !product.colors?.some(

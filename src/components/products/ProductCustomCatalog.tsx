@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { useRouter, Link } from '@/i18n/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { products, productTypes, type ProductType } from '@/lib/data/catalog';
+import { filterStorefrontHiddenProductTypes } from '@/lib/products/storefront-hidden-types';
 import { parseProductTypeFilter } from '@/lib/data/service-routes';
 import {
   getProductNavCategory,
@@ -16,6 +17,11 @@ import {
   productTypeHref,
   type ProductNavCategoryId,
 } from '@/lib/products/product-nav';
+import {
+  getCategoryCatalogFilterTypes,
+  normalizeProductTypeRoute,
+  productMatchesCatalogType,
+} from '@/lib/products/drinkware-type-groups';
 import { sortByDisplayOrder } from '@/lib/products/sort-by-display-order';
 import { buildProductTypeFilterOptions } from '@/lib/products/product-type-icons';
 import { PRODUCT_OFFERING_PATHS } from '@/lib/products/paths';
@@ -67,7 +73,7 @@ export function ProductCustomCatalog({
   useEffect(() => {
     const typeParam = searchParams.get('type');
     if (typeParam && (productTypes as readonly string[]).includes(typeParam)) {
-      router.replace(productTypeHref(typeParam as ProductType));
+      router.replace(productTypeHref(normalizeProductTypeRoute(typeParam as ProductType)));
       return;
     }
 
@@ -79,12 +85,13 @@ export function ProductCustomCatalog({
   }, [searchParams, router]);
 
   const scopedProducts = useMemo(() => {
-    const base =
+    const base = filterStorefrontHiddenProductTypes(
       categoryFilter === 'all'
         ? products
         : products.filter((product) =>
             productBelongsToCategory(product, categoryFilter),
-          );
+          ),
+    );
     return sortByDisplayOrder(base, displayOrder);
   }, [categoryFilter, displayOrder]);
 
@@ -95,7 +102,9 @@ export function ProductCustomCatalog({
 
     if (categoryFilter === 'all') return built;
 
-    const allowed = new Set(getProductNavCategory(categoryFilter).types);
+    const allowed = new Set(
+      getCategoryCatalogFilterTypes(getProductNavCategory(categoryFilter).types),
+    );
     return {
       allOption: built.allOption,
       options: built.options.filter((option) => allowed.has(option.value)),
@@ -105,7 +114,9 @@ export function ProductCustomCatalog({
   const filteredByType =
     typeFilter === 'all'
       ? scopedProducts
-      : scopedProducts.filter((product) => product.type === typeFilter);
+      : scopedProducts.filter((product) =>
+          productMatchesCatalogType(product, typeFilter),
+        );
 
   const filtered = useMemo(
     () =>

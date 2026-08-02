@@ -21,6 +21,7 @@ import {
   type CategoryMockupPreview,
 } from '@/lib/products/product-type-design-categories';
 import { sortByDisplayOrder } from '@/lib/products/sort-by-display-order';
+import { productMatchesCatalogType } from '@/lib/products/drinkware-type-groups';
 
 /** Shared TTL for pages that still use route-level revalidate. */
 export const CATALOG_CACHE_SECONDS = 21600;
@@ -32,7 +33,7 @@ export const CATALOG_CACHE_TAGS = {
 
 /** Per-request memoization for synchronous catalog reads (catalog array order). */
 export const getProductsByType = cache((type: ProductType): Product[] =>
-  products.filter((product) => product.type === type),
+  products.filter((product) => productMatchesCatalogType(product, type)),
 );
 
 export const getOrderedProductsByType = cache(

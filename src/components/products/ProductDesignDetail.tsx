@@ -36,8 +36,9 @@ import { capturePreviewElement } from '@/lib/products/capture-preview';
 import {
   buildCouplePackDetailUrl,
   buildCustomizerUrl,
-  PRODUCT_OFFERING_PATHS,
 } from '@/lib/products/paths';
+import { normalizeProductTypeRoute } from '@/lib/products/drinkware-type-groups';
+import { productTypeHref } from '@/lib/products/product-nav';
 import { getProductSpecs } from '@/lib/products/product-specs';
 import { cn, formatPrice } from '@/lib/utils';
 import { Card } from '@/components/ui/Card';
@@ -62,6 +63,7 @@ export function ProductDesignDetail({
   const td = useTranslations('products.detail');
   const tdp = useTranslations('products.designPdp');
   const tp = useTranslations('products.types');
+  const tTypesPlural = useTranslations('products.typesPlural');
   const tCustomizer = useTranslations('products.customizer');
   const locale = useLocale();
   const router = useRouter();
@@ -225,14 +227,14 @@ export function ProductDesignDetail({
     }
   }
 
-  const backType = preferredProductType ?? product.type;
-  const readyDesignsBackHref = `${PRODUCT_OFFERING_PATHS.readyDesigns}?type=${backType}`;
+  const backType = normalizeProductTypeRoute(preferredProductType ?? product.type);
+  const readyDesignsBackHref = productTypeHref(backType);
 
   return (
     <div className="space-y-10 pb-24 lg:pb-0">
       <ArchiveBackLink
         fallbackHref={readyDesignsBackHref}
-        label={tdp('backToReadyDesigns')}
+        label={tdp('backToType', { type: tTypesPlural(backType) })}
         className="hover:text-brand-600"
       />
 

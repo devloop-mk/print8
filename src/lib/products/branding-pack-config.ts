@@ -13,7 +13,6 @@ export const BRANDING_PACK_PRODUCT_TYPES: BrandingPackProductType[] = [
   'hoodie',
   'mug',
   'cap',
-  'thermos',
   'bag',
 ];
 

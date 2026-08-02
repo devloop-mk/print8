@@ -35,8 +35,17 @@ import {
   parseLayoutColorsFromCartMetadata,
   parseOrderFieldsFromCartMetadata,
 } from '@/lib/cart/design-cart';
+import { BusinessCardPrintOptions } from '@/components/designs/BusinessCardPrintOptions';
+import {
+  businessCardPrintMetadata,
+  DEFAULT_BUSINESS_CARD_LAMINATION,
+  DEFAULT_BUSINESS_CARD_PAPER,
+  parseBusinessCardPrintOptions,
+  type BusinessCardLamination,
+  type BusinessCardPaper,
+} from '@/lib/designs/business-card-print-options';
 import { cn } from '@/lib/utils';
-import { ChevronLeft, ChevronRight, Palette, FileText, Layers, ShoppingCart, Info } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Palette, FileText, Layers, ShoppingCart, Info, Layers2 } from 'lucide-react';
 
 const fieldInputType: Partial<
   Record<DesignOrderFieldId, 'text' | 'email' | 'tel' | 'url' | 'date' | 'textarea'>
@@ -49,11 +58,10 @@ const fieldInputType: Partial<
   address: 'textarea',
 };
 
-type EditorStep = 'front' | 'back' | 'colors' | 'review';
-
-const steps: EditorStep[] = ['front', 'back', 'colors', 'review'];
+type EditorStep = 'print' | 'front' | 'back' | 'colors' | 'review';
 
 const stepIcons: Record<EditorStep, typeof FileText> = {
+  print: Layers2,
   front: FileText,
   back: Layers,
   colors: Palette,
@@ -82,14 +90,28 @@ export function CustomizableDesignForm({
   const required = requiredOrderFields[template.category];
   const price = designCategoryPrices[template.category];
   const allFields = getLayoutFields(layout);
+  const isBusinessCard = template.category === 'business-cards';
+  const steps = useMemo<EditorStep[]>(
+    () =>
+      isBusinessCard
+        ? ['print', 'front', 'back', 'colors', 'review']
+        : ['front', 'back', 'colors', 'review'],
+    [isBusinessCard],
+  );
 
-  const [step, setStep] = useState<EditorStep>('front');
+  const [step, setStep] = useState<EditorStep>(
+    template.category === 'business-cards' ? 'print' : 'front',
+  );
   const [previewSide, setPreviewSide] = useState<'front' | 'back'>('front');
   const [colors, setColors] = useState<DesignColorTheme>(layout.defaultColors);
   const [values, setValues] = useState<
     Partial<Record<DesignOrderFieldId, string>>
   >(() => getDefaultFieldValues(allFields, layout.id));
   const [quantity, setQuantity] = useState(1);
+  const [paper, setPaper] = useState<BusinessCardPaper>(DEFAULT_BUSINESS_CARD_PAPER);
+  const [lamination, setLamination] = useState<BusinessCardLamination>(
+    DEFAULT_BUSINESS_CARD_LAMINATION,
+  );
   const [errors, setErrors] = useState<
     Partial<Record<DesignOrderFieldId, string>>
   >({});
@@ -119,6 +141,11 @@ export function CustomizableDesignForm({
       if (editingItem.quantity > 0) {
         setQuantity(editingItem.quantity);
       }
+      if (template.category === 'business-cards') {
+        const options = parseBusinessCardPrintOptions(editingItem.metadata);
+        setPaper(options.paper);
+        setLamination(options.lamination);
+      }
       setDraftHydrated(true);
       return;
     }
@@ -133,6 +160,7 @@ export function CustomizableDesignForm({
         setColors(payload.colors as DesignColorTheme);
       }
       if (
+        payload.step === 'print' ||
         payload.step === 'front' ||
         payload.step === 'back' ||
         payload.step === 'colors' ||
@@ -304,6 +332,9 @@ export function CustomizableDesignForm({
         backgroundColor: colors.background,
         textColor: colors.text,
         secondaryColor: colors.secondary,
+        ...(isBusinessCard
+          ? businessCardPrintMetadata({ paper, lamination })
+          : {}),
       };
 
       for (const field of allFields) {
@@ -549,6 +580,21 @@ export function CustomizableDesignForm({
 
         <div className="order-2 w-full max-w-full min-w-0">
           <Card className="w-full max-w-full min-w-0 p-5 sm:p-6">
+            {step === 'print' && isBusinessCard ? (
+              <div className="space-y-5">
+                <div>
+                  <h2 className="break-words text-xl font-bold text-ink-900">{t('steps.print.title')}</h2>
+                  <p className="mt-1 break-words text-sm text-ink-600">{t('steps.print.desc')}</p>
+                </div>
+                <BusinessCardPrintOptions
+                  paper={paper}
+                  lamination={lamination}
+                  onPaperChange={setPaper}
+                  onLaminationChange={setLamination}
+                />
+              </div>
+            ) : null}
+
             {step === 'front' && (
               <div className="space-y-4">
                 <div>

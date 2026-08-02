@@ -23,7 +23,8 @@
     "necessaryHelp": "Always on — cart, checkout, and security.",
     "analyticsTitle": "Analytics",
     "analyticsHelp": "Optional — helps us improve the site.",
-    "savePreferences": "Save choice"
+    "savePreferences": "Save choice",
+    "policyPageHint": "Read the policy above, then choose whether to accept cookies."
   },
   "privacy": {
     "title": "Privacy Policy",

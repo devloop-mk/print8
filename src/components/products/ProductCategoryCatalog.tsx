@@ -11,6 +11,10 @@ import {
   productNavCategories,
   type ProductNavCategoryId,
 } from '@/lib/products/product-nav';
+import {
+  getCategoryCatalogFilterTypes,
+  productMatchesCatalogType,
+} from '@/lib/products/drinkware-type-groups';
 import { useVisibleProductTypes } from '@/components/layout/ProductVisibilityProvider';
 import { sortByDisplayOrder } from '@/lib/products/sort-by-display-order';
 import { getProductTypeIcon } from '@/lib/products/product-type-icons';
@@ -69,7 +73,7 @@ export function ProductCategoryCatalog({
 
   const filterOptions = useMemo(
     () =>
-      category.types
+      getCategoryCatalogFilterTypes(category.types)
         .filter((type) => !visibleTypeSet || visibleTypeSet.has(type))
         .map((type) => ({
           value: type,
@@ -82,7 +86,9 @@ export function ProductCategoryCatalog({
   const filteredByType =
     typeFilter === 'all'
       ? sortedCategoryProducts
-      : sortedCategoryProducts.filter((product) => product.type === typeFilter);
+      : sortedCategoryProducts.filter((product) =>
+          productMatchesCatalogType(product, typeFilter),
+        );
 
   const filtered = useMemo(
     () =>

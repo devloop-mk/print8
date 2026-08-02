@@ -314,7 +314,7 @@ export function ProductTypeReadyDesignsSection({
           <p className="mt-2 text-ink-600">{tt('readyDesignsSubtitle')}</p>
         </div>
         <Link
-          href={`${PRODUCT_OFFERING_PATHS.readyDesigns}?type=${type}`}
+          href={PRODUCT_OFFERING_PATHS.readyDesigns}
           className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 transition hover:text-brand-700"
         >
           {tt('viewAllReadyDesigns')}

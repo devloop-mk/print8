@@ -94,7 +94,10 @@ function CaptureScene({
   return (
     <Canvas
       gl={{ antialias: true, alpha: true, preserveDrawingBuffer: true }}
-      camera={{ position: [0.65, 0.14, config.cameraZ], fov: 32 }}
+      camera={{
+        position: config.cameraPosition ?? [0.65, 0.14, config.cameraZ],
+        fov: 32,
+      }}
       frameloop="demand"
       dpr={1}
       style={{ width: CAPTURE_PX, height: CAPTURE_PX }}

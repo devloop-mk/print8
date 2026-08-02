@@ -5,6 +5,7 @@ import {
   type ProductType,
 } from '@/lib/data/catalog';
 import { PRODUCT_OFFERING_PATHS } from '@/lib/products/paths';
+import { productTypeHref } from '@/lib/products/product-nav';
 import { resolveDesignPreviewColor } from '@/lib/products/design-applicable-colors';
 import { resolveDesignProduct } from '@/lib/products/garment-fit';
 import { resolveStaticProductDesignTemplate } from '@/lib/products/resolve-product-design-template';
@@ -57,42 +58,42 @@ const TYPE_DESIGN_CATEGORIES: Partial<
     },
     {
       id: 'family',
-      href: `${PRODUCT_OFFERING_PATHS.readyDesigns}?collection=family&type=t-shirt`,
+      href: productTypeHref('t-shirt', { collection: 'family' }),
       previewDesignId: 'tee-family-newspaper-dad',
     },
     {
       id: 'streetwear',
-      href: `${PRODUCT_OFFERING_PATHS.readyDesigns}?collection=streetwear&type=t-shirt`,
+      href: productTypeHref('t-shirt', { collection: 'streetwear' }),
       previewDesignId: 'tee-sw-streetwear-377',
     },
     {
       id: 'chemistryDrama',
-      href: `${PRODUCT_OFFERING_PATHS.readyDesigns}?collection=chemistry-drama&type=t-shirt`,
+      href: productTypeHref('t-shirt', { collection: 'chemistry-drama' }),
       previewDesignId: 'tee-chem-walter-heisenberg',
     },
     {
       id: 'stranger80s',
-      href: `${PRODUCT_OFFERING_PATHS.readyDesigns}?collection=stranger-80s&type=t-shirt`,
+      href: productTypeHref('t-shirt', { collection: 'stranger-80s' }),
       previewDesignId: 'tee-str80-demogorgon',
     },
     {
       id: 'zombieSurvival',
-      href: `${PRODUCT_OFFERING_PATHS.readyDesigns}?collection=zombie-survival&type=t-shirt`,
+      href: productTypeHref('t-shirt', { collection: 'zombie-survival' }),
       previewDesignId: 'tee-zombie-zombie-horde',
     },
     {
       id: 'cartelCrime',
-      href: `${PRODUCT_OFFERING_PATHS.readyDesigns}?collection=cartel-crime&type=t-shirt`,
+      href: productTypeHref('t-shirt', { collection: 'cartel-crime' }),
       previewDesignId: 'tee-cartel-kingpin-portrait',
     },
     {
       id: 'mkSlang',
-      href: `${PRODUCT_OFFERING_PATHS.readyDesigns}?collection=mk-slang&type=t-shirt`,
+      href: productTypeHref('t-shirt', { collection: 'mk-slang' }),
       previewDesignId: 'tee-mk-mangupka',
     },
     {
       id: 'mkRetroPlates',
-      href: `${PRODUCT_OFFERING_PATHS.readyDesigns}?collection=mk-retro-plates&type=t-shirt`,
+      href: productTypeHref('t-shirt', { collection: 'mk-retro-plates' }),
       previewDesignId: 'tee-retro-klasika-skopje',
     },
   ],
@@ -104,29 +105,29 @@ const TYPE_DESIGN_CATEGORIES: Partial<
     },
     {
       id: 'family',
-      href: `${PRODUCT_OFFERING_PATHS.readyDesigns}?collection=family&type=hoodie`,
+      href: productTypeHref('hoodie', { collection: 'family' }),
       previewDesignId: 'tee-family-newspaper-mom',
     },
     {
       id: 'streetwear',
-      href: `${PRODUCT_OFFERING_PATHS.readyDesigns}?collection=streetwear&type=hoodie`,
+      href: productTypeHref('hoodie', { collection: 'streetwear' }),
       previewDesignId: 'tee-sw-streetwear-411',
     },
     {
       id: 'trendingMk',
-      href: `${PRODUCT_OFFERING_PATHS.readyDesigns}?collection=trending-mk&type=hoodie`,
+      href: productTypeHref('hoodie', { collection: 'trending-mk' }),
       previewDesignId: 'tee-trend-skopje-1963',
     },
     {
       id: 'chemistryDrama',
-      href: `${PRODUCT_OFFERING_PATHS.readyDesigns}?collection=chemistry-drama&type=hoodie`,
+      href: productTypeHref('hoodie', { collection: 'chemistry-drama' }),
       previewDesignId: 'tee-chem-walter-heisenberg',
     },
   ],
   bodysuit: [
     {
       id: 'babyMilestones',
-      href: `${PRODUCT_OFFERING_PATHS.readyDesigns}?collection=baby-milestones&type=bodysuit`,
+      href: productTypeHref('bodysuit', { collection: 'baby-milestones' }),
       previewDesignId: 'baby-hello-world',
     },
     {

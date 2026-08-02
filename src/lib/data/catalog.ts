@@ -11,6 +11,7 @@ import { kidsBirthdayPackTemplates } from '@/lib/data/kids-birthday-pack';
 import { kidsGeneratedPackTemplates } from '@/lib/data/kids-generated-pack';
 import { dualSideGeneratedPackTemplates } from '@/lib/data/dual-side-generated-pack';
 import { localMkDrinkwarePackTemplates } from '@/lib/data/local-mk-drinkware-pack';
+import { mkFolkPackTemplates } from '@/lib/data/mk-folk-pack';
 import { mkMugsPackTemplates } from '@/lib/data/mk-mugs-pack';
 import { capPackTemplates } from '@/lib/data/cap-pack';
 import { bagPackTemplates } from '@/lib/data/bag-pack';
@@ -1225,6 +1226,7 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
   ...streetwearPackTemplates,
   ...drinkwarePackTemplates,
   ...localMkDrinkwarePackTemplates,
+  ...mkFolkPackTemplates,
   ...mkMugsPackTemplates,
   ...capPackTemplates,
   ...bagPackTemplates,

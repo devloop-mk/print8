@@ -57,6 +57,7 @@ const COLLECTION_LABELS: Record<string, { en: string; mk: string }> = {
   'mk-slang': { en: 'MK Slang', mk: 'МК сленг' },
   'mk-retro-plates': { en: 'MK Retro Plates', mk: 'МК ретро таблици' },
   'mk-mugs': { en: 'MK Mugs', mk: 'МК шолји' },
+  'mk-folk': { en: 'MK Folk', mk: 'МК фолклор' },
   family: { en: 'Family', mk: 'Семејство' },
   'kids-birthday': { en: 'Kids & birthday', mk: 'Деца и роденден' },
   'local-mk': { en: 'Local designs', mk: 'Локални дизајни' },

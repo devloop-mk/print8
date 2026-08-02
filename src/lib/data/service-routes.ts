@@ -1,6 +1,7 @@
 import type { DesignCategory, ProductType, Service } from "@/lib/data/catalog";
 import { productTypes, designCategories } from "@/lib/data/catalog";
 import { productTypeHref } from "@/lib/products/product-nav";
+import { normalizeProductTypeRoute } from "@/lib/products/drinkware-type-groups";
 
 function isProductType(value: string): value is ProductType {
   return (productTypes as readonly string[]).includes(value);
@@ -30,7 +31,9 @@ export function getServiceDestination(service: Service): string | null {
 export function parseProductTypeFilter(
   value: string | null,
 ): ProductType | "all" {
-  if (value && isProductType(value)) return value;
+  if (value && isProductType(value)) {
+    return normalizeProductTypeRoute(value);
+  }
   return "all";
 }
 

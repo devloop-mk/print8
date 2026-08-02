@@ -15,6 +15,13 @@ export const promoBannerSlides: PromoBannerSlide[] = [
     imageMobile: '/banners/banner-mobile-apparel.png',
   },
   {
+    id: 'students',
+    href: '/students/print',
+    imageDesktop: '/banners/banner-desktop-students.png',
+    imageMobile: '/banners/banner-mobile-students.png',
+    mobileObjectPosition: 'center 42%',
+  },
+  {
     id: 'branding',
     href: '/products/branding-pack',
     imageDesktop: '/banners/banner-desktop-branding.png',
@@ -50,11 +57,5 @@ export const promoBannerSlides: PromoBannerSlide[] = [
     href: '/products',
     imageDesktop: '/banners/banner-desktop-coupons.png',
     imageMobile: '/banners/banner-mobile-coupons.png',
-  },
-  {
-    id: 'cod',
-    href: '/how-to-order',
-    imageDesktop: '/banners/banner-desktop-cod.png',
-    imageMobile: '/banners/banner-mobile-cod.png',
   },
 ];

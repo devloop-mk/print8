@@ -68,6 +68,10 @@ export function buildPageMetadata({
   return {
     metadataBase: new URL(siteUrl),
     applicationName: 'Print 8',
+    icons: {
+      icon: [{ url: '/favicon.png', type: 'image/png' }],
+      apple: [{ url: '/favicon.png', type: 'image/png' }],
+    },
     title,
     description,
     alternates: {

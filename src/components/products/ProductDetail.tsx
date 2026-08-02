@@ -9,7 +9,6 @@ import { getProductDisplayPrice } from '@/lib/products/tshirt-print-pricing';
 import { getColorSwatchDisplayHex } from '@/lib/products/product-color-labels';
 import {
   getProductPaths,
-  PRODUCT_OFFERING_PATHS,
 } from '@/lib/products/paths';
 import { formatPrice } from '@/lib/utils';
 import { Card } from '@/components/ui/Card';
@@ -43,7 +42,7 @@ export function ProductDetail({ productId }: { productId: string }) {
   }
 
   const paths = getProductPaths(product.id, product.type, { color, size });
-  const readyDesignsHref = `${PRODUCT_OFFERING_PATHS.readyDesigns}?type=${product.type}`;
+  const readyDesignsHref = paths.premadeDesigns;
   const productLabel = product.nameKey
     ? ti(product.nameKey)
     : tp(product.type);

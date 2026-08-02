@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { ArrowRight, ImageIcon, Palette } from 'lucide-react';
 import { Reveal } from '@/components/motion/Reveal';
-import { getProductPaths, PRODUCT_OFFERING_PATHS } from '@/lib/products/paths';
+import { getProductPaths } from '@/lib/products/paths';
 import type { ProductOffering } from '@/lib/products/offering';
 import { cn } from '@/lib/utils';
 
@@ -56,7 +56,7 @@ export function ProductPathChooser({
       badge: t('badgePremade'),
       cta: t('premadeCta'),
       meta: t('countPremade', { count: offering.premadeCount }),
-      href: `${PRODUCT_OFFERING_PATHS.readyDesigns}?type=${productType}`,
+      href: paths.premadeDesigns,
       show: offering.hasPremade,
       featured: offering.hasPremade,
       primary: false,

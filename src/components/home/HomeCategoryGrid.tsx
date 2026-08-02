@@ -43,7 +43,7 @@ type CategoryTile =
   | {
       id: string;
       kind: 'category';
-      categoryId: 'bags' | 'gifts';
+      categoryId: 'bags';
       image: string;
       hoverImage?: string;
       hoverImageClassName?: string;
@@ -73,26 +73,14 @@ const categoryTiles: CategoryTile[] = [
     },
   },
   {
-    id: 'mug',
+    id: 'cup',
     kind: 'type',
-    type: 'mug',
+    type: 'cup',
     image: '/mugs/mug-white-classic-v2.jpg',
-    // Local hover-only: keep art on the cylinder face, clear of the handle.
     designOverlay: {
       src: '/NEW_DESIGNS/drinkware/mug-coffee-time.png',
       position: { x: 45, y: 46 },
       scale: 24,
-    },
-  },
-  {
-    id: 'cup',
-    kind: 'type',
-    type: 'cup',
-    image: '/cups/cup-glass-beer.jpg',
-    designOverlay: {
-      src: '/NEW_DESIGNS/drinkware/mug-cheers-beer.png',
-      position: { x: 45, y: 46 },
-      scale: 26,
     },
   },
   {
@@ -116,10 +104,9 @@ const categoryTiles: CategoryTile[] = [
     },
   },
   {
-    id: 'gifts',
-    kind: 'category',
-    categoryId: 'gifts',
-    // Pre-hover showcase photo (ceramic heart with print) — better than plain glass.
+    id: 'magnet',
+    kind: 'type',
+    type: 'magnet',
     image: '/magnets/magnet-ceramic-heart.jpg',
   },
   {

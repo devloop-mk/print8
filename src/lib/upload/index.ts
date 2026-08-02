@@ -4,17 +4,19 @@ import { formatSupabaseError } from '@/lib/supabase/client';
 import { putUploadObject } from '@/lib/storage/object-storage';
 import { validateUploadBuffer } from '@/lib/security/validate-upload-content';
 import sharp from 'sharp';
+import {
+  ALLOWED_MIME_TYPES,
+  MAX_FILE_SIZE,
+  MAX_PRINT_FILE_SIZE,
+  MAX_UPLOADS_PER_SESSION,
+} from '@/lib/upload/constants';
 
-export const MAX_FILE_SIZE = 10 * 1024 * 1024;
-/** High-res print PNGs from the customizer can exceed the standard upload cap. */
-export const MAX_PRINT_FILE_SIZE = 25 * 1024 * 1024;
-export const MAX_UPLOADS_PER_SESSION = 25;
-export const ALLOWED_MIME_TYPES = [
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'application/pdf',
-];
+export {
+  ALLOWED_MIME_TYPES,
+  MAX_FILE_SIZE,
+  MAX_PRINT_FILE_SIZE,
+  MAX_UPLOADS_PER_SESSION,
+} from '@/lib/upload/constants';
 
 function resolveMimeType(file: File): string {
   if (file.type && ALLOWED_MIME_TYPES.includes(file.type)) {

@@ -5,8 +5,13 @@ import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { getBrowsableProducts, productTypes, type ProductType } from '@/lib/data/catalog';
+import { filterStorefrontHiddenProductTypes } from '@/lib/products/storefront-hidden-types';
 import { parseProductTypeFilter } from '@/lib/data/service-routes';
 import { productTypeHref } from '@/lib/products/product-nav';
+import {
+  normalizeProductTypeRoute,
+  productMatchesCatalogType,
+} from '@/lib/products/drinkware-type-groups';
 import { sortByDisplayOrder } from '@/lib/products/sort-by-display-order';
 import { buildProductTypeFilterOptions } from '@/lib/products/product-type-icons';
 import { ProductCardGrid } from '@/components/products/ProductCardGrid';
@@ -35,7 +40,7 @@ export function ProductsCatalog({
   useEffect(() => {
     const typeParam = searchParams.get('type');
     if (typeParam && isProductType(typeParam)) {
-      router.replace(productTypeHref(typeParam));
+      router.replace(productTypeHref(normalizeProductTypeRoute(typeParam)));
       return;
     }
     setTypeFilter(parseProductTypeFilter(typeParam));
@@ -50,10 +55,13 @@ export function ProductsCatalog({
   );
 
   const filtered = useMemo(() => {
-    const browsable = sortByDisplayOrder(getBrowsableProducts(), displayOrder);
+    const browsable = sortByDisplayOrder(
+      filterStorefrontHiddenProductTypes(getBrowsableProducts()),
+      displayOrder,
+    );
     return typeFilter === 'all'
       ? browsable
-      : browsable.filter((p) => p.type === typeFilter);
+      : browsable.filter((p) => productMatchesCatalogType(p, typeFilter));
   }, [displayOrder, typeFilter]);
 
   return (

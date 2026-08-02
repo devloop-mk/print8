@@ -17,6 +17,8 @@ export type Drinkware3DConfig = {
   lidHeight: number;
   /** Default camera distance */
   cameraZ: number;
+  /** Optional full camera position override (x, y, z). */
+  cameraPosition?: [number, number, number];
   /**
    * Fraction of the cylinder circumference reserved for the handle seam.
    * Cleared in the wrap texture (left+right edges) so art never prints under the handle.

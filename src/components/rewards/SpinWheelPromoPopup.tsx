@@ -100,7 +100,7 @@ export function SpinWheelPromoPopup() {
   return (
     <div className="fixed inset-0 z-[45] flex items-center justify-center bg-ink-950/40 p-3 sm:p-6">
       <div
-        className="relative w-full max-w-md border border-brand-200 bg-white p-5 shadow-xl sm:p-6"
+        className="relative w-full max-w-lg border border-brand-200 bg-white p-5 shadow-xl sm:p-6"
         role="dialog"
         aria-modal="true"
         aria-labelledby="spin-promo-title"
@@ -115,8 +115,8 @@ export function SpinWheelPromoPopup() {
         </button>
 
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-          <div className="mx-auto flex justify-center pt-1 sm:mx-0 sm:w-[168px] sm:shrink-0">
-            <SpinWheelPreview size={168} />
+          <div className="mx-auto flex justify-center pt-1 sm:mx-0 sm:w-[220px] sm:shrink-0">
+            <SpinWheelPreview size={220} />
           </div>
 
           <div className="min-w-0 flex-1">

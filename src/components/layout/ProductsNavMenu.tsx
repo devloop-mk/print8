@@ -8,6 +8,7 @@ import {
   productNavQuickLinks,
   productCategoryHref,
   productTypeHref,
+  getNavProductTypes,
 } from '@/lib/products/product-nav';
 import { getProductTypeIcon } from '@/lib/products/product-type-icons';
 import type { ProductType } from '@/lib/data/catalog';
@@ -74,8 +75,10 @@ export function ProductsNavMenu({
         <div className={cn('mt-3 space-y-4', isMobile && 'space-y-3')}>
           {productNavCategories.map((category) => {
             const visibleTypes = visibleTypeSet
-              ? category.types.filter((type) => visibleTypeSet.has(type))
-              : category.types;
+              ? getNavProductTypes(category.types).filter((type) =>
+                  visibleTypeSet.has(type),
+                )
+              : getNavProductTypes(category.types);
             if (visibleTypes.length === 0) return null;
 
             const CategoryIcon = category.icon;

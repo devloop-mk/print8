@@ -5,6 +5,8 @@ import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import {
   Cake,
+  ChevronLeft,
+  ChevronRight,
   CreditCard,
   Heart,
   ImageIcon,
@@ -30,6 +32,14 @@ import {
   type CustomDesignCategoryId,
   type CustomDesignProductTarget,
 } from '@/lib/data/custom-design-order';
+import { BusinessCardPrintOptions } from '@/components/designs/BusinessCardPrintOptions';
+import {
+  businessCardPrintMetadata,
+  DEFAULT_BUSINESS_CARD_LAMINATION,
+  DEFAULT_BUSINESS_CARD_PAPER,
+  type BusinessCardLamination,
+  type BusinessCardPaper,
+} from '@/lib/designs/business-card-print-options';
 
 const CATEGORY_ICONS: Record<CustomDesignCategoryId, LucideIcon> = {
   'business-cards': CreditCard,
@@ -55,6 +65,7 @@ type FormErrors = Partial<Record<keyof FormState | 'form', string>>;
 
 export function CustomDesignOrderForm() {
   const t = useTranslations('designs.customOrder');
+  const to = useTranslations('designs.order');
   const locale = useLocale();
   const router = useRouter();
   const { addItem } = useCart();
@@ -73,6 +84,14 @@ export function CustomDesignOrderForm() {
   const [referenceFileIds, setReferenceFileIds] = useState<string[]>([]);
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
+  const [paper, setPaper] = useState<BusinessCardPaper>(DEFAULT_BUSINESS_CARD_PAPER);
+  const [lamination, setLamination] = useState<BusinessCardLamination>(
+    DEFAULT_BUSINESS_CARD_LAMINATION,
+  );
+  const [businessCardStep, setBusinessCardStep] = useState<'print' | 'details'>('print');
+  const isBusinessCard = form.category === 'business-cards';
+  const showPrintStep = isBusinessCard && businessCardStep === 'print';
+  const showDetails = !isBusinessCard || businessCardStep === 'details';
 
   const unitPrice = useMemo(
     () =>
@@ -85,6 +104,9 @@ export function CustomDesignOrderForm() {
   function updateField<K extends keyof FormState>(field: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: undefined, form: undefined }));
+    if (field === 'category') {
+      setBusinessCardStep(value === 'business-cards' ? 'print' : 'details');
+    }
   }
 
   function validate(): boolean {
@@ -131,6 +153,9 @@ export function CustomDesignOrderForm() {
         customDesignCategory: form.category,
         targetProduct: form.targetProduct,
         designBrief: form.designBrief.trim(),
+        ...(isBusinessCard
+          ? businessCardPrintMetadata({ paper, lamination })
+          : {}),
       };
 
       if (form.styleNotes.trim()) {
@@ -220,6 +245,67 @@ export function CustomDesignOrderForm() {
           ) : null}
         </section>
 
+        {isBusinessCard ? (
+          <nav aria-label={to('stepsNav')} className="-mt-2">
+            <ol className="flex flex-wrap gap-2">
+              {(['print', 'details'] as const).map((item, index) => {
+                const isActive = businessCardStep === item;
+                const isDone = businessCardStep === 'details' && item === 'print';
+                return (
+                  <li key={item}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (item === 'print' || businessCardStep === 'details') {
+                          setBusinessCardStep(item);
+                        }
+                      }}
+                      aria-current={isActive ? 'step' : undefined}
+                      className={cn(
+                        'rounded-full border px-3 py-1.5 text-xs font-semibold transition sm:text-sm',
+                        isActive
+                          ? 'border-brand-600 bg-brand-50 text-brand-700'
+                          : isDone
+                            ? 'border-brand-200 bg-brand-50/60 text-brand-600 hover:border-brand-500'
+                            : 'border-ink-200 bg-white text-ink-500',
+                      )}
+                    >
+                      <span className="mr-1.5 tabular-nums">{index + 1}.</span>
+                      {to(`steps.${item}`)}
+                    </button>
+                  </li>
+                );
+              })}
+            </ol>
+          </nav>
+        ) : null}
+
+        {showPrintStep ? (
+          <section className="space-y-5">
+            <div>
+              <h2 className="text-lg font-bold text-ink-900">{to('printStepTitle')}</h2>
+              <p className="mt-1 text-sm text-ink-600">{to('printStepSubtitle')}</p>
+            </div>
+            <BusinessCardPrintOptions
+              paper={paper}
+              lamination={lamination}
+              onPaperChange={setPaper}
+              onLaminationChange={setLamination}
+            />
+            <Button
+              type="button"
+              size="lg"
+              className="w-full gap-1 sm:w-auto"
+              onClick={() => setBusinessCardStep('details')}
+            >
+              {to('nextStep')}
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          </section>
+        ) : null}
+
+        {showDetails ? (
+          <>
         <section className="space-y-4">
           <div>
             <h2 className="text-lg font-bold text-ink-900">{t('productTitle')}</h2>
@@ -380,9 +466,25 @@ export function CustomDesignOrderForm() {
           </p>
         ) : null}
 
-        <Button type="submit" size="lg" disabled={submitting} className="w-full sm:w-auto">
-          {submitting ? t('submitting') : t('submit')}
-        </Button>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          {isBusinessCard ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              className="w-full gap-1 sm:w-auto"
+              onClick={() => setBusinessCardStep('print')}
+            >
+              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+              {to('prevStep')}
+            </Button>
+          ) : null}
+          <Button type="submit" size="lg" disabled={submitting} className="w-full sm:w-auto">
+            {submitting ? t('submitting') : t('submit')}
+          </Button>
+        </div>
+          </>
+        ) : null}
       </form>
 
       <aside className="lg:sticky lg:top-24 lg:self-start">

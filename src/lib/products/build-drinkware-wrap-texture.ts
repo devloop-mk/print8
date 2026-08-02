@@ -165,9 +165,12 @@ function clearHandleGap(
   paintCeramicRect(ctx, color, 0, 0, edgePx, height, height);
   paintCeramicRect(ctx, color, width - edgePx, 0, edgePx, height, height);
 
-  // Make leftmost / rightmost columns identical so UV seam filtering doesn't crack.
-  const left = ctx.getImageData(0, 0, 1, height);
-  ctx.putImageData(left, width - 1, 0);
+  // Mirror the left seam strip onto the right edge so u=0/u=1 filtering stays ceramic.
+  const seamBleedPx = Math.min(4, edgePx);
+  for (let col = 0; col < seamBleedPx; col++) {
+    const strip = ctx.getImageData(col, 0, 1, height);
+    ctx.putImageData(strip, width - seamBleedPx + col, 0);
+  }
 }
 
 /**

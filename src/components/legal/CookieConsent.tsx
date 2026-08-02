@@ -3,24 +3,36 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { ChevronDown } from 'lucide-react';
-import { Link } from '@/i18n/navigation';
+import { Link, usePathname } from '@/i18n/navigation';
 import {
   getCookieConsent,
   setCookieConsent,
   type CookieConsentValue,
 } from '@/lib/legal/cookie-consent';
+import { isCookieConsentRelatedPath } from '@/lib/legal/pages';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 
 export function CookieConsent() {
   const t = useTranslations('legal.consent');
+  const pathname = usePathname();
   const [visible, setVisible] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [analyticsEnabled, setAnalyticsEnabled] = useState(true);
+  const onPolicyPage = isCookieConsentRelatedPath(pathname);
 
   useEffect(() => {
     setVisible(getCookieConsent() === null);
   }, []);
+
+  useEffect(() => {
+    if (!visible || !onPolicyPage) return;
+
+    document.body.classList.add('cookie-consent-compact');
+    return () => {
+      document.body.classList.remove('cookie-consent-compact');
+    };
+  }, [visible, onPolicyPage]);
 
   function respond(value: CookieConsentValue) {
     setCookieConsent(value);
@@ -29,27 +41,37 @@ export function CookieConsent() {
 
   if (!visible) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink-950/35 p-3 sm:items-center sm:p-6">
+  const panel = (
       <div
-        className="w-full max-w-lg rounded-2xl border border-ink-200 bg-white p-5 shadow-xl sm:p-6"
+        className={cn(
+          'border border-ink-200 bg-white shadow-xl',
+          onPolicyPage
+            ? 'w-full rounded-none border-x-0 border-b-0 p-4 sm:p-5'
+            : 'w-full max-w-lg rounded-2xl p-5 sm:p-6',
+        )}
         role="dialog"
-        aria-modal="true"
+        aria-modal={!onPolicyPage}
         aria-labelledby="cookie-consent-title"
       >
         <p id="cookie-consent-title" className="text-lg font-semibold text-ink-900">
           {t('title')}
         </p>
-        <p className="mt-2 text-sm leading-relaxed text-ink-600">{t('description')}</p>
-        <p className="mt-2 text-sm">
-          <Link href="/cookies" className="font-medium text-brand-600 hover:text-brand-700">
-            {t('learnMore')}
-          </Link>
-          {' · '}
-          <Link href="/privacy" className="font-medium text-brand-600 hover:text-brand-700">
-            {t('privacyLink')}
-          </Link>
-        </p>
+        {!onPolicyPage ? (
+          <>
+            <p className="mt-2 text-sm leading-relaxed text-ink-600">{t('description')}</p>
+            <p className="mt-2 text-sm">
+              <Link href="/cookies" className="font-medium text-brand-600 hover:text-brand-700">
+                {t('learnMore')}
+              </Link>
+              {' · '}
+              <Link href="/privacy" className="font-medium text-brand-600 hover:text-brand-700">
+                {t('privacyLink')}
+              </Link>
+            </p>
+          </>
+        ) : (
+          <p className="mt-1 text-sm text-ink-600">{t('policyPageHint')}</p>
+        )}
 
         <button
           type="button"
@@ -110,7 +132,12 @@ export function CookieConsent() {
           </div>
         ) : null}
 
-        <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <div
+          className={cn(
+            'mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end',
+            onPolicyPage && 'mt-4 sm:mt-3',
+          )}
+        >
           <Button type="button" variant="outline" onClick={() => respond('rejected')}>
             {t('reject')}
           </Button>
@@ -119,6 +146,19 @@ export function CookieConsent() {
           </Button>
         </div>
       </div>
+  );
+
+  if (onPolicyPage) {
+    return (
+      <div className="fixed inset-x-0 bottom-0 z-50">
+        <div className="mx-auto max-w-7xl">{panel}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink-950/35 p-3 sm:items-center sm:p-6">
+      {panel}
     </div>
   );
 }

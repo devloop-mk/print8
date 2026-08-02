@@ -11,6 +11,10 @@ import {
 } from 'lucide-react';
 import type { ProductType } from '@/lib/data/catalog';
 import { PRODUCT_OFFERING_PATHS } from '@/lib/products/paths';
+import {
+  getNavProductTypes as collapseDrinkwareGlassNavTypes,
+  normalizeProductTypeRoute,
+} from '@/lib/products/drinkware-type-groups';
 
 export type ProductNavCategoryId =
   | 'apparel'
@@ -96,6 +100,10 @@ export const productNavQuickLinks: ProductNavQuickLink[] = [
   },
 ];
 
+export function getNavProductTypes(types: ProductType[]): ProductType[] {
+  return collapseDrinkwareGlassNavTypes(types);
+}
+
 export function isProductNavCategoryId(
   value: string,
 ): value is ProductNavCategoryId {
@@ -152,8 +160,14 @@ export function parseProductNavCategoryFilter(
   return 'all';
 }
 
-export function productTypeHref(type: ProductType): string {
-  return `/products/type/${encodeURIComponent(type)}`;
+export function productTypeHref(
+  type: ProductType,
+  options?: { collection?: string },
+): string {
+  const catalogType = normalizeProductTypeRoute(type);
+  const base = `/products/type/${encodeURIComponent(catalogType)}`;
+  if (!options?.collection) return base;
+  return `${base}?collection=${encodeURIComponent(options.collection)}`;
 }
 
 export function isProductsNavActive(pathname: string): boolean {

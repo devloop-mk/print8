@@ -9,8 +9,10 @@ import {
   productNavCategories,
   productCategoryHref,
   productTypeHref,
+  getNavProductTypes,
   type ProductNavCategoryId,
 } from '@/lib/products/product-nav';
+import { useVisibleProductTypes } from '@/components/layout/ProductVisibilityProvider';
 import { getProductTypeIcon } from '@/lib/products/product-type-icons';
 
 const SLIDE_INTERVAL_MS = 1400;
@@ -31,9 +33,9 @@ const categoryMeta: Record<
   drinkware: {
     images: [
       '/mugs/mug-milkyblue.jpg',
-      '/thermoses/thermos-blue.jpg',
       '/cups/cup-glass-beer.jpg',
       '/mugs/mug-heart-handle.jpg',
+      '/mugs/mug-white-classic-v2.jpg',
     ],
     accent: 'from-sky-900/80',
   },
@@ -148,17 +150,24 @@ export function FeaturedProductCategories() {
   const tc = useTranslations('products.categoryPages');
   const tp = useTranslations('products.typesPlural');
   const t = useTranslations('home.featuredCategories');
+  const visibleProductTypes = useVisibleProductTypes();
+  const visibleTypeSet = visibleProductTypes
+    ? new Set(visibleProductTypes)
+    : null;
 
   return (
     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
       {productNavCategories.map((category) => {
         const meta = categoryMeta[category.id];
+        const types = getNavProductTypes(category.types).filter(
+          (type) => !visibleTypeSet || visibleTypeSet.has(type),
+        );
 
         return (
           <CategoryCard
             key={category.id}
             categoryId={category.id}
-            types={category.types}
+            types={types}
             meta={meta}
             title={tNav(category.id)}
             subtitle={tc(`${category.id}.subtitle`)}

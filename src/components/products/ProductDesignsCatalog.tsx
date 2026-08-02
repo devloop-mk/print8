@@ -19,6 +19,11 @@ import {
   type ProductNavCategoryId,
 } from '@/lib/products/product-nav';
 import {
+  designPackMatchesCatalogType,
+  getCategoryCatalogFilterTypes,
+  normalizeProductTypeRoute,
+} from '@/lib/products/drinkware-type-groups';
+import {
   filterDesignCatalogEntries,
   getCatalogColors,
   getProductDesignCatalogEntries,
@@ -87,6 +92,7 @@ const COLLECTION_LABELS: Record<string, { en: string; mk: string }> = {
   'mk-slang': { en: 'MK Slang', mk: 'МК сленг' },
   'mk-retro-plates': { en: 'MK Retro Plates', mk: 'МК ретро таблици' },
   'mk-mugs': { en: 'MK Mugs', mk: 'МК шолји' },
+  'mk-folk': { en: 'MK Folk', mk: 'МК фолклор' },
   family: { en: 'Family', mk: 'Семејство' },
   'kids-birthday': { en: 'Kids & birthday', mk: 'Деца и роденден' },
   'local-mk': { en: 'Local designs', mk: 'Локални дизајни' },
@@ -210,7 +216,9 @@ export function ProductDesignsCatalog({
       );
     }
     if (typeFilter !== 'all') {
-      packs = packs.filter((pack) => pack.productTypes.includes(typeFilter));
+      packs = packs.filter((pack) =>
+        designPackMatchesCatalogType(pack.productTypes, typeFilter),
+      );
     }
     const query = searchQuery.trim().toLowerCase();
     if (query) {
@@ -249,7 +257,9 @@ export function ProductDesignsCatalog({
 
     let options = built.options;
     if (categoryFilter !== 'all') {
-      const allowed = new Set(getProductNavCategory(categoryFilter).types);
+      const allowed = new Set(
+        getCategoryCatalogFilterTypes(getProductNavCategory(categoryFilter).types),
+      );
       options = options.filter((option) => allowed.has(option.value));
     }
 
@@ -260,7 +270,7 @@ export function ProductDesignsCatalog({
         if (couplePackPartnerIds.has(entry.design.id)) continue;
         if (entry.design.collection !== collectionFilter) continue;
         for (const product of entry.products) {
-          typesInCollection.add(product.type);
+          typesInCollection.add(normalizeProductTypeRoute(product.type));
         }
       }
       if (collectionFilter === COUPLES_DESIGN_COLLECTION) {
@@ -274,7 +284,7 @@ export function ProductDesignsCatalog({
             continue;
           }
           for (const type of pack.productTypes) {
-            typesInCollection.add(type);
+            typesInCollection.add(normalizeProductTypeRoute(type));
           }
         }
       }
@@ -356,7 +366,9 @@ export function ProductDesignsCatalog({
     }
 
     if (typeFilter !== 'all') {
-      packs = packs.filter((pack) => pack.productTypes.includes(typeFilter));
+      packs = packs.filter((pack) =>
+        designPackMatchesCatalogType(pack.productTypes, typeFilter),
+      );
     }
 
     if (colorFilter !== 'all') {

@@ -43,6 +43,20 @@ const KEY_LABELS: Record<string, string> = {
   category: 'Категорија',
   size: 'Големина',
   color: 'Боја',
+  paper: 'Хартија',
+  lamination: 'Пластификат',
+};
+
+const METADATA_VALUE_LABELS: Record<string, Record<string, string>> = {
+  paper: {
+    '240gsm': '240 gsm (грама)',
+    '300gsm': '300 gsm (грама)',
+  },
+  lamination: {
+    none: 'Без пластификат',
+    matte: 'Мат пластификат',
+    glossy: 'Сјај пластификат',
+  },
 };
 
 function formatMetadataKey(key: string) {
@@ -57,9 +71,11 @@ function formatMetadataKey(key: string) {
   return normalized.charAt(0).toUpperCase() + normalized.slice(1);
 }
 
-function formatMetadataValue(value: string | number | boolean) {
+function formatMetadataValue(key: string, value: string | number | boolean) {
   if (typeof value === 'boolean') return value ? 'Да' : 'Не';
   const text = String(value);
+  const mapped = METADATA_VALUE_LABELS[key]?.[text];
+  if (mapped) return mapped;
   if (text.length > 120) return `${text.slice(0, 117)}…`;
   return text;
 }
@@ -91,7 +107,7 @@ export function splitOrderMetadata(metadata: Record<string, string | number | bo
     const entry = {
       key,
       label: formatMetadataKey(key),
-      value: formatMetadataValue(value),
+      value: formatMetadataValue(key, value),
     };
 
     if (isAdvancedMetadataKey(key)) {

@@ -15,6 +15,11 @@ import {
   productTypeHref,
   type ProductNavCategoryId,
 } from '@/lib/products/product-nav';
+import {
+  getCategoryCatalogFilterTypes,
+  normalizeProductTypeRoute,
+  productMatchesCatalogType,
+} from '@/lib/products/drinkware-type-groups';
 import { sortByDisplayOrder } from '@/lib/products/sort-by-display-order';
 import { buildProductTypeFilterOptions } from '@/lib/products/product-type-icons';
 import { ProductCardGrid } from '@/components/products/ProductCardGrid';
@@ -26,7 +31,10 @@ import { filterProductsBySearchQuery } from '@/lib/catalog/catalog-search';
 import { useCatalogSearchLabels } from '@/hooks/useCatalogSearchLabels';
 import { CatalogPagination } from '@/components/catalog/CatalogPagination';
 import { useCatalogPagination } from '@/hooks/useCatalogPagination';
-import { filterProductsByInactiveIds } from '@/lib/cms/product-visibility';
+import {
+  filterProductsByInactiveIds,
+  filterStorefrontHiddenProductTypes,
+} from '@/lib/products/storefront-hidden-types';
 import { useVisibleProductTypes } from '@/components/layout/ProductVisibilityProvider';
 import { Reveal } from '@/components/motion/Reveal';
 
@@ -71,7 +79,7 @@ export function ProductsHubCatalog({
   useEffect(() => {
     const typeParam = searchParams.get('type');
     if (typeParam && (productTypes as readonly string[]).includes(typeParam)) {
-      router.replace(productTypeHref(typeParam as ProductType));
+      router.replace(productTypeHref(normalizeProductTypeRoute(typeParam as ProductType)));
       return;
     }
     setCategoryFilter(parseProductNavCategoryFilter(searchParams.get('category')));
@@ -81,7 +89,9 @@ export function ProductsHubCatalog({
   const browsableProducts = useMemo(
     () =>
       sortByDisplayOrder(
-        filterProductsByInactiveIds(getBrowsableProducts(), inactiveProductIds),
+        filterStorefrontHiddenProductTypes(
+          filterProductsByInactiveIds(getBrowsableProducts(), inactiveProductIds),
+        ),
         displayOrder,
       ),
     [displayOrder, inactiveProductIds],
@@ -121,7 +131,7 @@ export function ProductsHubCatalog({
 
     if (categoryFilter === 'all') return typeFiltered;
 
-    const allowed = new Set(getProductNavCategory(categoryFilter).types);
+    const allowed = new Set(getCategoryCatalogFilterTypes(getProductNavCategory(categoryFilter).types));
     return {
       allOption: typeFiltered.allOption,
       options: typeFiltered.options.filter((option) => allowed.has(option.value)),
@@ -131,7 +141,7 @@ export function ProductsHubCatalog({
   const filteredByType =
     typeFilter === 'all'
       ? scopedProducts
-      : scopedProducts.filter((product) => product.type === typeFilter);
+      : scopedProducts.filter((product) => productMatchesCatalogType(product, typeFilter));
 
   // Debounced in CatalogFilterLayout; defer grid work so sidebar/layout stay stable while typing.
   const deferredSearchQuery = useDeferredValue(searchQuery);
