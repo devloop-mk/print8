@@ -18,7 +18,7 @@ import {
 } from '@/lib/products/product-nav';
 import { productMatchesCatalogType } from '@/lib/products/drinkware-type-groups';
 import { resolveDesignProduct as resolveDesignProductByFit } from '@/lib/products/garment-fit';
-
+import { productIdsInclude } from '@/lib/products/product-id-aliases';
 export type ProductDesignCatalogEntry = {
   design: ProductDesignTemplate;
   products: Product[];
@@ -35,7 +35,7 @@ export function buildProductDesignCatalogEntries(
       products: products.filter(
         (product) =>
           design.productTypes.includes(product.type) &&
-          (!design.productIds || design.productIds.includes(product.id)),
+          (!design.productIds || productIdsInclude(design.productIds, product.id)),
       ),
     }))
     .filter((entry) => entry.products.length > 0);

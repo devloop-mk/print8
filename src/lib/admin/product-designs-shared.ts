@@ -97,7 +97,7 @@ export function getLinkedProducts(template: ProductDesignTemplate): Product[] {
     (product) =>
       template.productTypes.includes(product.type) &&
       (!template.productIds?.length ||
-        template.productIds.includes(product.id)),
+        productIdsInclude(template.productIds, product.id)),
   );
 }
 
@@ -109,6 +109,7 @@ import {
   getDesignApplicableFits,
   getDesignPrimaryProductType,
 } from '@/lib/products/garment-fit';
+import { productIdsInclude } from '@/lib/products/product-id-aliases';
 
 export type AdminDesignColorOption = {
   hex: string;
@@ -117,7 +118,7 @@ export type AdminDesignColorOption = {
 
 /** Exactly the 9 supplier unisex tee colors — never hoodie/legacy hex values. */
 export function getAdminUnisexTshirtColorOptions(
-  productId = 'tshirt-basic-white',
+  productId = 'tshirt-unisex',
 ): AdminDesignColorOption[] {
   return TSHIRT_UNISEX_COLORS.map((color) => ({
     hex: color.hex,
@@ -173,7 +174,7 @@ export function getAdminDesignColorOptions(
     if (fit === 'kids') {
       return getAdminKidsTshirtColorOptions('tshirt-kids');
     }
-    return getAdminUnisexTshirtColorOptions('tshirt-basic-white');
+    return getAdminUnisexTshirtColorOptions('tshirt-unisex');
   }
 
   return getDesignColorOptions(template, type);

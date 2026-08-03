@@ -10,6 +10,7 @@ import {
   DRINKWARE_GLASS_NAV_TYPE,
   isDrinkwareGlassType,
 } from '@/lib/products/drinkware-type-groups';
+import { productIdsInclude } from '@/lib/products/product-id-aliases';
 
 export function isDrinkwareProduct(product: Product): boolean {
   return isCylindricalDrinkwareType(product.type);
@@ -30,7 +31,7 @@ export function getCompatibleDrinkwareProducts(
     if (!design.productTypes.includes(product.type)) return false;
     if (
       design.productIds?.length &&
-      !design.productIds.includes(product.id)
+      !productIdsInclude(design.productIds, product.id)
     ) {
       return false;
     }

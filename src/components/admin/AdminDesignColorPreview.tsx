@@ -21,6 +21,7 @@ import {
   getDesignPrimaryProductType,
   resolveTshirtProductForDesign,
 } from '@/lib/products/garment-fit';
+import { productIdsInclude, resolveProductId } from '@/lib/products/product-id-aliases';
 import {
   getMockupImageDisplayStyle,
   getProductMockupLayout,
@@ -31,7 +32,7 @@ const PREVIEW_PRODUCT_BY_TYPE: Partial<Record<ProductType, string>> = {
   cup: 'cup-glass-beer',
   mug: 'mug-classic',
   thermos: 'thermos-classic',
-  't-shirt': 'tshirt-basic-white',
+  't-shirt': 'tshirt-unisex',
   hoodie: 'hoodie-basic',
   cap: 'cap-classic',
   bag: 'bag-tote',
@@ -131,14 +132,18 @@ export function resolveAdminPreviewProduct(
 
   if (template.productIds?.length) {
     const byId = template.productIds
-      .map((id) => products.find((product) => product.id === id))
+      .map((id) =>
+        products.find((product) => product.id === resolveProductId(id)),
+      )
       .find((product) => product?.type === type);
     if (byId) return byId;
   }
 
   const preferredId = PREVIEW_PRODUCT_BY_TYPE[type];
   if (preferredId) {
-    const preferred = products.find((product) => product.id === preferredId);
+    const preferred = products.find(
+      (product) => product.id === resolveProductId(preferredId),
+    );
     if (preferred) return preferred;
   }
 
@@ -146,7 +151,7 @@ export function resolveAdminPreviewProduct(
     (product) =>
       product.type === type &&
       (!template.productIds?.length ||
-        template.productIds.includes(product.id)),
+        productIdsInclude(template.productIds, product.id)),
   );
 
   return linked[0] ?? products.find((product) => product.type === type) ?? null;

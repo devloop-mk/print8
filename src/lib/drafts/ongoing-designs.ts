@@ -13,6 +13,10 @@ import {
 } from '@/lib/drafts/work-drafts';
 
 import { DRAFTS_CHANGED_EVENT } from '@/lib/drafts/draft-events';
+import {
+  productIdVariants,
+  resolveProductId,
+} from '@/lib/products/product-id-aliases';
 
 export type OngoingDesignSource = 'product' | 'template';
 
@@ -26,11 +30,12 @@ export type OngoingDesignItem = {
 };
 
 function productItem(draft: ProductCustomizerDraft): OngoingDesignItem {
+  const productId = resolveProductId(draft.productId);
   return {
     id: `product:${draft.id}`,
     source: 'product',
     name: draft.name,
-    href: buildCustomizerUrl(draft.productId, draft.productType, {
+    href: buildCustomizerUrl(productId, draft.productType, {
       design: draft.designId ?? undefined,
       color: draft.color,
       size: draft.size,
@@ -71,8 +76,13 @@ export function findProductCustomizerDraft(
   productId: string,
   designId: string | null,
 ) {
-  const draftId = `product-${productId}-${designId ?? 'blank'}`;
-  return readProductCustomizerDrafts().find((draft) => draft.id === draftId);
+  const drafts = readProductCustomizerDrafts();
+  for (const id of productIdVariants(productId)) {
+    const draftId = `product-${id}-${designId ?? 'blank'}`;
+    const found = drafts.find((draft) => draft.id === draftId);
+    if (found) return found;
+  }
+  return undefined;
 }
 
 export function findDesignEditorDraft(templateId: string) {

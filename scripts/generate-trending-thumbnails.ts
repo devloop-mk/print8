@@ -21,7 +21,7 @@ function resolveTrendingProduct(design: ProductDesignTemplate) {
       (item) =>
         design.productTypes.includes(item.type) &&
         (!design.productIds || design.productIds.includes(item.id)),
-    ) ?? products.find((item) => item.id === 'tshirt-basic-white')
+    ) ?? products.find((item) => item.id === 'tshirt-unisex')
   );
 }
 

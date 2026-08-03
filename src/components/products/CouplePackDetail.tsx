@@ -74,7 +74,7 @@ export function CouplePackDetail({
     if (!pack) return null;
     return (
       products.find((item) => pack.productTypes.includes(item.type)) ??
-      products.find((item) => item.id === 'tshirt-basic-white') ??
+      products.find((item) => item.id === 'tshirt-unisex') ??
       null
     );
   }, [pack]);

@@ -1,12 +1,16 @@
 import type { GarmentFit, Product, ProductDesignTemplate } from '@/lib/data/catalog';
 import { products } from '@/lib/data/catalog';
+import {
+  productIdsInclude,
+  resolveProductId,
+} from '@/lib/products/product-id-aliases';
 
 export type { GarmentFit };
 
 export const GARMENT_FIT_ORDER: GarmentFit[] = ['unisex', 'women', 'kids'];
 
 const TSHIRT_PRODUCT_BY_FIT: Record<GarmentFit, string> = {
-  unisex: 'tshirt-basic-white',
+  unisex: 'tshirt-unisex',
   women: 'tshirt-women-fitted',
   kids: 'tshirt-kids',
 };
@@ -102,7 +106,7 @@ export function resolveDesignProduct(
 
   if (design.productIds?.length) {
     const primaryById = design.productIds
-      .map((id) => products.find((product) => product.id === id))
+      .map((id) => products.find((product) => product.id === resolveProductId(id)))
       .find((product) => product?.type === productType);
     if (primaryById) return primaryById;
 
@@ -122,7 +126,9 @@ export function resolveDesignProduct(
 
     if (!prefersTypedGarment) {
       const firstListed = design.productIds
-        .map((id) => products.find((product) => product.id === id))
+        .map((id) =>
+          products.find((product) => product.id === resolveProductId(id)),
+        )
         .find((product): product is Product => Boolean(product));
       if (firstListed) return firstListed;
     }
@@ -132,7 +138,7 @@ export function resolveDesignProduct(
     products.find(
       (product) =>
         product.type === productType &&
-        (!design.productIds || design.productIds.includes(product.id)),
+        (!design.productIds || productIdsInclude(design.productIds, product.id)),
     ) ??
     products.find(
       (product) =>
@@ -142,9 +148,9 @@ export function resolveDesignProduct(
     products.find(
       (product) =>
         design.productTypes.includes(product.type) &&
-        (!design.productIds || design.productIds.includes(product.id)),
+        (!design.productIds || productIdsInclude(design.productIds, product.id)),
     ) ??
-    products.find((item) => item.id === 'tshirt-basic-white');
+    products.find((item) => item.id === 'tshirt-unisex');
 
   if (!matched) {
     throw new Error(`No product found for design ${design.id}`);

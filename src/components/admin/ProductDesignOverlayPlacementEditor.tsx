@@ -57,7 +57,7 @@ const PREVIEW_PRODUCT_BY_TYPE: Partial<Record<ProductType, string>> = {
   cup: 'cup-glass-beer',
   mug: 'mug-classic',
   thermos: 'thermos-classic',
-  't-shirt': 'tshirt-basic-white',
+  't-shirt': 'tshirt-unisex',
   hoodie: 'hoodie-basic',
   cap: 'cap-classic',
   bag: 'bag-tote',

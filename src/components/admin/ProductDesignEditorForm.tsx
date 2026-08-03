@@ -24,6 +24,10 @@ import {
   getDesignSideMode,
   type DesignSideMode,
 } from '@/lib/products/design-sides';
+import {
+  productIdsInclude,
+  resolveProductId,
+} from '@/lib/products/product-id-aliases';
 import { ProductDesignColorMatrix } from '@/components/admin/ProductDesignColorMatrix';
 import { ProductDesignFitMatrix } from '@/components/admin/ProductDesignFitMatrix';
 import { ProductDesignOverlayPlacementEditor } from '@/components/admin/ProductDesignOverlayPlacementEditor';
@@ -153,7 +157,9 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
           }
         : template.backOverlay,
       productIds: template.productIds?.filter((id) => {
-        const product = products.find((item) => item.id === id);
+        const product = products.find(
+          (item) => item.id === resolveProductId(id),
+        );
         return product ? productTypesNext.includes(product.type) : false;
       }),
     });
@@ -224,9 +230,11 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
 
   function toggleProductId(id: string) {
     const current = template.productIds ?? [];
-    const next = current.includes(id)
-      ? current.filter((item) => item !== id)
-      : [...current, id];
+    const canonicalId = resolveProductId(id);
+    const alreadyLinked = productIdsInclude(current, canonicalId);
+    const next = alreadyLinked
+      ? current.filter((item) => resolveProductId(item) !== canonicalId)
+      : [...current.filter((item) => resolveProductId(item) !== canonicalId), canonicalId];
     patchTemplate({ productIds: next.length ? next : undefined });
   }
 
@@ -673,7 +681,10 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
                   >
                     <input
                       type="checkbox"
-                      checked={template.productIds?.includes(product.id) ?? false}
+                      checked={productIdsInclude(
+                        template.productIds,
+                        product.id,
+                      )}
                       onChange={() => toggleProductId(product.id)}
                       className="h-4 w-4 rounded border-ink-300 text-brand-600"
                     />

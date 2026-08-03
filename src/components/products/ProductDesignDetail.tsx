@@ -36,6 +36,7 @@ import { capturePreviewElement } from '@/lib/products/capture-preview';
 import {
   buildCouplePackDetailUrl,
   buildCustomizerUrl,
+  sanitizeReturnTo,
 } from '@/lib/products/paths';
 import { normalizeProductTypeRoute } from '@/lib/products/drinkware-type-groups';
 import { productTypeHref } from '@/lib/products/product-nav';
@@ -193,11 +194,14 @@ export function ProductDesignDetail({
     setSize(nextProduct.sizes?.[0] ?? '');
   }
 
+  const returnTo = sanitizeReturnTo(searchParams.get('returnTo'));
+
   const customizeHref = buildCustomizerUrl(product.id, product.type, {
     design: design.id,
     color: previewColor,
     size: size || undefined,
     ...(applicableFits.length > 0 ? { fit: garmentFit } : {}),
+    ...(returnTo ? { returnTo } : {}),
   });
 
   async function handleAddToCart() {
@@ -229,12 +233,16 @@ export function ProductDesignDetail({
 
   const backType = normalizeProductTypeRoute(preferredProductType ?? product.type);
   const readyDesignsBackHref = productTypeHref(backType);
+  const backHref = returnTo ?? readyDesignsBackHref;
+  const backLabel = returnTo
+    ? tdp('backToDesigns')
+    : tdp('backToType', { type: tTypesPlural(backType) });
 
   return (
     <div className="space-y-10 pb-24 lg:pb-0">
       <ArchiveBackLink
-        fallbackHref={readyDesignsBackHref}
-        label={tdp('backToType', { type: tTypesPlural(backType) })}
+        fallbackHref={backHref}
+        label={backLabel}
         className="hover:text-brand-600"
       />
 

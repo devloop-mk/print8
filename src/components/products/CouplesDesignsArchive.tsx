@@ -107,7 +107,7 @@ function CouplesHeroPackPreview({
   const product = useMemo(
     () =>
       products.find((item) => pack.productTypes.includes(item.type)) ??
-      products.find((item) => item.id === 'tshirt-basic-white')!,
+      products.find((item) => item.id === 'tshirt-unisex')!,
     [pack.productTypes],
   );
 

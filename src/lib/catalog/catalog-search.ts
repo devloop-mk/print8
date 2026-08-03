@@ -26,6 +26,7 @@ import { getProductDesignThumbnail } from '@/lib/products/design-overlay';
 import { resolveAssetUrl } from '@/lib/storage/asset-url';
 import { buildDesignDetailUrl } from '@/lib/products/paths';
 import type { ProductDesignCatalogEntry } from '@/lib/products/design-catalog';
+import { productIdsInclude } from '@/lib/products/product-id-aliases';
 
 /** Initial matches shown before "See more" on search UIs. */
 export const SEARCH_RESULTS_PREVIEW_LIMIT = 20;
@@ -330,7 +331,7 @@ function buildCatalogItemResults(
     const matchedProducts = products.filter(
       (product) =>
         design.productTypes.includes(product.type) &&
-        (!design.productIds || design.productIds.includes(product.id)),
+        (!design.productIds || productIdsInclude(design.productIds, product.id)),
     );
     if (matchedProducts.length === 0) continue;
     // Prefer productTypes[0] (e.g. bodysuit for baby designs), not catalog order.
@@ -424,7 +425,7 @@ export function getFeaturedCatalogResults(
 
   const featuredIds = [
     ...DEFAULT_TRENDING_PRODUCT_DESIGN_IDS,
-    'tshirt-basic-white',
+    'tshirt-unisex',
     'mug-classic',
     'hoodie-basic',
     'bag-tote',

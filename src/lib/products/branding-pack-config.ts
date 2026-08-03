@@ -20,7 +20,7 @@ export const BRANDING_PACK_DEFAULT_PRODUCT_ID: Record<
   BrandingPackProductType,
   string
 > = {
-  't-shirt': 'tshirt-basic-white',
+  't-shirt': 'tshirt-unisex',
   hoodie: 'hoodie-basic',
   mug: 'mug-classic',
   cap: 'cap-classic',

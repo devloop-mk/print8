@@ -33,6 +33,7 @@ import {
   TSHIRT_KIDS_COLOR_HEXES,
 } from '@/lib/products/tshirt-kids-colors';
 import { getProductColorImagesEntry } from '@/lib/products/product-color-images';
+import { productIdsInclude } from '@/lib/products/product-id-aliases';
 
 export type ServiceId =
   | 'business-cards'
@@ -1358,7 +1359,7 @@ export function getProductDesignTemplates(product: Product) {
   return productDesignTemplates.filter(
     (d) =>
       d.productTypes.includes(product.type) &&
-      (!d.productIds || d.productIds.includes(product.id)),
+      (!d.productIds || productIdsInclude(d.productIds, product.id)),
   );
 }
 
@@ -1429,7 +1430,7 @@ export function getProductsForService(service: Service) {
 
 export const products: Product[] = [
   {
-    id: 'tshirt-basic-white',
+    id: 'tshirt-unisex',
     type: 't-shirt',
     fit: 'unisex',
     image: getUnisexTshirtMockupPath('bela', 'front'),

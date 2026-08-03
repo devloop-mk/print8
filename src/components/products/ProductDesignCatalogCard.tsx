@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 import Image from 'next/image';
 import { useTranslations, useLocale } from 'next-intl';
-import { Link, useRouter } from '@/i18n/navigation';
+import { Link, usePathname, useRouter } from '@/i18n/navigation';
+import { useSearchParams } from 'next/navigation';
 import {
   resolveDesignProduct,
   type ProductDesignCatalogEntry,
@@ -88,6 +89,9 @@ export function ProductDesignCatalogCard({
   const tCustomizer = useTranslations('products.customizer');
   const { addItem } = useCart();
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const returnTo = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
   const grid = useOptionalCatalogGrid();
   const previewRef = useRef<HTMLDivElement>(null);
   const [ordering, setOrdering] = useState(false);
@@ -168,8 +172,12 @@ export function ProductDesignCatalogCard({
   const customizeHref = buildCustomizerUrl(product.id, product.type, {
     design: design.id,
     color: previewColor,
+    returnTo,
   });
-  const detailHref = buildDesignDetailUrl(design.id, { type: product.type });
+  const detailHref = buildDesignDetailUrl(design.id, {
+    type: product.type,
+    returnTo,
+  });
 
   function setHoverReveal(next: boolean) {
     if (!isDualSided || touchPinned) return;

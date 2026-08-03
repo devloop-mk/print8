@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
-import { Link } from '@/i18n/navigation';
+import { Link, usePathname } from '@/i18n/navigation';
 import {
   isImageDesignTemplate,
   isOverlayDesignTemplate,
@@ -159,6 +160,8 @@ function DesignCard({
   const tp = useTranslations('products.types');
   const ti = useTranslations('products.items');
   const locale = useLocale() as 'mk' | 'en';
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const productLabel = product.nameKey
     ? ti(product.nameKey)
     : tp(product.type);
@@ -169,6 +172,16 @@ function DesignCard({
   const grid = useOptionalCatalogGrid();
   const canQuickOrder =
     isImageDesignTemplate(design) || isOverlayDesignTemplate(design);
+
+  const returnTo = useMemo(() => {
+    const qs = searchParams.toString();
+    return qs ? `${pathname}?${qs}` : pathname;
+  }, [pathname, searchParams]);
+
+  const designDetailHref = buildDesignDetailUrl(design.id, {
+    type: product.type,
+    returnTo,
+  });
 
   return (
     <Card
@@ -228,7 +241,7 @@ function DesignCard({
                 displayName={displayName}
               />
             ) : (
-              <Link href={buildDesignDetailUrl(design.id, { type: product.type })}>
+              <Link href={designDetailHref}>
                 <Button
                   size="sm"
                   className="w-full normal-case tracking-normal shadow-none hover:translate-y-0 active:translate-y-0 active:shadow-none"
@@ -241,7 +254,7 @@ function DesignCard({
             )}
             {canQuickOrder ? (
               <Link
-                href={buildDesignDetailUrl(design.id, { type: product.type })}
+                href={designDetailHref}
                 className="block text-center text-sm font-medium text-ink-600 transition-colors hover:text-brand-700"
               >
                 {isTextDesignTemplate(design)

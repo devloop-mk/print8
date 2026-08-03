@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
-import { Link } from '@/i18n/navigation';
+import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import {
   products,
   getProductDesignTemplates,
@@ -26,7 +27,9 @@ import {
 } from '@/components/catalog/CatalogFilterLayout';
 import { CatalogPagination } from '@/components/catalog/CatalogPagination';
 import { useCatalogPagination } from '@/hooks/useCatalogPagination';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { resolveProductDesignDisplayName } from '@/lib/products/design-display-name';
+import { resolveProductId } from '@/lib/products/product-id-aliases';
 import { Reveal } from '@/components/motion/Reveal';
 import { ArrowLeft } from 'lucide-react';
 
@@ -103,9 +106,12 @@ export function ProductDesignsPage({
   const tc = useTranslations('products.catalog');
   const ts = useTranslations('search');
   const locale = useLocale() as 'mk' | 'en';
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const product = useMemo(
-    () => products.find((p) => p.id === productId),
+    () => products.find((p) => p.id === resolveProductId(productId)),
     [productId],
   );
 
@@ -125,11 +131,64 @@ export function ProductDesignsPage({
     );
   }, [product, category]);
 
-  const [colorFilter, setColorFilter] = useState<string | 'all'>('all');
+  const [colorFilter, setColorFilter] = useState<string | 'all'>(() => {
+    const fromUrl = searchParams.get('color');
+    return fromUrl && fromUrl !== 'all' ? fromUrl : 'all';
+  });
   const [collectionFilter, setCollectionFilter] = useState<string | 'all'>(
-    'all',
+    () => {
+      const fromUrl = searchParams.get('collection');
+      return fromUrl && fromUrl !== 'all' ? fromUrl : 'all';
+    },
   );
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(
+    () => searchParams.get('q') ?? '',
+  );
+  const debouncedSearchQuery = useDebouncedValue(searchQuery, 350);
+
+  useEffect(() => {
+    const fromUrlColor = searchParams.get('color');
+    setColorFilter(fromUrlColor && fromUrlColor !== 'all' ? fromUrlColor : 'all');
+    const fromUrlCollection = searchParams.get('collection');
+    setCollectionFilter(
+      fromUrlCollection && fromUrlCollection !== 'all'
+        ? fromUrlCollection
+        : 'all',
+    );
+    setSearchQuery(searchParams.get('q') ?? '');
+  }, [searchParams]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (collectionFilter === 'all') params.delete('collection');
+    else params.set('collection', collectionFilter);
+
+    if (colorFilter === 'all') params.delete('color');
+    else params.set('color', colorFilter);
+
+    const trimmed = debouncedSearchQuery.trim();
+    if (!trimmed) params.delete('q');
+    else params.set('q', trimmed);
+
+    const next = params.toString();
+    if (next === searchParams.toString()) return;
+    router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
+  }, [
+    collectionFilter,
+    colorFilter,
+    debouncedSearchQuery,
+    pathname,
+    router,
+    searchParams,
+  ]);
+
+  const handleColorChange = useCallback((value: string | 'all') => {
+    setColorFilter(value);
+  }, []);
+
+  const handleCollectionChange = useCallback((value: string | 'all') => {
+    setCollectionFilter(value);
+  }, []);
 
   const availableColors = useMemo(() => {
     if (!product) return [];
@@ -186,8 +245,8 @@ export function ProductDesignsPage({
 
   const filterSignature = useMemo(
     () =>
-      [colorFilter, collectionFilter, searchQuery.trim()].join('|'),
-    [collectionFilter, colorFilter, searchQuery],
+      [colorFilter, collectionFilter, debouncedSearchQuery.trim()].join('|'),
+    [collectionFilter, colorFilter, debouncedSearchQuery],
   );
 
   const { page, setPage, resetPage, paginate } = useCatalogPagination({
@@ -216,7 +275,7 @@ export function ProductDesignsPage({
         title: tc('filterColor'),
         colors: availableColors,
         value: colorFilter,
-        onChange: setColorFilter,
+        onChange: handleColorChange,
         allLabel: tc('allColors'),
       });
     }
@@ -236,7 +295,7 @@ export function ProductDesignsPage({
           })),
         ],
         value: collectionFilter,
-        onChange: setCollectionFilter,
+        onChange: handleCollectionChange,
       });
     }
 
@@ -246,6 +305,8 @@ export function ProductDesignsPage({
     availableColors,
     collectionFilter,
     colorFilter,
+    handleCollectionChange,
+    handleColorChange,
     locale,
     tc,
   ]);

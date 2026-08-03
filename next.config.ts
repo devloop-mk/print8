@@ -77,6 +77,27 @@ const nextConfig: NextConfig = {
         destination: "/:locale/designs/custom",
         permanent: true,
       },
+      // Legacy unisex tee SKU (`tshirt-basic-white` → `tshirt-unisex`)
+      {
+        source: "/products/tshirt-basic-white",
+        destination: "/products/tshirt-unisex",
+        permanent: true,
+      },
+      {
+        source: "/products/tshirt-basic-white/:path*",
+        destination: "/products/tshirt-unisex/:path*",
+        permanent: true,
+      },
+      {
+        source: "/:locale(en)/products/tshirt-basic-white",
+        destination: "/:locale/products/tshirt-unisex",
+        permanent: true,
+      },
+      {
+        source: "/:locale(en)/products/tshirt-basic-white/:path*",
+        destination: "/:locale/products/tshirt-unisex/:path*",
+        permanent: true,
+      },
     ];
   },
   async headers() {

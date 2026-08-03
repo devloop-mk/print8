@@ -1830,6 +1830,7 @@
     },
     "designPdp": {
       "backToReadyDesigns": "Back to ready designs",
+      "backToDesigns": "Back to designs",
       "backToType": "Back to {type}",
       "addToCart": "Add to cart",
       "customizeButton": "Customize design",

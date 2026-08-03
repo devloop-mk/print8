@@ -23,6 +23,8 @@ import {
 import { useTranslations, useLocale } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from '@/i18n/navigation';
+import { sanitizeReturnTo } from '@/lib/products/paths';
+import { resolveProductId } from '@/lib/products/product-id-aliases';
 import {
   products,
   getProductMockup,
@@ -951,13 +953,17 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   // it (e.g. the pencil icon in "ongoing designs"). Plain "create design"
   // entry points should always start a blank session.
   const resumeParam = searchParams.get('resume') === '1';
+  const returnTo = sanitizeReturnTo(searchParams.get('returnTo'));
 
   const designTemplateForFit = useMergedProductDesignTemplate(designId);
 
   const product = useMemo(
     () => {
+      const resolvedId = activeProductId
+        ? resolveProductId(activeProductId)
+        : undefined;
       const base =
-        products.find((p) => p.id === activeProductId) ||
+        products.find((p) => p.id === resolvedId) ||
         products.find((p) => p.type === type);
       if (!base || base.type !== 't-shirt' || !designTemplateForFit) {
         return base;
@@ -975,6 +981,9 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     },
     [activeProductId, type, designTemplateForFit, fitParam],
   );
+
+  const leaveHref =
+    returnTo ?? `/products/${product?.id ?? productId ?? ''}`;
 
   const garmentFits = designTemplateForFit
     ? getDesignApplicableFits(designTemplateForFit)
@@ -1014,7 +1023,9 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   const handleDrinkwareProductChange = useCallback(
     (nextProductId: string) => {
       if (nextProductId === activeProductId) return;
-      const nextProduct = products.find((p) => p.id === nextProductId);
+      const nextProduct = products.find(
+        (p) => p.id === resolveProductId(nextProductId),
+      );
       if (!nextProduct) return;
 
       setPendingDrinkwareProductId(nextProductId);
@@ -2559,7 +2570,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
-              onClick={() => unsavedWorkGuard.requestLeave(`/products/${product.id}`)}
+              onClick={() => unsavedWorkGuard.requestLeave(leaveHref)}
               className="inline-flex items-center gap-1.5 text-sm font-medium text-ink-600 hover:text-brand-600"
             >
               <ArrowLeft className="h-4 w-4 shrink-0" />

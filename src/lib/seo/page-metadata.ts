@@ -28,6 +28,7 @@ import { getDesignGalleryImage } from '@/lib/designs/design-thumb';
 import { getCouplePackTemplate, getCouplePackPartnerDesign } from '@/lib/data/couple-pack';
 import { resolveCouplePackPartnerDesigns } from '@/lib/products/couple-pack-resolved';
 import { resolveProductDesignDisplayName } from '@/lib/products/design-display-name';
+import { resolveProductId } from '@/lib/products/product-id-aliases';
 
 function isSvgAssetPath(value: string) {
   return /\.svg(\?.*)?$/i.test(value);
@@ -42,7 +43,8 @@ function buildBlankProductOgImage(productImage: string | undefined) {
 }
 
 export async function buildProductMetadata(locale: Locale, id: string) {
-  const product = products.find((item) => item.id === id);
+  const canonicalId = resolveProductId(id);
+  const product = products.find((item) => item.id === canonicalId);
   if (!product) return null;
 
   const tp = await getTranslations({ locale, namespace: 'products.types' });
@@ -66,7 +68,7 @@ export async function buildProductMetadata(locale: Locale, id: string) {
     locale,
     title,
     description,
-    path: `/products/${id}`,
+    path: `/products/${canonicalId}`,
     image,
   });
 }
@@ -76,7 +78,8 @@ export async function buildProductDesignsMetadata(
   id: string,
   category: ProductDesignCategory,
 ) {
-  const product = products.find((item) => item.id === id);
+  const canonicalId = resolveProductId(id);
+  const product = products.find((item) => item.id === canonicalId);
   if (!product) return null;
 
   const t = await getTranslations({ locale, namespace: 'products' });
@@ -93,8 +96,8 @@ export async function buildProductDesignsMetadata(
     : td('textDesignsPageHint');
   const title = `${sectionTitle} — ${productName} | Print 8`;
   const path = isPhoto
-    ? `/products/${id}/photo-designs`
-    : `/products/${id}/text-designs`;
+    ? `/products/${canonicalId}/photo-designs`
+    : `/products/${canonicalId}/text-designs`;
 
   return buildPageMetadata({
     locale,
@@ -115,7 +118,8 @@ export async function buildProductPremadeDesignsMetadata(
   locale: Locale,
   id: string,
 ) {
-  const product = products.find((item) => item.id === id);
+  const canonicalId = resolveProductId(id);
+  const product = products.find((item) => item.id === canonicalId);
   if (!product) return null;
 
   const tp = await getTranslations({ locale, namespace: 'products.types' });
@@ -132,7 +136,7 @@ export async function buildProductPremadeDesignsMetadata(
     locale,
     title,
     description,
-    path: `/products/${id}/designs`,
+    path: `/products/${canonicalId}/designs`,
     image: buildOgImageUrl({
       locale,
       title: sectionTitle,

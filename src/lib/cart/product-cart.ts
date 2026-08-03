@@ -14,9 +14,11 @@ import {
   SIDE_PREVIEW_CART_KEYS,
 } from "@/lib/products/product-sides";
 import { isCylindricalDrinkwareType } from "@/lib/products/product-mockup-layout";
+import { resolveProductId } from "@/lib/products/product-id-aliases";
 
 export function getProductById(id: string): Product | undefined {
-  return products.find((p) => p.id === id);
+  const canonicalId = resolveProductId(id);
+  return products.find((p) => p.id === canonicalId);
 }
 
 export function formatProductCartName(

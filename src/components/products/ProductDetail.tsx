@@ -10,6 +10,7 @@ import { getColorSwatchDisplayHex } from '@/lib/products/product-color-labels';
 import {
   getProductPaths,
 } from '@/lib/products/paths';
+import { resolveProductId } from '@/lib/products/product-id-aliases';
 import { formatPrice } from '@/lib/utils';
 import { Card } from '@/components/ui/Card';
 import { ProductImageCarousel } from '@/components/products/ProductImageCarousel';
@@ -25,7 +26,7 @@ export function ProductDetail({ productId }: { productId: string }) {
   const locale = useLocale();
 
   const product = useMemo(
-    () => products.find((p) => p.id === productId),
+    () => products.find((p) => p.id === resolveProductId(productId)),
     [productId],
   );
 

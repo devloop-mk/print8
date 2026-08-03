@@ -8,6 +8,10 @@ import {
 } from '@/lib/data/catalog';
 import { productVisibilityDb } from '@/lib/db/product-visibility';
 import { isProductTypeHiddenFromStorefront } from '@/lib/products/storefront-hidden-types';
+import {
+  productIdVariants,
+  resolveProductId,
+} from '@/lib/products/product-id-aliases';
 
 export {
   STOREFONT_HIDDEN_PRODUCT_TYPES,
@@ -52,7 +56,11 @@ export function isProductActiveOnStorefront(
   productId: string,
   visibility: Record<string, boolean>,
 ): boolean {
-  return visibility[productId] !== false;
+  // Honor explicit false on the canonical id or any legacy alias.
+  for (const id of productIdVariants(productId)) {
+    if (visibility[id] === false) return false;
+  }
+  return true;
 }
 
 export function filterProductsByStorefrontVisibility(
@@ -67,12 +75,13 @@ export function filterProductsByStorefrontVisibility(
 export async function isProductVisibleOnStorefront(
   productId: string,
 ): Promise<boolean> {
-  const product = products.find((item) => item.id === productId);
+  const canonicalId = resolveProductId(productId);
+  const product = products.find((item) => item.id === canonicalId);
   if (product && isProductTypeHiddenFromStorefront(product.type)) {
     return false;
   }
   const visibility = await getProductVisibilityRecord();
-  return isProductActiveOnStorefront(productId, visibility);
+  return isProductActiveOnStorefront(canonicalId, visibility);
 }
 
 export async function getStorefrontBrowsableProducts(): Promise<Product[]> {
