@@ -15,6 +15,11 @@ export function isDrinkwareProduct(product: Product): boolean {
   return isCylindricalDrinkwareType(product.type);
 }
 
+/** Pre-printed interior message mugs — exterior only is customizable. */
+export function isMugInsideProduct(productId: string): boolean {
+  return productId.startsWith('mug-inside-');
+}
+
 /** Drinkware blanks compatible with the active design (type + optional productIds lock). */
 export function getCompatibleDrinkwareProducts(
   design: ProductDesignTemplate | null | undefined,

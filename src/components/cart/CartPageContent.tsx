@@ -461,7 +461,7 @@ export function CartPageContent() {
 
                       onClick={() => updateQuantity(item.id, item.quantity - 1)}
 
-                      className="rounded border border-ink-300 px-2 py-0.5 text-sm"
+                      className="rounded-md border border-ink-300 px-2 py-0.5 text-sm"
 
                       disabled={item.quantity <= 1}
 
@@ -479,7 +479,7 @@ export function CartPageContent() {
 
                       onClick={() => updateQuantity(item.id, item.quantity + 1)}
 
-                      className="rounded border border-ink-300 px-2 py-0.5 text-sm"
+                      className="rounded-md border border-ink-300 px-2 py-0.5 text-sm"
 
                     >
 

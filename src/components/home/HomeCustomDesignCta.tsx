@@ -109,8 +109,8 @@ export function HomeCustomDesignCta() {
                 <div
                   key={key}
                   className={cn(
-                    'group relative overflow-hidden border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm transition duration-500 sm:p-5',
-                    'hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[0.07]',
+                    'group relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm transition duration-500 sm:p-5',
+                    'hover:border-white/20 hover:bg-white/[0.07]',
                     'hover:shadow-[0_20px_60px_-24px_rgba(255,255,255,0.12)]',
                     index === 1 && 'sm:ml-6 lg:ml-8',
                     index === 2 && 'sm:ml-3 lg:ml-4',
@@ -131,7 +131,7 @@ export function HomeCustomDesignCta() {
                       </span>
                       <div
                         className={cn(
-                          'flex h-11 w-11 shrink-0 items-center justify-center ring-1',
+                          'flex h-11 w-11 shrink-0 items-center justify-center rounded-md ring-1',
                           iconBg,
                         )}
                       >

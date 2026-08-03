@@ -40,6 +40,15 @@ export const designCategoryIcons: Record<DesignCategory, LucideIcon> = {
   general: LayoutGrid,
 };
 
+/** Representative gallery thumbs for /designs category cards. */
+export const designCategoryCoverImages: Record<DesignCategory, string> = {
+  'business-cards': '/NEW_DESIGNS/gallery-thumbs/svg-bcard-luxury-gold.webp',
+  wedding: '/NEW_DESIGNS/gallery-thumbs/svg-wedding-romantic-blush.webp',
+  birthday: '/NEW_DESIGNS/gallery-thumbs/svg-bday-unicorn.webp',
+  menus: '/NEW_DESIGNS/gallery-thumbs/svg-menu-cafe.webp',
+  general: '/NEW_DESIGNS/gallery-thumbs/svg-bcard-tech-wave.webp',
+};
+
 export const designNavCategories: DesignNavCategory[] =
   DESIGN_NAV_CATEGORY_IDS.map((id) => ({
     id,

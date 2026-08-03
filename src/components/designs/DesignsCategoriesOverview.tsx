@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { ArrowRight, Sparkles } from 'lucide-react';
@@ -6,6 +7,7 @@ import {
   type DesignCategory,
 } from '@/lib/data/catalog';
 import {
+  designCategoryCoverImages,
   designCategoryHref,
   designCategoryIcons,
   designNavQuickLinks,
@@ -16,32 +18,27 @@ import { cn } from '@/lib/utils';
 
 const categoryAccents: Record<
   DesignCategory,
-  { gradient: string; ring: string; badge: string }
+  { media: string; badge: string }
 > = {
   'business-cards': {
-    gradient: 'from-slate-400/20 via-slate-500/10 to-transparent',
-    ring: 'group-hover:ring-slate-300/50',
-    badge: 'bg-slate-600/90',
+    media: 'bg-slate-100',
+    badge: 'bg-slate-700/95',
   },
   wedding: {
-    gradient: 'from-rose-400/25 via-fuchsia-500/10 to-transparent',
-    ring: 'group-hover:ring-rose-300/50',
-    badge: 'bg-rose-500/90',
+    media: 'bg-rose-50',
+    badge: 'bg-rose-500/95',
   },
   birthday: {
-    gradient: 'from-lime-400/20 via-emerald-500/10 to-transparent',
-    ring: 'group-hover:ring-lime-300/50',
-    badge: 'bg-lime-600/90',
+    media: 'bg-lime-50',
+    badge: 'bg-lime-600/95',
   },
   menus: {
-    gradient: 'from-amber-300/25 via-orange-500/10 to-transparent',
-    ring: 'group-hover:ring-amber-300/50',
-    badge: 'bg-amber-600/90',
+    media: 'bg-amber-50',
+    badge: 'bg-amber-600/95',
   },
   general: {
-    gradient: 'from-brand-400/20 via-brand-500/10 to-transparent',
-    ring: 'group-hover:ring-brand-300/50',
-    badge: 'bg-brand-600/90',
+    media: 'bg-brand-50',
+    badge: 'bg-brand-600/95',
   },
 };
 
@@ -81,6 +78,8 @@ export async function DesignsCategoriesOverview({
           const Icon = designCategoryIcons[category];
           const accent = categoryAccents[category];
           const count = categoryCounts[category] ?? 0;
+          const cover = designCategoryCoverImages[category];
+          const title = t(`categories.${category}`);
 
           return (
             <Link
@@ -90,37 +89,43 @@ export async function DesignsCategoriesOverview({
             >
               <article
                 className={cn(
-                  'relative flex h-full flex-col overflow-hidden border border-ink-200 bg-white p-5 transition duration-300',
-                  'hover:-translate-y-1 hover:border-brand-200 hover:shadow-lift-brand',
-                  'ring-1 ring-transparent',
-                  accent.ring,
+                  'flex h-full flex-col overflow-hidden rounded-2xl border border-ink-200/80 bg-white shadow-sm',
+                  'transition duration-300 hover:border-brand-300 hover:shadow-md',
                 )}
               >
                 <div
                   className={cn(
-                    'pointer-events-none absolute inset-0 bg-gradient-to-br opacity-80',
-                    accent.gradient,
+                    'relative aspect-[4/3] overflow-hidden',
+                    accent.media,
                   )}
-                  aria-hidden
-                />
-                <div className="relative flex items-start justify-between gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center border border-brand-200 bg-brand-50 text-brand-700">
-                    <Icon className="h-6 w-6" aria-hidden />
-                  </div>
+                >
+                  <Image
+                    src={cover}
+                    alt={title}
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                    className="object-contain p-5 transition duration-500 group-hover:scale-[1.03]"
+                  />
                   <span
                     className={cn(
-                      'rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white',
+                      'absolute right-3 top-3 rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white shadow-sm',
                       accent.badge,
                     )}
                   >
                     {t('categoriesOverview.count', { count })}
                   </span>
                 </div>
-                <div className="relative mt-5 flex flex-1 flex-col">
-                  <h3 className="text-lg font-bold text-ink-900 group-hover:text-brand-700">
-                    {t(`categories.${category}`)}
-                  </h3>
-                  <p className="mt-2 flex-1 text-sm leading-relaxed text-ink-600">
+
+                <div className="flex flex-1 flex-col p-5">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-brand-200 bg-brand-50 text-brand-700">
+                      <Icon className="h-5 w-5" aria-hidden />
+                    </div>
+                    <h3 className="text-lg font-bold text-ink-900 transition group-hover:text-brand-700">
+                      {title}
+                    </h3>
+                  </div>
+                  <p className="mt-3 flex-1 text-sm leading-relaxed text-ink-600">
                     {t(`categoryDescriptions.${category}`)}
                   </p>
                   <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700">
@@ -151,9 +156,9 @@ export async function DesignsCategoriesOverview({
               <Link
                 key={link.id}
                 href={link.href}
-                className="group flex gap-3 border border-ink-200 bg-white p-4 transition hover:border-brand-200 hover:bg-brand-50/40"
+                className="group flex gap-3 rounded-xl border border-ink-200 bg-white p-4 transition hover:border-brand-200 hover:bg-brand-50/40"
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-brand-50 text-brand-700">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-brand-50 text-brand-700">
                   <Icon className="h-5 w-5" aria-hidden />
                 </div>
                 <div className="min-w-0">

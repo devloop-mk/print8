@@ -63,7 +63,7 @@ export function ProductTypeDesignCategories({
               >
                 <Link
                   href={category.href}
-                  className="group flex h-full flex-col overflow-hidden rounded-xl border border-ink-200 bg-white transition hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-lift"
+                  className="group flex h-full flex-col overflow-hidden rounded-xl border border-ink-200 bg-white transition hover:border-brand-300 hover:shadow-lift"
                 >
                   <span className="relative block overflow-hidden bg-white transition duration-300 group-hover:scale-[1.03] [&_[data-mockup-frame]]:rounded-none [&_[data-mockup-frame]]:border-0">
                     {preview ? (

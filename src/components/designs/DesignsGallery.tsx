@@ -23,7 +23,6 @@ import {
 } from '@/lib/designs/design-filters';
 import { filterDesignsBySearchQuery } from '@/lib/catalog/catalog-search';
 import { useCatalogSearchLabels } from '@/hooks/useCatalogSearchLabels';
-import { Card } from '@/components/ui/Card';
 import { DesignCardThumbnail } from '@/components/designs/DesignCardThumbnail';
 import {
   CatalogFilterLayout,
@@ -66,36 +65,44 @@ const DesignCard = memo(function DesignCard({
       prefetch={false}
       className={cn('group block', getCatalogItemClassName(grid))}
     >
-      <Card className="overflow-hidden p-0 transition group-hover:shadow-md">
+      <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-ink-200/80 bg-white shadow-sm transition duration-300 group-hover:border-brand-300 group-hover:shadow-md">
         <div
-          className="relative flex items-center justify-center overflow-hidden bg-white p-1"
+          className="relative flex items-center justify-center bg-gradient-to-b from-ink-50 via-ink-50 to-white p-4 sm:p-5"
           style={{ aspectRatio: getDesignThumbAspect(design) }}
         >
-          <DesignCardThumbnail
-            design={design}
-            alt={displayName}
-            previewMode="lazy"
-            svgDefaultsMap={svgDefaultsMap}
-            svgThumbVersions={svgThumbVersions}
-          />
+          <div className="relative h-full w-full overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-ink-200/70">
+            <DesignCardThumbnail
+              design={design}
+              alt={displayName}
+              previewMode="lazy"
+              svgDefaultsMap={svgDefaultsMap}
+              svgThumbVersions={svgThumbVersions}
+            />
+          </div>
           {badgeLabel ? (
             <span className="absolute left-3 top-3 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-brand-700 shadow-sm">
               {badgeLabel}
             </span>
           ) : null}
         </div>
-        <div className="p-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-brand-600">
+        <div className="flex flex-1 flex-col px-4 pb-4 pt-1 sm:px-5 sm:pb-5">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-600">
             {t(`categories.${design.category}`)}
           </p>
-          <p className="mt-1 font-medium text-ink-900 group-hover:text-brand-700">
+          <p className="mt-1.5 text-base font-semibold text-ink-900 transition group-hover:text-brand-700">
             {displayName}
           </p>
-          <p className="mt-3 text-sm font-medium text-brand-600">
-            {actionLabel} →
+          <p className="mt-auto pt-3 text-sm font-semibold text-brand-600">
+            {actionLabel}
+            <span
+              aria-hidden
+              className="ml-1 inline-block transition group-hover:translate-x-0.5"
+            >
+              →
+            </span>
           </p>
         </div>
-      </Card>
+      </article>
     </Link>
   );
 });
@@ -342,7 +349,7 @@ export function DesignsGallery({
               />
               <div className="relative">
                 <div className="mb-8 flex gap-4 sm:items-start">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center border-2 border-brand-700 bg-brand-600 text-white shadow-lift-brand">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2 border-brand-700 bg-brand-600 text-white shadow-lift-brand">
                     <Palette className="h-6 w-6" aria-hidden />
                   </div>
                   <div className="min-w-0">

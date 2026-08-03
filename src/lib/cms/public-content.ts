@@ -134,6 +134,22 @@ export async function getResolvedServices(
   );
 }
 
+export async function getResolvedService(
+  id: string,
+  locale: CmsLocale,
+  labelsFor: (id: string) => { title: string; description: string; detail?: string },
+): Promise<ResolvedService | null> {
+  const service = staticServices.find((item) => item.id === id);
+  if (!service) return null;
+
+  const cmsServices = await getCmsServicesCached();
+  if (cmsServices.some((item) => item.id === id && !item.active)) {
+    return null;
+  }
+
+  return resolveServiceLabels(service, locale, labelsFor(id), cmsServices);
+}
+
 export async function getResolvedFeaturedServices(
   locale: CmsLocale,
   labelsFor: (id: string) => { title: string; description: string; detail?: string },

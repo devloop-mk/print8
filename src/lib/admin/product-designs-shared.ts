@@ -135,7 +135,7 @@ export function getAdminWomenTshirtColorOptions(
   }));
 }
 
-/** Exactly the 3 supplier kids tee colors. */
+/** Exactly the kids tee palette (white + supplier colors). */
 export function getAdminKidsTshirtColorOptions(
   productId = 'tshirt-kids',
 ): AdminDesignColorOption[] {

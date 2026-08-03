@@ -161,7 +161,7 @@ export function HomeCategoryGrid({ productCount }: { productCount: number }) {
             className={cn(
               'group relative col-span-2 overflow-hidden rounded-2xl bg-ink-950 text-white',
               'flex min-h-[11.5rem] flex-col justify-between p-6 sm:min-h-[12.5rem] sm:p-8',
-              'transition hover:-translate-y-0.5 hover:shadow-lift-lg',
+              'transition hover:shadow-lift-lg',
               'lg:aspect-[2/1] lg:min-h-0',
             )}
           >
@@ -187,7 +187,7 @@ export function HomeCategoryGrid({ productCount }: { productCount: number }) {
               className={cn(
                 'relative mt-5 inline-flex w-fit items-center gap-2 rounded-lg border-2 border-brand-500',
                 'bg-gradient-to-r from-brand-600 to-brand-700 px-5 py-2.5 text-sm font-semibold uppercase tracking-wide text-white',
-                'shadow-lift-brand transition group-hover:-translate-y-0.5 group-hover:from-brand-500 group-hover:to-brand-600',
+                'shadow-lift-brand transition group-hover:from-brand-500 group-hover:to-brand-600',
               )}
             >
               {t('cta')}
@@ -209,7 +209,7 @@ export function HomeCategoryGrid({ productCount }: { productCount: number }) {
                 className={cn(
                   'group relative aspect-square overflow-hidden rounded-2xl bg-white',
                   'border border-ink-200/80 transition',
-                  'hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-lift',
+                  'hover:border-brand-300 hover:shadow-lift',
                 )}
               >
                 <div className="absolute inset-0">
@@ -264,7 +264,7 @@ export function HomeCategoryGrid({ productCount }: { productCount: number }) {
                     />
                   ) : null}
                 </div>
-                <span className="absolute bottom-3 left-3 z-10 rounded-md bg-white px-2.5 py-1 text-xs font-semibold text-ink-900 shadow-sm">
+                <span className="absolute bottom-3 left-3 z-10 rounded-md bg-white px-2.5 py-1 text-xs font-semibold text-ink-900">
                   {label}
                 </span>
               </Link>

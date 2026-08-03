@@ -63,7 +63,6 @@ function CouplesPackGridItems({
           <div
             className={cn(
               'h-full transition duration-300',
-              !reducedMotion && 'hover:-translate-y-1',
             )}
           >
             <CouplePackCard
@@ -245,8 +244,7 @@ export function CouplesDesignsArchive({
           <div className="mt-6 grid items-center gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-12">
             <div className="max-w-xl">
               <p
-                className="inline-flex items-center gap-2 bg-white/80 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-rose-800 shadow-sm"
-                style={{ borderRadius: '999px' }}
+                className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-rose-800 shadow-sm"
               >
                 <Heart className="h-3.5 w-3.5" aria-hidden />
                 {t('eyebrow')}
@@ -264,8 +262,7 @@ export function CouplesDesignsArchive({
               <div className="mt-6">
                 <a
                   href="#couples-designs-grid"
-                  className="inline-flex items-center gap-2 bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lift-brand transition hover:-translate-y-0.5 hover:bg-brand-700"
-                  style={{ borderRadius: '999px' }}
+                  className="inline-flex items-center gap-2 rounded-full bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lift-brand transition hover:bg-brand-700"
                 >
                   {t('ctaBrowse')}
                   <ArrowRight className="h-4 w-4" />
@@ -304,8 +301,7 @@ export function CouplesDesignsArchive({
               onChange={(event) => setSearchQuery(event.target.value)}
               placeholder={t('searchPlaceholder')}
               aria-label={tp('searchAriaLabel')}
-              className="w-full border border-rose-200 bg-white px-4 py-2.5 text-sm text-ink-900 shadow-sm placeholder:text-ink-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
-              style={{ borderRadius: '1rem' }}
+              className="w-full rounded-lg border border-rose-200 bg-white px-4 py-2.5 text-sm text-ink-900 shadow-sm placeholder:text-ink-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
             />
             {searchQuery ? (
               <button
@@ -321,8 +317,7 @@ export function CouplesDesignsArchive({
 
         {filtered.length === 0 ? (
           <p
-            className="border border-dashed border-rose-200 bg-rose-50/60 px-4 py-12 text-center text-sm text-ink-500"
-            style={{ borderRadius: '1.25rem' }}
+            className="rounded-xl border border-dashed border-rose-200 bg-rose-50/60 px-4 py-12 text-center text-sm text-ink-500"
           >
             {t('noDesigns')}
           </p>

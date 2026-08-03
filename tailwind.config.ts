@@ -9,14 +9,14 @@ const config: Config = {
   theme: {
     borderRadius: {
       none: '0',
-      sm: '0',
-      DEFAULT: '0',
-      md: '0',
-      lg: '0',
-      xl: '0',
-      '2xl': '0',
-      '3xl': '0',
-      full: '0',
+      sm: '0.1875rem', // 3px
+      DEFAULT: '0.25rem', // 4px
+      md: '0.375rem', // 6px
+      lg: '0.5rem', // 8px
+      xl: '0.75rem', // 12px
+      '2xl': '1rem', // 16px
+      '3xl': '1.25rem', // 20px
+      full: '9999px',
     },
     extend: {
       width: {
@@ -58,9 +58,11 @@ const config: Config = {
         display: ['var(--font-display)', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        lift: '4px 4px 0 0 rgba(15, 23, 42, 0.12)',
-        'lift-brand': '4px 4px 0 0 rgba(47, 124, 178, 0.35)',
-        'lift-lg': '6px 6px 0 0 rgba(15, 23, 42, 0.14)',
+        lift: '0 1px 2px rgba(15, 23, 42, 0.05), 0 2px 8px rgba(15, 23, 42, 0.06)',
+        'lift-brand':
+          '0 1px 2px rgba(47, 124, 178, 0.08), 0 3px 10px rgba(47, 124, 178, 0.12)',
+        'lift-lg':
+          '0 2px 4px rgba(15, 23, 42, 0.05), 0 8px 24px rgba(15, 23, 42, 0.08)',
       },
       backgroundImage: {
         'mesh-light':

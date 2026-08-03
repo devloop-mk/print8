@@ -719,7 +719,7 @@ export function SpinWheelGame() {
       </div>
 
       {phase === 'already' ? (
-        <div className="mt-8 border border-brand-200 bg-brand-50 px-5 py-6 text-center">
+        <div className="mt-8 rounded-xl border border-brand-200 bg-brand-50 px-5 py-6 text-center">
           <p className="font-display text-xl font-bold text-brand-900">
             {t('alreadyTitle')}
           </p>
@@ -740,7 +740,7 @@ export function SpinWheelGame() {
       {phase === 'claim' && result ? (
         <div
           className={cn(
-            'mt-8 border border-ink-200 bg-white px-5 py-6 text-center shadow-lift',
+            'mt-8 rounded-xl border border-ink-200 bg-white px-5 py-6 text-center shadow-lift',
             winCelebration && 'animate-spin-win-pop',
           )}
         >
@@ -773,7 +773,7 @@ export function SpinWheelGame() {
                   value={email}
                   disabled={claiming}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1.5 w-full border border-ink-300 bg-white px-3 py-2.5 text-ink-900 outline-none focus:border-brand-500"
+                  className="mt-1.5 w-full rounded-lg border border-ink-300 bg-white px-3 py-2.5 text-ink-900 outline-none focus:border-brand-500"
                   placeholder={t('emailPlaceholder')}
                 />
               </label>
@@ -810,7 +810,7 @@ export function SpinWheelGame() {
       {phase === 'result' && result ? (
         <div
           className={cn(
-            'mt-8 border border-ink-200 bg-white px-5 py-6 text-center shadow-lift',
+            'mt-8 rounded-xl border border-ink-200 bg-white px-5 py-6 text-center shadow-lift',
             winCelebration && 'animate-spin-win-pop',
           )}
         >
@@ -837,13 +837,13 @@ export function SpinWheelGame() {
                 <p className="mt-2 text-sm text-ink-500">{t('emailFallback')}</p>
               )}
               <div className="mt-5 flex items-center justify-center gap-2">
-                <code className="border-2 border-dashed border-[#e85d04] bg-ink-50 px-4 py-3 text-lg font-bold tracking-wider text-ink-900">
+                <code className="rounded-lg border-2 border-dashed border-[#e85d04] bg-ink-50 px-4 py-3 text-lg font-bold tracking-wider text-ink-900">
                   {result.couponCode}
                 </code>
                 <button
                   type="button"
                   onClick={() => void copyCode()}
-                  className="border border-ink-200 bg-white p-3 text-ink-700 hover:bg-ink-50"
+                  className="rounded-md border border-ink-200 bg-white p-3 text-ink-700 hover:bg-ink-50"
                   aria-label={t('copyCode')}
                 >
                   {copied ? (
@@ -910,7 +910,7 @@ export function SpinWheelGame() {
             loading={phase === 'spinning'}
             disabled={phase === 'spinning'}
             className={cn(
-              'relative w-full overflow-hidden border-[#e85d04] bg-[#e85d04] shadow-[4px_4px_0_0_rgba(0,0,0,0.2)] hover:border-[#f48c06] hover:bg-[#f48c06]',
+              'relative w-full overflow-hidden border-[#e85d04] bg-[#e85d04] shadow-lift hover:border-[#f48c06] hover:bg-[#f48c06]',
             )}
           >
             {idleMotion ? (

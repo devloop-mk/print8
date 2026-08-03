@@ -118,7 +118,7 @@ export function Header() {
                   key={item.key}
                   href={item.href}
                   className={cn(
-                    "border-x border-transparent px-2.5 py-2.5 text-sm font-semibold uppercase tracking-wide transition lg:px-3",
+                    "rounded-lg border-x border-transparent px-2.5 py-2.5 text-sm font-semibold uppercase tracking-wide transition lg:px-3",
                     active
                       ? "bg-brand-50 text-brand-700"
                       : "text-ink-600 hover:bg-ink-50 hover:text-ink-900",
@@ -141,7 +141,7 @@ export function Header() {
 
             <Link
               href={auth?.customer ? "/account" : "/account/login"}
-              className="relative border-2 border-transparent p-2 text-ink-600 transition hover:border-ink-200 hover:bg-ink-50"
+              className="relative rounded-lg border-2 border-transparent p-2 text-ink-600 transition hover:border-ink-200 hover:bg-ink-50"
               aria-label={t("account")}
             >
               <User className="h-5 w-5" />
@@ -155,11 +155,11 @@ export function Header() {
 
             <Link
               href="/cart"
-              className="relative border-2 border-transparent p-2 text-ink-600 transition hover:border-ink-200 hover:bg-ink-50"
+              className="relative rounded-lg border-2 border-transparent p-2 text-ink-600 transition hover:border-ink-200 hover:bg-ink-50"
             >
               <ShoppingCart className="h-5 w-5" />
               {itemCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center border border-brand-800 bg-brand-600 px-1 text-[10px] font-bold text-white">
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-md border border-brand-800 bg-brand-600 px-1 text-[10px] font-bold text-white">
                   {itemCount}
                 </span>
               )}
@@ -167,7 +167,7 @@ export function Header() {
 
             <button
               type="button"
-              className="border-2 border-transparent p-2 text-ink-600 transition hover:border-ink-200 hover:bg-ink-50 lg:hidden"
+              className="rounded-lg border-2 border-transparent p-2 text-ink-600 transition hover:border-ink-200 hover:bg-ink-50 lg:hidden"
               onClick={openMenu}
               aria-label={t('openMenu')}
               aria-expanded={mobileOpen}

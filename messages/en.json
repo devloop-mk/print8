@@ -223,7 +223,7 @@
           "cta": "Start branding pack"
         },
         "ready": {
-          "title": "Ready designs, print today",
+          "title": "Pick a design and order",
           "subtitle": "Hundreds of templates for tees, mugs, and caps — pick and order.",
           "cta": "Choose a design"
         },
@@ -255,7 +255,7 @@
       }
     },
     "featuredServices": "Popular services",
-    "featuredServicesDesc": "From custom merch and promo gifts to photocopying, plastification, and binding — everything in one place.",
+    "featuredServicesDesc": "Photocopying, laminating, plastification, binding, and similar shop-floor services.",
     "featuredDesigns": "Print designs",
     "featuredDesignsDesc": "Business cards, invitations, menus, and more — pick a template, send your details, or customize online.",
     "designFilterLabel": "Filter by category",
@@ -325,7 +325,7 @@
       },
       "range": {
         "title": "Full range of services",
-        "description": "From t-shirts and magnets to thesis binding, club cards, menus, and temporary tattoos.",
+        "description": "From t-shirts and magnets to thesis binding, club cards, menus, and A3 posters.",
         "cta": "Browse all services"
       }
     },
@@ -453,12 +453,15 @@
   },
   "services": {
     "title": "Our services",
-    "subtitle": "Complete printing solutions — from t-shirts and magnets to thesis binding, menus, and invitations.",
+    "subtitle": "Printing, binding, laminating, and finishing — plus business cards, menus, and invitations.",
     "heroBadge": "PRINT 8 • SERVICES",
-    "heroTitle": "Popular services for your business and events",
-    "heroSubtitle": "From custom apparel and promo gifts to business cards, invitations, and finishing — professional printing in one place.",
-    "heroCta": "Browse all services",
+    "heroTitle": "Printing, binding, and finishing",
+    "heroSubtitle": "Photocopying, laminating, plastification, bookbinding, and thesis hardcovers — plus business cards, menus, and invitations.",
+    "heroCta": "Browse services",
     "catalogTitle": "All services",
+    "productsTeaserTitle": "Personalized products",
+    "productsTeaserDesc": "T-shirts, mugs, bags, and more live under Products — this page is for print-shop services and finishing.",
+    "productsTeaserCta": "Go to products",
     "heroStatQuality": "Professional quality",
     "heroStatRange": "Wide service range",
     "heroStatPopular": "Most requested",
@@ -475,6 +478,17 @@
     "contactUs": "Contact us",
     "orderService": "Order service",
     "seeOptions": "See options",
+    "learnMore": "Learn more",
+    "startOrder": "Start order",
+    "detailTitle": "About this service",
+    "useCasesTitle": "Use cases",
+    "whatNextTitle": "Next step",
+    "whatNext": {
+      "options": "Browse available designs or products and continue your order online.",
+      "contact": "Send us a message — we’ll follow up with details and a quote.",
+      "order-flow": "Continue to order: upload your file and choose printing or binding options."
+    },
+    "relatedServices": "Related services",
     "backToServices": "Back to services",
     "designsSection": "Ready-made designs",
     "designsSectionDesc": "Choose a template and send us your details — we prepare the design for you.",
@@ -496,16 +510,12 @@
         "description": "Magnets, wooden plaques, photo stone, keychains, and personalized gift sets."
       },
       "print": {
-        "title": "Print & cards",
-        "description": "Business cards, menus, invitations, thank-you cards, photocopying, and club cards."
+        "title": "Printing",
+        "description": "Photocopying, A3 posters, business cards, menus, invitations, thank-you cards, and club cards."
       },
       "finishing": {
-        "title": "Finishing",
-        "description": "Laminating, plastification, metal and plastic binding, and hardcover thesis printing."
-      },
-      "special": {
-        "title": "Special services",
-        "description": "Temporary tattoos and tattoo appointments."
+        "title": "Binding & lamination",
+        "description": "Laminating, plastification, bookbinding, and hardcover thesis printing."
       }
     },
     "items": {
@@ -528,6 +538,38 @@
         "title": "Photocopying & printing",
         "description": "Photocopying on a latest-generation multifunction printer — color and black & white.",
         "detail": "Documents, brochures, flyers, and posters. Upload files at checkout."
+      },
+      "a3-posters": {
+        "title": "A3 posters (297×420 mm)",
+        "description": "Large A3 posters (297×420 mm) — color or black & white, for promos, events, and notices.",
+        "detail": "We print A3 posters at 297×420 mm with professional quality. Optional laminating or plastification for extra durability. Send your file or idea — we prepare the print.",
+        "useCasesTitle": "What A3 posters are used for",
+        "useCases": {
+          "events": {
+            "title": "Events & concerts",
+            "description": "Announcements, schedules, sponsors, and visuals meant to be seen from a distance."
+          },
+          "school": {
+            "title": "Schools & universities",
+            "description": "Science posters, presentations, notice boards, and student projects."
+          },
+          "retail": {
+            "title": "Shops & salons",
+            "description": "Sales, price lists, new products, and in-store window displays."
+          },
+          "office": {
+            "title": "Offices & companies",
+            "description": "Info boards, instructions, internal campaigns, and safety notices."
+          },
+          "promo": {
+            "title": "Brand promotions",
+            "description": "Logos, offers, QR codes, and campaign creatives brought into print."
+          },
+          "hospitality": {
+            "title": "Cafés & restaurants",
+            "description": "Specials, daily menus, venue events, and seasonal offers."
+          }
+        }
       },
       "plastification": {
         "title": "Plastification",
@@ -628,16 +670,6 @@
         "title": "Loyalty points cards",
         "description": "Loyalty and points cards for your business or club.",
         "detail": "Branded cards tailored to you — contact us for details."
-      },
-      "temporary-tattoos": {
-        "title": "Temporary tattoos",
-        "description": "Custom temporary tattoos — for events, promos, and fun.",
-        "detail": "Send your design or idea — we prepare it for print."
-      },
-      "tattoo-services": {
-        "title": "Tattoos",
-        "description": "Tattoos by appointment — contact us for a consultation.",
-        "detail": "Book a session or ask about design and pricing through our contact form."
       }
     }
   },
@@ -1989,6 +2021,7 @@
       "drinkwareWrapArea": "Print area",
       "drinkwareFrontPreview": "Front",
       "drinkwareWrapHint": "Design on the flat print template — left and right edges meet at the handle. The 3D preview is approximate and shows roughly how the mug will look in real life.",
+      "mugInsidePrintNote": "The interior is always the same (pre-printed). Only the exterior is customizable.",
       "previewModeLabel": "Preview mode",
       "previewModeFlat": "Flat",
       "previewMode3d": "3D",
@@ -2753,7 +2786,7 @@
     "viewAccountCta": "View my account",
     "alreadyBodyLoggedIn": "You already spun the wheel with this account. Your coupon is in your account dashboard.",
     "rules": "One play per email. Spin first, then claim with your email. Coupons are single-use and locked to your email.",
-    "winTitle": "You won −{amount} MKD!",
+    "winTitle": "You won a {amount} MKD discount!",
     "winBody": "Minimum order {min} MKD · Valid {days} days · enter the code at checkout.",
     "emailSent": "We also sent the code to your email.",
     "emailFallback": "Save the code below (email may be delayed).",

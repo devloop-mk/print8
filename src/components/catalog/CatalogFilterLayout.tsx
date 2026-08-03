@@ -260,7 +260,7 @@ function MobileFilterPanel({
   );
 
   return (
-    <div className="w-full min-w-0 max-w-full overflow-hidden border border-ink-200 bg-white shadow-lift">
+    <div className="w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-ink-200 bg-white shadow-lift">
       {showSearch ? (
         <div className="border-b border-ink-100 px-4 py-3">
           <CatalogSearchField
@@ -275,7 +275,7 @@ function MobileFilterPanel({
       <div className="flex items-center gap-3 border-b border-ink-100 px-4 py-3">
         <button
           type="button"
-          className="flex flex-1 items-center gap-2 border-2 border-ink-200 bg-ink-50 px-3 py-2.5 text-left text-sm font-medium text-ink-800 transition hover:border-brand-400 hover:bg-brand-50/50"
+          className="flex flex-1 items-center gap-2 rounded-lg border-2 border-ink-200 bg-ink-50 px-3 py-2.5 text-left text-sm font-medium text-ink-800 transition hover:border-brand-400 hover:bg-brand-50/50"
           aria-expanded={expanded}
           aria-controls={panelId}
           onClick={() => setExpanded((open) => !open)}
@@ -395,7 +395,7 @@ export function CatalogFilterLayout({
   return (
     <div className="min-w-0 lg:grid lg:grid-cols-[minmax(0,15rem)_1fr] lg:gap-8 xl:grid-cols-[minmax(0,16rem)_1fr]">
       <aside className="hidden lg:sticky lg:top-20 lg:z-20 lg:block lg:self-start">
-        <div className="max-h-[calc(100vh-5.5rem)] space-y-6 overflow-y-auto overscroll-contain border border-ink-200 bg-white p-4 shadow-sm">
+        <div className="max-h-[calc(100vh-5.5rem)] space-y-6 overflow-y-auto overscroll-contain rounded-xl border border-ink-200 bg-white p-4 shadow-sm">
           <div className="flex items-center gap-2 border-b border-ink-100 pb-3 text-sm font-semibold text-ink-900">
             <SlidersHorizontal className="h-4 w-4 text-brand-600" aria-hidden />
             {ariaLabel}

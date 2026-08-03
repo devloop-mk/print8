@@ -84,7 +84,7 @@ export function ProductCardGrid({
           >
             <Link
               href={productHref}
-              className="group block transition hover:-translate-y-1"
+              className="group block transition hover:shadow-lift-brand"
             >
               <Card className="h-full overflow-hidden p-0 transition group-hover:shadow-lift-brand">
                 <div className="p-4 pb-0">
@@ -136,7 +136,7 @@ export function ProductCardGrid({
                             }));
                           }}
                           className={cn(
-                            'h-5 w-5 border-2 transition',
+                            'h-5 w-5 rounded-full border-2 transition',
                             cardColor === c
                               ? 'border-brand-600 ring-2 ring-brand-200'
                               : 'border-ink-300 hover:border-ink-400',

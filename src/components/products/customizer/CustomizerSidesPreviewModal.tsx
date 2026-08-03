@@ -76,6 +76,14 @@ export function CustomizerSidesPreviewModal({
               {t('sidesPreviewTitle')}
             </p>
             <p className="mt-1 text-sm text-ink-500">{t('sidesPreviewHint')}</p>
+            {use3DPreviewLabels ? (
+              <p
+                role="note"
+                className="mt-2 rounded-lg border border-amber-300/80 bg-amber-50 px-2.5 py-2 text-xs font-medium leading-snug text-amber-950"
+              >
+                {t('drinkwarePreviewApproximateNote')}
+              </p>
+            ) : null}
           </div>
           <button
             type="button"

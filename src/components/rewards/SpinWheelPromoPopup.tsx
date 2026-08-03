@@ -100,7 +100,7 @@ export function SpinWheelPromoPopup() {
   return (
     <div className="fixed inset-0 z-[45] flex items-center justify-center bg-ink-950/40 p-3 sm:p-6">
       <div
-        className="relative w-full max-w-lg border border-brand-200 bg-white p-5 shadow-xl sm:p-6"
+        className="relative w-full max-w-lg rounded-xl border border-brand-200 bg-white p-5 shadow-xl sm:p-6"
         role="dialog"
         aria-modal="true"
         aria-labelledby="spin-promo-title"
@@ -108,7 +108,7 @@ export function SpinWheelPromoPopup() {
         <button
           type="button"
           onClick={dismiss}
-          className="absolute right-3 top-3 p-1.5 text-ink-500 hover:text-ink-800"
+          className="absolute right-3 top-3 rounded-md p-1.5 text-ink-500 hover:text-ink-800"
           aria-label={t('dismiss')}
         >
           <X className="h-5 w-5" />

@@ -37,9 +37,9 @@ function SlideCopy({
         href={href}
         tabIndex={active ? 0 : -1}
         className={cn(
-          'mt-4 inline-flex min-h-11 items-center justify-center border-2 border-[#e85d04] bg-[#e85d04] px-5 py-2.5',
-          'text-sm font-semibold uppercase tracking-wide text-white shadow-[4px_4px_0_0_rgba(0,0,0,0.25)]',
-          'transition hover:-translate-y-0.5 hover:border-[#f48c06] hover:bg-[#f48c06] active:translate-y-0 active:shadow-none',
+          'mt-4 inline-flex min-h-11 items-center justify-center rounded-lg border-2 border-[#e85d04] bg-[#e85d04] px-5 py-2.5',
+          'text-sm font-semibold uppercase tracking-wide text-white shadow-lift',
+          'transition hover:border-[#f48c06] hover:bg-[#f48c06]',
           'sm:mt-6 sm:min-h-0 sm:px-6 sm:py-3',
         )}
       >
@@ -168,7 +168,7 @@ export function HomePromoBannerCarousel({ className = '' }: { className?: string
           })}
           onClick={() => goTo(slideIndex)}
           className={cn(
-            'h-1.5 transition-all duration-300',
+            'h-1.5 rounded-full transition-all duration-300',
             slideIndex === index ? 'w-7 bg-white' : 'w-1.5 bg-white/40 hover:bg-white/70',
           )}
         />
@@ -231,7 +231,7 @@ export function HomePromoBannerCarousel({ className = '' }: { className?: string
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent via-brand-800/55 to-brand-800"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent via-brand-800/55 to-[#0a1a38]"
         aria-hidden
       />
     </div>
@@ -239,7 +239,7 @@ export function HomePromoBannerCarousel({ className = '' }: { className?: string
 
   return (
     <div
-      className={cn('relative w-full overflow-hidden bg-ink-950', className)}
+      className={cn('relative w-full overflow-hidden bg-[#0a1a38]', className)}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
@@ -299,7 +299,7 @@ export function HomePromoBannerCarousel({ className = '' }: { className?: string
           <button
             type="button"
             onClick={goPrev}
-            className="absolute left-4 top-1/2 z-20 -translate-y-1/2 border border-white/25 bg-ink-950/55 p-2.5 text-white backdrop-blur-sm transition hover:bg-ink-950/80"
+            className="absolute left-4 top-1/2 z-20 -translate-y-1/2 rounded-md border border-white/25 bg-ink-950/55 p-2.5 text-white backdrop-blur-sm transition hover:bg-ink-950/80"
             aria-label={t('prev')}
           >
             <ChevronLeft className="h-6 w-6" />
@@ -307,7 +307,7 @@ export function HomePromoBannerCarousel({ className = '' }: { className?: string
           <button
             type="button"
             onClick={goNext}
-            className="absolute right-4 top-1/2 z-20 -translate-y-1/2 border border-white/25 bg-ink-950/55 p-2.5 text-white backdrop-blur-sm transition hover:bg-ink-950/80"
+            className="absolute right-4 top-1/2 z-20 -translate-y-1/2 rounded-md border border-white/25 bg-ink-950/55 p-2.5 text-white backdrop-blur-sm transition hover:bg-ink-950/80"
             aria-label={t('next')}
           >
             <ChevronRight className="h-6 w-6" />
@@ -341,7 +341,7 @@ export function HomePromoBannerCarousel({ className = '' }: { className?: string
             <div
               key={slide.id}
               data-promo-slide
-              className="relative h-full min-w-full shrink-0 snap-center snap-always self-stretch overflow-hidden bg-brand-800"
+              className="relative h-full min-w-full shrink-0 snap-center snap-always self-stretch overflow-hidden bg-[#0a1a38]"
               aria-hidden={slideIndex !== index}
             >
               {renderMobileImage(slide, slideIndex)}
@@ -352,7 +352,7 @@ export function HomePromoBannerCarousel({ className = '' }: { className?: string
         <div
           className={cn(
             'pointer-events-none absolute inset-x-0 bottom-0 z-10',
-            'bg-gradient-to-b from-brand-800 via-brand-800 to-brand-900 px-5 pb-5 pt-5',
+            'bg-gradient-to-b from-brand-800 via-brand-800 to-[#0a1a38] px-5 pb-5 pt-5',
             'before:pointer-events-none before:absolute before:inset-x-0 before:-top-14 before:h-14 before:bg-gradient-to-b before:from-transparent before:via-brand-800/45 before:to-brand-800',
           )}
         >
@@ -365,7 +365,7 @@ export function HomePromoBannerCarousel({ className = '' }: { className?: string
         <button
           type="button"
           onClick={goPrev}
-          className="absolute left-2 top-[38%] z-20 -translate-y-1/2 border border-white/25 bg-ink-950/55 p-2 text-white backdrop-blur-sm transition hover:bg-ink-950/80"
+          className="absolute left-2 top-[38%] z-20 -translate-y-1/2 rounded-md border border-white/25 bg-ink-950/55 p-2 text-white backdrop-blur-sm transition hover:bg-ink-950/80"
           aria-label={t('prev')}
         >
           <ChevronLeft className="h-5 w-5" />
@@ -373,7 +373,7 @@ export function HomePromoBannerCarousel({ className = '' }: { className?: string
         <button
           type="button"
           onClick={goNext}
-          className="absolute right-2 top-[38%] z-20 -translate-y-1/2 border border-white/25 bg-ink-950/55 p-2 text-white backdrop-blur-sm transition hover:bg-ink-950/80"
+          className="absolute right-2 top-[38%] z-20 -translate-y-1/2 rounded-md border border-white/25 bg-ink-950/55 p-2 text-white backdrop-blur-sm transition hover:bg-ink-950/80"
           aria-label={t('next')}
         >
           <ChevronRight className="h-5 w-5" />

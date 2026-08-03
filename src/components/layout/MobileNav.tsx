@@ -242,14 +242,14 @@ export function MobileNav({ open, onClose, onOpenSearch }: MobileNavProps) {
               ) : null}
             </Link>
           </div>
-        </nav>
 
-        <div className="border-t border-ink-100 px-4 py-5">
-          <p className="mb-3 px-1 text-xs font-semibold uppercase tracking-wider text-ink-400">
-            {t('language')}
-          </p>
-          <LanguageSwitcher variant="list" onLocaleChange={onClose} />
-        </div>
+          <div className="mt-4 border-t border-ink-100 px-1 pb-2 pt-4">
+            <p className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-ink-400">
+              {t('language')}
+            </p>
+            <LanguageSwitcher variant="list" onLocaleChange={onClose} />
+          </div>
+        </nav>
       </aside>
     </div>
   );

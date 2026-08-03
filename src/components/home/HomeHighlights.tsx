@@ -75,7 +75,7 @@ export function HomeHighlights() {
             <button
               type="button"
               onClick={() => scrollTo(index - 1)}
-              className="inline-flex h-10 w-10 items-center justify-center border border-ink-300 bg-white text-ink-700 transition hover:border-brand-500 hover:text-brand-700"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-ink-300 bg-white text-ink-700 transition hover:border-brand-500 hover:text-brand-700"
               aria-label={t('prev')}
             >
               <ChevronLeft className="h-5 w-5" />
@@ -83,7 +83,7 @@ export function HomeHighlights() {
             <button
               type="button"
               onClick={() => scrollTo(index + 1)}
-              className="inline-flex h-10 w-10 items-center justify-center border border-ink-300 bg-white text-ink-700 transition hover:border-brand-500 hover:text-brand-700"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-ink-300 bg-white text-ink-700 transition hover:border-brand-500 hover:text-brand-700"
               aria-label={t('next')}
             >
               <ChevronRight className="h-5 w-5" />
@@ -105,11 +105,11 @@ export function HomeHighlights() {
               href={href}
               data-highlight-card
               className={cn(
-                'group flex w-[84vw] shrink-0 snap-start flex-col border border-ink-200 bg-ink-50/40 p-4 transition',
+                'group flex w-[84vw] shrink-0 snap-start flex-col rounded-xl border border-ink-200 bg-ink-50/40 p-4 transition',
                 'hover:border-brand-300 hover:bg-white hover:shadow-lift sm:w-[min(340px,42vw)]',
               )}
             >
-              <div className={cn('mb-3 flex h-10 w-10 items-center justify-center border', accent)}>
+              <div className={cn('mb-3 flex h-10 w-10 items-center justify-center rounded-md border', accent)}>
                 <Icon className="h-5 w-5" aria-hidden />
               </div>
               <h3 className="text-base font-bold text-ink-900">{t(`${id}.title`)}</h3>
@@ -134,7 +134,7 @@ export function HomeHighlights() {
               aria-label={t(`${card.id}.title`)}
               onClick={() => scrollTo(i)}
               className={cn(
-                'h-1.5 transition-all',
+                'h-1.5 rounded-full transition-all',
                 i === index ? 'w-6 bg-brand-600' : 'w-1.5 bg-ink-300',
               )}
             />

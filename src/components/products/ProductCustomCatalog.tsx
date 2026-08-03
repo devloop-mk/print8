@@ -227,7 +227,7 @@ export function ProductCustomCatalog({
 
       <Link
         href={PRODUCT_OFFERING_PATHS.brandingPack}
-        className="block rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-white p-5 shadow-lift transition hover:-translate-y-0.5 hover:border-brand-400 hover:shadow-lift-brand sm:p-6"
+        className="block rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-white p-5 shadow-lift transition hover:border-brand-400 hover:shadow-lift-brand sm:p-6"
       >
         <p className="text-xs font-semibold uppercase tracking-wider text-brand-600">
           {tc('brandingPackBadge')}

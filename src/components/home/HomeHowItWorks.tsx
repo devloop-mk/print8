@@ -18,7 +18,7 @@ export async function HomeHowItWorks() {
         </div>
         <Link
           href="/how-to-order"
-          className="inline-flex shrink-0 items-center justify-center gap-2 border-2 border-brand-600 bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lift-brand transition hover:-translate-y-0.5 hover:bg-brand-700"
+          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border-2 border-brand-600 bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lift-brand transition hover:bg-brand-700"
         >
           {t('teaserCta')}
           <ArrowRight className="h-4 w-4" aria-hidden />

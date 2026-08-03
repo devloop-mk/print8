@@ -10,10 +10,11 @@ export type TshirtKidsColor = {
 };
 
 /**
- * Children's tee — 3 chart colors:
- * 4 Небесно плава, 12 Жолта, 19 Минт
+ * Children's tee — chart colors + white:
+ * Бела, 4 Небесно плава, 12 Жолта, 19 Минт
  */
 export const TSHIRT_KIDS_COLORS: TshirtKidsColor[] = [
+  { hex: '#ffffff', labelKey: 'white', slug: 'bela' },
   { hex: '#7891B7', labelKey: 'skyBlue', slug: 'nebesno-plava' },
   { hex: '#FDC101', labelKey: 'yellow', slug: 'zolta' },
   { hex: '#9ACDCA', labelKey: 'mint', slug: 'mint' },
@@ -26,15 +27,17 @@ export const TSHIRT_KIDS_COLOR_HEXES = TSHIRT_KIDS_COLORS.map((c) =>
 const KIDS_MOCKUP_DIR = '/t-shirts/kids';
 
 /** Bump when kids JPG mockups are regenerated. */
-export const KIDS_MOCKUP_ASSET_VERSION = 1;
+export const KIDS_MOCKUP_ASSET_VERSION = 2;
 
 const KIDS_MOCKUP_CATALOG_SCALE: Record<string, number> = {
+  bela: 1.08,
   'nebesno-plava': 1.08,
   zolta: 1.08,
   mint: 1.08,
 };
 
 const KIDS_MOCKUP_CUSTOMIZER_SCALE: Record<string, number> = {
+  bela: 1,
   'nebesno-plava': 1,
   zolta: 1,
   mint: 1,

@@ -7,6 +7,7 @@ import { Flame, Sparkles, ArrowUpRight } from 'lucide-react';
 import type { TrendingProductDesign } from '@/lib/cms/home-trending';
 import { resolveProductDesignDisplayName } from '@/lib/products/design-display-name';
 import { buildDesignDetailUrl } from '@/lib/products/paths';
+import { productTypeHref } from '@/lib/products/product-nav';
 import { getTrendingDesignThumbnail } from '@/lib/home/trending-thumbnail';
 import { cn } from '@/lib/utils';
 
@@ -24,7 +25,7 @@ function TrendingThumbnail({
   return (
     <div
       className={cn(
-        'relative w-full overflow-hidden shadow-[0_20px_60px_-24px_rgba(0,0,0,0.65)]',
+        'relative w-full overflow-hidden shadow-[0_20px_60px_-24px_rgba(0,0,0,0.65)] rounded-xl',
         'transition duration-500 group-hover:scale-[1.03] group-hover:shadow-[0_28px_70px_-20px_rgba(0,0,0,0.55)]',
         compact && 'shadow-[0_8px_24px_-12px_rgba(0,0,0,0.5)] group-hover:shadow-[0_12px_28px_-10px_rgba(0,0,0,0.45)]',
         design.ring,
@@ -77,9 +78,9 @@ function TrendingCard({
       href={href}
       prefetch={false}
       className={cn(
-        'group relative flex h-full flex-col overflow-hidden',
+        'group relative flex h-full flex-col overflow-hidden rounded-xl',
         'border border-white/10 bg-white/[0.04] backdrop-blur-sm',
-        'transition duration-500 hover:-translate-y-1 hover:border-white/25 hover:bg-white/[0.07]',
+        'transition duration-500 hover:border-white/25 hover:bg-white/[0.07]',
         'hover:shadow-[0_24px_80px_-20px_rgba(255,255,255,0.15)]',
         compact && 'w-[55vw] max-w-[210px] shrink-0 snap-start',
         featured && !compact && 'min-h-[320px] lg:min-h-full',
@@ -111,7 +112,7 @@ function TrendingCard({
         <div className="flex flex-wrap items-center gap-1.5">
           <span
             className={cn(
-              'inline-flex items-center gap-1 border border-white/20 font-bold uppercase tracking-wider text-white',
+              'inline-flex items-center gap-1 rounded-md border border-white/20 font-bold uppercase tracking-wider text-white',
               compact ? 'px-1.5 py-0.5 text-[9px]' : 'px-2 py-0.5 text-[10px]',
               design.badge,
             )}
@@ -222,8 +223,8 @@ export function TrendingDesignsSection({
           </div>
 
           <Link
-            href="/products/ready-designs"
-            className="inline-flex shrink-0 items-center gap-2 border border-white/25 bg-white/5 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm transition hover:border-white/40 hover:bg-white/10 sm:px-5 sm:py-2.5"
+            href={productTypeHref('t-shirt')}
+            className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-white/25 bg-white/5 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm transition hover:border-white/40 hover:bg-white/10 sm:px-5 sm:py-2.5"
           >
             <Sparkles className="h-4 w-4 text-brand-300" aria-hidden />
             {t('viewAll')}
@@ -281,8 +282,8 @@ export function TrendingDesignsSection({
 
         <div className="mt-8 hidden justify-center sm:mt-12 sm:flex">
           <Link
-            href="/products/ready-designs"
-            className="inline-flex items-center gap-2 border border-white/25 bg-white/5 px-6 py-3 text-sm font-semibold text-white backdrop-blur-sm transition hover:border-white/40 hover:bg-white/10"
+            href={productTypeHref('t-shirt')}
+            className="inline-flex items-center gap-2 rounded-lg border border-white/25 bg-white/5 px-6 py-3 text-sm font-semibold text-white backdrop-blur-sm transition hover:border-white/40 hover:bg-white/10"
           >
             <Sparkles className="h-4 w-4 text-brand-300" aria-hidden />
             {t('viewAll')}

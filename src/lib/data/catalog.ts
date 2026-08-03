@@ -59,15 +59,13 @@ export type ServiceId =
   | 'gift-sets'
   | 'club-membership-cards'
   | 'loyalty-points-cards'
-  | 'temporary-tattoos'
-  | 'tattoo-services';
+  | 'a3-posters';
 
 export const serviceCategoryOrder = [
-  'merch',
-  'gifts',
   'print',
   'finishing',
-  'special',
+  'merch',
+  'gifts',
 ] as const;
 
 export type ServiceCategoryId = (typeof serviceCategoryOrder)[number];
@@ -94,7 +92,6 @@ export const services: Service[] = [
     icon: 'Shirt',
     category: 'merch',
     startingPrice: 350,
-    featured: true,
     customization: 'products',
     productTypes: ['t-shirt'],
   },
@@ -103,7 +100,6 @@ export const services: Service[] = [
     icon: 'Shirt',
     category: 'merch',
     startingPrice: 1200,
-    featured: true,
     customization: 'products',
     productTypes: ['hoodie'],
   },
@@ -112,7 +108,6 @@ export const services: Service[] = [
     icon: 'Baby',
     category: 'merch',
     startingPrice: 500,
-    featured: true,
     customization: 'products',
     productTypes: ['bodysuit'],
   },
@@ -129,7 +124,6 @@ export const services: Service[] = [
     icon: 'ShoppingBag',
     category: 'merch',
     startingPrice: 300,
-    featured: true,
     customization: 'products',
     productTypes: ['bag'],
   },
@@ -146,7 +140,6 @@ export const services: Service[] = [
     icon: 'GlassWater',
     category: 'merch',
     startingPrice: 800,
-    featured: true,
     customization: 'products',
     productTypes: ['thermos'],
   },
@@ -155,7 +148,6 @@ export const services: Service[] = [
     icon: 'Magnet',
     category: 'gifts',
     startingPrice: 49,
-    featured: true,
     customization: 'products',
     productTypes: ['magnet'],
   },
@@ -238,6 +230,14 @@ export const services: Service[] = [
     customization: 'none',
   },
   {
+    id: 'a3-posters',
+    icon: 'Image',
+    category: 'print',
+    startingPrice: 150,
+    featured: true,
+    customization: 'none',
+  },
+  {
     id: 'club-membership-cards',
     icon: 'IdCard',
     category: 'print',
@@ -256,6 +256,7 @@ export const services: Service[] = [
     icon: 'Layers',
     category: 'finishing',
     startingPrice: 50,
+    featured: true,
     customization: 'none',
   },
   {
@@ -263,6 +264,7 @@ export const services: Service[] = [
     icon: 'Shield',
     category: 'finishing',
     startingPrice: 100,
+    featured: true,
     customization: 'none',
   },
   {
@@ -279,21 +281,6 @@ export const services: Service[] = [
     category: 'finishing',
     startingPrice: 1500,
     featured: true,
-    customization: 'none',
-  },
-  {
-    id: 'temporary-tattoos',
-    icon: 'Sticker',
-    category: 'special',
-    startingPrice: 300,
-    customization: 'none',
-  },
-  {
-    id: 'tattoo-services',
-    icon: 'PenTool',
-    category: 'special',
-    startingPrice: 0,
-    contactOnly: true,
     customization: 'none',
   },
 ];
@@ -1473,7 +1460,7 @@ export const products: Product[] = [
     fit: 'kids',
     fitOnly: true,
     nameKey: 'tshirtKids',
-    image: getKidsTshirtMockupPath('nebesno-plava', 'front'),
+    image: getKidsTshirtMockupPath('bela', 'front'),
     colorsImages: buildKidsTshirtColorImages(),
     /** Fallback when printPackage missing — matches front-small. */
     basePrice: 400,

@@ -52,11 +52,11 @@
 
 @layer components {
   .eyebrow {
-    @apply inline-flex items-center gap-2 bg-brand-50 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-brand-800;
+    @apply inline-flex items-center gap-2 rounded-md bg-brand-50 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-brand-800;
   }
 
   .eyebrow-on-dark {
-    @apply inline-flex items-center gap-2 border border-white/25 bg-white/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-brand-100;
+    @apply inline-flex items-center gap-2 rounded-md border border-white/25 bg-white/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-brand-100;
   }
 
   .section-band {
@@ -68,18 +68,18 @@
   }
 
   .link-cta {
-    @apply inline-flex items-center border border-ink-300 bg-white px-5 py-2.5 text-sm font-semibold text-ink-800 shadow-lift transition hover:-translate-y-0.5 hover:border-ink-400 hover:bg-ink-50;
+    @apply inline-flex items-center rounded-lg border border-ink-200 bg-white px-4 py-2 text-sm font-semibold text-ink-700 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800;
   }
 
   .surface-panel {
-    @apply border border-ink-200 bg-white shadow-lift;
+    @apply rounded-2xl border border-ink-200/80 bg-white shadow-sm;
   }
 
   .badge-sharp {
-    @apply inline-flex items-center border border-ink-200 bg-ink-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-ink-700;
+    @apply inline-flex items-center rounded-md border border-ink-200 bg-ink-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-ink-700;
   }
 
   .badge-brand {
-    @apply inline-flex items-center bg-brand-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-800;
+    @apply inline-flex items-center rounded-md bg-brand-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-800;
   }
 }

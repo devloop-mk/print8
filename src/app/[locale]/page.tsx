@@ -3,7 +3,7 @@ import { Link } from '@/i18n/navigation';
 import { getHomeFeaturedDesignTemplates } from '@/lib/catalog/design-catalog';
 import {
   getContactCmsValues,
-  getResolvedFeaturedServices,
+  getResolvedServices,
   resolveCmsTexts,
   type CmsLocale,
 } from '@/lib/cms/public-content';
@@ -59,10 +59,19 @@ export default async function HomePage({
         addressValue: tc('addressValue'),
         hoursValue: tc('hoursValue'),
       }),
-      getResolvedFeaturedServices(cmsLocale, (id) => ({
+      getResolvedServices(cmsLocale, (id) => ({
         title: ts(`${id}.title`),
         description: ts(`${id}.description`),
-      })),
+      })).then((items) => {
+        const isShopFloor = (service: (typeof items)[number]) =>
+          service.category === 'print' || service.category === 'finishing';
+        const featuredShop = items.filter(
+          (service) => service.featured && isShopFloor(service),
+        );
+        if (featuredShop.length >= 4) return featuredShop.slice(0, 4);
+        const shopFloor = items.filter(isShopFloor);
+        return shopFloor.slice(0, 4);
+      }),
       // Untagged from catalog-designs — exclusive orders must not rewrite home ISR.
       getHomeFeaturedDesignTemplates(),
       getHomeTrendingProductDesigns(),
@@ -74,7 +83,7 @@ export default async function HomePage({
 
   return (
     <>
-      <section className="relative overflow-hidden border-b border-ink-200 bg-ink-950 text-white">
+      <section className="relative overflow-hidden bg-[#0a1a38] text-white">
         <h1 className="sr-only">
           Print 8 — {cmsTexts['home.heroTitle']}
         </h1>

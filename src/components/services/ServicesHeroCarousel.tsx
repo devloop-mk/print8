@@ -10,7 +10,6 @@ import { cn } from '@/lib/utils';
 export type ServicesHeroCarouselItem = {
   id: string;
   title: string;
-  priceLabel: string;
   href: string;
   image: string;
   accent: string;
@@ -22,9 +21,11 @@ const AUTO_ADVANCE_MS = 5500;
 export function ServicesHeroCarousel({
   items,
   className = '',
+  compact = false,
 }: {
   items: ServicesHeroCarouselItem[];
   className?: string;
+  compact?: boolean;
 }) {
   const t = useTranslations('services.heroCarousel');
   const [index, setIndex] = useState(0);
@@ -64,8 +65,13 @@ export function ServicesHeroCarousel({
         }
       }}
     >
-      <div className="relative overflow-hidden rounded-2xl border border-white/15 bg-white/5 shadow-2xl shadow-black/30 backdrop-blur-sm">
-        <div className="relative aspect-[3/4] w-full lg:aspect-[5/6]">
+      <div className="relative overflow-hidden rounded-xl border border-white/15 bg-white/5 shadow-xl shadow-black/25 backdrop-blur-sm">
+        <div
+          className={cn(
+            'relative w-full',
+            compact ? 'aspect-[16/11]' : 'aspect-[3/4] lg:aspect-[5/6]',
+          )}
+        >
           {items.map((item, slideIndex) => (
             <Link
               key={item.id}
@@ -89,12 +95,29 @@ export function ServicesHeroCarousel({
                 )}
                 priority={slideIndex === 0}
               />
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/92 via-black/60 via-[38%] to-transparent px-5 pb-5 pt-20 sm:px-6 sm:pb-6 sm:pt-24">
-                <p className="text-base font-bold leading-snug text-white sm:text-lg">
+              <div
+                className={cn(
+                  'pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/92 via-black/60 via-[38%] to-transparent',
+                  compact
+                    ? 'px-4 pb-4 pt-14 sm:px-5 sm:pb-5 sm:pt-16'
+                    : 'px-5 pb-5 pt-20 sm:px-6 sm:pb-6 sm:pt-24',
+                )}
+              >
+                <p
+                  className={cn(
+                    'font-bold leading-snug text-white',
+                    compact ? 'text-sm sm:text-base' : 'text-base sm:text-lg',
+                  )}
+                >
                   {item.title}
                 </p>
-                <p className="mt-1 text-sm font-medium text-white/80">
-                  {item.priceLabel} · {t('cta')} →
+                <p
+                  className={cn(
+                    'mt-1 font-medium text-white/80',
+                    compact ? 'text-xs sm:text-sm' : 'text-sm',
+                  )}
+                >
+                  {t('cta')} →
                 </p>
               </div>
             </Link>

@@ -46,6 +46,7 @@ import {
 import {
   getCompatibleDrinkwareProducts,
   getDrinkwareBodyColorOptions,
+  isMugInsideProduct,
 } from '@/lib/products/drinkware-product-options';
 import { GarmentFitSelector } from '@/components/products/GarmentFitSelector';
 import { DrinkwareProductSelector } from '@/components/products/DrinkwareProductSelector';
@@ -2455,16 +2456,27 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   const drinkwareSidePreviewNode =
     isDrinkware && isDesktopSplitPreview && !isCapturing ? (
       <div className="flex min-h-0 flex-1 flex-col">
-        <div className="flex shrink-0 flex-col gap-0.5 border-b border-ink-100 px-4 py-3">
+        <div className="flex shrink-0 flex-col gap-2 border-b border-ink-100 px-4 py-3">
           <div className="flex items-center gap-2">
             <Rotate3d className="h-4 w-4 text-brand-600" aria-hidden />
             <h2 className="text-sm font-semibold text-ink-900">
               {t('preview3dPaneTitle')}
             </h2>
           </div>
-          <p className="pl-6 text-xs leading-snug text-ink-500">
+          <p
+            role="note"
+            className="rounded-lg border border-amber-300/80 bg-amber-50 px-2.5 py-2 text-xs font-medium leading-snug text-amber-950"
+          >
             {t('drinkwarePreviewApproximateNote')}
           </p>
+          {isMugInsideProduct(product.id) ? (
+            <p
+              role="note"
+              className="rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-2 text-xs font-medium leading-snug text-brand-950"
+            >
+              {t('mugInsidePrintNote')}
+            </p>
+          ) : null}
         </div>
         <div className="flex min-h-0 flex-1 items-center justify-center bg-[#f4f6f8] p-4 md:p-6">
           <DrinkwareDesignPreview3D
@@ -3300,6 +3312,7 @@ function InteractivePreview({
   const live3DSideDesign = preview3DSideDesign ?? sideDesign;
   const showStacked3dPreview =
     isDrinkware && !isCapturing && !desktopSplitPreview;
+  const showMugInsideNote = isMugInsideProduct(product.id);
   const placedPhotos = getPlacedPhotos(sideDesign);
 
   // Drinkware 2D editor is a flat unwrap template — never show the mug photo.
@@ -3573,7 +3586,21 @@ function InteractivePreview({
     </div>
 
     {showStacked3dPreview ? (
-      <div className="flex w-full max-w-[min(48rem,94vw)] flex-col items-center pb-2">
+      <div className="flex w-full max-w-[min(48rem,94vw)] flex-col items-center gap-2 pb-2">
+        {showMugInsideNote ? (
+          <p
+            role="note"
+            className="w-full rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-center text-xs font-medium leading-snug text-brand-950"
+          >
+            {t('mugInsidePrintNote')}
+          </p>
+        ) : null}
+        <p
+          role="note"
+          className="w-full rounded-lg border border-amber-300/80 bg-amber-50 px-3 py-2 text-center text-xs font-medium leading-snug text-amber-950"
+        >
+          {t('drinkwarePreviewApproximateNote')}
+        </p>
         <DrinkwareDesignPreview3D
           productType={productType}
           productId={product.id}
@@ -3591,7 +3618,29 @@ function InteractivePreview({
     {!isCapturing &&
     mockupLayout.wrapPrintArea &&
     !desktopSplitPreview ? (
-      <DrinkwareWrapHint>{t('drinkwareWrapHint')}</DrinkwareWrapHint>
+      <div className="flex w-full max-w-[min(36rem,92vw)] flex-col items-center gap-2">
+        {showMugInsideNote && !showStacked3dPreview ? (
+          <p
+            role="note"
+            className="w-full rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-center text-xs font-medium leading-snug text-brand-950"
+          >
+            {t('mugInsidePrintNote')}
+          </p>
+        ) : null}
+        <DrinkwareWrapHint>{t('drinkwareWrapHint')}</DrinkwareWrapHint>
+      </div>
+    ) : null}
+
+    {!isCapturing &&
+    mockupLayout.wrapPrintArea &&
+    desktopSplitPreview &&
+    showMugInsideNote ? (
+      <p
+        role="note"
+        className="w-full max-w-[min(36rem,92vw)] rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-center text-xs font-medium leading-snug text-brand-950"
+      >
+        {t('mugInsidePrintNote')}
+      </p>
     ) : null}
     </div>
   );

@@ -205,7 +205,6 @@ function CategoryCard({
       onMouseLeave={() => setIsHovered(false)}
       className={cn(
         'surface-panel relative flex h-full flex-col overflow-hidden transition-transform duration-300',
-        isHovered && 'z-10 -translate-y-1.5',
       )}
     >
       <div className="relative overflow-hidden">
@@ -234,7 +233,7 @@ function CategoryCard({
                 <Link
                   key={type}
                   href={productTypeHref(type)}
-                  className="inline-flex items-center gap-1.5 border border-ink-200 bg-ink-50 px-3 py-1.5 text-xs font-medium text-ink-700 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-ink-200 bg-ink-50 px-3 py-1.5 text-xs font-medium text-ink-700 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700"
                 >
                   <TypeIcon className="h-3.5 w-3.5" aria-hidden />
                   {typeLabel(type)}

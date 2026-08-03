@@ -28,7 +28,7 @@ export function HomeContactCta({
   return (
     <section className="section-band py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="relative overflow-hidden bg-gradient-to-br from-brand-800 via-brand-900 to-ink-950 text-white shadow-lift-lg">
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-brand-800 via-brand-900 to-ink-950 text-white shadow-lift-lg">
           <div className="absolute inset-0 bg-mesh-dark opacity-80" aria-hidden />
           <div
             className="absolute inset-0 bg-grid-light bg-grid opacity-10"
@@ -74,7 +74,7 @@ export function HomeContactCta({
               ].map(({ icon: Icon, label, value }) => (
                 <div
                   key={label}
-                  className="flex items-start gap-3 border border-white/20 bg-white/5 px-4 py-3 backdrop-blur-sm"
+                  className="flex items-start gap-3 rounded-xl border border-white/20 bg-white/5 px-4 py-3 backdrop-blur-sm"
                 >
                   <Icon className="mt-0.5 h-5 w-5 shrink-0 text-brand-200" aria-hidden />
                   <div>
@@ -85,7 +85,7 @@ export function HomeContactCta({
                   </div>
                 </div>
               ))}
-              <div className="flex items-start gap-3 border border-white/20 bg-white/5 px-4 py-3 backdrop-blur-sm sm:col-span-2 lg:col-span-1">
+              <div className="flex items-start gap-3 rounded-xl border border-white/20 bg-white/5 px-4 py-3 backdrop-blur-sm sm:col-span-2 lg:col-span-1">
                 <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-brand-200" aria-hidden />
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-brand-200">

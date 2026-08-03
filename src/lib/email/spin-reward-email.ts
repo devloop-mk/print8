@@ -27,8 +27,8 @@ export async function sendSpinRewardEmail(input: {
     : `Your spin-wheel coupon: ${input.code}`;
   const headline = isMk ? 'Честитки — освоивте попуст!' : 'Congrats — you won a discount!';
   const subtitle = isMk
-    ? `−${input.discountAmount} ден. на вашата нарачка`
-    : `−${input.discountAmount} MKD on your order`;
+    ? `Попуст од ${input.discountAmount} ден. на вашата нарачка`
+    : `${input.discountAmount} MKD off your order`;
   const bodyLines = isMk
     ? [
         `Вашиот уникатен код е подолу. Важи еднаш и е врзан за оваа е-пошта.`,

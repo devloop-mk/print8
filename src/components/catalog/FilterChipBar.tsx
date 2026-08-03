@@ -45,7 +45,7 @@ function FilterChip<T extends string>({
         aria-selected={selected}
         onClick={onSelect}
         className={cn(
-          'flex w-[5.25rem] shrink-0 snap-start flex-col items-center gap-2 border-2 px-2 py-3 transition',
+          'flex w-[5.25rem] shrink-0 snap-start flex-col items-center gap-2 rounded-md border-2 px-2 py-3 transition',
           selected
             ? 'border-brand-700 bg-brand-600 text-white shadow-lift-brand'
             : 'border-ink-200 bg-ink-50 text-ink-600 hover:border-brand-300 hover:bg-brand-50',
@@ -54,7 +54,7 @@ function FilterChip<T extends string>({
         {Icon ? (
           <span
             className={cn(
-              'flex h-9 w-9 items-center justify-center border',
+              'flex h-9 w-9 items-center justify-center rounded-md border',
               selected
                 ? 'border-white/30 bg-white/15 text-white'
                 : 'border-brand-200 bg-white text-brand-700',
@@ -77,7 +77,7 @@ function FilterChip<T extends string>({
       aria-selected={selected}
       onClick={onSelect}
       className={cn(
-        'inline-flex items-center gap-2 border-2 px-4 py-2 text-sm font-semibold uppercase tracking-wide transition',
+        'inline-flex items-center gap-2 rounded-md border-2 px-4 py-2 text-sm font-semibold uppercase tracking-wide transition',
         selected
           ? 'border-brand-800 bg-brand-600 text-white shadow-lift-brand'
           : 'border-ink-200 bg-ink-50 text-ink-600 hover:border-brand-300 hover:bg-brand-50',
@@ -125,7 +125,7 @@ export function FilterChipBar<T extends string>({
 
   if (useScrollMobile) {
     return (
-      <div className="mb-8 w-full min-w-0 max-w-full overflow-hidden border border-ink-200 bg-white shadow-lift">
+      <div className="mb-8 w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-ink-200 bg-white shadow-lift">
         <div className="flex min-w-0 items-center justify-between gap-3 border-b border-ink-100 px-4 py-3 md:px-4 md:py-4">
           <div className="flex min-w-0 items-center gap-2 text-sm font-semibold text-ink-900">
             <SlidersHorizontal className="h-4 w-4 shrink-0 text-brand-600" aria-hidden />
@@ -176,7 +176,7 @@ export function FilterChipBar<T extends string>({
   }
 
   return (
-    <div className="mb-8 w-full min-w-0 max-w-full overflow-hidden border border-ink-200 bg-white shadow-lift">
+    <div className="mb-8 w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-ink-200 bg-white shadow-lift">
       <div className="flex items-center gap-3 border-b border-ink-100 px-4 py-3 md:border-b-0 md:pb-0 md:pt-4">
         <div className="hidden items-center gap-2 text-sm font-semibold text-ink-900 md:flex">
           <SlidersHorizontal className="h-4 w-4 text-brand-600" aria-hidden />
@@ -185,7 +185,7 @@ export function FilterChipBar<T extends string>({
 
         <button
           type="button"
-          className="flex flex-1 items-center gap-2 border-2 border-ink-200 bg-ink-50 px-3 py-2.5 text-left text-sm font-medium text-ink-800 transition hover:border-brand-400 hover:bg-brand-50/50 md:hidden"
+          className="flex flex-1 items-center gap-2 rounded-lg border-2 border-ink-200 bg-ink-50 px-3 py-2.5 text-left text-sm font-medium text-ink-800 transition hover:border-brand-400 hover:bg-brand-50/50 md:hidden"
           aria-expanded={expanded}
           aria-controls={panelId}
           onClick={() => setExpanded((open) => !open)}

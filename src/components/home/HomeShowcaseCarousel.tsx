@@ -98,7 +98,7 @@ export function HomeShowcaseCarousel() {
             <button
               type="button"
               onClick={() => scrollByCard('prev')}
-              className="inline-flex h-11 w-11 items-center justify-center border-2 border-ink-300 bg-white text-ink-700 shadow-lift transition hover:-translate-y-0.5 hover:border-brand-500 hover:text-brand-700"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-md border-2 border-ink-300 bg-white text-ink-700 shadow-lift transition hover:border-brand-500 hover:text-brand-700"
               aria-label={t('scrollPrev')}
             >
               <ChevronLeft className="h-5 w-5" />
@@ -106,7 +106,7 @@ export function HomeShowcaseCarousel() {
             <button
               type="button"
               onClick={() => scrollByCard('next')}
-              className="inline-flex h-11 w-11 items-center justify-center border-2 border-ink-300 bg-white text-ink-700 shadow-lift transition hover:-translate-y-0.5 hover:border-brand-500 hover:text-brand-700"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-md border-2 border-ink-300 bg-white text-ink-700 shadow-lift transition hover:border-brand-500 hover:text-brand-700"
               aria-label={t('scrollNext')}
             >
               <ChevronRight className="h-5 w-5" />
@@ -130,7 +130,7 @@ export function HomeShowcaseCarousel() {
               aria-label={t(`slides.${slide.id}.title`)}
               className="group w-[78vw] shrink-0 snap-start sm:w-[280px] lg:w-[300px]"
             >
-              <article className="surface-panel flex h-full flex-col overflow-hidden transition duration-300 hover:-translate-y-1 hover:shadow-lift-brand">
+              <article className="surface-panel flex h-full flex-col overflow-hidden transition duration-300 hover:shadow-lift-brand">
                 <div
                   className={cn(
                     'relative aspect-[4/3] overflow-hidden',
@@ -156,7 +156,7 @@ export function HomeShowcaseCarousel() {
                     )}
                     aria-hidden
                   />
-                  <span className="absolute bottom-3 left-3 border border-white/30 bg-ink-950/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white backdrop-blur-sm">
+                  <span className="absolute bottom-3 left-3 rounded-md border border-white/30 bg-ink-950/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white backdrop-blur-sm">
                     {t(`slides.${slide.id}.badge`)}
                   </span>
                 </div>

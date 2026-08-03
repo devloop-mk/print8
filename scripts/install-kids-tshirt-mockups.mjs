@@ -7,7 +7,7 @@ const assets = path.resolve(
   process.env.KIDS_MOCKUP_ASSETS ?? resolveCursorAssetsDir(),
 );
 const outDir = path.join(process.cwd(), 'public', 't-shirts', 'kids');
-const slugs = ['nebesno-plava', 'zolta', 'mint'];
+const slugs = ['bela', 'nebesno-plava', 'zolta', 'mint'];
 
 /** Replace neutral light-gray studio backgrounds with pure white (#FFFFFF). */
 async function normalizeLightBackgroundToWhite(srcPath) {

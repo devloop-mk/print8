@@ -1,12 +1,11 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import {
-  getResolvedFeaturedServices,
+  getResolvedServices,
   resolveCmsTexts,
   type CmsLocale,
 } from '@/lib/cms/public-content';
 import { HeroSectionBackground } from '@/components/home/HeroSectionBackground';
-import { HeroFeatureBar } from '@/components/home/HeroFeatureBar';
 import { Button } from '@/components/ui/Button';
 import {
   ServicesHeroCarousel,
@@ -16,13 +15,12 @@ import {
   getServicesHeroSlideHref,
   servicesHeroSlides,
 } from '@/lib/services/services-hero-slides';
-import { formatPrice } from '@/lib/utils';
 
 export async function ServicesPageHero({ locale }: { locale: CmsLocale }) {
   const t = await getTranslations('services');
   const ts = await getTranslations('services.items');
 
-  const [cmsTexts, featuredServices] = await Promise.all([
+  const [cmsTexts, resolvedServices] = await Promise.all([
     resolveCmsTexts(
       [
         { key: 'services.heroBadge', fallback: t('heroBadge') },
@@ -31,30 +29,25 @@ export async function ServicesPageHero({ locale }: { locale: CmsLocale }) {
       ],
       locale,
     ),
-    getResolvedFeaturedServices(locale, (id) => ({
+    getResolvedServices(locale, (id) => ({
       title: ts(`${id}.title`),
       description: ts(`${id}.description`),
     })),
   ]);
 
-  const featuredMap = new Map(
-    featuredServices.map((service) => [service.id, service]),
+  const serviceMap = new Map(
+    resolvedServices.map((service) => [service.id, service]),
   );
 
   const carouselItems: ServicesHeroCarouselItem[] = servicesHeroSlides
-    .filter((slide) => featuredMap.has(slide.serviceId))
+    .filter((slide) => serviceMap.has(slide.serviceId))
     .map((slide) => {
-      const service = featuredMap.get(slide.serviceId)!;
+      const service = serviceMap.get(slide.serviceId)!;
       const title = service.title ?? ts(`${slide.serviceId}.title`);
-      const priceLabel =
-        service.startingPrice > 0
-          ? `${t('startingFrom')} ${formatPrice(service.startingPrice, locale)}`
-          : t('priceOnRequest');
 
       return {
         id: slide.serviceId,
         title,
-        priceLabel,
         href: getServicesHeroSlideHref(slide.serviceId),
         image: slide.image,
         accent: slide.accent,
@@ -66,16 +59,16 @@ export async function ServicesPageHero({ locale }: { locale: CmsLocale }) {
     <section className="relative overflow-hidden border-b border-white/10 bg-ink-950 text-white">
       <HeroSectionBackground />
 
-      <div className="relative mx-auto flex max-w-7xl flex-col px-4 py-8 sm:px-6 lg:flex-row lg:items-center lg:gap-16 lg:px-8 lg:py-20">
-        <div className="order-2 lg:order-1 lg:flex-1">
-          <p className="eyebrow-on-dark mb-5">{cmsTexts['services.heroBadge']}</p>
-          <h1 className="max-w-2xl font-display text-3xl font-bold leading-[1.1] tracking-tight sm:text-4xl lg:text-5xl">
+      <div className="relative mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8 lg:flex-row lg:items-center lg:gap-10 lg:px-8 lg:py-10">
+        <div className="order-2 min-w-0 flex-1 lg:order-1">
+          <p className="eyebrow-on-dark mb-3">{cmsTexts['services.heroBadge']}</p>
+          <h1 className="max-w-xl font-display text-2xl font-bold leading-[1.15] tracking-tight sm:text-3xl lg:text-[2.15rem]">
             {cmsTexts['services.heroTitle']}
           </h1>
-          <p className="mt-5 max-w-xl text-base leading-relaxed text-brand-100 sm:mt-6 sm:text-lg">
+          <p className="mt-3 max-w-lg text-sm leading-relaxed text-brand-100 sm:text-base">
             {cmsTexts['services.heroSubtitle']}
           </p>
-          <div className="mt-6 flex flex-wrap gap-3 sm:mt-9">
+          <div className="mt-5 flex flex-wrap gap-3">
             <Link href="#services-catalog">
               <Button
                 size="lg"
@@ -96,22 +89,16 @@ export async function ServicesPageHero({ locale }: { locale: CmsLocale }) {
           </div>
         </div>
 
-        <div className="order-1 mb-8 flex w-full justify-center lg:order-2 lg:mb-0 lg:flex-1 lg:justify-end">
-          <ServicesHeroCarousel
-            items={carouselItems}
-            className="h-auto w-full max-w-none lg:max-w-md xl:max-w-lg"
-          />
-        </div>
+        {carouselItems.length > 0 ? (
+          <div className="order-1 w-full max-w-sm self-center lg:order-2 lg:max-w-xs lg:shrink-0 xl:max-w-sm">
+            <ServicesHeroCarousel
+              items={carouselItems}
+              className="h-auto w-full"
+              compact
+            />
+          </div>
+        ) : null}
       </div>
-
-      <HeroFeatureBar
-        items={[
-          { icon: 'sparkles', label: t('heroStatQuality') },
-          { icon: 'printer', label: t('heroStatRange') },
-          { icon: 'award', label: t('heroStatPopular') },
-          { icon: 'truck', label: t('heroStatDelivery') },
-        ]}
-      />
     </section>
   );
 }

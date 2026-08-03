@@ -76,7 +76,7 @@ export function HeroFeatureBar({
       ];
 
   return (
-    <div className="relative w-full border-t border-ink-200 bg-white">
+    <div className="relative w-full border-t border-ink-200 border-b border-ink-200 bg-white">
       <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 sm:py-3.5 lg:px-8">
         {!customItems ? (
           <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-ink-500 sm:mb-2.5">
@@ -92,10 +92,10 @@ export function HeroFeatureBar({
         >
           {items.map(({ id, href, icon: Icon, label }) => {
             const className = cn(
-              'group flex shrink-0 snap-start items-center gap-2 border border-ink-200 bg-ink-50/80 px-3 py-2',
+              'group flex shrink-0 snap-start items-center gap-2 rounded-lg border border-ink-200 bg-ink-50/80 px-3 py-2',
               'text-sm font-semibold text-ink-800 transition',
               href &&
-                'hover:-translate-y-0.5 hover:border-brand-400 hover:bg-brand-50 hover:text-brand-800',
+                'hover:border-brand-400 hover:bg-brand-50 hover:text-brand-800',
             );
 
             const content = (

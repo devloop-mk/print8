@@ -132,7 +132,7 @@ export function ProductCategoryPathChooser({
                 <article
                   className={cn(
                     'flex h-full flex-col overflow-hidden rounded-2xl border bg-white shadow-sm transition',
-                    'group-hover:-translate-y-0.5 group-hover:shadow-lift-brand',
+                    'group-hover:shadow-lift-brand',
                     path.primary
                       ? cn('ring-1', visual.ringClass)
                       : 'border-ink-200 group-hover:border-brand-200',
