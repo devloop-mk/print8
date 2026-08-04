@@ -86,12 +86,45 @@ export function getDesignNavCategory(
   return category;
 }
 
-export function designCategoryHref(categoryId: DesignCategory): string {
-  return `/designs/all?category=${categoryId}`;
+export function designCategoryHref(
+  categoryId: DesignCategory,
+  options?: { tag?: string; q?: string; page?: number },
+): string {
+  const params = new URLSearchParams();
+  if (options?.tag) params.set('tag', options.tag);
+  const trimmed = options?.q?.trim();
+  if (trimmed) params.set('q', trimmed);
+  if (options?.page && options.page > 1) {
+    params.set('page', String(options.page));
+  }
+  const queryString = params.toString();
+  const base = `/designs/${categoryId}`;
+  return queryString ? `${base}?${queryString}` : base;
 }
 
-export function designsAllHref(): string {
-  return '/designs/all';
+export function designsAllHref(options?: {
+  q?: string;
+  page?: number;
+}): string {
+  const params = new URLSearchParams();
+  const trimmed = options?.q?.trim();
+  if (trimmed) params.set('q', trimmed);
+  if (options?.page && options.page > 1) {
+    params.set('page', String(options.page));
+  }
+  const queryString = params.toString();
+  return queryString ? `/designs/all?${queryString}` : '/designs/all';
+}
+
+/** Gallery path for a category filter (or the full catalog). */
+export function designsGalleryHref(
+  category: DesignCategory | 'all',
+  options?: { tag?: string; q?: string; page?: number },
+): string {
+  if (category === 'all') {
+    return designsAllHref({ q: options?.q, page: options?.page });
+  }
+  return designCategoryHref(category, options);
 }
 
 export function isDesignsNavActive(pathname: string): boolean {

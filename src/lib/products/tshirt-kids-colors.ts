@@ -27,7 +27,7 @@ export const TSHIRT_KIDS_COLOR_HEXES = TSHIRT_KIDS_COLORS.map((c) =>
 const KIDS_MOCKUP_DIR = '/t-shirts/kids';
 
 /** Bump when kids JPG mockups are regenerated. */
-export const KIDS_MOCKUP_ASSET_VERSION = 2;
+export const KIDS_MOCKUP_ASSET_VERSION = 3;
 
 const KIDS_MOCKUP_CATALOG_SCALE: Record<string, number> = {
   bela: 1.08,

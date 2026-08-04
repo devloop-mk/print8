@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { Link } from '@/i18n/navigation';
+import { Link, redirect } from '@/i18n/navigation';
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { DesignsGallery } from '@/components/designs/DesignsGallery';
@@ -9,7 +9,11 @@ import { buildSectionMetadata } from '@/lib/seo/page-metadata';
 import type { Locale } from '@/i18n/routing';
 import { getPublishedDesignTemplates } from '@/lib/catalog/design-catalog';
 import { toGalleryDesignTemplates } from '@/lib/catalog/slim-design-template';
-import { getManagedSvgTemplateDefaultsMap, getManagedSvgTemplateVersionMap } from '@/lib/designs/managed-svg-template-defaults';
+import {
+  getManagedSvgTemplateDefaultsMap,
+  getManagedSvgTemplateVersionMap,
+} from '@/lib/designs/managed-svg-template-defaults';
+import { designCategoryHref, isDesignCategory } from '@/lib/designs/design-nav';
 import { ArrowLeft } from 'lucide-react';
 
 /** Full gallery payload — skip ISR writes; render on demand. */
@@ -30,7 +34,31 @@ export async function generateMetadata({
   );
 }
 
-export default async function DesignsAllPage() {
+export default async function DesignsAllPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const { locale } = await params;
+  const query = await searchParams;
+  const categoryParam =
+    typeof query.category === 'string' ? query.category : null;
+
+  // Legacy `/designs/all?category=X` → dedicated category pages.
+  if (categoryParam && isDesignCategory(categoryParam)) {
+    redirect({
+      href: designCategoryHref(categoryParam, {
+        tag: typeof query.tag === 'string' ? query.tag : undefined,
+        q: typeof query.q === 'string' ? query.q : undefined,
+        page:
+          typeof query.page === 'string' ? Number(query.page) || undefined : undefined,
+      }),
+      locale: locale as Locale,
+    });
+  }
+
   const t = await getTranslations('designs');
   const [published, svgDefaultsMap, svgThumbVersions] = await Promise.all([
     getPublishedDesignTemplates(),

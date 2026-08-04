@@ -65,22 +65,21 @@ export function FeaturedDesignCards({ designs }: { designs: FeaturedDesign[] }) 
                     )}
                   >
                     <div
-                      className="relative flex items-center justify-center bg-gradient-to-b from-ink-50 via-ink-50 to-white p-4 sm:p-5"
+                      className="relative overflow-hidden bg-ink-50"
                       style={{ aspectRatio: getDesignThumbAspect(design) }}
                     >
-                      <div className="relative h-full w-full overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-ink-200/70">
-                        <DesignCardThumbnail
-                          design={design}
-                          alt={displayName}
-                        />
-                      </div>
+                      <DesignCardThumbnail
+                        design={design}
+                        alt={displayName}
+                        fill
+                      />
                       {!isFixed ? (
                         <span className="badge-brand absolute left-3 top-3 bg-white/95 shadow-sm">
                           {t('customizableBadge')}
                         </span>
                       ) : null}
                     </div>
-                    <div className="flex flex-1 flex-col px-4 pb-4 pt-1 sm:px-5 sm:pb-5">
+                    <div className="flex flex-1 flex-col px-4 pb-4 pt-3 sm:px-5 sm:pb-5">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-600">
                         {t(`categories.${design.category}`)}
                       </p>

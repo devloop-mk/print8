@@ -24,7 +24,7 @@ const slides: ShowcaseSlide[] = [
   },
   {
     id: 'wedding',
-    href: '/designs/all?category=wedding',
+    href: '/designs/wedding',
     image: '/NEW_DESIGNS/gallery-thumbs/svg-wedding-classic-navy-gold.webp',
     imageFit: 'contain',
     tint: 'from-rose-900/45',
@@ -37,7 +37,7 @@ const slides: ShowcaseSlide[] = [
   },
   {
     id: 'menus',
-    href: '/designs/all?category=menus',
+    href: '/designs/menus',
     image: '/NEW_DESIGNS/gallery-thumbs/svg-menu-finedining.webp',
     imageFit: 'contain',
     tint: 'from-amber-900/45',

@@ -27,6 +27,7 @@ import { resolveAssetUrl } from '@/lib/storage/asset-url';
 import { buildDesignDetailUrl } from '@/lib/products/paths';
 import type { ProductDesignCatalogEntry } from '@/lib/products/design-catalog';
 import { productIdsInclude } from '@/lib/products/product-id-aliases';
+import { designCategoryHref } from '@/lib/designs/design-nav';
 
 /** Initial matches shown before "See more" on search UIs. */
 export const SEARCH_RESULTS_PREVIEW_LIMIT = 20;
@@ -243,7 +244,7 @@ function buildCatalogCollectionResults(labels: CatalogSearchLabels): GlobalSearc
     results.push({
       id: `collection:designs:${category}`,
       kind: 'collection',
-      href: `/designs/all?category=${category}`,
+      href: designCategoryHref(category),
       title: labels.browseAllDesigns(category),
       subtitle: labels.designCategory(category),
       searchText: buildDesignCategoryCollectionSearchText(category, labels),
@@ -255,7 +256,7 @@ function buildCatalogCollectionResults(labels: CatalogSearchLabels): GlobalSearc
       results.push({
         id: `collection:designs:${category}:${subfilter.id}`,
         kind: 'collection',
-        href: `/designs/all?category=${category}&tag=${subfilter.id}`,
+        href: designCategoryHref(category, { tag: subfilter.id }),
         title: labels.designSubfilter(category, subfilter.id),
         subtitle: labels.designCategory(category),
         searchText: buildDesignSubfilterCollectionSearchText(

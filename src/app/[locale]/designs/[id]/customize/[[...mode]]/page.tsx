@@ -20,6 +20,7 @@ import {
 import { buildDesignCustomizeMetadata } from '@/lib/seo/page-metadata';
 import type { Locale } from '@/i18n/routing';
 import { getManagedSvgTemplateDefaults } from '@/lib/designs/managed-svg-template-defaults';
+import { designCategoryHref, isDesignCategory } from '@/lib/designs/design-nav';
 import { ArrowLeft } from 'lucide-react';
 
 export async function generateMetadata({
@@ -28,6 +29,7 @@ export async function generateMetadata({
   params: Promise<{ locale: string; id: string; mode?: string[] }>;
 }): Promise<Metadata> {
   const { locale, id } = await params;
+  if (isDesignCategory(id)) notFound();
   const metadata = await buildDesignCustomizeMetadata(locale as Locale, id);
   if (!metadata) notFound();
   return metadata;
@@ -46,6 +48,7 @@ export default async function CustomizeDesignPage({
   params: Promise<{ locale: string; id: string; mode?: string[] }>;
 }) {
   const { id, mode: modeSegments } = await params;
+  if (isDesignCategory(id)) notFound();
   const template = await resolveDesignTemplate(id);
   if (!template || !isCustomizableDesign(template)) notFound();
 
@@ -62,6 +65,8 @@ export default async function CustomizeDesignPage({
     </p>
   ) : null;
 
+  const designsBackHref = designCategoryHref(template.category);
+
   if (modeSegments && modeSegments.length > 0 && !mode) {
     notFound();
   }
@@ -73,7 +78,7 @@ export default async function CustomizeDesignPage({
     return (
       <div className="mx-auto w-full min-w-0 max-w-[96rem] px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         <Link
-          href="/designs"
+          href={designsBackHref}
           className="mb-8 inline-flex items-center gap-2 text-sm font-medium text-ink-600 transition hover:text-brand-600"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
@@ -102,7 +107,7 @@ export default async function CustomizeDesignPage({
     return (
       <div className="mx-auto w-full min-w-0 max-w-[96rem] px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         <Link
-          href="/designs"
+          href={designsBackHref}
           className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-ink-600 transition hover:text-brand-600 sm:mb-8"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />

@@ -25,7 +25,7 @@ export function fitDesignThumbSize(
   containerWidth: number,
   containerHeight: number,
   aspectRatio: number,
-  padding = 6,
+  padding = 0,
 ) {
   const availW = Math.max(containerWidth - padding, 1);
   const availH = Math.max(containerHeight - padding, 1);

@@ -22,6 +22,10 @@ import {
 } from '@/lib/products/product-type-design-categories';
 import { sortByDisplayOrder } from '@/lib/products/sort-by-display-order';
 import { productMatchesCatalogType } from '@/lib/products/drinkware-type-groups';
+import {
+  GARMENT_FIT_ORDER,
+  getProductGarmentFit,
+} from '@/lib/products/garment-fit';
 
 /** Shared TTL for pages that still use route-level revalidate. */
 export const CATALOG_CACHE_SECONDS = 21600;
@@ -36,6 +40,16 @@ export const getProductsByType = cache((type: ProductType): Product[] =>
   products.filter((product) => productMatchesCatalogType(product, type)),
 );
 
+/** Unisex → women → kids on type pages, then admin display order within a fit. */
+function sortTshirtProductsByFit(items: Product[]): Product[] {
+  return [...items].sort((a, b) => {
+    const fitA = GARMENT_FIT_ORDER.indexOf(getProductGarmentFit(a) ?? 'unisex');
+    const fitB = GARMENT_FIT_ORDER.indexOf(getProductGarmentFit(b) ?? 'unisex');
+    if (fitA !== fitB) return fitA - fitB;
+    return 0;
+  });
+}
+
 export const getOrderedProductsByType = cache(
   async (type: ProductType): Promise<Product[]> => {
     const [orderMap, visibility] = await Promise.all([
@@ -46,7 +60,8 @@ export const getOrderedProductsByType = cache(
       getProductsByType(type),
       visibility,
     );
-    return sortByDisplayOrder(visible, orderMap);
+    const ordered = sortByDisplayOrder(visible, orderMap);
+    return type === 't-shirt' ? sortTshirtProductsByFit(ordered) : ordered;
   },
 );
 

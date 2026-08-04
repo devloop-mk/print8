@@ -2,103 +2,57 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useTranslations, useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
+import { ArrowLeft } from 'lucide-react';
 import {
   products,
-  getProductDesignTemplates,
-  getProductDesignTemplatesByCategory,
   type ProductDesignCategory,
-  type ProductDesignTemplate,
 } from '@/lib/data/catalog';
-import { getProductPaths } from '@/lib/products/paths';
+import { getProductPaths, PRODUCT_OFFERING_PATHS, COUPLES_DESIGN_COLLECTION, KIDS_DESIGN_COLLECTION } from '@/lib/products/paths';
 import { getProductDisplayPrice } from '@/lib/products/tshirt-print-pricing';
-import { getDesignApplicableColors } from '@/lib/products/design-applicable-colors';
 import {
-  designSupportsGarmentFit,
-  getProductGarmentFit,
-} from '@/lib/products/garment-fit';
-import { normalizeHex } from '@/lib/products/design-overlay';
+  filterDesignCatalogEntries,
+  getCatalogColors,
+  type ProductDesignCatalogEntry,
+} from '@/lib/products/design-catalog';
+import { getDesignCollectionLabel } from '@/lib/products/design-collection-labels';
+import {
+  sortDesignCatalogEntries,
+  type DesignCatalogSort,
+} from '@/lib/products/design-catalog-sort';
+import { getCouplePackTemplates } from '@/lib/data/couple-pack';
+import { resolveProductId } from '@/lib/products/product-id-aliases';
 import { formatPrice } from '@/lib/utils';
-import { ProductDesignSection } from '@/components/products/ProductDesignSection';
 import {
   CatalogFilterLayout,
   type CatalogFilterGroup,
 } from '@/components/catalog/CatalogFilterLayout';
+import { CatalogSortSelect } from '@/components/catalog/CatalogSortSelect';
+import { CatalogPageSizeSelect } from '@/components/catalog/CatalogPageSizeSelect';
+import { ProductDesignCatalogCard } from '@/components/products/ProductDesignCatalogCard';
+import { filterProductDesignEntriesBySearchQuery } from '@/lib/catalog/catalog-search';
+import { useCatalogSearchLabels } from '@/hooks/useCatalogSearchLabels';
+import { CatalogGridLayout } from '@/components/catalog/CatalogGrid';
 import { CatalogPagination } from '@/components/catalog/CatalogPagination';
 import { useCatalogPagination } from '@/hooks/useCatalogPagination';
-import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import { resolveProductDesignDisplayName } from '@/lib/products/design-display-name';
-import { resolveProductId } from '@/lib/products/product-id-aliases';
+import {
+  parseCatalogPageSize,
+  PRODUCT_TYPE_READY_DESIGNS_PAGE_SIZE,
+  PRODUCT_TYPE_READY_DESIGNS_PAGE_SIZES,
+} from '@/lib/catalog/pagination';
 import { Reveal } from '@/components/motion/Reveal';
-import { ArrowLeft } from 'lucide-react';
 
 type ProductDesignsPageProps = {
   productId: string;
+  entries: ProductDesignCatalogEntry[];
   category?: ProductDesignCategory | 'all';
 };
 
-const COLLECTION_LABELS: Record<string, { en: string; mk: string }> = {
-  basketball: { en: 'Basketball', mk: 'Кошарка' },
-  anime: { en: 'Japanese Anime', mk: 'Јапонско аниме' },
-  typography: { en: 'Streetwear Typography', mk: 'Стритвер типографија' },
-  streetwear: { en: 'Streetwear', mk: 'Стритвер' },
-  'baby-milestones': { en: 'Baby milestones', mk: 'Беби пресвртници' },
-  'couple-packs': { en: 'Couple packs', mk: 'Парски пакети' },
-  'trending-mk': { en: 'Trending MK', mk: 'Тренд МК' },
-  'chemistry-drama': { en: 'Chemistry Drama', mk: 'Кемија драма' },
-  'stranger-80s': { en: 'Stranger 80s', mk: 'Странџер 80-ти' },
-  'peaky-era': { en: 'Peaky Era', mk: 'Пики ера' },
-  'zombie-survival': { en: 'Zombie Survival', mk: 'Зомби преживување' },
-  'cartel-crime': { en: 'Cartel Crime', mk: 'Картел криминал' },
-  'biker-rebel': { en: 'Biker Rebel', mk: 'Бајкер бунтовник' },
-  'neon-retro': { en: 'Neon Retro', mk: 'Неон ретро' },
-  'vintage-dapper': { en: 'Vintage Dapper', mk: 'Винтиџ стил' },
-  'science-core': { en: 'Science Core', mk: 'Наука' },
-  'wild-outdoors': { en: 'Wild Outdoors', mk: 'Авантура надвор' },
-  'daily-grind': { en: 'Daily Grind', mk: 'Дневен ритам' },
-  'mk-slang': { en: 'MK Slang', mk: 'МК сленг' },
-  'mk-retro-plates': { en: 'MK Retro Plates', mk: 'МК ретро таблици' },
-  'mk-mugs': { en: 'MK Mugs', mk: 'МК шолји' },
-  'mk-folk': { en: 'MK Folk', mk: 'МК фолклор' },
-  family: { en: 'Family', mk: 'Семејство' },
-  'kids-birthday': { en: 'Kids & birthday', mk: 'Деца и роденден' },
-  'local-mk': { en: 'Local designs', mk: 'Локални дизајни' },
-  'caps-local': { en: 'Caps', mk: 'Капи' },
-  'bags-local': { en: 'Bags', mk: 'Торби' },
-  drinkware: { en: 'Drinkware', mk: 'Шолји' },
-  'family-gifts': { en: 'Family gifts', mk: 'Семејни подароци' },
-};
-
-function designMatchesSearch(
-  design: ProductDesignTemplate,
-  query: string,
-  locale: 'mk' | 'en',
-  translateName: (key: string) => string,
-): boolean {
-  const trimmed = query.trim().toLowerCase();
-  if (!trimmed) return true;
-
-  const name = resolveProductDesignDisplayName(design, locale, translateName);
-  const haystack = [
-    design.id,
-    design.nameKey,
-    design.titleEn,
-    design.titleMk,
-    design.collection,
-    name,
-    design.textStyle?.text,
-  ]
-    .filter(Boolean)
-    .join(' ')
-    .toLowerCase();
-
-  return haystack.includes(trimmed);
-}
-
 export function ProductDesignsPage({
   productId,
-  category = 'all',
+  entries,
+  category = 'image-designs',
 }: ProductDesignsPageProps) {
   const t = useTranslations('products');
   const td = useTranslations('products.detail');
@@ -106,6 +60,7 @@ export function ProductDesignsPage({
   const tc = useTranslations('products.catalog');
   const ts = useTranslations('search');
   const locale = useLocale() as 'mk' | 'en';
+  const searchLabels = useCatalogSearchLabels();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -115,142 +70,173 @@ export function ProductDesignsPage({
     [productId],
   );
 
-  const allDesigns = useMemo(() => {
-    if (!product) return [];
-    const designs =
-      category === 'all'
-        ? getProductDesignTemplates(product)
-        : getProductDesignTemplatesByCategory(product, category);
-
-    const fit = getProductGarmentFit(product);
-    if (!fit) return designs;
-    return designs.filter(
-      (design) =>
-        !design.productTypes.includes('t-shirt') ||
-        designSupportsGarmentFit(design, fit),
-    );
-  }, [product, category]);
-
-  const [colorFilter, setColorFilter] = useState<string | 'all'>(() => {
-    const fromUrl = searchParams.get('color');
-    return fromUrl && fromUrl !== 'all' ? fromUrl : 'all';
+  const [colorFilter, setColorFilter] = useState<string | 'all'>('all');
+  const [collectionFilter, setCollectionFilter] = useState<string | 'all'>(() => {
+    const fromUrl = searchParams.get('collection');
+    return fromUrl && fromUrl.trim() ? fromUrl.trim() : 'all';
   });
-  const [collectionFilter, setCollectionFilter] = useState<string | 'all'>(
-    () => {
-      const fromUrl = searchParams.get('collection');
-      return fromUrl && fromUrl !== 'all' ? fromUrl : 'all';
-    },
-  );
+  const [sort, setSort] = useState<DesignCatalogSort>('featured');
   const [searchQuery, setSearchQuery] = useState(
     () => searchParams.get('q') ?? '',
   );
-  const debouncedSearchQuery = useDebouncedValue(searchQuery, 350);
 
   useEffect(() => {
-    const fromUrlColor = searchParams.get('color');
-    setColorFilter(fromUrlColor && fromUrlColor !== 'all' ? fromUrlColor : 'all');
-    const fromUrlCollection = searchParams.get('collection');
-    setCollectionFilter(
-      fromUrlCollection && fromUrlCollection !== 'all'
-        ? fromUrlCollection
-        : 'all',
-    );
+    const fromUrl = searchParams.get('collection');
+    setCollectionFilter(fromUrl && fromUrl.trim() ? fromUrl.trim() : 'all');
     setSearchQuery(searchParams.get('q') ?? '');
   }, [searchParams]);
 
+  const pageSize = useMemo(
+    () =>
+      parseCatalogPageSize(
+        searchParams.get('perPage'),
+        PRODUCT_TYPE_READY_DESIGNS_PAGE_SIZES,
+        PRODUCT_TYPE_READY_DESIGNS_PAGE_SIZE,
+      ),
+    [searchParams],
+  );
+
+  const handlePageSizeChange = useCallback(
+    (next: number) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (next === PRODUCT_TYPE_READY_DESIGNS_PAGE_SIZE) params.delete('perPage');
+      else params.set('perPage', String(next));
+      params.delete('page');
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
+
+  const availableColors = useMemo(() => getCatalogColors(entries), [entries]);
+
+  const entriesForCollectionOptions = useMemo(() => {
+    if (!product) return [];
+    const byType = filterDesignCatalogEntries(entries, {
+      type: product.type,
+      color: 'all',
+    });
+    if (!searchQuery.trim()) return byType;
+    return filterProductDesignEntriesBySearchQuery(
+      byType,
+      searchQuery,
+      searchLabels,
+    );
+  }, [entries, product, searchLabels, searchQuery]);
+
+  const collectionOptions = useMemo(() => {
+    if (!product) return [];
+    const collections = new Set<string>();
+    for (const entry of entriesForCollectionOptions) {
+      if (entry.design.collection) collections.add(entry.design.collection);
+    }
+
+    let packs = getCouplePackTemplates().filter((pack) =>
+      pack.productTypes.includes(product.type),
+    );
+    const query = searchQuery.trim().toLowerCase();
+    if (query) {
+      packs = packs.filter((pack) => {
+        const haystack = `${pack.titleEn} ${pack.titleMk} ${pack.partnerDesigns
+          .map((partner) => `${partner.labelEn} ${partner.labelMk}`)
+          .join(' ')}`.toLowerCase();
+        return haystack.includes(query);
+      });
+    }
+    if (packs.length > 0) {
+      collections.add(COUPLES_DESIGN_COLLECTION);
+    }
+
+    return [...collections]
+      .map((value) => ({
+        value,
+        label: getDesignCollectionLabel(value, locale),
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [entriesForCollectionOptions, locale, product, searchQuery]);
+
   useEffect(() => {
+    if (collectionFilter === 'all') return;
+    if (collectionOptions.some((option) => option.value === collectionFilter)) {
+      return;
+    }
+    setCollectionFilter('all');
     const params = new URLSearchParams(searchParams.toString());
-    if (collectionFilter === 'all') params.delete('collection');
-    else params.set('collection', collectionFilter);
-
-    if (colorFilter === 'all') params.delete('color');
-    else params.set('color', colorFilter);
-
-    const trimmed = debouncedSearchQuery.trim();
-    if (!trimmed) params.delete('q');
-    else params.set('q', trimmed);
-
-    const next = params.toString();
-    if (next === searchParams.toString()) return;
-    router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
+    if (!params.has('collection')) return;
+    params.delete('collection');
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   }, [
     collectionFilter,
-    colorFilter,
-    debouncedSearchQuery,
+    collectionOptions,
     pathname,
     router,
     searchParams,
   ]);
 
-  const handleColorChange = useCallback((value: string | 'all') => {
-    setColorFilter(value);
-  }, []);
+  const handleCollectionChange = useCallback(
+    (value: string | 'all') => {
+      if (value === KIDS_DESIGN_COLLECTION) {
+        router.push(PRODUCT_OFFERING_PATHS.kidsReadyDesigns);
+        return;
+      }
+      if (value === COUPLES_DESIGN_COLLECTION) {
+        router.push(PRODUCT_OFFERING_PATHS.couplesReadyDesigns);
+        return;
+      }
 
-  const handleCollectionChange = useCallback((value: string | 'all') => {
-    setCollectionFilter(value);
-  }, []);
+      setCollectionFilter(value);
+      const params = new URLSearchParams(searchParams.toString());
+      if (value === 'all') params.delete('collection');
+      else params.set('collection', value);
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
 
-  const availableColors = useMemo(() => {
+  const filteredByAttributes = useMemo(() => {
     if (!product) return [];
-    const colors = new Set<string>();
-    for (const design of allDesigns) {
-      for (const color of getDesignApplicableColors(design, product)) {
-        colors.add(color);
-      }
-    }
-    return [...colors];
-  }, [allDesigns, product]);
+    return filterDesignCatalogEntries(entries, {
+      type: product.type,
+      color: colorFilter,
+    }).filter((entry) =>
+      collectionFilter === 'all'
+        ? true
+        : entry.design.collection === collectionFilter,
+    );
+  }, [collectionFilter, colorFilter, entries, product]);
 
-  const availableCollections = useMemo(() => {
-    const collections = new Set<string>();
-    for (const design of allDesigns) {
-      if (design.collection) collections.add(design.collection);
-    }
-    return [...collections].sort();
-  }, [allDesigns]);
-
-  const filteredDesigns = useMemo(() => {
-    if (!product) return [];
-
-    return allDesigns.filter((design) => {
-      if (collectionFilter !== 'all' && design.collection !== collectionFilter) {
-        return false;
-      }
-
-      if (colorFilter !== 'all') {
-        const applicable = getDesignApplicableColors(design, product);
-        const matchesColor = applicable.some(
-          (color) => normalizeHex(color) === normalizeHex(colorFilter),
-        );
-        if (!matchesColor) return false;
-      }
-
-      if (
-        !designMatchesSearch(design, searchQuery, locale, (key) => t(key))
-      ) {
-        return false;
-      }
-
-      return true;
+  const filtered = useMemo(() => {
+    const searched = filterProductDesignEntriesBySearchQuery(
+      filteredByAttributes,
+      searchQuery,
+      searchLabels,
+    );
+    return sortDesignCatalogEntries(searched, sort, {
+      locale,
+      colorFilter,
+      translateName: (key) => t(key),
     });
   }, [
-    allDesigns,
-    collectionFilter,
     colorFilter,
+    filteredByAttributes,
     locale,
-    product,
+    searchLabels,
     searchQuery,
+    sort,
     t,
   ]);
 
   const filterSignature = useMemo(
-    () =>
-      [colorFilter, collectionFilter, debouncedSearchQuery.trim()].join('|'),
-    [collectionFilter, colorFilter, debouncedSearchQuery],
+    () => [collectionFilter, colorFilter, searchQuery.trim(), sort].join('|'),
+    [collectionFilter, colorFilter, searchQuery, sort],
   );
 
   const { page, setPage, resetPage, paginate } = useCatalogPagination({
-    totalItems: filteredDesigns.length,
+    totalItems: filtered.length,
+    pageSize,
+    preventScroll: true,
   });
 
   const prevFilterSignature = useRef(filterSignature);
@@ -260,13 +246,42 @@ export function ProductDesignsPage({
     resetPage();
   }, [filterSignature, resetPage]);
 
-  const visibleDesigns = useMemo(
-    () => paginate(filteredDesigns),
-    [filteredDesigns, paginate],
+  const isInitialCatalogPage = useRef(true);
+  useEffect(() => {
+    if (page <= 1) return;
+    const target = document.getElementById('product-designs');
+    if (!target) return;
+    const behavior = isInitialCatalogPage.current ? 'auto' : 'smooth';
+    isInitialCatalogPage.current = false;
+    requestAnimationFrame(() => {
+      target.scrollIntoView({ behavior, block: 'start' });
+    });
+  }, [page]);
+
+  const visibleEntries = useMemo(
+    () => paginate(filtered),
+    [filtered, paginate],
   );
 
   const filterGroups = useMemo((): CatalogFilterGroup[] => {
     const groups: CatalogFilterGroup[] = [];
+
+    if (collectionOptions.length > 0) {
+      groups.push({
+        kind: 'pills',
+        id: 'collection',
+        title: tc('filterCollection'),
+        options: [
+          { value: 'all' as const, label: tc('allCollections') },
+          ...collectionOptions.map((option) => ({
+            value: option.value,
+            label: option.label,
+          })),
+        ],
+        value: collectionFilter,
+        onChange: handleCollectionChange,
+      });
+    }
 
     if (availableColors.length > 0) {
       groups.push({
@@ -275,39 +290,18 @@ export function ProductDesignsPage({
         title: tc('filterColor'),
         colors: availableColors,
         value: colorFilter,
-        onChange: handleColorChange,
+        onChange: setColorFilter,
         allLabel: tc('allColors'),
-      });
-    }
-
-    if (availableCollections.length > 0) {
-      groups.push({
-        kind: 'pills',
-        id: 'collection',
-        title: tc('filterCollection'),
-        options: [
-          { value: 'all' as const, label: tc('allCollections') },
-          ...availableCollections.map((collection) => ({
-            value: collection,
-            label:
-              COLLECTION_LABELS[collection]?.[locale] ??
-              collection.replace(/-/g, ' '),
-          })),
-        ],
-        value: collectionFilter,
-        onChange: handleCollectionChange,
       });
     }
 
     return groups;
   }, [
-    availableCollections,
     availableColors,
     collectionFilter,
+    collectionOptions,
     colorFilter,
     handleCollectionChange,
-    handleColorChange,
-    locale,
     tc,
   ]);
 
@@ -328,15 +322,9 @@ export function ProductDesignsPage({
     : isText
       ? td('textDesignsPageHint')
       : td('premadeDesignsPageHint');
-  const sectionId =
-    category === 'all'
-      ? 'premade-designs'
-      : isPhoto
-        ? 'photo-designs'
-        : 'text-designs';
 
   return (
-    <div className="space-y-8">
+    <div id="product-designs" className="scroll-mt-24 space-y-8">
       <Link
         href={paths.detail}
         className="inline-flex items-center gap-2 text-sm font-medium text-ink-600 transition hover:text-brand-600"
@@ -357,13 +345,13 @@ export function ProductDesignsPage({
         </div>
       </Reveal>
 
-      <Reveal delay={100}>
+      <Reveal delay={100} className="min-w-0">
         <CatalogFilterLayout
           groups={filterGroups}
           ariaLabel={t('filterLabel')}
           showFiltersLabel={t('showFilters')}
           hideFiltersLabel={t('hideFilters')}
-          resultsCount={filteredDesigns.length}
+          resultsCount={filtered.length}
           resultsLabel={(count) => tc('resultsDesigns', { count })}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
@@ -371,22 +359,38 @@ export function ProductDesignsPage({
           searchAriaLabel={t('searchAriaLabel')}
           searchClearLabel={ts('clear')}
         >
-          {filteredDesigns.length === 0 ? (
+          {filtered.length === 0 ? (
             <p className="rounded-xl border border-dashed border-ink-200 bg-ink-50 px-4 py-12 text-center text-sm text-ink-500">
               {tc('noDesigns')}
             </p>
           ) : (
             <>
-              <ProductDesignSection
-                id={sectionId}
-                product={product}
-                designs={visibleDesigns}
-                showHeader={false}
-                colorFilter={colorFilter}
-              />
+              <CatalogGridLayout
+                toolbarStart={
+                  <div className="mr-auto flex flex-wrap items-center gap-2">
+                    <CatalogSortSelect value={sort} onChange={setSort} />
+                    <CatalogPageSizeSelect
+                      value={pageSize}
+                      onChange={handlePageSizeChange}
+                      options={PRODUCT_TYPE_READY_DESIGNS_PAGE_SIZES}
+                    />
+                  </div>
+                }
+              >
+                {visibleEntries.map((entry) => (
+                  <ProductDesignCatalogCard
+                    key={entry.design.id}
+                    entry={entry}
+                    colorFilter={colorFilter}
+                    preferredProductType={product.type}
+                    preferredProductId={product.id}
+                  />
+                ))}
+              </CatalogGridLayout>
               <CatalogPagination
                 page={page}
-                totalItems={filteredDesigns.length}
+                totalItems={filtered.length}
+                pageSize={pageSize}
                 onPageChange={setPage}
                 previousLabel={tc('paginationPrevious')}
                 nextLabel={tc('paginationNext')}

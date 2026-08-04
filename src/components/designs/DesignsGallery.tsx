@@ -38,6 +38,7 @@ import {
 import { CatalogPagination } from '@/components/catalog/CatalogPagination';
 import { useCatalogPagination } from '@/hooks/useCatalogPagination';
 import { parseCatalogPage, DESIGN_GALLERY_PAGE_SIZE } from '@/lib/catalog/pagination';
+import { designsGalleryHref } from '@/lib/designs/design-nav';
 import { cn } from '@/lib/utils';
 import type { ManagedSvgTemplateDefaultsPayload } from '@/lib/db/managed-svg-templates';
 
@@ -67,25 +68,24 @@ const DesignCard = memo(function DesignCard({
     >
       <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-ink-200/80 bg-white shadow-sm transition duration-300 group-hover:border-brand-300 group-hover:shadow-md">
         <div
-          className="relative flex items-center justify-center bg-gradient-to-b from-ink-50 via-ink-50 to-white p-4 sm:p-5"
+          className="relative overflow-hidden bg-ink-50"
           style={{ aspectRatio: getDesignThumbAspect(design) }}
         >
-          <div className="relative h-full w-full overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-ink-200/70">
-            <DesignCardThumbnail
-              design={design}
-              alt={displayName}
-              previewMode="lazy"
-              svgDefaultsMap={svgDefaultsMap}
-              svgThumbVersions={svgThumbVersions}
-            />
-          </div>
+          <DesignCardThumbnail
+            design={design}
+            alt={displayName}
+            fill
+            previewMode="lazy"
+            svgDefaultsMap={svgDefaultsMap}
+            svgThumbVersions={svgThumbVersions}
+          />
           {badgeLabel ? (
             <span className="absolute left-3 top-3 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-brand-700 shadow-sm">
               {badgeLabel}
             </span>
           ) : null}
         </div>
-        <div className="flex flex-1 flex-col px-4 pb-4 pt-1 sm:px-5 sm:pb-5">
+        <div className="flex flex-1 flex-col px-4 pb-4 pt-3 sm:px-5 sm:pb-5">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-600">
             {t(`categories.${design.category}`)}
           </p>
@@ -113,24 +113,22 @@ function buildDesignsHref(
   query = '',
   page?: number,
 ): string {
-  const params = new URLSearchParams();
-  if (category !== 'all') params.set('category', category);
-  if (subfilter !== 'all' && category !== 'all') {
-    params.set('tag', subfilter);
-  }
-  const trimmed = query.trim();
-  if (trimmed) params.set('q', trimmed);
-  if (page && page > 1) params.set('page', String(page));
-  const queryString = params.toString();
-  return queryString ? `/designs/all?${queryString}` : '/designs/all';
+  return designsGalleryHref(category, {
+    tag: subfilter !== 'all' && category !== 'all' ? subfilter : undefined,
+    q: query,
+    page,
+  });
 }
 
 export function DesignsGallery({
   designs,
+  initialCategory = 'all',
   svgDefaultsMap,
   svgThumbVersions,
 }: {
   designs: GalleryDesignTemplate[];
+  /** When set (category page), the gallery is scoped to that path segment. */
+  initialCategory?: DesignCategory | 'all';
   svgDefaultsMap?: Record<string, ManagedSvgTemplateDefaultsPayload>;
   svgThumbVersions?: Record<string, string>;
 }) {
@@ -141,25 +139,32 @@ export function DesignsGallery({
   const searchParams = useSearchParams();
   const router = useRouter();
   const [category, setCategory] = useState<DesignCategory | 'all'>(() =>
-    parseDesignCategoryFilter(searchParams.get('category')),
+    initialCategory !== 'all'
+      ? initialCategory
+      : parseDesignCategoryFilter(searchParams.get('category')),
   );
   const [subfilter, setSubfilter] = useState<DesignSubfilterId | 'all'>(() =>
     parseDesignSubfilterFilter(
       searchParams.get('tag'),
-      parseDesignCategoryFilter(searchParams.get('category')),
+      initialCategory !== 'all'
+        ? initialCategory
+        : parseDesignCategoryFilter(searchParams.get('category')),
       designs,
     ),
   );
   const [searchQuery, setSearchQuery] = useState(() => searchParams.get('q') ?? '');
 
   useEffect(() => {
-    const nextCategory = parseDesignCategoryFilter(searchParams.get('category'));
+    const nextCategory =
+      initialCategory !== 'all'
+        ? initialCategory
+        : parseDesignCategoryFilter(searchParams.get('category'));
     setCategory(nextCategory);
     setSubfilter(
       parseDesignSubfilterFilter(searchParams.get('tag'), nextCategory, designs),
     );
     setSearchQuery(searchParams.get('q') ?? '');
-  }, [designs, searchParams]);
+  }, [designs, initialCategory, searchParams]);
 
   const updateSearchQuery = useCallback((nextQuery: string) => {
     setSearchQuery(nextQuery);

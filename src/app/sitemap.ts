@@ -5,6 +5,7 @@ import { LEGAL_PAGE_PATHS } from '@/lib/legal/pages';
 import { routing } from '@/i18n/routing';
 import { getSiteUrl, localePath } from '@/lib/seo/site';
 import type { Locale } from '@/i18n/routing';
+import { designNavCategories } from '@/lib/designs/design-nav';
 
 const STATIC_PATHS = [
   '',
@@ -55,6 +56,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
         entry(locale, path, {
           priority: path === '' ? 1 : 0.8,
           changeFrequency: path === '' ? 'daily' : 'weekly',
+        }),
+      );
+    }
+
+    for (const category of designNavCategories) {
+      entries.push(
+        entry(locale, `/designs/${category.id}`, {
+          priority: 0.7,
+          changeFrequency: 'weekly',
         }),
       );
     }

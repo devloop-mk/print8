@@ -7,6 +7,7 @@ import { PageIntro } from '@/components/brand/PageIntro';
 import { buildSectionMetadata } from '@/lib/seo/page-metadata';
 import type { Locale } from '@/i18n/routing';
 import { getDesignCategoryCounts } from '@/lib/catalog/design-catalog';
+import { designCategoryHref, isDesignCategory } from '@/lib/designs/design-nav';
 
 export const revalidate = 86400;
 
@@ -29,9 +30,24 @@ export default async function DesignsPage({
 }) {
   const { locale } = await params;
   const query = await searchParams;
-  const legacyQuery = new URLSearchParams();
+  const categoryParam =
+    typeof query.category === 'string' ? query.category : null;
 
-  for (const key of ['category', 'tag', 'q', 'page'] as const) {
+  // Legacy `/designs?category=X` → category page (or /designs/all for other filters).
+  if (categoryParam && isDesignCategory(categoryParam)) {
+    redirect({
+      href: designCategoryHref(categoryParam, {
+        tag: typeof query.tag === 'string' ? query.tag : undefined,
+        q: typeof query.q === 'string' ? query.q : undefined,
+        page:
+          typeof query.page === 'string' ? Number(query.page) || undefined : undefined,
+      }),
+      locale: locale as Locale,
+    });
+  }
+
+  const legacyQuery = new URLSearchParams();
+  for (const key of ['tag', 'q', 'page'] as const) {
     const value = query[key];
     if (typeof value === 'string' && value.length > 0) {
       legacyQuery.set(key, value);

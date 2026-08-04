@@ -7,6 +7,7 @@ import {
 } from '@/lib/catalog/design-catalog';
 import { routing } from '@/i18n/routing';
 import { localePath } from '@/lib/seo/site';
+import { designNavCategories } from '@/lib/designs/design-nav';
 
 /** Bust published-design Data Cache (force-dynamic listings + designs hub). */
 export function revalidateDesignCatalogCache() {
@@ -22,5 +23,9 @@ export function revalidateStorefrontDesignListingPaths() {
   for (const locale of routing.locales) {
     revalidatePath(localePath(locale), 'page');
     revalidatePath(localePath(locale, '/designs'), 'page');
+    revalidatePath(localePath(locale, '/designs/all'), 'page');
+    for (const category of designNavCategories) {
+      revalidatePath(localePath(locale, `/designs/${category.id}`), 'page');
+    }
   }
 }

@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
+import { ArrowRight } from 'lucide-react';
 import type { ProductType } from '@/lib/data/catalog';
 import {
   getProductTypeDesignCategories,
@@ -31,64 +32,94 @@ export function ProductTypeDesignCategories({
   return (
     <Reveal delay={40} className="min-w-0">
       <div className="min-w-0 space-y-3">
-        <div>
-          <h3 className="text-sm font-semibold text-ink-900 sm:text-base">
-            {t('title')}
-          </h3>
-          <p className="mt-0.5 text-sm text-ink-600">{t('subtitle')}</p>
+        <div className="flex items-end justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="text-lg font-bold tracking-tight text-ink-900 sm:text-xl">
+              {t('title')}
+            </h3>
+            <p className="mt-0.5 text-sm text-ink-500">{t('subtitle')}</p>
+          </div>
         </div>
 
-        <div className="w-full min-w-0 max-w-full overflow-hidden sm:overflow-visible">
+        <div className="relative min-w-0">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 left-0 z-10 w-6 bg-gradient-to-r from-white to-transparent sm:hidden"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-white to-transparent"
+          />
+
           <ul
             className={cn(
-              'flex w-full min-w-0 max-w-full gap-3 overflow-x-auto pb-1 [contain:inline-size]',
+              'flex gap-2.5 overflow-x-auto pb-1 pt-0.5 [contain:inline-size]',
               'snap-x snap-mandatory scroll-smooth',
               '[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
-              'sm:grid sm:grid-cols-2 sm:overflow-visible sm:pb-0 lg:grid-cols-3 xl:grid-cols-5',
             )}
           >
-          {categories.map((category) => {
-            const title = t(`${category.id}.title`);
-            const rawPreview =
-              categoryPreviews?.[category.id] ??
-              resolveCategoryMockupPreview(category, type);
-            const preview = rawPreview
-              ? resolveCategoryMockupPreview(category, type, rawPreview.design)
-              : null;
+            {categories.map((category) => {
+              const title = t(`${category.id}.title`);
+              const description = t(`${category.id}.description`);
+              const rawPreview =
+                categoryPreviews?.[category.id] ??
+                resolveCategoryMockupPreview(category, type);
+              const preview = rawPreview
+                ? resolveCategoryMockupPreview(category, type, rawPreview.design)
+                : null;
 
-            return (
-              <li
-                key={category.id}
-                className="w-[9.5rem] shrink-0 sm:w-auto sm:min-w-0"
-              >
-                <Link
-                  href={category.href}
-                  className="group flex h-full flex-col overflow-hidden rounded-xl border border-ink-200 bg-white transition hover:border-brand-300 hover:shadow-lift"
+              return (
+                <li
+                  key={category.id}
+                  className="w-[7.25rem] shrink-0 snap-start sm:w-[8.25rem]"
                 >
-                  <span className="relative block overflow-hidden bg-white transition duration-300 group-hover:scale-[1.03] [&_[data-mockup-frame]]:rounded-none [&_[data-mockup-frame]]:border-0">
-                    {preview ? (
-                      <DesignTemplatePreview
-                        product={preview.product}
-                        color={preview.color}
-                        design={preview.design}
-                        typeLabel={tp(preview.product.type)}
-                      />
-                    ) : (
-                      <span className="block aspect-square bg-ink-50" />
+                  <Link
+                    href={category.href}
+                    title={description}
+                    className={cn(
+                      'group relative block aspect-[3/4] overflow-hidden rounded-2xl',
+                      'bg-ink-100 ring-1 ring-ink-200/80',
+                      'transition duration-300',
+                      'hover:ring-brand-400 hover:shadow-md',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
                     )}
-                  </span>
-                  <span className="border-t border-ink-100 px-2.5 py-2.5">
-                    <span className="block text-sm font-semibold leading-snug text-ink-900">
-                      {title}
+                  >
+                    <span className="absolute inset-0 origin-center transition duration-500 ease-out group-hover:scale-[1.06]">
+                      {preview ? (
+                        <DesignTemplatePreview
+                          product={preview.product}
+                          color={preview.color}
+                          design={preview.design}
+                          typeLabel={tp(preview.product.type)}
+                          className="!aspect-auto h-full rounded-none border-0 bg-ink-100"
+                        />
+                      ) : (
+                        <span className="block h-full w-full bg-ink-100" />
+                      )}
                     </span>
-                    <span className="mt-0.5 block text-xs leading-snug text-ink-600">
-                      {t(`${category.id}.description`)}
+
+                    <span
+                      aria-hidden
+                      className="absolute inset-0 bg-gradient-to-t from-ink-950/80 via-ink-950/25 to-ink-950/5"
+                    />
+                    <span
+                      aria-hidden
+                      className="absolute inset-0 opacity-0 transition duration-300 group-hover:opacity-100 bg-gradient-to-t from-brand-950/35 to-transparent"
+                    />
+
+                    <span className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-1.5 p-2.5 sm:p-3">
+                      <span className="min-w-0 text-[13px] font-semibold leading-snug text-white drop-shadow-sm">
+                        {title}
+                      </span>
+                      <ArrowRight
+                        aria-hidden
+                        className="mt-0.5 h-3.5 w-3.5 shrink-0 text-white/80 transition duration-300 group-hover:translate-x-0.5 group-hover:text-white"
+                      />
                     </span>
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </div>
       </div>

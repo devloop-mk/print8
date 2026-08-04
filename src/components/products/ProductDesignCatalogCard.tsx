@@ -54,6 +54,8 @@ type ProductDesignCatalogCardProps = {
    * that garment for previews and design PDP links instead of productTypes[0].
    */
   preferredProductType?: ProductType;
+  /** Lock mockup/order to a specific catalog product (e.g. product /designs page). */
+  preferredProductId?: string;
 };
 
 function resolvePreviewColorForFilter(
@@ -80,6 +82,7 @@ export function ProductDesignCatalogCard({
   colorFilter,
   varyInitialColor = false,
   preferredProductType,
+  preferredProductId,
 }: ProductDesignCatalogCardProps) {
   const t = useTranslations('products');
   const locale = useLocale() as 'mk' | 'en';
@@ -102,6 +105,7 @@ export function ProductDesignCatalogCard({
     entry,
     colorFilter,
     preferredProductType,
+    preferredProductId,
   );
   const { design } = entry;
   const displayName = resolveProductDesignDisplayName(design, locale, (key) =>

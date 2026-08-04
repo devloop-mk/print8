@@ -7,6 +7,7 @@ import {
 import {
   isCustomizableDesign,
   products,
+  type DesignCategory,
   type ProductType,
   type ProductDesignCategory,
   type ProductDesignTemplate,
@@ -289,6 +290,30 @@ export async function buildProductCategoryMetadata(
       title: tNav(category),
       description,
       badge: tm('badges.products'),
+    }),
+  });
+}
+
+export async function buildDesignCategoryMetadata(
+  locale: Locale,
+  category: DesignCategory,
+) {
+  const td = await getTranslations({ locale, namespace: 'designs' });
+  const tm = await getTranslations({ locale, namespace: 'metadata' });
+  const categoryName = td(`categories.${category}`);
+  const description = td(`categoryDescriptions.${category}`);
+  const title = `${categoryName} | Print 8`;
+
+  return buildPageMetadata({
+    locale,
+    title,
+    description,
+    path: `/designs/${category}`,
+    image: buildOgImageUrl({
+      locale,
+      title: categoryName,
+      description,
+      badge: tm('badges.designs'),
     }),
   });
 }

@@ -343,6 +343,7 @@ export function ProductTypeReadyDesignsSection({
           ) : (
             <>
               <CatalogGridLayout
+                gapClassName="gap-3 sm:gap-4"
                 toolbarStart={
                   <div className="mr-auto flex flex-wrap items-center gap-2">
                     <CatalogSortSelect value={sort} onChange={setSort} />

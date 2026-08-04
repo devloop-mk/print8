@@ -86,7 +86,7 @@ export function getCatalogGridClassName({
   mobileColumns,
   desktopColumns,
   mobileColumnToggle,
-  gapClassName = 'gap-4 sm:gap-6',
+  gapClassName = 'gap-3 sm:gap-4',
   className,
 }: {
   mobileColumns: MobileColumns;

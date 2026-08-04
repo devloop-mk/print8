@@ -64,7 +64,7 @@ function DesignCardImageThumb({
   const resolved = resolveAssetUrl(src);
   const imageClassName = fill
     ? 'h-full w-full object-cover transition group-hover:scale-[1.02]'
-    : 'h-full w-full object-contain p-1 transition group-hover:scale-[1.02]';
+    : 'h-full w-full object-contain transition group-hover:scale-[1.02]';
 
   if (shouldUseNativeImage(src)) {
     return (
@@ -330,7 +330,7 @@ export function DesignCardThumbnail({
         <DesignCardImageThumb
           src={galleryImage}
           alt={props.alt}
-          fill={false}
+          fill={props.fill ?? true}
         />
       </div>
     );

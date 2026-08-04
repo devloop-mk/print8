@@ -17,7 +17,7 @@ import {
   type ProductNavCategoryId,
 } from '@/lib/products/product-nav';
 import { productMatchesCatalogType } from '@/lib/products/drinkware-type-groups';
-import { resolveDesignProduct as resolveDesignProductByFit } from '@/lib/products/garment-fit';
+import { resolveDesignProduct as resolveDesignProductByFit, designSupportsGarmentFit, getProductGarmentFit } from '@/lib/products/garment-fit';
 import { productIdsInclude } from '@/lib/products/product-id-aliases';
 export type ProductDesignCatalogEntry = {
   design: ProductDesignTemplate;
@@ -86,6 +86,45 @@ function designSupportsColor(
   return getDesignApplicableColors(design, product).some(
     (value) => normalizeHex(value) === normalizeHex(color),
   );
+}
+
+export function filterDesignCatalogEntriesForProduct(
+  entries: ProductDesignCatalogEntry[],
+  product: Product,
+): ProductDesignCatalogEntry[] {
+  const fit = getProductGarmentFit(product);
+
+  return entries
+    .filter(({ design, products: matchedProducts }) => {
+      if (!matchedProducts.some((item) => item.type === product.type)) {
+        return false;
+      }
+      if (
+        design.productIds?.length &&
+        !productIdsInclude(design.productIds, product.id)
+      ) {
+        return false;
+      }
+      if (
+        fit &&
+        design.productTypes.includes('t-shirt') &&
+        !designSupportsGarmentFit(design, fit)
+      ) {
+        return false;
+      }
+      return true;
+    })
+    .map(({ design, products: matchedProducts }) => ({
+      design,
+      products: matchedProducts.some((item) => item.id === product.id)
+        ? matchedProducts.filter(
+            (item) => item.id === product.id || item.type === product.type,
+          )
+        : [
+            product,
+            ...matchedProducts.filter((item) => item.type === product.type),
+          ],
+    }));
 }
 
 export function getProductDesignCatalogEntriesForType(
@@ -171,7 +210,26 @@ export function resolveDesignProduct(
   entry: ProductDesignCatalogEntry,
   colorFilter: string | 'all',
   preferredType?: ProductType,
+  preferredProductId?: string,
 ): { product: Product; color: string } {
+  if (preferredProductId) {
+    const locked =
+      entry.products.find((item) => item.id === preferredProductId) ??
+      products.find((item) => item.id === preferredProductId);
+    if (locked) {
+      const applicable = getDesignApplicableColors(entry.design, locked);
+      const defaultColor = applicable[0] ?? locked.colors?.[0] ?? '#ffffff';
+      const color =
+        colorFilter !== 'all' &&
+        applicable.some(
+          (value) => normalizeHex(value) === normalizeHex(colorFilter),
+        )
+          ? colorFilter
+          : defaultColor;
+      return { product: locked, color };
+    }
+  }
+
   const resolvedType =
     preferredType && entry.design.productTypes.includes(preferredType)
       ? preferredType
@@ -191,6 +249,5 @@ export function resolveDesignProduct(
     )
       ? colorFilter
       : defaultColor;
-
   return { product, color };
 }
