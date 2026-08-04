@@ -65,7 +65,7 @@ export function Drinkware3DPreview({
         variant === 'pane'
           ? 'h-full w-full'
           : variant === 'stacked'
-            ? 'w-[min(94vw,48rem)] h-[min(calc(min(94vw,48rem)*1.25),clamp(14rem,38vh,24rem))] rounded-sm shadow-[0_8px_40px_rgba(15,23,42,0.12)]'
+            ? 'aspect-[4/5] w-[min(85vw,20rem)] rounded-sm shadow-[0_8px_40px_rgba(15,23,42,0.12)]'
             : 'aspect-[4/5] w-[min(18rem,78vw)] rounded-sm shadow-[0_8px_40px_rgba(15,23,42,0.12)] md:w-[min(28rem,46vh)] lg:w-[min(32rem,52vh)] xl:w-[min(36rem,58vh)]',
         className,
       )}
@@ -80,10 +80,13 @@ export function Drinkware3DPreview({
         productId={productId}
         productColor={productColor}
         textureCanvas={textureCanvas}
+        interactive={variant !== 'stacked'}
       />
-      <p className="pointer-events-none absolute inset-x-0 bottom-2 z-10 text-center text-[10px] font-medium text-ink-500/90">
-        {t('preview3dDragHint')}
-      </p>
+      {variant === 'stacked' ? null : (
+        <p className="pointer-events-none absolute inset-x-0 bottom-2 z-10 text-center text-[10px] font-medium text-ink-500/90">
+          {t('preview3dDragHint')}
+        </p>
+      )}
     </div>
   );
 }

@@ -2,7 +2,7 @@ import type { ProductType } from '@/lib/data/catalog';
 import type { PrintAreaInsets } from '@/lib/products/print-area';
 
 export type Drinkware3DMaterial = 'ceramic' | 'glass';
-export type DrinkwareHandleType = 'c' | 'd' | 'heart';
+export type DrinkwareHandleType = 'c' | 'd';
 export type DrinkwareHandleMaterial = 'ceramic' | 'chrome' | 'gold';
 
 export type Drinkware3DConfig = {
@@ -122,8 +122,11 @@ const productConfigs: Record<string, Drinkware3DConfig> = {
   'cup-glass-beer': GLASS_BEER_CUP_CONFIG,
   'mug-heart-handle': {
     ...MUG_CONFIG,
-    handleType: 'heart',
-    handleGapFraction: 0.13,
+    /**
+     * Real blank has a heart handle; 3D uses a standard C-handle and the
+     * customizer shows a note that the preview is body-only for the handle.
+     */
+    handleGapFraction: 0.12,
   },
   'mug-chrome-handle': {
     ...MUG_CONFIG,

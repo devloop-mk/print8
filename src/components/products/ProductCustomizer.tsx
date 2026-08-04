@@ -48,6 +48,7 @@ import {
 import {
   getCompatibleDrinkwareProducts,
   getDrinkwareBodyColorOptions,
+  isHeartHandleMug,
   isMugInsideProduct,
 } from '@/lib/products/drinkware-product-options';
 import { GarmentFitSelector } from '@/components/products/GarmentFitSelector';
@@ -932,6 +933,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   const isDrinkware = isCylindricalDrinkwareType(type);
   const isDesktopSplitPreview = useMediaQuery('(min-width: 1280px)') && isDrinkware;
   const isLargeCustomizerViewport = useMediaQuery('(min-width: 1024px)');
+  const isMdCustomizer = useMediaQuery('(min-width: 768px)');
 
   const productId = searchParams.get('id');
   /** Immediate drinkware SKU while router.replace flushes ?id= to searchParams. */
@@ -1162,13 +1164,20 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     () => createSideDesignsForSides(sides),
     { isEqual: sideDesignsHistoryEqual },
   );
-  const [activePanel, setActivePanel] = useState<EditorPanel>('product');
+  const [activePanel, setActivePanel] = useState<EditorPanel>(null);
+  const desktopPanelInitializedRef = useRef(false);
   const [selectedElement, setSelectedElement] = useState<SelectedElement>(null);
   /** Last text layer edited in the panel — survives canvas deselect when opening tabs. */
   const [editingTextLayerId, setEditingTextLayerId] = useState<string | null>(
     null,
   );
   const contextBarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (desktopPanelInitializedRef.current || !isMdCustomizer) return;
+    setActivePanel('product');
+    desktopPanelInitializedRef.current = true;
+  }, [isMdCustomizer]);
 
   const handleSelectElement = useCallback((element: SelectedElement) => {
     setSelectedElement(element);
@@ -2371,6 +2380,38 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
 
   const hasRecolorableOverlay = Boolean(currentDesign.isRecolorableOverlay);
 
+  const mobileEditorPanels = useMemo(() => {
+    const panels: Exclude<EditorPanel, null>[] = ['product'];
+    if (isDrinkware && drinkwareBodyColors.length > 1) {
+      panels.push('color');
+    }
+    panels.push('text', 'photo', 'stickers');
+    if (hasRecolorableOverlay) {
+      panels.push('design');
+    }
+    return panels;
+  }, [
+    isDrinkware,
+    drinkwareBodyColors.length,
+    hasRecolorableOverlay,
+  ]);
+
+  const mobilePanelIndex = activePanel
+    ? mobileEditorPanels.indexOf(activePanel)
+    : -1;
+  const isLastMobilePanel =
+    mobilePanelIndex >= 0 && mobilePanelIndex === mobileEditorPanels.length - 1;
+
+  const goToNextMobilePanel = useCallback(() => {
+    if (!activePanel) return;
+    const idx = mobileEditorPanels.indexOf(activePanel);
+    if (idx < 0 || idx >= mobileEditorPanels.length - 1) {
+      setActivePanel(null);
+      return;
+    }
+    setActivePanel(mobileEditorPanels[idx + 1]!);
+  }, [activePanel, mobileEditorPanels]);
+
   function handleRemoveElement(target: SelectedElement) {
     if (!target) return;
     if (target.startsWith('text:')) {
@@ -2486,6 +2527,14 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
               className="rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-2 text-xs font-medium leading-snug text-brand-950"
             >
               {t('mugInsidePrintNote')}
+            </p>
+          ) : null}
+          {isHeartHandleMug(product.id) ? (
+            <p
+              role="note"
+              className="rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-2 text-xs font-medium leading-snug text-brand-950"
+            >
+              {t('mugHeartHandlePreviewNote')}
             </p>
           ) : null}
         </div>
@@ -2804,8 +2853,8 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
               )}
               data-customizer-editor-chrome
             >
-              <div className="flex shrink-0 items-center justify-between border-b border-ink-100 px-5 py-3">
-                <h3 className="font-semibold text-ink-900">
+              <div className="flex shrink-0 items-center gap-2 border-b border-ink-100 px-4 py-3">
+                <h3 className="min-w-0 flex-1 truncate font-semibold text-ink-900">
                   {activePanel === 'product'
                     ? t('tabProduct')
                     : activePanel === 'color'
@@ -2818,12 +2867,21 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
                           ? t('designColor')
                           : t('tabElements')}
                 </h3>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={goToNextMobilePanel}
+                  className="h-9 shrink-0 px-3.5 normal-case tracking-normal"
+                >
+                  {isLastMobilePanel ? t('done') : t('nextStep')}
+                </Button>
                 <button
                   type="button"
                   onClick={() => setActivePanel(null)}
-                  className="rounded-full bg-ink-100 px-3 py-1 text-sm text-ink-600"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink-100 text-ink-600 transition hover:bg-ink-200 hover:text-ink-900"
+                  aria-label={t('close')}
                 >
-                  {t('close')}
+                  <X className="h-4 w-4" aria-hidden />
                 </button>
               </div>
               <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
@@ -3324,6 +3382,7 @@ function InteractivePreview({
   const showStacked3dPreview =
     isDrinkware && !isCapturing && !desktopSplitPreview;
   const showMugInsideNote = isMugInsideProduct(product.id);
+  const showHeartHandleNote = isHeartHandleMug(product.id);
   const placedPhotos = getPlacedPhotos(sideDesign);
 
   // Drinkware 2D editor is a flat unwrap template — never show the mug photo.
@@ -3597,21 +3656,7 @@ function InteractivePreview({
     </div>
 
     {showStacked3dPreview ? (
-      <div className="flex w-full max-w-[min(48rem,94vw)] flex-col items-center gap-2 pb-2">
-        {showMugInsideNote ? (
-          <p
-            role="note"
-            className="w-full rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-center text-xs font-medium leading-snug text-brand-950"
-          >
-            {t('mugInsidePrintNote')}
-          </p>
-        ) : null}
-        <p
-          role="note"
-          className="w-full rounded-lg border border-amber-300/80 bg-amber-50 px-3 py-2 text-center text-xs font-medium leading-snug text-amber-950"
-        >
-          {t('drinkwarePreviewApproximateNote')}
-        </p>
+      <div className="flex w-full max-w-[min(48rem,94vw)] flex-col items-center gap-2 pb-3">
         <DrinkwareDesignPreview3D
           productType={productType}
           productId={product.id}
@@ -3623,6 +3668,28 @@ function InteractivePreview({
           variant="stacked"
           canvasHeightPx={drinkwareCanvasHeightPx}
         />
+        {showMugInsideNote ? (
+          <p
+            role="note"
+            className="w-full rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-center text-xs font-medium leading-snug text-brand-950"
+          >
+            {t('mugInsidePrintNote')}
+          </p>
+        ) : null}
+        {showHeartHandleNote ? (
+          <p
+            role="note"
+            className="w-full rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-center text-xs font-medium leading-snug text-brand-950"
+          >
+            {t('mugHeartHandlePreviewNote')}
+          </p>
+        ) : null}
+        <p
+          role="note"
+          className="w-full rounded-lg border border-amber-300/80 bg-amber-50 px-3 py-2 text-center text-xs font-medium leading-snug text-amber-950"
+        >
+          {t('drinkwarePreviewApproximateNote')}
+        </p>
       </div>
     ) : null}
 
@@ -3638,6 +3705,14 @@ function InteractivePreview({
             {t('mugInsidePrintNote')}
           </p>
         ) : null}
+        {showHeartHandleNote && !showStacked3dPreview ? (
+          <p
+            role="note"
+            className="w-full rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-center text-xs font-medium leading-snug text-brand-950"
+          >
+            {t('mugHeartHandlePreviewNote')}
+          </p>
+        ) : null}
         <DrinkwareWrapHint>{t('drinkwareWrapHint')}</DrinkwareWrapHint>
       </div>
     ) : null}
@@ -3645,13 +3720,25 @@ function InteractivePreview({
     {!isCapturing &&
     mockupLayout.wrapPrintArea &&
     desktopSplitPreview &&
-    showMugInsideNote ? (
-      <p
-        role="note"
-        className="w-full max-w-[min(36rem,92vw)] rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-center text-xs font-medium leading-snug text-brand-950"
-      >
-        {t('mugInsidePrintNote')}
-      </p>
+    (showMugInsideNote || showHeartHandleNote) ? (
+      <>
+        {showMugInsideNote ? (
+          <p
+            role="note"
+            className="w-full max-w-[min(36rem,92vw)] rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-center text-xs font-medium leading-snug text-brand-950"
+          >
+            {t('mugInsidePrintNote')}
+          </p>
+        ) : null}
+        {showHeartHandleNote ? (
+          <p
+            role="note"
+            className="w-full max-w-[min(36rem,92vw)] rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-center text-xs font-medium leading-snug text-brand-950"
+          >
+            {t('mugHeartHandlePreviewNote')}
+          </p>
+        ) : null}
+      </>
     ) : null}
     </div>
   );

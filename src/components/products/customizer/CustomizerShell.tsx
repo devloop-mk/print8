@@ -153,6 +153,7 @@ export function CustomizerShell({
       <div
         className={cn(
           'min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain p-2 [-webkit-overflow-scrolling:touch] md:p-3',
+          mobileStackedPreview && 'touch-pan-y',
           !sidePreview && 'md:flex md:items-center md:justify-center',
         )}
       >
@@ -174,7 +175,7 @@ export function CustomizerShell({
       className={cn(
         'flex h-full min-h-0 flex-col overflow-hidden bg-white md:pb-0',
         mobileStackedPreview
-          ? 'pb-[max(10.5rem,calc(9rem+env(safe-area-inset-bottom,0px)))]'
+          ? 'pb-[max(12rem,calc(10.5rem+env(safe-area-inset-bottom,0px)))]'
           : 'pb-[max(7.75rem,calc(6.5rem+env(safe-area-inset-bottom,0px)))]',
       )}
     >

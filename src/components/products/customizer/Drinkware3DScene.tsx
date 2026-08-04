@@ -4,7 +4,6 @@ import { useEffect, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { ProductType } from '@/lib/data/catalog';
 import {
   getDrinkware3DConfig,
@@ -177,77 +176,11 @@ function buildClassicMugHandleCurve(bodyRadius: number, bodyHeight: number) {
   );
 }
 
-/**
- * Heart mug handle geometry traced from mug-heart-handle.jpg:
- * one open tube top→bottom with a cleft dip and outer tip, built from smooth
- * cubic-bezier segments (avoids kinked Catmull-Rom / CurvePath artifacts).
- */
-function buildHeartHandleGeometry(
-  bodyRadius: number,
-  bodyHeight: number,
-  tubeRadius: number,
-  radialSegments: number,
-): THREE.BufferGeometry {
-  const ax = bodyRadius * 0.985;
-  const r = bodyRadius * 0.68;
-  const top = bodyHeight * 0.21;
-  const bottom = -bodyHeight * 0.135;
-  const h = bodyHeight;
-  const tip = h * 0.042;
-  const p = (xf: number, y: number) => new THREE.Vector3(ax + r * xf, y, 0);
-
-  const tubular = 44;
-  const curves = [
-    new THREE.CubicBezierCurve3(
-      p(0, top),
-      p(0.16, top + h * 0.025),
-      p(0.4, top + h * 0.033),
-      p(0.48, top + h * 0.026),
-    ),
-    new THREE.CubicBezierCurve3(
-      p(0.48, top + h * 0.026),
-      p(0.36, top + h * 0.017),
-      p(0.09, top + h * 0.009),
-      p(0.14, top + h * 0.003),
-    ),
-    new THREE.CubicBezierCurve3(
-      p(0.14, top + h * 0.003),
-      p(0.46, tip + h * 0.01),
-      p(0.9, tip + h * 0.014),
-      p(1, tip),
-    ),
-    new THREE.CubicBezierCurve3(
-      p(1, tip),
-      p(0.97, tip - h * 0.055),
-      p(0.6, bottom * 0.38),
-      p(0.32, bottom * 0.8),
-    ),
-    new THREE.CubicBezierCurve3(
-      p(0.32, bottom * 0.8),
-      p(0.12, bottom * 0.97),
-      p(0.02, bottom * 1.01),
-      p(0, bottom),
-    ),
-  ];
-
-  const parts = curves.map(
-    (curve) =>
-      new THREE.TubeGeometry(curve, tubular, tubeRadius, radialSegments, false),
-  );
-  const merged = mergeGeometries(parts);
-  for (const part of parts) part.dispose();
-  if (!merged) {
-    throw new Error('Failed to merge heart handle geometry');
-  }
-  return merged;
-}
-
 function MugHandle({
   color,
   bodyRadius,
   bodyHeight,
   material = 'ceramic',
-  handleType = 'c',
   handleMaterial = 'ceramic',
   handleColor,
 }: {
@@ -255,7 +188,6 @@ function MugHandle({
   bodyRadius: number;
   bodyHeight: number;
   material?: Drinkware3DConfig['material'];
-  handleType?: Drinkware3DConfig['handleType'];
   handleMaterial?: Drinkware3DConfig['handleMaterial'];
   handleColor?: string;
 }) {
@@ -263,26 +195,10 @@ function MugHandle({
   const radialSegments = 16;
   const glazeColor = handleColor ?? color;
 
-  const heartGeometry = useMemo(() => {
-    if (handleType !== 'heart') return null;
-    return buildHeartHandleGeometry(
-      bodyRadius,
-      bodyHeight,
-      radius,
-      radialSegments,
-    );
-  }, [bodyRadius, bodyHeight, handleType, radius]);
-
-  useEffect(() => {
-    return () => {
-      heartGeometry?.dispose();
-    };
-  }, [heartGeometry]);
-
-  const curve = useMemo(() => {
-    if (handleType === 'heart') return null;
-    return buildClassicMugHandleCurve(bodyRadius, bodyHeight);
-  }, [bodyRadius, bodyHeight, handleType]);
+  const curve = useMemo(
+    () => buildClassicMugHandleCurve(bodyRadius, bodyHeight),
+    [bodyRadius, bodyHeight],
+  );
 
   const handleMaterialNode =
     handleMaterial === 'chrome' || handleMaterial === 'gold' ? (
@@ -293,17 +209,9 @@ function MugHandle({
       <CeramicMaterial color={glazeColor} roughness={0.32} clearcoat={0.4} />
     );
 
-  if (handleType === 'heart' && heartGeometry) {
-    return (
-      <mesh key={handleType} geometry={heartGeometry}>
-        {handleMaterialNode}
-      </mesh>
-    );
-  }
-
   return (
-    <mesh key={handleType}>
-      <tubeGeometry args={[curve!, 56, radius, radialSegments, false]} />
+    <mesh>
+      <tubeGeometry args={[curve, 56, radius, radialSegments, false]} />
       {handleMaterialNode}
     </mesh>
   );
@@ -622,7 +530,6 @@ export function DrinkwareBody({
             bodyRadius={(config.radiusTop + config.radiusBottom) / 2}
             bodyHeight={config.height}
             material={config.material}
-            handleType={handleType}
             handleMaterial={config.handleMaterial}
           />
         )
@@ -645,11 +552,14 @@ export function Drinkware3DScene({
   productColor,
   textureCanvas,
   productId,
+  interactive = true,
 }: {
   productType: ProductType;
   productColor: string;
   textureCanvas: HTMLCanvasElement | null;
   productId?: string;
+  /** When false (stacked mobile), allow page scroll over the canvas. */
+  interactive?: boolean;
 }) {
   const config = getDrinkware3DConfig(productType, productId);
 
@@ -662,6 +572,11 @@ export function Drinkware3DScene({
       }}
       gl={{ antialias: true, alpha: true }}
       dpr={[1, 2]}
+      style={{
+        touchAction: interactive ? 'none' : 'pan-y',
+        // Let vertical page scroll pass through the stacked mobile preview.
+        pointerEvents: interactive ? 'auto' : 'none',
+      }}
     >
       <color attach="background" args={['#eef2f6']} />
       <ambientLight intensity={0.58} />
@@ -676,7 +591,10 @@ export function Drinkware3DScene({
         productId={productId}
       />
       <OrbitControls
+        enabled={interactive}
         enablePan={false}
+        enableZoom={interactive}
+        enableRotate={interactive}
         target={[0, 0, 0]}
         minDistance={1.85}
         maxDistance={4.2}

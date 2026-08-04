@@ -21,6 +21,11 @@ export function isMugInsideProduct(productId: string): boolean {
   return productId.startsWith('mug-inside-');
 }
 
+/** Heart-handle mug — 3D preview uses a standard C-handle; real product differs. */
+export function isHeartHandleMug(productId: string): boolean {
+  return productId === 'mug-heart-handle';
+}
+
 /** Drinkware blanks compatible with the active design (type + optional productIds lock). */
 export function getCompatibleDrinkwareProducts(
   design: ProductDesignTemplate | null | undefined,
