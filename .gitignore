@@ -41,10 +41,18 @@ yarn-error.log*
 /uploads/
 /print-masters/
 
-# local / oversized assets (serve via CDN/R2, do not ship in git)
-/public/NEW_DESIGNS/streetwear-art/
-/public/NEW_DESIGNS/streetwear/car/
-/public/NEW_DESIGNS/streetwear/streetwear3/
+# Catalog design art — production source of truth is R2 (sync via npm scripts).
+# Local copy optional; set NEXT_PUBLIC_ASSETS_CDN_URL (or ASSETS_FORCE_CDN=1) for dev.
+/public/NEW_DESIGNS/
+
 /public/wedding-designs-to-add/
+
+# Local design pipeline — never served by the storefront
+/designs-to-process/
+/.cursor/
+
+# Local script outputs / backups
+/scripts/chemistry-drama-manifest.json
+/public/t-shirts/kids/*.pre-v3.jpg
 /scripts/*.log
 *.tsbuildinfo

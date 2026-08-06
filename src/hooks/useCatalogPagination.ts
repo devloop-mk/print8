@@ -56,7 +56,7 @@ export function useCatalogPagination({
   const setPage = useCallback(
     (nextPage: number) => {
       const clamped = clampCatalogPage(nextPage, totalItems, pageSize);
-      router.replace(buildHref(clamped), { scroll: !preventScroll });
+      router.push(buildHref(clamped), { scroll: !preventScroll });
     },
     [buildHref, pageSize, preventScroll, router, totalItems],
   );

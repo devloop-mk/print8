@@ -27,6 +27,7 @@
     "db:migrate:svg-templates": "node scripts/apply-managed-svg-templates-migration.mjs",
     "build:wedding-cdr-assets": "node scripts/build-wedding-cdr-assets.mjs",
     "build:design-gallery-thumbs": "tsx scripts/build-design-gallery-thumbs.ts",
+    "process:mockup-thumbs": "node scripts/process-mockup-thumbs.mjs",
     "regenerate:design-gallery-thumb": "tsx scripts/regenerate-design-gallery-thumb.ts",
     "playwright:install": "playwright install chromium",
     "process:baby-pngs": "node scripts/process-baby-pngs.mjs",

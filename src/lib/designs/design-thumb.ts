@@ -2,13 +2,12 @@ import type { DesignTemplate } from '@/lib/data/catalog';
 import { getDesignLayout } from '@/lib/data/design-layouts';
 import { getSvgDesignTemplate } from '@/lib/data/svg-design-templates';
 import type { ManagedSvgTemplateDefaultsPayload } from '@/lib/db/managed-svg-templates';
-import { hasManagedSvgDefaults } from '@/lib/designs/merge-svg-template-defaults';
 
 export const DESIGN_GALLERY_THUMB_DIR = '/NEW_DESIGNS/gallery-thumbs';
 
 /** Bump when gallery mockup WebPs change so CDN/browser refetch (production uses R2). */
 export const GALLERY_THUMB_CACHE_VERSION =
-  process.env.NEXT_PUBLIC_GALLERY_THUMB_VERSION ?? '20260806-mockups-v2';
+  process.env.NEXT_PUBLIC_GALLERY_THUMB_VERSION ?? '20260806-mockups-v3';
 
 export function getDesignGalleryThumbPath(designId: string): string {
   return `${DESIGN_GALLERY_THUMB_DIR}/${designId}.webp`;
@@ -70,18 +69,11 @@ export function getDesignGalleryImage(
 export function shouldUseGalleryRasterPreview(
   design: DesignTemplate,
   previewMode: 'static' | 'live' | 'lazy' = 'lazy',
-  svgDefaultsMap?: Record<string, ManagedSvgTemplateDefaultsPayload>,
-  thumbVersions?: Record<string, string>,
+  _svgDefaultsMap?: Record<string, ManagedSvgTemplateDefaultsPayload>,
+  _thumbVersions?: Record<string, string>,
 ): boolean {
   if (previewMode === 'live') return false;
-  if (!getDesignGalleryImage(design)) return false;
-
-  if (
-    design.svgTemplateId &&
-    hasManagedSvgDefaults(svgDefaultsMap?.[design.svgTemplateId])
-  ) {
-    return Boolean(thumbVersions?.[design.svgTemplateId]);
-  }
-
-  return true;
+  // Gallery thumbs are marketing mockups — always prefer them in listings.
+  // (Managed SVG defaults only affect the customizer, not card previews.)
+  return Boolean(getDesignGalleryImage(design));
 }

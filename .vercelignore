@@ -1,0 +1,14 @@
+# Catalog art is on R2 — browsers use NEXT_PUBLIC_ASSETS_CDN_URL in production.
+public/NEW_DESIGNS/
+
+designs-to-process/
+.cursor/
+
+scripts/chemistry-drama-manifest.json
+public/t-shirts/kids/*.pre-v3.jpg
+
+# Already excluded from serverless bundles (next.config outputFileTracingExcludes)
+scripts/
+ms-playwright/
+playwright/.cache/
+supabase/
