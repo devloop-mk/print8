@@ -11,4 +11,5 @@ public/t-shirts/kids/*.pre-v3.jpg
 scripts/
 ms-playwright/
 playwright/.cache/
-supabase/
+# Root Supabase migrations only — do not use bare `supabase/` (matches src/lib/supabase).
+/supabase/
