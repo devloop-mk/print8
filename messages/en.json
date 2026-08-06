@@ -1147,13 +1147,18 @@
       "logoUploadError": "Could not use that image. Try a PNG or JPG under 2 MB.",
       "capturing": "Saving preview...",
       "menuInsideTitle": "What this price includes",
-      "menuInsideNote": "The price shown is for the front and back cover only. It does not include the interior menu pages, food photos, extra sections, or other add-ons. After you place your order, our team will contact you to collect your dishes, prices, and any photos, then prepare a quote for the inside pages.",
-      "menuPriceNote": "Price is for front & back cover only — not interior pages, photos, or extras.",
+      "menuInsideNote": "The price covers printing the menu in the selected format (A5, spiral bound, chosen page count) plus the cover design. It does not include laying out the interior pages, food photos, or extra sections. After you place your order, our team will contact you to collect your dishes, prices, and any photos — larger interiors are quoted separately.",
+      "menuPriceNote": "Price covers printing in the selected format plus the cover design — interior layout, photos, and extras are quoted separately.",
       "steps": {
         "print": {
           "title": "Paper & lamination",
           "hint": "Weight & finish",
           "desc": "Choose paper weight and whether to laminate your business cards."
+        },
+        "menuPrint": {
+          "title": "Format & printing",
+          "hint": "A5 spiral & tirage",
+          "desc": "Choose page count, paper, lamination, and tirage. The price updates instantly."
         },
         "front": {
           "title": "Front side",
@@ -1254,6 +1259,48 @@
             "description": "Glossy finish with stronger protection."
           }
         }
+      },
+      "menuPrintOptions": {
+        "sku": "A5 spiral ({size} mm)",
+        "skuHint": "Wire-o spiral bound menu, printed on both sides. Other formats on request.",
+        "pagesLabel": "Page count",
+        "pagesHint": "Total pages in the menu, covers included.",
+        "pagesValue": "{pages} pages",
+        "paperLabel": "Paper",
+        "paperHint": "Pick the stock based on how heavily the menu is handled.",
+        "paper": {
+          "coated-300gsm": {
+            "title": "Coated 300 gsm",
+            "description": "Standard thick stock — the most common choice for menus."
+          },
+          "waterproof": {
+            "title": "Waterproof paper",
+            "description": "Synthetic stock — tear-proof and wipes clean with a damp cloth."
+          }
+        },
+        "laminationLabel": "Lamination",
+        "laminationHint": "Lamination protects the paper from grease and moisture.",
+        "lamination": {
+          "none": {
+            "title": "No lamination"
+          },
+          "matte": {
+            "title": "Matte lamination"
+          },
+          "glossy": {
+            "title": "Glossy lamination"
+          }
+        },
+        "laminationWaterproofNote": "Waterproof paper is already sealed, so lamination is not needed.",
+        "quantityLabel": "Tirage",
+        "quantityHint": "How many menus you need.",
+        "quantityValue": "{quantity} pcs",
+        "quoteAbove": "Need more than {max} menus?",
+        "quoteCta": "Request a quote",
+        "unitPrice": "Price per menu",
+        "printTotal": "Printing ({quantity} pcs)",
+        "designFee": "Cover design",
+        "total": "Total"
       },
       "fields": {
         "fullName": "Full name",
@@ -2340,6 +2387,13 @@
     "businessCard": {
       "paper": "Paper",
       "lamination": "Lamination"
+    },
+    "menuPrint": {
+      "format": "Format",
+      "pages": "Pages",
+      "paper": "Paper",
+      "lamination": "Lamination",
+      "tirage": "Tirage"
     }
   },
   "checkout": {

@@ -76,18 +76,38 @@ import {
   type BusinessCardLamination,
   type BusinessCardPaper,
 } from '@/lib/designs/business-card-print-options';
+import { MenuPrintOptionsPanel } from '@/components/designs/MenuPrintOptionsPanel';
+import {
+  calculateMenuPrintPrice,
+  DEFAULT_MENU_PRINT_OPTIONS,
+  menuPrintMetadata,
+  parseMenuPrintOptions,
+  type MenuPrintOptions,
+} from '@/lib/designs/menu-print-options';
 import { cn } from '@/lib/utils';
-import { ChevronLeft, ChevronRight, FileText, Layers, Palette, ShoppingCart, Info, Layers2 } from 'lucide-react';
+import { BookOpen, ChevronLeft, ChevronRight, FileText, Layers, Palette, ShoppingCart, Info, Layers2 } from 'lucide-react';
 
-type EditorStep = 'print' | 'front' | 'back' | 'colors' | 'review';
+type EditorStep = 'print' | 'menuPrint' | 'front' | 'back' | 'colors' | 'review';
 
 const stepIcons: Record<EditorStep, typeof FileText> = {
   print: Layers2,
+  menuPrint: BookOpen,
   front: FileText,
   back: Layers,
   colors: Palette,
   review: ShoppingCart,
 };
+
+function isEditorStep(value: unknown): value is EditorStep {
+  return (
+    value === 'print' ||
+    value === 'menuPrint' ||
+    value === 'front' ||
+    value === 'back' ||
+    value === 'colors' ||
+    value === 'review'
+  );
+}
 
 export function SvgCustomizableDesignForm({
   template,
@@ -114,17 +134,29 @@ export function SvgCustomizableDesignForm({
 
   const hasBack = Boolean(svgTemplate.sides.back);
   const isBusinessCard = template.category === 'business-cards';
+  const isMenu = template.category === 'menus';
   const steps = useMemo<EditorStep[]>(() => {
     const core: EditorStep[] = hasBack
       ? ['front', 'back', 'colors', 'review']
       : ['front', 'colors', 'review'];
-    return isBusinessCard ? ['print', ...core] : core;
-  }, [hasBack, isBusinessCard]);
+    if (isBusinessCard) return ['print', ...core];
+    if (isMenu) return ['menuPrint', ...core];
+    return core;
+  }, [hasBack, isBusinessCard, isMenu]);
 
-  const price = designCategoryPrices[template.category];
-  const [step, setStep] = useState<EditorStep>(
-    template.category === 'business-cards' ? 'print' : 'front',
-  );
+  // Mirrors the server-side fee resolution in lib/orders/validate-order-prices,
+  // otherwise a managed design with its own price is rejected at checkout.
+  const designFee =
+    'customPrice' in template &&
+    typeof template.customPrice === 'number' &&
+    template.customPrice > 0
+      ? template.customPrice
+      : designCategoryPrices[template.category];
+  const [step, setStep] = useState<EditorStep>(() => {
+    if (isBusinessCard) return 'print';
+    if (isMenu) return 'menuPrint';
+    return 'front';
+  });
   const [previewSide, setPreviewSide] = useState<'front' | 'back'>('front');
   const {
     present: state,
@@ -142,6 +174,9 @@ export function SvgCustomizableDesignForm({
   const [lamination, setLamination] = useState<BusinessCardLamination>(
     DEFAULT_BUSINESS_CARD_LAMINATION,
   );
+  const [menuOptions, setMenuOptions] = useState<MenuPrintOptions>(
+    DEFAULT_MENU_PRINT_OPTIONS,
+  );
   const [capturing, setCapturing] = useState(false);
   const [draftHydrated, setDraftHydrated] = useState(false);
   const [activeFieldKey, setActiveFieldKey] = useState<string | null>(null);
@@ -157,6 +192,15 @@ export function SvgCustomizableDesignForm({
         : undefined,
     [editCartItemId, cartItems],
   );
+
+  // Menus are priced per configured print job, so the cart holds one line with
+  // the tirage in metadata instead of using the generic quantity stepper.
+  const menuPrice = useMemo(
+    () => calculateMenuPrintPrice(menuOptions, designFee),
+    [designFee, menuOptions],
+  );
+  const cartPrice = isMenu ? menuPrice.total : designFee;
+  const cartQuantity = isMenu ? 1 : quantity;
 
   useEffect(() => {
     const defaults = buildMergedDefaultSvgTemplateState(
@@ -191,6 +235,9 @@ export function SvgCustomizableDesignForm({
         setPaper(options.paper);
         setLamination(options.lamination);
       }
+      if (template.category === 'menus') {
+        setMenuOptions(parseMenuPrintOptions(editingItem.metadata));
+      }
       setDraftHydrated(true);
       return;
     }
@@ -215,17 +262,18 @@ export function SvgCustomizableDesignForm({
       } else {
         resetEditorState(defaults);
       }
-      if (
-        payload.step === 'print' ||
-        payload.step === 'front' ||
-        payload.step === 'back' ||
-        payload.step === 'colors' ||
-        payload.step === 'review'
-      ) {
+      if (isEditorStep(payload.step)) {
         setStep(payload.step);
       }
       if (typeof payload.quantity === 'number' && payload.quantity > 0) {
         setQuantity(payload.quantity);
+      }
+      if (template.category === 'menus' && payload.menuPrint) {
+        setMenuOptions(
+          parseMenuPrintOptions(
+            payload.menuPrint as Record<string, string | number | boolean>,
+          ),
+        );
       }
     } else {
       resetEditorState(defaults);
@@ -242,8 +290,8 @@ export function SvgCustomizableDesignForm({
   });
 
   const serializedDraft = useMemo(
-    () => JSON.stringify({ state, step, quantity }),
-    [state, step, quantity],
+    () => JSON.stringify({ state, step, quantity, menuOptions }),
+    [state, step, quantity, menuOptions],
   );
   const { isDirty, markClean } = useDirtySnapshot(serializedDraft, draftHydrated);
 
@@ -260,6 +308,7 @@ export function SvgCustomizableDesignForm({
           quantity,
           svgTemplateId: svgTemplate.id,
           customizeMode: mode,
+          ...(isMenu ? { menuPrint: menuPrintMetadata(menuOptions) } : {}),
         },
         updatedAt: new Date().toISOString(),
       });
@@ -268,7 +317,18 @@ export function SvgCustomizableDesignForm({
     } catch {
       return false;
     }
-  }, [markClean, mode, quantity, state, step, svgTemplate.id, td, template.id]);
+  }, [
+    isMenu,
+    markClean,
+    menuOptions,
+    mode,
+    quantity,
+    state,
+    step,
+    svgTemplate.id,
+    td,
+    template.id,
+  ]);
 
   const unsavedWorkGuard = useUnsavedWorkGuard({
     isDirty,
@@ -470,6 +530,7 @@ export function SvgCustomizableDesignForm({
         ...(isBusinessCard
           ? businessCardPrintMetadata({ paper, lamination })
           : {}),
+        ...(isMenu ? menuPrintMetadata(menuOptions, menuPrice) : {}),
       };
 
       for (const [key, value] of Object.entries(state.texts)) {
@@ -485,8 +546,8 @@ export function SvgCustomizableDesignForm({
       const cartPayload = {
         type: 'design' as const,
         name: `${td(`categories.${template.category}`)} — ${td(`templates.${template.id}`)}`,
-        price,
-        quantity,
+        price: cartPrice,
+        quantity: cartQuantity,
         designPreview: assets.front.pngDataUrl,
         backDesignPreview: assets.back?.pngDataUrl,
         metadata,
@@ -855,6 +916,13 @@ export function SvgCustomizableDesignForm({
                     onLaminationChange={setLamination}
                   />
                 ) : null}
+                {step === 'menuPrint' && isMenu ? (
+                  <MenuPrintOptionsPanel
+                    options={menuOptions}
+                    onChange={setMenuOptions}
+                    designFee={designFee}
+                  />
+                ) : null}
                 {step === 'front' && renderLogoFields('front')}
                 {step === 'back' && renderLogoFields('back')}
                 {step === 'front' && !editOnCanvas && renderTextFields('front')}
@@ -900,29 +968,36 @@ export function SvgCustomizableDesignForm({
                     </div>
                   </div>
                 )}
-                {step === 'review' && (
-                  <div className="space-y-4">
-                    <div>
-                      <label
-                        htmlFor="quantity"
-                        className="mb-1.5 block text-sm font-medium text-ink-700"
-                      >
-                        {to('quantity')}
-                      </label>
-                      <QuantityInput
-                        id="quantity"
-                        min={1}
-                        max={999}
-                        value={quantity}
-                        onChange={setQuantity}
-                        className="w-28"
-                      />
+                {step === 'review' &&
+                  (isMenu ? (
+                    <MenuPrintOptionsPanel
+                      options={menuOptions}
+                      onChange={setMenuOptions}
+                      designFee={designFee}
+                    />
+                  ) : (
+                    <div className="space-y-4">
+                      <div>
+                        <label
+                          htmlFor="quantity"
+                          className="mb-1.5 block text-sm font-medium text-ink-700"
+                        >
+                          {to('quantity')}
+                        </label>
+                        <QuantityInput
+                          id="quantity"
+                          min={1}
+                          max={999}
+                          value={quantity}
+                          onChange={setQuantity}
+                          className="w-28"
+                        />
+                      </div>
+                      <p className="text-lg font-semibold text-ink-900">
+                        {formatPrice(designFee * quantity, locale)}
+                      </p>
                     </div>
-                    <p className="text-lg font-semibold text-ink-900">
-                      {formatPrice(price * quantity, locale)}
-                    </p>
-                  </div>
-                )}
+                  ))}
               </div>
 
               <div className="mt-8 flex flex-col gap-3 border-t border-ink-100 pt-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">

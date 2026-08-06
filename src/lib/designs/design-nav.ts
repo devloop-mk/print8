@@ -45,7 +45,7 @@ export const designCategoryCoverImages: Record<DesignCategory, string> = {
   'business-cards': '/NEW_DESIGNS/gallery-thumbs/svg-bcard-luxury-gold.webp',
   wedding: '/NEW_DESIGNS/gallery-thumbs/svg-wedding-romantic-blush.webp',
   birthday: '/NEW_DESIGNS/gallery-thumbs/svg-bday-unicorn.webp',
-  menus: '/NEW_DESIGNS/gallery-thumbs/svg-menu-cafe.webp',
+  menus: '/NEW_DESIGNS/gallery-thumbs/svg-menu-finedining.webp',
   general: '/NEW_DESIGNS/gallery-thumbs/svg-bcard-tech-wave.webp',
 };
 

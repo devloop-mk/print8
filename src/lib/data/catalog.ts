@@ -194,7 +194,9 @@ export const services: Service[] = [
     id: 'restaurant-menus',
     icon: 'BookOpen',
     category: 'print',
-    startingPrice: 800,
+    // Cheapest configurable menu job: A5 spiral, 8 pages, coated, 10 pcs (650)
+    // plus the 800 MKD cover design fee. See lib/designs/menu-print-options.
+    startingPrice: 1450,
     customization: 'designs',
     designCategory: 'menus',
   },

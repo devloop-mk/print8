@@ -47,6 +47,8 @@ import { isStudentPrintCartItem } from "@/lib/students/student-print-cart";
 import { StudentPrintCartDetails } from "@/components/students/StudentPrintCartDetails";
 import { BusinessCardCartDetails } from "@/components/designs/BusinessCardCartDetails";
 import { isBusinessCardCartItem } from "@/lib/designs/business-card-print-options";
+import { MenuPrintCartDetails } from "@/components/designs/MenuPrintCartDetails";
+import { isMenuPrintCartItem } from "@/lib/designs/menu-print-options";
 
 
 
@@ -362,6 +364,9 @@ export function CartPageContent() {
                       {isBusinessCardCartItem(item) ? (
                         <BusinessCardCartDetails item={item} />
                       ) : null}
+                      {isMenuPrintCartItem(item) ? (
+                        <MenuPrintCartDetails item={item} />
+                      ) : null}
 
                     </div>
 
@@ -451,43 +456,29 @@ export function CartPageContent() {
 
 
 
-                  <div className="mt-auto flex items-center gap-2 pt-2">
-
-                    <span className="text-sm text-ink-500">{t("quantity")}</span>
-
-                    <button
-
-                      type="button"
-
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
-
-                      className="rounded-md border border-ink-300 px-2 py-0.5 text-sm"
-
-                      disabled={item.quantity <= 1}
-
-                    >
-
-                      −
-
-                    </button>
-
-                    <span className="text-sm font-medium">{item.quantity}</span>
-
-                    <button
-
-                      type="button"
-
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
-
-                      className="rounded-md border border-ink-300 px-2 py-0.5 text-sm"
-
-                    >
-
-                      +
-
-                    </button>
-
-                  </div>
+                  {/* Menus carry their tirage in the print options, so the
+                      generic per-line stepper would double-charge the job. */}
+                  {isMenuPrintCartItem(item) ? null : (
+                    <div className="mt-auto flex items-center gap-2 pt-2">
+                      <span className="text-sm text-ink-500">{t("quantity")}</span>
+                      <button
+                        type="button"
+                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        className="rounded-md border border-ink-300 px-2 py-0.5 text-sm"
+                        disabled={item.quantity <= 1}
+                      >
+                        −
+                      </button>
+                      <span className="text-sm font-medium">{item.quantity}</span>
+                      <button
+                        type="button"
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        className="rounded-md border border-ink-300 px-2 py-0.5 text-sm"
+                      >
+                        +
+                      </button>
+                    </div>
+                  )}
 
                 </div>
 

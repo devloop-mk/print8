@@ -4,6 +4,11 @@ import { getService } from '@/lib/data/catalog';
 import { designCategoryPrices } from '@/lib/data/design-order-fields';
 import { cmsDb } from '@/lib/db/cms';
 import {
+  calculateMenuPrintPrice,
+  hasMenuPrintOptions,
+  parseMenuPrintOptions,
+} from '@/lib/designs/menu-print-options';
+import {
   calculateBrandingPackTotal,
   parseBrandingPackState,
 } from '@/lib/products/branding-pack-state';
@@ -69,11 +74,21 @@ async function getDesignUnitPrice(
   const template = await resolveDesignTemplate(id);
   if (!template) return null;
 
-  if (typeof template.customPrice === 'number' && template.customPrice > 0) {
-    return template.customPrice;
+  const designFee =
+    typeof template.customPrice === 'number' && template.customPrice > 0
+      ? template.customPrice
+      : (designCategoryPrices[template.category] ?? null);
+
+  if (designFee === null) return null;
+
+  // A configured menu is a single cart line priced as print run + cover design,
+  // so recompute it from the submitted options instead of trusting the total.
+  if (template.category === 'menus' && hasMenuPrintOptions(metadata)) {
+    return calculateMenuPrintPrice(parseMenuPrintOptions(metadata), designFee)
+      .total;
   }
 
-  return designCategoryPrices[template.category] ?? null;
+  return designFee;
 }
 
 function getProductUnitPrice(
