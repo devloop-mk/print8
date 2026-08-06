@@ -6,6 +6,10 @@ import { hasManagedSvgDefaults } from '@/lib/designs/merge-svg-template-defaults
 
 export const DESIGN_GALLERY_THUMB_DIR = '/NEW_DESIGNS/gallery-thumbs';
 
+/** Bump when gallery mockup WebPs change so CDN/browser refetch (production uses R2). */
+export const GALLERY_THUMB_CACHE_VERSION =
+  process.env.NEXT_PUBLIC_GALLERY_THUMB_VERSION ?? '20260806-mockups-v2';
+
 export function getDesignGalleryThumbPath(designId: string): string {
   return `${DESIGN_GALLERY_THUMB_DIR}/${designId}.webp`;
 }
@@ -46,10 +50,9 @@ export function getDesignGalleryImage(
   design: DesignTemplate,
   options?: { thumbVersion?: string },
 ): string | undefined {
+  const version = options?.thumbVersion ?? GALLERY_THUMB_CACHE_VERSION;
   const withVersion = (base: string) =>
-    options?.thumbVersion
-      ? `${base}?v=${encodeURIComponent(options.thumbVersion)}`
-      : base;
+    version ? `${base}?v=${encodeURIComponent(version)}` : base;
 
   if (design.svgTemplateId) {
     return withVersion(getDesignGalleryThumbPath(design.id));
