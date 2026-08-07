@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
+import { resolveAssetUrl } from '@/lib/storage/asset-url';
 import { cn } from '@/lib/utils';
 
 type ShowcaseSlide = {
@@ -138,7 +139,7 @@ export function HomeShowcaseCarousel() {
                   )}
                 >
                   <Image
-                    src={slide.image}
+                    src={resolveAssetUrl(slide.image)}
                     alt=""
                     fill
                     sizes="(max-width: 640px) 78vw, 300px"

@@ -15,6 +15,7 @@ import {
   DESIGN_OVERLAY_LAYER_CLASS,
   getDesignOverlayLayerStyle,
 } from '@/lib/products/design-overlay';
+import { resolveAssetUrl } from '@/lib/storage/asset-url';
 
 type DesignOverlay = {
   src: string;
@@ -229,7 +230,7 @@ export function HomeCategoryGrid({ productCount }: { productCount: number }) {
                   {tile.designOverlay ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={tile.designOverlay.src}
+                      src={resolveAssetUrl(tile.designOverlay.src)}
                       alt=""
                       aria-hidden
                       draggable={false}
@@ -251,7 +252,7 @@ export function HomeCategoryGrid({ productCount }: { productCount: number }) {
 
                   {tile.hoverImage ? (
                     <Image
-                      src={tile.hoverImage}
+                      src={resolveAssetUrl(tile.hoverImage)}
                       alt=""
                       fill
                       sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 22vw"
