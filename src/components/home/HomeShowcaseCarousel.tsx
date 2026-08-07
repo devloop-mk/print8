@@ -46,9 +46,8 @@ const slides: ShowcaseSlide[] = [
   {
     id: 'finishing',
     href: '/services#finishing',
-    image: '/hero/hero-your-brand-v2.png',
-    imageFit: 'contain',
-    tint: 'from-sky-900/50',
+    image: '/showcase/showcase-finishing.png',
+    tint: 'from-emerald-900/45',
   },
   {
     id: 'customDesign',
