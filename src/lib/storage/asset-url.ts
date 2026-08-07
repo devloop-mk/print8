@@ -54,7 +54,7 @@ export function resolveAssetUrl(path: string): string {
     return normalized;
   }
 
-  if (cdn) {
+  if (cdn && isCatalogDesignAssetPath(normalized)) {
     if (key.startsWith('masters/')) {
       return `${cdn}/${key}`;
     }
