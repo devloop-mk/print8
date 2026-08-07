@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { useEffect, useMemo, useRef, type ReactNode } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import type { ProductType } from '@/lib/data/catalog';
@@ -547,19 +547,45 @@ export function DrinkwareBody({
   );
 }
 
+function IdleSpinGroup({
+  spin,
+  children,
+}: {
+  spin: boolean;
+  children: ReactNode;
+}) {
+  const groupRef = useRef<THREE.Group>(null);
+
+  useEffect(() => {
+    if (!spin && groupRef.current) {
+      groupRef.current.rotation.y = 0;
+    }
+  }, [spin]);
+
+  useFrame((_, delta) => {
+    if (!spin || !groupRef.current) return;
+    groupRef.current.rotation.y += delta * 0.4;
+  });
+
+  return <group ref={groupRef}>{children}</group>;
+}
+
 export function Drinkware3DScene({
   productType,
   productColor,
   textureCanvas,
   productId,
   interactive = true,
+  idleAutoRotate = false,
 }: {
   productType: ProductType;
   productColor: string;
   textureCanvas: HTMLCanvasElement | null;
   productId?: string;
-  /** When false (stacked mobile), allow page scroll over the canvas. */
+  /** When false (stacked mobile), allow page scroll over the canvas until rotate mode. */
   interactive?: boolean;
+  /** Slow spin while non-interactive (stacked mobile default). */
+  idleAutoRotate?: boolean;
 }) {
   const config = getDrinkware3DConfig(productType, productId);
 
@@ -584,12 +610,14 @@ export function Drinkware3DScene({
       <directionalLight position={[3.2, 4.5, 2.8]} intensity={1.2} />
       <directionalLight position={[-2.8, 1.8, -1.5]} intensity={0.38} />
       <directionalLight position={[0.2, 2.2, 4]} intensity={0.42} />
-      <DrinkwareBody
-        productType={productType}
-        productColor={productColor}
-        textureCanvas={textureCanvas}
-        productId={productId}
-      />
+      <IdleSpinGroup spin={idleAutoRotate}>
+        <DrinkwareBody
+          productType={productType}
+          productColor={productColor}
+          textureCanvas={textureCanvas}
+          productId={productId}
+        />
+      </IdleSpinGroup>
       <OrbitControls
         enabled={interactive}
         enablePan={false}
@@ -600,7 +628,7 @@ export function Drinkware3DScene({
         maxDistance={4.2}
         minPolarAngle={Math.PI * 0.28}
         maxPolarAngle={Math.PI * 0.72}
-        autoRotate={Boolean(textureCanvas)}
+        autoRotate={interactive && Boolean(textureCanvas)}
         autoRotateSpeed={0.65}
       />
     </Canvas>

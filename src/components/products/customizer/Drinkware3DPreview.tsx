@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Box, Rotate3d } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
@@ -47,6 +48,14 @@ export function Drinkware3DPreview({
   canvasHeightPx,
 }: Drinkware3DPreviewProps) {
   const t = useTranslations('products.customizer');
+  const [rotateActive, setRotateActive] = useState(false);
+  const isStacked = variant === 'stacked';
+  const interactive = !isStacked || rotateActive;
+
+  useEffect(() => {
+    setRotateActive(false);
+  }, [productId, variant]);
+
   const { textureCanvas, loading } = useDrinkwareWrapTexture({
     productType,
     productId,
@@ -80,9 +89,36 @@ export function Drinkware3DPreview({
         productId={productId}
         productColor={productColor}
         textureCanvas={textureCanvas}
-        interactive={variant !== 'stacked'}
+        interactive={interactive}
+        idleAutoRotate={isStacked && !rotateActive && Boolean(textureCanvas)}
       />
-      {variant === 'stacked' ? null : (
+      {isStacked ? (
+        <>
+          {rotateActive ? (
+            <>
+              <button
+                type="button"
+                onClick={() => setRotateActive(false)}
+                className="absolute right-2 top-2 z-20 rounded-md border border-ink-200 bg-white/95 px-2.5 py-1 text-[11px] font-semibold text-ink-700 shadow-sm backdrop-blur-sm"
+              >
+                {t('preview3dRotateDone')}
+              </button>
+              <p className="pointer-events-none absolute inset-x-0 bottom-2 z-10 text-center text-[10px] font-medium text-ink-500/90">
+                {t('preview3dMobileDragHint')}
+              </p>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setRotateActive(true)}
+              className="absolute inset-x-3 bottom-3 z-20 inline-flex items-center justify-center gap-1.5 rounded-md border border-ink-200 bg-white/95 px-3 py-2 text-[11px] font-semibold text-ink-700 shadow-sm backdrop-blur-sm"
+            >
+              <Rotate3d className="h-3.5 w-3.5" aria-hidden />
+              {t('preview3dTapToRotate')}
+            </button>
+          )}
+        </>
+      ) : (
         <p className="pointer-events-none absolute inset-x-0 bottom-2 z-10 text-center text-[10px] font-medium text-ink-500/90">
           {t('preview3dDragHint')}
         </p>
