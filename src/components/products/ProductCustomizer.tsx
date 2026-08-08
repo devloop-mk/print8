@@ -1400,9 +1400,8 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     shirtColor: color,
   });
 
-  // Track editor mockup inner height for compact side previews (text scales with mockup).
+  // Track editor mockup inner height so overlay text scales with the visible canvas.
   useLayoutEffect(() => {
-    if (isDrinkware) return;
     const container = previewRef.current;
     if (!container) return;
 
@@ -1784,11 +1783,20 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     const inner = previewRef.current?.querySelector<HTMLElement>(
       '[data-mockup-inner]',
     );
-    const height =
-      inner?.offsetHeight ??
-      (previewRef.current?.offsetHeight ?? 400) * 0.85;
+    const height = isDrinkware
+      ? drinkwareCanvasHeightPx
+      : inner?.offsetHeight ??
+        (previewRef.current?.offsetHeight ?? 400) * 0.85;
     return getMaxTextSizeForPrintArea(height, effectivePrintAreaInsets);
-  }, [product, activeSide, canvasZoom, sideDesigns, effectivePrintAreaInsets]);
+  }, [
+    product,
+    activeSide,
+    canvasZoom,
+    sideDesigns,
+    effectivePrintAreaInsets,
+    isDrinkware,
+    drinkwareCanvasHeightPx,
+  ]);
 
   const updateTextLayer = useCallback(
     (instanceId: string, updates: Partial<PlacedTextLayer>) => {
@@ -2502,6 +2510,9 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       preview3DSideDesign={preview3DSideDesign}
       overlayGestureHandlers={overlayGestureHandlers}
       largeCustomizerViewport={isLargeCustomizerViewport}
+      referenceMockupInnerHeight={
+        isDrinkware ? drinkwareCanvasHeightPx : editorMockupInnerHeight
+      }
     />
   );
 
@@ -2965,7 +2976,9 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
               onStickerScaleChange={() => {}}
               onRemoveSticker={() => {}}
               printAreaOverride={printOverride}
-              referenceMockupInnerHeight={editorMockupInnerHeight}
+              referenceMockupInnerHeight={
+                isDrinkware ? drinkwareCanvasHeightPx : editorMockupInnerHeight
+              }
             />
           );
         }}
@@ -3044,14 +3057,24 @@ function ResizableTextOverlay({
     const parent = containerRef.current?.parentElement;
     if (!parent) return;
     if (printBounds) {
+      const sizingHeight =
+        referenceMockupInnerHeight && mockupInnerHeight > 0
+          ? referenceMockupInnerHeight
+          : parent.offsetHeight;
       setMaxTextSize(
         getMaxTextSizeForPrintArea(
-          parent.offsetHeight,
+          sizingHeight,
           printBounds,
         ),
       );
     }
-  }, [printBounds, size, text]);
+  }, [
+    printBounds,
+    size,
+    text,
+    referenceMockupInnerHeight,
+    mockupInnerHeight,
+  ]);
 
   useLayoutEffect(() => {
     const mockupInner = containerRef.current?.closest<HTMLElement>(
