@@ -5,6 +5,20 @@
  */
 export const PRODUCT_ID_ALIASES: Readonly<Record<string, string>> = {
   'tshirt-basic-white': 'tshirt-unisex',
+  'mug-koni-inner-red': 'mug-inner-red',
+  'mug-koni-inner-light-blue': 'mug-inner-light-blue',
+  'mug-koni-inner-pink': 'mug-inner-pink',
+  'mug-koni-inner-violet': 'mug-inner-violet',
+  'mug-koni-inner-light-violet': 'mug-inner-light-violet',
+  'mug-koni-football-handle': 'mug-football-handle',
+  'mug-koni-magic-glossy': 'mug-magic-glossy',
+  'mug-koni-magic-matte': 'mug-magic-matte',
+  'mug-koni-window-blue': 'mug-window-blue',
+  'mug-koni-window-red': 'mug-red-patch',
+  'mug-koni-rose-sparkle': 'mug-rose-sparkle',
+  'mug-koni-red-sparkle': 'mug-red-sparkle',
+  'photo-stone-sbbh03': 'photo-stone-15x20',
+  'photo-stone-sbbh19': 'photo-stone-15x15',
 };
 
 /** Map a stored / URL product id to the current catalog id. */

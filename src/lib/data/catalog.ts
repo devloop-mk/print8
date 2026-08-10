@@ -34,7 +34,7 @@ import {
 } from '@/lib/products/tshirt-kids-colors';
 import { getProductColorImagesEntry } from '@/lib/products/product-color-images';
 import { productIdsInclude } from '@/lib/products/product-id-aliases';
-import { koniSupplierProducts } from '@/lib/data/koni-supplier-products';
+import { supplierCatalogProducts } from '@/lib/data/supplier-catalog-products';
 
 export type ServiceId =
   | 'business-cards'
@@ -1570,6 +1570,7 @@ export const products: Product[] = [
     id: 'mug-red-patch',
     type: 'mug',
     nameKey: 'mugRedPatch',
+    vendorSku: 'CB11C-R',
     image: '/mugs/mug-red-patch.jpg',
     colorsImages: {
       '#dc2626': {
@@ -1854,7 +1855,7 @@ export const products: Product[] = [
     colors: ['#f5f5f4'],
     uploadAspect: 1,
   },
-  ...koniSupplierProducts,
+  ...supplierCatalogProducts,
 ];
 
 export const productTypes: ProductType[] = [
