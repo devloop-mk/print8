@@ -51,6 +51,7 @@ import {
   isHeartHandleMug,
   isMugInsideProduct,
 } from '@/lib/products/drinkware-product-options';
+import { withVendorSkuMetadata } from '@/lib/products/vendor-sku';
 import { GarmentFitSelector } from '@/components/products/GarmentFitSelector';
 import { DrinkwareProductSelector } from '@/components/products/DrinkwareProductSelector';
 import { DesignColorPicker } from '@/components/products/DesignColorPicker';
@@ -2314,6 +2315,8 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       metadata.designTemplateId = designId;
       metadata.designKind = activeDesignTemplate.kind;
     }
+
+    withVendorSkuMetadata(metadata, product ?? null);
 
     const fileIds = cartSides.flatMap((side) =>
       collectPlacedPhotoFileIds(sideDesigns[side] ?? createDefaultSideDesign()),

@@ -624,12 +624,12 @@
       "wooden-plaques": {
         "title": "Плакети на дрвена подлога",
         "description": "Елегантни плакети и признанија на дрвена основа — за награди и спомени.",
-        "detail": "Испратете текст, лого или фотографија — ние го подготвуваме и печатиме."
+        "detail": "Изберете големина, поставете фотографија и нарачајте — ние печатиме и подготвуваме."
       },
       "photo-stone": {
         "title": "Фото камен",
         "description": "Траен спомен со ваша фотографија на камена подлога.",
-        "detail": "Прикачете ја фотографијата при нарачка — ние ја подготвуваме за печат."
+        "detail": "Изберете модел, поставете фотографија и нарачајте — ние ја подготвуваме за печат."
       },
       "gift-sets": {
         "title": "Персонализирани сетови за поклон",
@@ -1950,7 +1950,26 @@
       "imageDesignsPageHint": "Прегледајте ги сите готови фото-дизајни за овој производ.",
       "textDesignsPageHint": "Прегледајте ги сите текстуални шаблони за овој производ.",
       "magnetDescription": "Поставете ја вашата фотографија — ќе ја испечатиме на овој магнет. Можете да ја исечете сликата пред нарачка.",
-      "magnetUploadCta": "Постави слика и нарачај"
+      "magnetUploadCta": "Постави слика и нарачај",
+      "uploadDescription": "Поставете ја вашата фотографија — ќе ја испечатиме на овој производ. Можете да ја исечете сликата пред нарачка.",
+      "uploadCta": "Постави слика и нарачај"
+    },
+    "uploadOrder": {
+      "title": "Постави слика и нарачај",
+      "notFound": "Производот не е пронајден.",
+      "backToCatalog": "Назад кон каталогот",
+      "backToProduct": "Назад кон производот",
+      "productPreview": "Преглед",
+      "instructions": "Поставете ја сликата што сакате да ја испечатиме. Исечете ја според формата, па додајте во кошничка.",
+      "uploadTitle": "Вашата слика",
+      "uploadHint": "Изберете фотографија — можете да ја исечете пред поставување.",
+      "yourImage": "Вашата слика",
+      "removeImage": "Отстрани слика",
+      "quantity": "Количина",
+      "uploadRequired": "Поставете слика пред да додадете во кошничка.",
+      "photoLimit": "Премногу фотографии во оваа нарачка. Отстранете некои од кошничката.",
+      "addToCart": "Додај во кошничка",
+      "updateCart": "Ажурирај кошничка"
     },
     "magnetOrder": {
       "title": "Нарачај магнет",
@@ -1979,6 +1998,10 @@
       "bag": "Торба",
       "thermos": "Термос",
       "magnet": "Магнет",
+      "photo-stone": "Фото камен",
+      "puzzle": "Сложувалка",
+      "plaque": "Плакета",
+      "gift-box": "Поклон кутија",
       "gift-set": "Поклон сет"
     },
     "typesPlural": {
@@ -1991,6 +2014,10 @@
       "bag": "Торби",
       "thermos": "Термоси",
       "magnet": "Магнети",
+      "photo-stone": "Фото камења",
+      "puzzle": "Сложувалки",
+      "plaque": "Плакети",
+      "gift-box": "Поклон кутии",
       "gift-set": "Поклон сетови"
     },
     "items": {
@@ -2017,7 +2044,35 @@
       "magnetHardboardSquare": "Hardboard магнет 9,5×9,5 cm",
       "magnetHardboard6x6": "Hardboard магнет 6×6 cm",
       "magnetHardboardOval": "Hardboard овален магнет 9×6,5 cm",
-      "magnetHardboardRound": "Hardboard кружен магнет Ø9,5 cm"
+      "magnetHardboardRound": "Hardboard кружен магнет Ø9,5 cm",
+      "koniMugInnerRed": "Шолја со црвена внатрешност и рачка",
+      "koniMugInnerLightBlue": "Шолја со светло сина внатрешност и рачка",
+      "koniMugInnerPink": "Шолја со розева внатрешност и рачка",
+      "koniMugInnerViolet": "Шолја со виолетова внатрешност и рачка",
+      "koniMugInnerLightViolet": "Шолја со светло виолетова внатрешност и рачка",
+      "koniMugFootballHandle": "Шолја со фудбалска топка на рачката",
+      "koniMugMagicGlossy": "Магична шолја — сјај",
+      "koniMugMagicMatte": "Магична шолја — мат",
+      "koniMugWindowBlue": "Шолја со прозорец — сина",
+      "koniMugWindowRed": "Шолја со прозорец — црвена",
+      "koniMugRoseSparkle": "Шолја розова со сјај",
+      "koniMugRedSparkle": "Шолја црвена со сјај",
+      "koniMagnetHardboard7x9": "Hardboard магнет 7×9 cm",
+      "koniPhotoStone03": "Фото камен SBBH03",
+      "koniPhotoStone19": "Фото камен SBBH19",
+      "koniPuzzleA4": "Сложувалка A4",
+      "koniPuzzleA5": "Сложувалка A5",
+      "koniPuzzleHeart": "Сложувалка срце",
+      "koniPuzzleA4Wood": "Дрвена сложувалка A4",
+      "koniPlaque10x15": "Дрвена плакета 10×15 cm",
+      "koniPlaque15x20": "Плакета 15×20 cm",
+      "koniPlaque20x30": "Дрвена плакета 20×30 cm",
+      "koniGiftCaseGold": "Поклон кутија — златна",
+      "koniGiftCaseWhite": "Поклон кутија — бела",
+      "koniGiftBoxMugDecor": "Декоративна кутија за шолја",
+      "koniGiftBoxMugBasicWhite": "Кутија за шолја — бела",
+      "koniGiftBoxMugBasicRed": "Кутија за шолја — црвена",
+      "koniGiftBoxMugBasicBlue": "Кутија за шолја — сина"
     },
     "customizer": {
       "editText": "Уреди текст",

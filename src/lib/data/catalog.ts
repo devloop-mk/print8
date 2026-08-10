@@ -34,6 +34,7 @@ import {
 } from '@/lib/products/tshirt-kids-colors';
 import { getProductColorImagesEntry } from '@/lib/products/product-color-images';
 import { productIdsInclude } from '@/lib/products/product-id-aliases';
+import { koniSupplierProducts } from '@/lib/data/koni-supplier-products';
 
 export type ServiceId =
   | 'business-cards'
@@ -148,7 +149,7 @@ export const services: Service[] = [
     id: 'magnet-printing',
     icon: 'Magnet',
     category: 'gifts',
-    startingPrice: 49,
+    startingPrice: 110,
     customization: 'products',
     productTypes: ['magnet'],
   },
@@ -163,15 +164,17 @@ export const services: Service[] = [
     id: 'wooden-plaques',
     icon: 'Award',
     category: 'gifts',
-    startingPrice: 900,
-    customization: 'none',
+    startingPrice: 850,
+    customization: 'products',
+    productTypes: ['plaque'],
   },
   {
     id: 'photo-stone',
     icon: 'Gem',
     category: 'gifts',
-    startingPrice: 1200,
-    customization: 'none',
+    startingPrice: 890,
+    customization: 'products',
+    productTypes: ['photo-stone'],
   },
   {
     id: 'gift-sets',
@@ -714,6 +717,10 @@ export type ProductType =
   | 'bag'
   | 'thermos'
   | 'magnet'
+  | 'photo-stone'
+  | 'puzzle'
+  | 'plaque'
+  | 'gift-box'
   | 'gift-set';
 
 /** T-shirt garment cut (unisex, women's fitted, kids). */
@@ -788,6 +795,8 @@ export interface Product {
   fitOnly?: boolean;
   /** Default crop aspect for upload-only products (e.g. magnets) */
   uploadAspect?: number;
+  /** Koni / supplier SKU — internal only (orders, admin), not on storefront cards */
+  vendorSku?: string;
 }
 
 export function isMagnetProduct(product: Product): boolean {
@@ -1501,6 +1510,7 @@ export const products: Product[] = [
     id: 'mug-heart-handle',
     type: 'mug',
     nameKey: 'mugHeartHandle',
+    vendorSku: 'B101H',
     image: '/mugs/mug-heart-handle.jpg',
     colorsImages: {
       '#ffffff': '/mugs/mug-heart-handle.jpg',
@@ -1534,6 +1544,7 @@ export const products: Product[] = [
     id: 'mug-b5kf-white',
     type: 'mug',
     nameKey: 'mugB5kfWhite',
+    vendorSku: 'B101B',
     image: '/mugs/mug-b5kf-white.jpg',
     colorsImages: {
       '#ffffff': {
@@ -1573,6 +1584,7 @@ export const products: Product[] = [
     id: 'mug-frosted',
     type: 'mug',
     nameKey: 'mugFrosted',
+    vendorSku: 'B1G-01',
     image: '/mugs/mug-frosted.jpg',
     colorsImages: {
       '#f5f5f4': '/mugs/mug-frosted.jpg',
@@ -1584,6 +1596,7 @@ export const products: Product[] = [
     id: 'cup-glass-beer',
     type: 'cup',
     nameKey: 'cupGlassBeer',
+    vendorSku: 'BN1C',
     image: '/cups/cup-glass-beer.jpg',
     colorsImages: {
       '#e8f4fc': '/cups/cup-glass-beer.jpg',
@@ -1595,6 +1608,7 @@ export const products: Product[] = [
     id: 'mug-inside-daddy',
     type: 'mug',
     nameKey: 'mugInsideDaddy',
+    vendorSku: 'BD101-FD',
     image: '/mugs/mug-inside-daddy.jpg',
     colorsImages: {
       '#ffffff': {
@@ -1609,6 +1623,7 @@ export const products: Product[] = [
     id: 'mug-inside-love',
     type: 'mug',
     nameKey: 'mugInsideLove',
+    vendorSku: 'BD101-H',
     image: '/mugs/mug-inside-love.jpg',
     colorsImages: {
       '#ffffff': {
@@ -1623,6 +1638,7 @@ export const products: Product[] = [
     id: 'mug-inside-birthday',
     type: 'mug',
     nameKey: 'mugInsideBirthday',
+    vendorSku: 'BD101-HB',
     image: '/mugs/mug-inside-birthday.jpg',
     colorsImages: {
       '#ffffff': {
@@ -1637,6 +1653,7 @@ export const products: Product[] = [
     id: 'mug-inside-mothers-day',
     type: 'mug',
     nameKey: 'mugInsideMothersDay',
+    vendorSku: 'BD101-MD',
     image: '/mugs/mug-inside-mothers-day.jpg',
     colorsImages: {
       '#ffffff': {
@@ -1651,6 +1668,7 @@ export const products: Product[] = [
     id: 'mug-inside-thanksgiving',
     type: 'mug',
     nameKey: 'mugInsideThanksgiving',
+    vendorSku: 'BD101-TKG',
     image: '/mugs/mug-inside-thanksgiving.jpg',
     colorsImages: {
       '#ffffff': {
@@ -1742,6 +1760,7 @@ export const products: Product[] = [
     id: 'magnet-ceramic-5x7',
     type: 'magnet',
     nameKey: 'magnetCeramic5x7',
+    vendorSku: 'TFM01',
     image: '/magnets/magnet-ceramic-5x7.jpg',
     colorsImages: {
       '#ffffff': {
@@ -1749,7 +1768,7 @@ export const products: Product[] = [
         secondary: '/magnets/magnet-ceramic-5x7-plain.jpg',
       },
     },
-    basePrice: 98,
+    basePrice: 165,
     colors: ['#ffffff'],
     uploadAspect: 5 / 7,
   },
@@ -1757,6 +1776,7 @@ export const products: Product[] = [
     id: 'magnet-ceramic-heart',
     type: 'magnet',
     nameKey: 'magnetCeramicHeart',
+    vendorSku: 'CFM02',
     image: '/magnets/magnet-ceramic-heart.jpg',
     colorsImages: {
       '#ffffff': {
@@ -1764,7 +1784,7 @@ export const products: Product[] = [
         secondary: '/magnets/magnet-ceramic-heart-plain.jpg',
       },
     },
-    basePrice: 115,
+    basePrice: 185,
     colors: ['#ffffff'],
     uploadAspect: 6 / 6.8,
   },
@@ -1772,6 +1792,7 @@ export const products: Product[] = [
     id: 'magnet-glass-5x7',
     type: 'magnet',
     nameKey: 'magnetGlass5x7',
+    vendorSku: 'TFM03',
     image: '/magnets/magnet-glass-5x7.jpg',
     colorsImages: {
       '#e8f4fc': {
@@ -1779,7 +1800,7 @@ export const products: Product[] = [
         secondary: '/magnets/magnet-glass-5x7-plain.jpg',
       },
     },
-    basePrice: 85,
+    basePrice: 155,
     colors: ['#e8f4fc'],
     uploadAspect: 5 / 7,
   },
@@ -1791,7 +1812,7 @@ export const products: Product[] = [
     colorsImages: {
       '#f5f5f4': '/magnets/magnet-hardboard-square.jpg',
     },
-    basePrice: 62,
+    basePrice: 120,
     colors: ['#f5f5f4'],
     uploadAspect: 1,
   },
@@ -1799,11 +1820,12 @@ export const products: Product[] = [
     id: 'magnet-hardboard-6x6',
     type: 'magnet',
     nameKey: 'magnetHardboard6x6',
+    vendorSku: 'HBFM04',
     image: '/magnets/magnet-hardboard-6x6.jpg',
     colorsImages: {
       '#f5f5f4': '/magnets/magnet-hardboard-6x6.jpg',
     },
-    basePrice: 49,
+    basePrice: 110,
     colors: ['#f5f5f4'],
     uploadAspect: 1,
   },
@@ -1811,11 +1833,12 @@ export const products: Product[] = [
     id: 'magnet-hardboard-oval',
     type: 'magnet',
     nameKey: 'magnetHardboardOval',
+    vendorSku: 'HBFM05',
     image: '/magnets/magnet-hardboard-oval.jpg',
     colorsImages: {
       '#f5f5f4': '/magnets/magnet-hardboard-oval.jpg',
     },
-    basePrice: 49,
+    basePrice: 110,
     colors: ['#f5f5f4'],
     uploadAspect: 9 / 6.5,
   },
@@ -1827,10 +1850,11 @@ export const products: Product[] = [
     colorsImages: {
       '#f5f5f4': '/magnets/magnet-hardboard-round.jpg',
     },
-    basePrice: 62,
+    basePrice: 120,
     colors: ['#f5f5f4'],
     uploadAspect: 1,
   },
+  ...koniSupplierProducts,
 ];
 
 export const productTypes: ProductType[] = [
@@ -1843,6 +1867,10 @@ export const productTypes: ProductType[] = [
   'bag',
   'thermos',
   'magnet',
+  'photo-stone',
+  'puzzle',
+  'plaque',
+  'gift-box',
   'gift-set',
 ];
 

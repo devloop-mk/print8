@@ -3,7 +3,8 @@
 import { useMemo, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { products, isMagnetProduct } from '@/lib/data/catalog';
+import { products } from '@/lib/data/catalog';
+import { isUploadOnlyProduct } from '@/lib/products/upload-only-products';
 import { getProductOffering } from '@/lib/products/offering';
 import { getProductDisplayPrice } from '@/lib/products/tshirt-print-pricing';
 import { getColorSwatchDisplayHex } from '@/lib/products/product-color-labels';
@@ -47,7 +48,7 @@ export function ProductDetail({ productId }: { productId: string }) {
   const productLabel = product.nameKey
     ? ti(product.nameKey)
     : tp(product.type);
-  const isMagnet = isMagnetProduct(product);
+  const isUpload = isUploadOnlyProduct(product);
 
   return (
     <div className="min-w-0 max-w-full space-y-10 pb-24 lg:pb-0">
@@ -131,21 +132,21 @@ export function ProductDetail({ productId }: { productId: string }) {
                 {t('startingFrom')} {formatPrice(getProductDisplayPrice(product), locale)}
               </p>
               <p className="mt-4 text-ink-600">
-                {isMagnet ? td('magnetDescription') : td('description')}
+                {isUpload ? td('uploadDescription') : td('description')}
               </p>
             </div>
 
-            {isMagnet ? (
+            {isUpload ? (
               <Link
                 href={paths.custom}
                 className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand-600 px-6 py-3 text-base font-medium text-white transition hover:bg-brand-700 sm:w-auto"
               >
                 <Upload className="h-5 w-5" />
-                {td('magnetUploadCta')}
+                {td('uploadCta')}
               </Link>
             ) : null}
 
-            {!isMagnet ? (
+            {!isUpload ? (
               <div className="lg:border-t lg:border-ink-200 lg:pt-6">
                 <ProductPathChooser
                   productId={product.id}
@@ -163,13 +164,13 @@ export function ProductDetail({ productId }: { productId: string }) {
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-ink-200 bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
         <div className="mx-auto max-w-lg">
-          {isMagnet ? (
+          {isUpload ? (
             <Link
               href={paths.custom}
               className="inline-flex w-full min-h-[3rem] items-center justify-center gap-2 rounded-lg bg-brand-600 px-6 py-3 text-base font-medium text-white transition hover:bg-brand-700"
             >
               <Upload className="h-5 w-5" aria-hidden />
-              {td('magnetUploadCta')}
+              {td('uploadCta')}
             </Link>
           ) : offering.hasPremade ? (
             <div className="grid min-w-0 grid-cols-2 gap-2">

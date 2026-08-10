@@ -624,12 +624,12 @@
       "wooden-plaques": {
         "title": "Wooden plaques",
         "description": "Elegant plaques and awards on wood — for recognition and keepsakes.",
-        "detail": "Send text, logo, or photo — we prepare and print it for you."
+        "detail": "Choose a size, upload your photo, and order — we print and prepare it for you."
       },
       "photo-stone": {
         "title": "Photo stone",
         "description": "A lasting keepsake with your photo on stone.",
-        "detail": "Upload your photo at checkout — we prepare it for print."
+        "detail": "Choose a model, upload your photo, and order — we prepare it for print."
       },
       "gift-sets": {
         "title": "Personalized gift sets",
@@ -1952,15 +1952,17 @@
       "imageDesignsPageHint": "Browse all ready photo designs for this product.",
       "textDesignsPageHint": "Browse all text templates for this product.",
       "magnetDescription": "Upload your photo — we print it on this magnet. You can crop the image before ordering.",
-      "magnetUploadCta": "Upload image & order"
+      "magnetUploadCta": "Upload image & order",
+      "uploadDescription": "Upload your photo — we print it on this product. You can crop the image before ordering.",
+      "uploadCta": "Upload image & order"
     },
-    "magnetOrder": {
-      "title": "Order magnet",
-      "notFound": "Magnet not found.",
-      "backToMagnets": "Back to magnets",
+    "uploadOrder": {
+      "title": "Upload image & order",
+      "notFound": "Product not found.",
+      "backToCatalog": "Back to catalog",
       "backToProduct": "Back to product",
-      "productPreview": "Magnet",
-      "instructions": "Upload the image you want printed on this magnet. Crop it to fit the magnet shape, then add to cart.",
+      "productPreview": "Preview",
+      "instructions": "Upload the image you want printed. Crop it to fit the product shape, then add to cart.",
       "uploadTitle": "Your image",
       "uploadHint": "Choose a photo — you can crop it before uploading.",
       "yourImage": "Your image",
@@ -1981,6 +1983,10 @@
       "bag": "Bag",
       "thermos": "Thermos",
       "magnet": "Magnet",
+      "photo-stone": "Photo stone",
+      "puzzle": "Puzzle",
+      "plaque": "Plaque",
+      "gift-box": "Gift box",
       "gift-set": "Gift set"
     },
     "typesPlural": {
@@ -1993,6 +1999,10 @@
       "bag": "Bags",
       "thermos": "Thermoses",
       "magnet": "Magnets",
+      "photo-stone": "Photo stones",
+      "puzzle": "Puzzles",
+      "plaque": "Plaques",
+      "gift-box": "Gift boxes",
       "gift-set": "Gift sets"
     },
     "items": {
@@ -2019,7 +2029,35 @@
       "magnetHardboardSquare": "Hardboard magnet 9.5×9.5 cm",
       "magnetHardboard6x6": "Hardboard magnet 6×6 cm",
       "magnetHardboardOval": "Hardboard oval magnet 9×6.5 cm",
-      "magnetHardboardRound": "Hardboard round magnet Ø9.5 cm"
+      "magnetHardboardRound": "Hardboard round magnet Ø9.5 cm",
+      "koniMugInnerRed": "Mug with red interior & handle",
+      "koniMugInnerLightBlue": "Mug with light blue interior & handle",
+      "koniMugInnerPink": "Mug with pink interior & handle",
+      "koniMugInnerViolet": "Mug with violet interior & handle",
+      "koniMugInnerLightViolet": "Mug with light violet interior & handle",
+      "koniMugFootballHandle": "Mug with football on handle",
+      "koniMugMagicGlossy": "Magic mug — glossy",
+      "koniMugMagicMatte": "Magic mug — matte",
+      "koniMugWindowBlue": "Window mug — blue",
+      "koniMugWindowRed": "Window mug — red",
+      "koniMugRoseSparkle": "Rose sparkle mug",
+      "koniMugRedSparkle": "Red sparkle mug",
+      "koniMagnetHardboard7x9": "Hardboard magnet 7×9 cm",
+      "koniPhotoStone03": "Photo stone SBBH03",
+      "koniPhotoStone19": "Photo stone SBBH19",
+      "koniPuzzleA4": "Puzzle A4",
+      "koniPuzzleA5": "Puzzle A5",
+      "koniPuzzleHeart": "Heart puzzle",
+      "koniPuzzleA4Wood": "Wooden puzzle A4",
+      "koniPlaque10x15": "Wooden plaque 10×15 cm",
+      "koniPlaque15x20": "Plaque 15×20 cm",
+      "koniPlaque20x30": "Wooden plaque 20×30 cm",
+      "koniGiftCaseGold": "Gift case — gold",
+      "koniGiftCaseWhite": "Gift case — white",
+      "koniGiftBoxMugDecor": "Decorative mug gift box",
+      "koniGiftBoxMugBasicWhite": "Mug box — white",
+      "koniGiftBoxMugBasicRed": "Mug box — red",
+      "koniGiftBoxMugBasicBlue": "Mug box — blue"
     },
     "customizer": {
       "editText": "Edit text",

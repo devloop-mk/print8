@@ -141,6 +141,9 @@ function buildProductDesignDetailsInnerHtml(item: OrderItem): string {
   if (typeof meta.color === "string" && meta.color) {
     rows.unshift(detailRow("Color", escapeHtml(meta.color)));
   }
+  if (typeof meta.vendorSku === "string" && meta.vendorSku) {
+    rows.unshift(detailRow("Supplier SKU", escapeHtml(meta.vendorSku)));
+  }
   if (typeof meta.printPackage === "string" && meta.printPackage) {
     rows.unshift(detailRow("Print package", escapeHtml(meta.printPackage)));
   }

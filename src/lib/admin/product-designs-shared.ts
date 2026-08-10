@@ -216,6 +216,10 @@ export const PRODUCT_TYPE_LABELS_MK: Record<ProductType, string> = {
   bag: 'Торба',
   thermos: 'Термос',
   magnet: 'Магнет',
+  'photo-stone': 'Фото камен',
+  puzzle: 'Сложувалка',
+  plaque: 'Плакета',
+  'gift-box': 'Поклон кутија',
   'gift-set': 'Поклон сет',
 };
 

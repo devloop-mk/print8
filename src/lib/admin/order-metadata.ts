@@ -43,6 +43,7 @@ const KEY_LABELS: Record<string, string> = {
   category: 'Категорија',
   size: 'Големина',
   color: 'Боја',
+  vendorSku: 'Кони SKU',
   paper: 'Хартија',
   lamination: 'Пластификат',
 };

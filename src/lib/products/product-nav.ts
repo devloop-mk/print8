@@ -65,7 +65,7 @@ export const productNavCategories: ProductNavCategory[] = [
   {
     id: 'gifts',
     icon: Gift,
-    types: ['magnet', 'gift-set'],
+    types: ['magnet', 'photo-stone', 'puzzle', 'plaque', 'gift-box', 'gift-set'],
   },
 ];
 

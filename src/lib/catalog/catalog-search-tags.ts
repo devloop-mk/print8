@@ -117,6 +117,10 @@ export const PRODUCT_TYPE_KEYWORDS: Record<ProductType, string[]> = {
   bag: ['bag', 'tote', 'shopper', 'торба', 'торби', 'кеса'],
   'gift-set': ['gift set', 'gift box', 'подарок', 'подарочен', 'сет'],
   magnet: ['magnet', 'fridge magnet', 'магнет', 'магнети'],
+  'photo-stone': ['photo stone', 'stone', 'фото камен', 'камен'],
+  puzzle: ['puzzle', 'jigsaw', 'сложувалка', 'сложувалки'],
+  plaque: ['plaque', 'award', 'wooden plaque', 'плакета', 'плакети'],
+  'gift-box': ['gift box', 'mug box', 'кутија', 'поклон кутија'],
 };
 
 export function keywordsForDesignTags(tags: string[]): string[] {

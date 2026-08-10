@@ -1,12 +1,15 @@
 import {
+  Award,
   Baby,
   CircleUserRound,
   Coffee,
   CupSoda,
+  Gem,
   Gift,
   GlassWater,
   LayoutGrid,
   Magnet,
+  Puzzle,
   Shirt,
   ShoppingBag,
   type LucideIcon,
@@ -28,6 +31,10 @@ export const productTypeIconMap: Record<ProductTypeFilterValue, LucideIcon> = {
   bag: ShoppingBag,
   thermos: GlassWater,
   magnet: Magnet,
+  'photo-stone': Gem,
+  puzzle: Puzzle,
+  plaque: Award,
+  'gift-box': Gift,
   'gift-set': Gift,
 };
 
