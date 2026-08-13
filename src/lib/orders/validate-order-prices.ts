@@ -21,6 +21,10 @@ import {
   getTshirtPriceFromMetadata,
   isTshirtProduct,
 } from '@/lib/products/tshirt-print-pricing';
+import {
+  getBagPriceFromMetadata,
+  isBagProduct,
+} from '@/lib/products/bag-print-pricing';
 import { getPremadeDesignUnitPrice } from '@/lib/products/premade-design-order';
 import { getStaticProductDesignTemplates } from '@/lib/products/merged-product-designs';
 
@@ -112,7 +116,7 @@ function getProductUnitPrice(
   if (!product) return null;
 
   if (isTshirtProduct(product)) {
-    const packaged = getTshirtPriceFromMetadata(metadata);
+    const packaged = getTshirtPriceFromMetadata(metadata, product);
     if (packaged !== null) return packaged;
 
     // Premade ready-designs / couple packs historically omitted printPackage.
@@ -126,6 +130,20 @@ function getProductUnitPrice(
     }
 
     return null;
+  }
+
+  if (isBagProduct(product)) {
+    const bagPrice = getBagPriceFromMetadata(metadata);
+    if (bagPrice !== null) return bagPrice;
+
+    if (typeof metadata.designTemplateId === 'string') {
+      const design = getStaticProductDesignTemplates().find(
+        (template) => template.id === metadata.designTemplateId,
+      );
+      if (design) return getPremadeDesignUnitPrice(product, design);
+    }
+
+    return product.basePrice;
   }
 
   return product.basePrice;

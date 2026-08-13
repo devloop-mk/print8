@@ -1,47 +1,7 @@
-import {
-  Lora,
-  Merriweather,
-  Montserrat,
-  Oswald,
-  Playfair_Display,
-  Roboto,
-} from 'next/font/google';
+import './customizer-fonts.css';
 
-const roboto = Roboto({
-  variable: '--font-customizer-roboto',
-  subsets: ['latin', 'cyrillic', 'cyrillic-ext'],
-  weight: ['400', '500', '700', '900'],
-});
-
-const montserrat = Montserrat({
-  variable: '--font-customizer-montserrat',
-  subsets: ['latin', 'cyrillic'],
-  weight: ['500', '600', '700', '800'],
-});
-
-const oswald = Oswald({
-  variable: '--font-customizer-oswald',
-  subsets: ['latin', 'cyrillic'],
-  weight: ['500', '600', '700'],
-});
-
-const playfair = Playfair_Display({
-  variable: '--font-customizer-playfair',
-  subsets: ['latin', 'cyrillic'],
-  weight: ['600', '700', '800'],
-});
-
-const lora = Lora({
-  variable: '--font-customizer-lora',
-  subsets: ['latin', 'cyrillic'],
-  weight: ['500', '600', '700'],
-});
-
-const merriweather = Merriweather({
-  variable: '--font-customizer-merriweather',
-  subsets: ['latin', 'cyrillic'],
-  weight: ['400', '700', '900'],
-});
+const CUSTOMIZER_FONTS_HREF =
+  'https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Montserrat:wght@500;600;700;800&family=Oswald:wght@500;600;700&family=Playfair+Display:wght@600;700;800&family=Lora:wght@500;600;700&family=Merriweather:wght@400;700;900&display=swap';
 
 export default function CustomizeProductLayout({
   children,
@@ -49,10 +9,15 @@ export default function CustomizeProductLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div
-      className={`${roboto.variable} ${montserrat.variable} ${oswald.variable} ${playfair.variable} ${lora.variable} ${merriweather.variable}`}
-    >
-      {children}
-    </div>
+    <>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossOrigin="anonymous"
+      />
+      <link href={CUSTOMIZER_FONTS_HREF} rel="stylesheet" />
+      <div className="customizer-font-scope">{children}</div>
+    </>
   );
 }

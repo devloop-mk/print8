@@ -121,6 +121,15 @@ export const PRODUCT_TYPE_KEYWORDS: Record<ProductType, string[]> = {
   puzzle: ['puzzle', 'jigsaw', 'сложувалка', 'сложувалки'],
   plaque: ['plaque', 'award', 'wooden plaque', 'плакета', 'плакети'],
   'gift-box': ['gift box', 'mug box', 'кутија', 'поклон кутија'],
+  'microfiber-cloth': [
+    'microfiber',
+    'cloth',
+    'cleaning cloth',
+    'sublimation cloth',
+    'крпа',
+    'микрофибер',
+    'сублимација',
+  ],
 };
 
 export function keywordsForDesignTags(tags: string[]): string[] {

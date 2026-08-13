@@ -49,7 +49,7 @@ export function getProductsForCategoryWithVisibility(
 /** Sample products from other types for cross-sell on type pages. */
 export async function getSuggestedProductsForType(
   currentType: ProductType,
-  limit = 8,
+  limit = 4,
 ): Promise<Product[]> {
   const visibility = await getProductVisibilityRecord();
   const parentCategory = getCategoryForProductType(currentType);

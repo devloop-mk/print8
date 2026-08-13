@@ -18,7 +18,10 @@ import {
 } from '@/lib/products/product-nav';
 import { productMatchesCatalogType } from '@/lib/products/drinkware-type-groups';
 import { resolveDesignProduct as resolveDesignProductByFit, designSupportsGarmentFit, getProductGarmentFit } from '@/lib/products/garment-fit';
-import { productIdsInclude } from '@/lib/products/product-id-aliases';
+import {
+  premadeDesignAppliesToProduct,
+  productRequiresExplicitPremadeDesigns,
+} from '@/lib/products/premade-design-product-match';
 export type ProductDesignCatalogEntry = {
   design: ProductDesignTemplate;
   products: Product[];
@@ -32,10 +35,8 @@ export function buildProductDesignCatalogEntries(
     .filter((design) => design.category === category)
     .map((design) => ({
       design,
-      products: products.filter(
-        (product) =>
-          design.productTypes.includes(product.type) &&
-          (!design.productIds || productIdsInclude(design.productIds, product.id)),
+      products: products.filter((product) =>
+        premadeDesignAppliesToProduct(design, product),
       ),
     }))
     .filter((entry) => entry.products.length > 0);
@@ -96,13 +97,10 @@ export function filterDesignCatalogEntriesForProduct(
 
   return entries
     .filter(({ design, products: matchedProducts }) => {
-      if (!matchedProducts.some((item) => item.type === product.type)) {
+      if (!premadeDesignAppliesToProduct(design, product)) {
         return false;
       }
-      if (
-        design.productIds?.length &&
-        !productIdsInclude(design.productIds, product.id)
-      ) {
+      if (!matchedProducts.some((item) => item.type === product.type)) {
         return false;
       }
       if (
@@ -120,10 +118,12 @@ export function filterDesignCatalogEntriesForProduct(
         ? matchedProducts.filter(
             (item) => item.id === product.id || item.type === product.type,
           )
-        : [
-            product,
-            ...matchedProducts.filter((item) => item.type === product.type),
-          ],
+        : productRequiresExplicitPremadeDesigns(product)
+          ? [product]
+          : [
+              product,
+              ...matchedProducts.filter((item) => item.type === product.type),
+            ],
     }));
 }
 

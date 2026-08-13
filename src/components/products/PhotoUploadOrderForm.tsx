@@ -44,6 +44,7 @@ export function PhotoUploadOrderForm({ productType }: PhotoUploadOrderFormProps)
 
   const productId = searchParams.get('id');
   const editCartItemId = searchParams.get('edit');
+  const colorParam = searchParams.get('color');
 
   const product = useMemo(
     () => products.find((p) => p.id === productId && p.type === productType),
@@ -58,12 +59,20 @@ export function PhotoUploadOrderForm({ productType }: PhotoUploadOrderFormProps)
     [editCartItemId, cartItems],
   );
 
-  const [color] = useState(
-    () =>
-      (typeof editingItem?.metadata?.color === 'string'
-        ? editingItem.metadata.color
-        : undefined) ?? product?.colors?.[0] ?? '#ffffff',
-  );
+  const resolvedColor = useMemo(() => {
+    if (!product) return '#ffffff';
+    const fromEdit = editingItem?.metadata?.color;
+    const raw =
+      typeof fromEdit === 'string'
+        ? fromEdit
+        : colorParam ?? product.colors?.[0] ?? '#ffffff';
+    return (
+      product.colors?.find((c) => c.toLowerCase() === raw.toLowerCase()) ??
+      product.colors?.[0] ??
+      raw
+    );
+  }, [product, editingItem, colorParam]);
+
   const [quantity, setQuantity] = useState(editingItem?.quantity ?? 1);
   const [uploadedPhoto, setUploadedPhoto] = useState<UploadedPhoto | null>(
     null,
@@ -97,7 +106,7 @@ export function PhotoUploadOrderForm({ productType }: PhotoUploadOrderFormProps)
   const productLabel = product.nameKey
     ? ti(product.nameKey)
     : product.type;
-  const mockupImage = getMagnetDisplayMockup(product, color);
+  const mockupImage = getMagnetDisplayMockup(product, resolvedColor);
 
   function handleAddToCart() {
     if (!product) return;
@@ -123,7 +132,7 @@ export function PhotoUploadOrderForm({ productType }: PhotoUploadOrderFormProps)
     const metadata = withVendorSkuMetadata(
       {
         productId: product.id,
-        color,
+        color: resolvedColor,
         isUploadOrder: true,
         isCustomized: true,
         frontUploadedFileId: uploadedPhoto.fileId,
@@ -169,7 +178,7 @@ export function PhotoUploadOrderForm({ productType }: PhotoUploadOrderFormProps)
           </p>
           <ProductImageCarousel
             product={product}
-            color={color}
+            color={resolvedColor}
             typeLabel={productLabel}
           />
         </Card>
@@ -257,22 +266,24 @@ export function PhotoUploadOrderForm({ productType }: PhotoUploadOrderFormProps)
             </div>
           </Card>
 
-          {submitError ? (
-            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-              {submitError}
-            </p>
-          ) : null}
-
-          <Button
-            size="lg"
-            className="w-full gap-2"
-            onClick={handleAddToCart}
-            disabled={!uploadedPhoto || uploadLoading}
-          >
-            <ShoppingCart className="h-5 w-5" />
-            {editCartItemId ? t('updateCart') : t('addToCart')}
-          </Button>
         </div>
+      </div>
+
+      <div className="sticky bottom-0 z-10 -mx-4 space-y-2 border-t border-ink-100 bg-white/95 px-4 py-3 backdrop-blur-sm sm:-mx-0 sm:rounded-xl sm:border sm:shadow-sm sm:py-4">
+        {submitError ? (
+          <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            {submitError}
+          </p>
+        ) : null}
+        <Button
+          size="lg"
+          className="w-full gap-2"
+          onClick={handleAddToCart}
+          disabled={!uploadedPhoto}
+        >
+          <ShoppingCart className="h-5 w-5" />
+          {editCartItemId ? t('updateCart') : t('addToCart')}
+        </Button>
       </div>
     </div>
   );

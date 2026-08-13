@@ -7,6 +7,7 @@ export const UPLOAD_ONLY_PRODUCT_TYPES = [
   'puzzle',
   'plaque',
   'gift-box',
+  'microfiber-cloth',
 ] as const satisfies readonly ProductType[];
 
 export type UploadOnlyProductType = (typeof UPLOAD_ONLY_PRODUCT_TYPES)[number];

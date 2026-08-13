@@ -10,6 +10,7 @@ import {
   LayoutGrid,
   Magnet,
   Puzzle,
+  Sparkles,
   Shirt,
   ShoppingBag,
   type LucideIcon,
@@ -36,6 +37,7 @@ export const productTypeIconMap: Record<ProductTypeFilterValue, LucideIcon> = {
   plaque: Award,
   'gift-box': Gift,
   'gift-set': Gift,
+  'microfiber-cloth': Sparkles,
 };
 
 export function getProductTypeIcon(type: ProductTypeFilterValue): LucideIcon {

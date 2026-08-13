@@ -93,11 +93,8 @@ export function matchesAdminProductDesignSearch(
 }
 
 export function getLinkedProducts(template: ProductDesignTemplate): Product[] {
-  return products.filter(
-    (product) =>
-      template.productTypes.includes(product.type) &&
-      (!template.productIds?.length ||
-        productIdsInclude(template.productIds, product.id)),
+  return products.filter((product) =>
+    premadeDesignAppliesToProduct(template, product),
   );
 }
 
@@ -109,7 +106,8 @@ import {
   getDesignApplicableFits,
   getDesignPrimaryProductType,
 } from '@/lib/products/garment-fit';
-import { productIdsInclude } from '@/lib/products/product-id-aliases';
+import { premadeDesignAppliesToProduct } from '@/lib/products/premade-design-product-match';
+import { resolveProductId } from '@/lib/products/product-id-aliases';
 
 export type AdminDesignColorOption = {
   hex: string;
@@ -221,6 +219,7 @@ export const PRODUCT_TYPE_LABELS_MK: Record<ProductType, string> = {
   plaque: 'Плакета',
   'gift-box': 'Поклон кутија',
   'gift-set': 'Поклон сет',
+  'microfiber-cloth': 'Микрофибер крпа',
 };
 
 export function createEmptyProductDesignTemplate(

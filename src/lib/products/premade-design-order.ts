@@ -23,6 +23,7 @@ import {
 import { writeTextMetadata } from '@/lib/products/text-layers';
 import { writePremadeArtworkSourceMetadata } from '@/lib/products/premade-artwork-source';
 import { resolveOverlayPlacementForSide } from '@/lib/products/design-overlay';
+import { getBagUnitPrice, isBagProduct } from '@/lib/products/bag-print-pricing';
 import {
   deriveTshirtPrintPackage,
   getTshirtUnitPrice,
@@ -147,8 +148,13 @@ export function getPremadeDesignUnitPrice(
   product: Product,
   design: ProductDesignTemplate,
 ): number {
-  if (!isTshirtProduct(product)) return product.basePrice;
-  return getTshirtUnitPrice(getPremadeTshirtPrintPackage(design));
+  if (isTshirtProduct(product)) {
+    return getTshirtUnitPrice(getPremadeTshirtPrintPackage(design), product);
+  }
+  if (isBagProduct(product)) {
+    return getBagUnitPrice(true);
+  }
+  return product.basePrice;
 }
 
 export function buildPremadeDesignOrderMetadata({

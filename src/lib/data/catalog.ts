@@ -33,7 +33,9 @@ import {
   TSHIRT_KIDS_COLOR_HEXES,
 } from '@/lib/products/tshirt-kids-colors';
 import { getProductColorImagesEntry } from '@/lib/products/product-color-images';
-import { productIdsInclude } from '@/lib/products/product-id-aliases';
+import type { TshirtPricingOverride } from '@/lib/products/tshirt-print-pricing';
+import { getPoloMockupPath } from '@/lib/products/polo-mockup-paths';
+import { premadeDesignAppliesToProduct } from '@/lib/products/premade-design-product-match';
 import { supplierCatalogProducts } from '@/lib/data/supplier-catalog-products';
 
 export type ServiceId =
@@ -125,7 +127,7 @@ export const services: Service[] = [
     id: 'bag-printing',
     icon: 'ShoppingBag',
     category: 'merch',
-    startingPrice: 300,
+    startingPrice: 250,
     customization: 'products',
     productTypes: ['bag'],
   },
@@ -133,7 +135,7 @@ export const services: Service[] = [
     id: 'cup-printing',
     icon: 'Coffee',
     category: 'merch',
-    startingPrice: 250,
+    startingPrice: 350,
     customization: 'products',
     productTypes: ['mug', 'cup'],
   },
@@ -149,7 +151,7 @@ export const services: Service[] = [
     id: 'magnet-printing',
     icon: 'Magnet',
     category: 'gifts',
-    startingPrice: 110,
+    startingPrice: 150,
     customization: 'products',
     productTypes: ['magnet'],
   },
@@ -164,7 +166,7 @@ export const services: Service[] = [
     id: 'wooden-plaques',
     icon: 'Award',
     category: 'gifts',
-    startingPrice: 850,
+    startingPrice: 550,
     customization: 'products',
     productTypes: ['plaque'],
   },
@@ -172,7 +174,7 @@ export const services: Service[] = [
     id: 'photo-stone',
     icon: 'Gem',
     category: 'gifts',
-    startingPrice: 890,
+    startingPrice: 680,
     customization: 'products',
     productTypes: ['photo-stone'],
   },
@@ -721,7 +723,8 @@ export type ProductType =
   | 'puzzle'
   | 'plaque'
   | 'gift-box'
-  | 'gift-set';
+  | 'gift-set'
+  | 'microfiber-cloth';
 
 /** T-shirt garment cut (unisex, women's fitted, kids). */
 export type GarmentFit = 'unisex' | 'women' | 'kids';
@@ -797,6 +800,8 @@ export interface Product {
   uploadAspect?: number;
   /** Koni / supplier SKU — internal only (orders, admin), not on storefront cards */
   vendorSku?: string;
+  /** Optional t-shirt / polo print tier overrides (MKD). */
+  tshirtPricing?: TshirtPricingOverride;
 }
 
 export function isMagnetProduct(product: Product): boolean {
@@ -1367,10 +1372,8 @@ export function getProductSecondaryImage(
 }
 
 export function getProductDesignTemplates(product: Product) {
-  return productDesignTemplates.filter(
-    (d) =>
-      d.productTypes.includes(product.type) &&
-      (!d.productIds || productIdsInclude(d.productIds, product.id)),
+  return productDesignTemplates.filter((d) =>
+    premadeDesignAppliesToProduct(d, product),
   );
 }
 
@@ -1444,10 +1447,11 @@ export const products: Product[] = [
     id: 'tshirt-unisex',
     type: 't-shirt',
     fit: 'unisex',
+    nameKey: 'tshirtUnisex',
     image: getUnisexTshirtMockupPath('bela', 'front'),
     colorsImages: buildUnisexTshirtColorImages(),
     /** Fallback when printPackage missing — matches front-small. Display uses blank (350). */
-    basePrice: 400,
+    basePrice: 500,
     colors: TSHIRT_UNISEX_COLOR_HEXES,
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
     sides: ['front', 'back'],
@@ -1461,7 +1465,7 @@ export const products: Product[] = [
     image: getWomenTshirtMockupPath('bela', 'front'),
     colorsImages: buildWomenTshirtColorImages(),
     /** Fallback when printPackage missing — matches front-small. */
-    basePrice: 400,
+    basePrice: 500,
     colors: TSHIRT_WOMEN_COLOR_HEXES,
     sizes: ['XS', 'S', 'M', 'L', 'XL'],
     sides: ['front', 'back'],
@@ -1475,9 +1479,32 @@ export const products: Product[] = [
     image: getKidsTshirtMockupPath('bela', 'front'),
     colorsImages: buildKidsTshirtColorImages(),
     /** Fallback when printPackage missing — matches front-small. */
-    basePrice: 400,
+    basePrice: 500,
     colors: TSHIRT_KIDS_COLOR_HEXES,
     sizes: ['2-3', '4-5', '6-7', '8-9', '10-12', '12-14'],
+    sides: ['front', 'back'],
+  },
+  {
+    id: 'polo-frut-original-white',
+    type: 't-shirt',
+    fit: 'unisex',
+    nameKey: 'poloFrutOriginalWhite',
+    vendorSku: '0632140',
+    image: getPoloMockupPath('front'),
+    colorsImages: {
+      '#ffffff': {
+        front: getPoloMockupPath('front'),
+        back: getPoloMockupPath('back'),
+      },
+    },
+    tshirtPricing: {
+      blank: 700,
+      front: { small: 850, medium: 950, large: 1100 },
+    },
+    /** Fallback when printPackage missing — matches front-small. */
+    basePrice: 850,
+    colors: ['#ffffff'],
+    sizes: ['S', 'M', 'L', 'XXL'],
     sides: ['front', 'back'],
   },
   {
@@ -1515,7 +1542,7 @@ export const products: Product[] = [
     colorsImages: {
       '#ffffff': '/mugs/mug-heart-handle.jpg',
     },
-    basePrice: 280,
+    basePrice: 350,
     colors: ['#ffffff'],
   },
   {
@@ -1552,7 +1579,7 @@ export const products: Product[] = [
         secondary: '/mugs/mug-b5kf-angle.jpg',
       },
     },
-    basePrice: 250,
+    basePrice: 350,
     colors: ['#ffffff'],
   },
   {
@@ -1578,7 +1605,7 @@ export const products: Product[] = [
         secondary: '/mugs/mug-red-patch-side.jpg',
       },
     },
-    basePrice: 300,
+    basePrice: 470,
     colors: ['#dc2626'],
   },
   {
@@ -1590,7 +1617,7 @@ export const products: Product[] = [
     colorsImages: {
       '#f5f5f4': '/mugs/mug-frosted.jpg',
     },
-    basePrice: 280,
+    basePrice: 450,
     colors: ['#f5f5f4'],
   },
   {
@@ -1602,7 +1629,7 @@ export const products: Product[] = [
     colorsImages: {
       '#e8f4fc': '/cups/cup-glass-beer.jpg',
     },
-    basePrice: 250,
+    basePrice: 600,
     colors: ['#e8f4fc'],
   },
   {
@@ -1617,7 +1644,7 @@ export const products: Product[] = [
         secondary: '/mugs/mug-b5kf-white.jpg',
       },
     },
-    basePrice: 350,
+    basePrice: 450,
     colors: ['#ffffff'],
   },
   {
@@ -1632,7 +1659,7 @@ export const products: Product[] = [
         secondary: '/mugs/mug-b5kf-white.jpg',
       },
     },
-    basePrice: 350,
+    basePrice: 450,
     colors: ['#ffffff'],
   },
   {
@@ -1647,7 +1674,7 @@ export const products: Product[] = [
         secondary: '/mugs/mug-b5kf-white.jpg',
       },
     },
-    basePrice: 350,
+    basePrice: 450,
     colors: ['#ffffff'],
   },
   {
@@ -1662,7 +1689,7 @@ export const products: Product[] = [
         secondary: '/mugs/mug-b5kf-white.jpg',
       },
     },
-    basePrice: 350,
+    basePrice: 450,
     colors: ['#ffffff'],
   },
   {
@@ -1677,7 +1704,7 @@ export const products: Product[] = [
         secondary: '/mugs/mug-b5kf-white.jpg',
       },
     },
-    basePrice: 380,
+    basePrice: 450,
     colors: ['#ffffff'],
   },
   {
@@ -1693,6 +1720,49 @@ export const products: Product[] = [
     basePrice: 300,
     colors: ['#D8C3A5'],
     sides: ['front', 'back'],
+  },
+  {
+    id: 'bag-naturella-natural',
+    type: 'bag',
+    nameKey: 'bagNaturellaNatural',
+    vendorSku: '3402871',
+    image: '/bags/bag-naturella-natural.jpg',
+    colorsImages: {
+      '#E8DCC8': {
+        front: '/bags/bag-naturella-natural.jpg',
+        back: '/bags/bag-naturella-natural.jpg',
+      },
+    },
+    basePrice: 300,
+    colors: ['#E8DCC8'],
+    sides: ['front', 'back'],
+  },
+  {
+    id: 'gift-case-pure-pack-subli',
+    type: 'gift-box',
+    nameKey: 'giftCasePurePackSubli',
+    vendorSku: '3732191',
+    fitOnly: true,
+    image: '/gift-boxes/case-pure-pack-subli.jpg',
+    colorsImages: {
+      '#f5f5f4': '/gift-boxes/case-pure-pack-subli.jpg',
+    },
+    basePrice: 50,
+    colors: ['#f5f5f4'],
+    uploadAspect: 95 / 55,
+  },
+  {
+    id: 'cloth-pure-microfiber-white',
+    type: 'microfiber-cloth',
+    nameKey: 'clothPureMicrofiberWhite',
+    vendorSku: '3732090+3732191',
+    image: '/microfiber-cloths/cloth-pure-microfiber-white.jpg',
+    colorsImages: {
+      '#ffffff': '/microfiber-cloths/cloth-pure-microfiber-white.jpg',
+    },
+    basePrice: 100,
+    colors: ['#ffffff'],
+    uploadAspect: 18 / 15,
   },
   {
     id: 'hoodie-basic',
@@ -1769,7 +1839,7 @@ export const products: Product[] = [
         secondary: '/magnets/magnet-ceramic-5x7-plain.jpg',
       },
     },
-    basePrice: 165,
+    basePrice: 230,
     colors: ['#ffffff'],
     uploadAspect: 5 / 7,
   },
@@ -1785,7 +1855,7 @@ export const products: Product[] = [
         secondary: '/magnets/magnet-ceramic-heart-plain.jpg',
       },
     },
-    basePrice: 185,
+    basePrice: 250,
     colors: ['#ffffff'],
     uploadAspect: 6 / 6.8,
   },
@@ -1801,7 +1871,7 @@ export const products: Product[] = [
         secondary: '/magnets/magnet-glass-5x7-plain.jpg',
       },
     },
-    basePrice: 155,
+    basePrice: 200,
     colors: ['#e8f4fc'],
     uploadAspect: 5 / 7,
   },
@@ -1826,7 +1896,7 @@ export const products: Product[] = [
     colorsImages: {
       '#f5f5f4': '/magnets/magnet-hardboard-6x6.jpg',
     },
-    basePrice: 110,
+    basePrice: 150,
     colors: ['#f5f5f4'],
     uploadAspect: 1,
   },
@@ -1839,7 +1909,7 @@ export const products: Product[] = [
     colorsImages: {
       '#f5f5f4': '/magnets/magnet-hardboard-oval.jpg',
     },
-    basePrice: 110,
+    basePrice: 170,
     colors: ['#f5f5f4'],
     uploadAspect: 9 / 6.5,
   },
@@ -1873,6 +1943,7 @@ export const productTypes: ProductType[] = [
   'plaque',
   'gift-box',
   'gift-set',
+  'microfiber-cloth',
 ];
 
 export const designCategories: DesignCategory[] = [

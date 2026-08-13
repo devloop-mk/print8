@@ -21,7 +21,8 @@ import {
   getDesignPrimaryProductType,
   resolveTshirtProductForDesign,
 } from '@/lib/products/garment-fit';
-import { productIdsInclude, resolveProductId } from '@/lib/products/product-id-aliases';
+import { premadeDesignAppliesToProduct } from '@/lib/products/premade-design-product-match';
+import { resolveProductId } from '@/lib/products/product-id-aliases';
 import {
   getMockupImageDisplayStyle,
   getProductMockupLayout,
@@ -149,9 +150,7 @@ export function resolveAdminPreviewProduct(
 
   const linked = products.filter(
     (product) =>
-      product.type === type &&
-      (!template.productIds?.length ||
-        productIdsInclude(template.productIds, product.id)),
+      product.type === type && premadeDesignAppliesToProduct(template, product),
   );
 
   return linked[0] ?? products.find((product) => product.type === type) ?? null;

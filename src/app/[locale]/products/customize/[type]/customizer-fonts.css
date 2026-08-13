@@ -1,0 +1,10 @@
+/* Google Fonts CSS is UA-aware and returns current woff2 URLs (next/font/google
+   can embed stale Montserrat v31 paths that 404 on fonts.gstatic.com). */
+.customizer-font-scope {
+  --font-customizer-roboto: 'Roboto', sans-serif;
+  --font-customizer-montserrat: 'Montserrat', sans-serif;
+  --font-customizer-oswald: 'Oswald', sans-serif;
+  --font-customizer-playfair: 'Playfair Display', serif;
+  --font-customizer-lora: 'Lora', serif;
+  --font-customizer-merriweather: 'Merriweather', serif;
+}

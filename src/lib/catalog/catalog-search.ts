@@ -26,7 +26,7 @@ import { getProductDesignThumbnail } from '@/lib/products/design-overlay';
 import { resolveAssetUrl } from '@/lib/storage/asset-url';
 import { buildDesignDetailUrl } from '@/lib/products/paths';
 import type { ProductDesignCatalogEntry } from '@/lib/products/design-catalog';
-import { productIdsInclude } from '@/lib/products/product-id-aliases';
+import { premadeDesignAppliesToProduct } from '@/lib/products/premade-design-product-match';
 import { designCategoryHref } from '@/lib/designs/design-nav';
 
 /** Initial matches shown before "See more" on search UIs. */
@@ -329,10 +329,8 @@ function buildCatalogItemResults(
   }
 
   for (const design of productDesignTemplates) {
-    const matchedProducts = products.filter(
-      (product) =>
-        design.productTypes.includes(product.type) &&
-        (!design.productIds || productIdsInclude(design.productIds, product.id)),
+    const matchedProducts = products.filter((product) =>
+      premadeDesignAppliesToProduct(design, product),
     );
     if (matchedProducts.length === 0) continue;
     // Prefer productTypes[0] (e.g. bodysuit for baby designs), not catalog order.

@@ -211,6 +211,10 @@ import {
 } from '@/lib/products/print-area';
 import { notifyMovedOutsidePrintArea } from '@/lib/products/print-area-events';
 import {
+  getBagUnitPrice,
+  isBagProduct,
+} from '@/lib/products/bag-print-pricing';
+import {
   deriveTshirtPrintPackage,
   getTshirtPrintAreaInsets,
   getTshirtUnitPrice,
@@ -1490,9 +1494,12 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
 
   const unitPrice = useMemo(() => {
     if (!product) return 0;
-    if (isTshirtProduct(product)) return getTshirtUnitPrice(printPackage);
+    if (isTshirtProduct(product)) return getTshirtUnitPrice(printPackage, product);
+    if (isBagProduct(product)) {
+      return getBagUnitPrice(frontHasContent || backHasContent);
+    }
     return product.basePrice;
-  }, [product, printPackage]);
+  }, [product, printPackage, frontHasContent, backHasContent]);
 
   // Editing always uses the generous chest zone — the tighter "small
   // print" zone (see tshirt-print-pricing.ts) only classifies price/back
@@ -2247,6 +2254,9 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     }
     if (isTshirt) {
       metadata.printPackage = printPackage;
+    }
+    if (product && isBagProduct(product)) {
+      metadata.bagHasPrint = frontHasContent || backHasContent;
     }
 
     for (const side of cartSides) {
@@ -4252,9 +4262,11 @@ function EditorPanelContent({
   return null;
 }
 
-const TSHIRT_PRINT_PACKAGE_LABELS: Record<
-  TshirtPrintPackage,
-  { title: string; description: string }
+const TSHIRT_PRINT_PACKAGE_LABELS: Partial<
+  Record<
+    TshirtPrintPackage,
+    { title: string; description: string }
+  >
 > = {
   blank: {
     title: 'printPackageBlank',
@@ -4264,6 +4276,10 @@ const TSHIRT_PRINT_PACKAGE_LABELS: Record<
     title: 'printPackageFrontSmall',
     description: 'printPackageFrontSmallDesc',
   },
+  'front-medium': {
+    title: 'printPackageFrontMedium',
+    description: 'printPackageFrontMediumDesc',
+  },
   'front-large': {
     title: 'printPackageFrontLarge',
     description: 'printPackageFrontLargeDesc',
@@ -4271,6 +4287,10 @@ const TSHIRT_PRINT_PACKAGE_LABELS: Record<
   'back-small': {
     title: 'printPackageBackSmall',
     description: 'printPackageBackSmallDesc',
+  },
+  'back-medium': {
+    title: 'printPackageBackMedium',
+    description: 'printPackageBackMediumDesc',
   },
   'back-large': {
     title: 'printPackageBackLarge',
@@ -4297,6 +4317,18 @@ const TSHIRT_PRINT_PACKAGE_LABELS: Record<
     description: 'printPackageFrontBackDesc',
   },
 };
+
+function tshirtPrintPackageLabels(
+  pkg: TshirtPrintPackage,
+): { title: string; description: string } {
+  if (TSHIRT_PRINT_PACKAGE_LABELS[pkg]) {
+    return TSHIRT_PRINT_PACKAGE_LABELS[pkg];
+  }
+  return {
+    title: 'printPackageDualAuto',
+    description: 'printPackageAutoNote',
+  };
+}
 
 function ProductOptions({
   product,
@@ -4361,14 +4393,14 @@ function ProductOptions({
           <div className="flex items-center justify-between gap-3 rounded-xl border border-ink-200 bg-ink-50 px-4 py-3">
             <div className="min-w-0">
               <p className="text-sm font-semibold text-ink-900">
-                {t(TSHIRT_PRINT_PACKAGE_LABELS[printPackage].title)}
+                {t(tshirtPrintPackageLabels(printPackage).title)}
               </p>
               <p className="text-xs text-ink-500">
                 {t('printPackageAutoNote')}
               </p>
             </div>
             <span className="shrink-0 text-sm font-semibold text-brand-700">
-              {formatPrice(getTshirtUnitPrice(printPackage), locale ?? 'mk')}
+              {formatPrice(getTshirtUnitPrice(printPackage, product), locale ?? 'mk')}
             </span>
           </div>
         </div>

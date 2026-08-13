@@ -1,5 +1,9 @@
 import type { Product, ProductSide } from '@/lib/data/catalog';
 import {
+  getBagStartingPrice,
+  isBagProduct,
+} from '@/lib/products/bag-print-pricing';
+import {
   TSHIRT_PRINT_AREA_INSETS,
   WOMEN_TSHIRT_PRINT_AREA_INSETS,
   WOMEN_TSHIRT_SMALL_PRINT_AREA_INSETS,
@@ -8,57 +12,114 @@ import {
   type PrintAreaInsets,
 } from '@/lib/products/print-area';
 
+export type PrintTier = 'small' | 'medium' | 'large';
+
+/** Per-product overrides for t-shirt / polo pricing (MKD). */
+export interface TshirtPricingOverride {
+  blank?: number;
+  front?: Partial<Record<PrintTier, number>>;
+  backSurcharge?: Partial<Record<PrintTier, number>>;
+}
+
 export const TSHIRT_PRINT_PACKAGES = [
   'blank',
   'front-small',
+  'front-medium',
   'front-large',
   'back-small',
+  'back-medium',
   'back-large',
   'front-small-back-small',
+  'front-small-back-medium',
+  'front-small-back-large',
+  'front-medium-back-small',
+  'front-medium-back-medium',
+  'front-medium-back-large',
+  'front-large-back-small',
+  'front-large-back-medium',
+  'front-large-back-large',
+  /** @deprecated Legacy dual-side key — priced like front-large-back-large. */
+  'front-back',
+  /** @deprecated Legacy mixed dual keys — kept for cart metadata compatibility. */
   'front-small-back-large',
   'front-large-back-small',
   'front-large-back-large',
-  /** @deprecated Legacy dual-side key; priced like front-large-back-large. */
-  'front-back',
 ] as const;
 
 export type TshirtPrintPackage = (typeof TSHIRT_PRINT_PACKAGES)[number];
 
-/**
- * Unit prices in MKD (print package matrix).
- *
- * - blank: garment only (no print)
- * - single-side small / large: same price for front or back
- * - dual mixed: small on one side + large on the other
- * - dual both large: full print both sides
- * - front-small-back-small: not listed by product — priced at 450
- *   (400 one-side small + second small), the sensible middle between
- *   single-small (400) and mixed dual (550)
- * - legacy `front-back` keys price like front-large-back-large
- */
-export const TSHIRT_PRINT_PACKAGE_PRICES: Record<TshirtPrintPackage, number> = {
-  blank: 350,
-  'front-small': 400,
-  'front-large': 500,
-  'back-small': 400,
-  'back-large': 500,
-  'front-small-back-small': 450,
-  'front-small-back-large': 550,
-  'front-large-back-small': 550,
-  'front-large-back-large': 600,
-  'front-back': 600,
+/** Garment-only (no print). */
+export const TSHIRT_BLANK_PRICE = 350;
+
+/** Front print tiers (MKD) — mal / sredno / golemo logo. */
+export const TSHIRT_FRONT_TIER_PRICES: Record<PrintTier, number> = {
+  small: 500,
+  medium: 600,
+  large: 750,
 };
 
-/** @deprecated Prefer TSHIRT_PRINT_PACKAGE_PRICES */
-const TSHIRT_PACKAGE_PRICES = TSHIRT_PRINT_PACKAGE_PRICES;
+/** Back-print supplement when front is also printed (MKD). */
+export const TSHIRT_BACK_PRINT_SURCHARGE: Record<PrintTier, number> = {
+  small: 50,
+  medium: 100,
+  large: 200,
+};
 
-/** Tighter chest logo zone for small front prints. */
+/** @deprecated Prefer getTshirtUnitPrice — static matrix no longer used for all tiers. */
+export const TSHIRT_PRINT_PACKAGE_PRICES: Record<TshirtPrintPackage, number> = {
+  blank: TSHIRT_BLANK_PRICE,
+  'front-small': TSHIRT_FRONT_TIER_PRICES.small,
+  'front-medium': TSHIRT_FRONT_TIER_PRICES.medium,
+  'front-large': TSHIRT_FRONT_TIER_PRICES.large,
+  'back-small': TSHIRT_BLANK_PRICE + TSHIRT_BACK_PRINT_SURCHARGE.small,
+  'back-medium': TSHIRT_BLANK_PRICE + TSHIRT_BACK_PRINT_SURCHARGE.medium,
+  'back-large': TSHIRT_BLANK_PRICE + TSHIRT_BACK_PRINT_SURCHARGE.large,
+  'front-small-back-small':
+    TSHIRT_FRONT_TIER_PRICES.small + TSHIRT_BACK_PRINT_SURCHARGE.small,
+  'front-small-back-medium':
+    TSHIRT_FRONT_TIER_PRICES.small + TSHIRT_BACK_PRINT_SURCHARGE.medium,
+  'front-small-back-large':
+    TSHIRT_FRONT_TIER_PRICES.small + TSHIRT_BACK_PRINT_SURCHARGE.large,
+  'front-medium-back-small':
+    TSHIRT_FRONT_TIER_PRICES.medium + TSHIRT_BACK_PRINT_SURCHARGE.small,
+  'front-medium-back-medium':
+    TSHIRT_FRONT_TIER_PRICES.medium + TSHIRT_BACK_PRINT_SURCHARGE.medium,
+  'front-medium-back-large':
+    TSHIRT_FRONT_TIER_PRICES.medium + TSHIRT_BACK_PRINT_SURCHARGE.large,
+  'front-large-back-small':
+    TSHIRT_FRONT_TIER_PRICES.large + TSHIRT_BACK_PRINT_SURCHARGE.small,
+  'front-large-back-medium':
+    TSHIRT_FRONT_TIER_PRICES.large + TSHIRT_BACK_PRINT_SURCHARGE.medium,
+  'front-large-back-large':
+    TSHIRT_FRONT_TIER_PRICES.large + TSHIRT_BACK_PRINT_SURCHARGE.large,
+  'front-back':
+    TSHIRT_FRONT_TIER_PRICES.large + TSHIRT_BACK_PRINT_SURCHARGE.large,
+};
+
+/** Tighter chest logo zone for small front prints (≈15×15 cm). */
 export const TSHIRT_SMALL_PRINT_AREA_INSETS: PrintAreaInsets = {
   top: 30,
   right: 36,
   bottom: 40,
   left: 35,
 };
+
+/** Mid chest zone (≈25×30 cm). */
+export const TSHIRT_MEDIUM_PRINT_AREA_INSETS: PrintAreaInsets = {
+  top: 24,
+  right: 34,
+  bottom: 28,
+  left: 34,
+};
+
+export const WOMEN_TSHIRT_MEDIUM_PRINT_AREA_INSETS: PrintAreaInsets = {
+  top: 25,
+  right: 32,
+  bottom: 30,
+  left: 32,
+};
+
+const SMALL_FOOTPRINT_TOLERANCE = 1.1;
 
 export function isTshirtPrintPackage(
   value: string,
@@ -70,23 +131,105 @@ export function isTshirtProduct(product: Product): boolean {
   return product.type === 't-shirt';
 }
 
-export function getTshirtUnitPrice(pkg: TshirtPrintPackage): number {
-  return TSHIRT_PACKAGE_PRICES[pkg];
+function resolveBlankPrice(product?: Product | null): number {
+  return product?.tshirtPricing?.blank ?? TSHIRT_BLANK_PRICE;
 }
 
-export function getTshirtStartingPrice(): number {
-  return TSHIRT_PACKAGE_PRICES.blank;
+function resolveFrontTierPrices(product?: Product | null): Record<PrintTier, number> {
+  const overrides = product?.tshirtPricing?.front;
+  return {
+    small: overrides?.small ?? TSHIRT_FRONT_TIER_PRICES.small,
+    medium: overrides?.medium ?? TSHIRT_FRONT_TIER_PRICES.medium,
+    large: overrides?.large ?? TSHIRT_FRONT_TIER_PRICES.large,
+  };
+}
+
+function resolveBackSurcharge(product?: Product | null): Record<PrintTier, number> {
+  const overrides = product?.tshirtPricing?.backSurcharge;
+  if (
+    overrides?.small !== undefined ||
+    overrides?.medium !== undefined ||
+    overrides?.large !== undefined
+  ) {
+    return {
+      small: overrides?.small ?? TSHIRT_BACK_PRINT_SURCHARGE.small,
+      medium: overrides?.medium ?? TSHIRT_BACK_PRINT_SURCHARGE.medium,
+      large: overrides?.large ?? TSHIRT_BACK_PRINT_SURCHARGE.large,
+    };
+  }
+
+  // Custom front tiers include blank + one print — back-only should match front-only.
+  if (product?.tshirtPricing?.front) {
+    const blank = resolveBlankPrice(product);
+    const front = resolveFrontTierPrices(product);
+    return {
+      small: front.small - blank,
+      medium: front.medium - blank,
+      large: front.large - blank,
+    };
+  }
+
+  return {
+    small: TSHIRT_BACK_PRINT_SURCHARGE.small,
+    medium: TSHIRT_BACK_PRINT_SURCHARGE.medium,
+    large: TSHIRT_BACK_PRINT_SURCHARGE.large,
+  };
+}
+
+function packageBackTier(pkg: TshirtPrintPackage): PrintTier | null {
+  const match = pkg.match(/(?:^back-|-back-)(small|medium|large)/);
+  return match ? (match[1] as PrintTier) : null;
+}
+
+export function getTshirtUnitPrice(
+  pkg: TshirtPrintPackage,
+  product?: Product | null,
+): number {
+  const blank = resolveBlankPrice(product);
+  const front = resolveFrontTierPrices(product);
+  const back = resolveBackSurcharge(product);
+
+  if (pkg === 'blank') return blank;
+
+  const frontTier = packageFrontTier(pkg);
+  const backTier = packageBackTier(pkg);
+
+  if (frontTier && backTier) {
+    return front[frontTier] + back[backTier];
+  }
+
+  if (frontTier && pkg.startsWith('front-')) {
+    return front[frontTier];
+  }
+
+  if (backTier && pkg.startsWith('back-')) {
+    return blank + back[backTier];
+  }
+
+  if (pkg === 'front-back') {
+    return front.large + back.large;
+  }
+
+  return TSHIRT_PRINT_PACKAGE_PRICES[pkg] ?? blank;
+}
+
+export function getTshirtStartingPrice(product?: Product | null): number {
+  return resolveBlankPrice(product);
 }
 
 export function getProductDisplayPrice(product: Product): number {
   if (isTshirtProduct(product)) {
-    return getTshirtStartingPrice();
+    return getTshirtStartingPrice(product);
+  }
+  if (isBagProduct(product)) {
+    return getBagStartingPrice();
   }
   return product.basePrice;
 }
 
 export function getTshirtPriceFromMetadata(
   metadata: Record<string, string | number | boolean> | undefined,
+  product?: Product | null,
 ): number | null {
   if (!metadata) return null;
 
@@ -95,7 +238,7 @@ export function getTshirtPriceFromMetadata(
     return null;
   }
 
-  return getTshirtUnitPrice(raw);
+  return getTshirtUnitPrice(raw, product);
 }
 
 export function getTshirtPrintAreaInsets(
@@ -104,67 +247,76 @@ export function getTshirtPrintAreaInsets(
   product?: Product,
 ): PrintAreaInsets {
   const isWomen = product?.fit === 'women';
+  const tier = packageFrontTier(pkg);
 
-  const frontIsSmall =
-    pkg === 'front-small' || pkg.startsWith('front-small-');
-
-  if (frontIsSmall && side === 'front') {
-    return isWomen
-      ? WOMEN_TSHIRT_SMALL_PRINT_AREA_INSETS
-      : TSHIRT_SMALL_PRINT_AREA_INSETS;
+  if (side === 'front') {
+    if (tier === 'small') {
+      return isWomen
+        ? WOMEN_TSHIRT_SMALL_PRINT_AREA_INSETS
+        : TSHIRT_SMALL_PRINT_AREA_INSETS;
+    }
+    if (tier === 'medium') {
+      return isWomen
+        ? WOMEN_TSHIRT_MEDIUM_PRINT_AREA_INSETS
+        : TSHIRT_MEDIUM_PRINT_AREA_INSETS;
+    }
   }
 
   return isWomen ? WOMEN_TSHIRT_PRINT_AREA_INSETS : TSHIRT_PRINT_AREA_INSETS;
 }
 
 export function tshirtPackageAllowsBack(pkg: TshirtPrintPackage): boolean {
-  // Dual / legacy keys only — single-side back-* packages are back-only, not dual.
-  return pkg === 'front-back' || pkg.includes('-back');
+  return pkg === 'front-back' || pkg.includes('-back-');
 }
 
 export interface TshirtContentFootprint {
-  /** % of the mockup's own width/height (same coordinate space as PrintAreaInsets). */
   width: number;
   height: number;
 }
 
-/**
- * Extra room (as a multiplier) beyond the small print zone that still
- * counts as "small" — avoids the price tier flip-flopping for designs that
- * sit right on the boundary between the two front zones.
- */
-const SMALL_FOOTPRINT_TOLERANCE = 1.1;
+function footprintFitsInsets(
+  footprint: TshirtContentFootprint,
+  insets: PrintAreaInsets,
+): boolean {
+  const maxWidth =
+    getPrintAreaWidthPercent(insets) * SMALL_FOOTPRINT_TOLERANCE;
+  const maxHeight =
+    getPrintAreaHeightPercent(insets) * SMALL_FOOTPRINT_TOLERANCE;
+  return footprint.width <= maxWidth && footprint.height <= maxHeight;
+}
 
-/** True when the footprint fits inside the small chest-logo zone (+ tolerance). */
-export function footprintFitsSmallZone(
+export function classifyPrintTier(
   footprint: TshirtContentFootprint | null | undefined,
   isWomen?: boolean,
-): boolean {
-  if (!footprint) return false;
+): PrintTier {
+  if (!footprint) return 'large';
 
   const smallInsets = isWomen
     ? WOMEN_TSHIRT_SMALL_PRINT_AREA_INSETS
     : TSHIRT_SMALL_PRINT_AREA_INSETS;
-  const maxSmallWidth =
-    getPrintAreaWidthPercent(smallInsets) * SMALL_FOOTPRINT_TOLERANCE;
-  const maxSmallHeight =
-    getPrintAreaHeightPercent(smallInsets) * SMALL_FOOTPRINT_TOLERANCE;
+  const mediumInsets = isWomen
+    ? WOMEN_TSHIRT_MEDIUM_PRINT_AREA_INSETS
+    : TSHIRT_MEDIUM_PRINT_AREA_INSETS;
 
-  return (
-    footprint.width <= maxSmallWidth && footprint.height <= maxSmallHeight
-  );
+  if (footprintFitsInsets(footprint, smallInsets)) return 'small';
+  if (footprintFitsInsets(footprint, mediumInsets)) return 'medium';
+  return 'large';
 }
 
-/**
- * Auto-detects the print package from what the user actually placed instead
- * of asking them to pick a package up front:
- * - no content on either side → blank (product-only base price)
- * - front only → front-small / front-large from the front footprint
- * - back only → back-small / back-large (same prices as the front tiers)
- * - both sides → dual package from front + back small/large classification
- * - missing footprint on a side that has content defaults to large
- *   (safe / matches prior defaults)
- */
+/** @deprecated Use classifyPrintTier */
+export function footprintFitsSmallZone(
+  footprint: TshirtContentFootprint | null | undefined,
+  isWomen?: boolean,
+): boolean {
+  return classifyPrintTier(footprint, isWomen) === 'small';
+}
+
+function packageFrontTier(pkg: TshirtPrintPackage): PrintTier | null {
+  if (pkg === 'blank') return null;
+  const match = pkg.match(/^front-(small|medium|large)/);
+  return match ? (match[1] as PrintTier) : null;
+}
+
 export function deriveTshirtPrintPackage({
   hasFrontContent = false,
   hasBackContent,
@@ -182,23 +334,16 @@ export function deriveTshirtPrintPackage({
     return 'blank';
   }
 
+  const frontTier = classifyPrintTier(frontFootprint, isWomen);
+  const backTier = classifyPrintTier(backFootprint, isWomen);
+
   if (hasFrontContent && !hasBackContent) {
-    return footprintFitsSmallZone(frontFootprint, isWomen)
-      ? 'front-small'
-      : 'front-large';
+    return `front-${frontTier}` as TshirtPrintPackage;
   }
 
   if (!hasFrontContent && hasBackContent) {
-    return footprintFitsSmallZone(backFootprint, isWomen)
-      ? 'back-small'
-      : 'back-large';
+    return `back-${backTier}` as TshirtPrintPackage;
   }
 
-  const frontSmall = footprintFitsSmallZone(frontFootprint, isWomen);
-  const backSmall = footprintFitsSmallZone(backFootprint, isWomen);
-
-  if (frontSmall && backSmall) return 'front-small-back-small';
-  if (frontSmall && !backSmall) return 'front-small-back-large';
-  if (!frontSmall && backSmall) return 'front-large-back-small';
-  return 'front-large-back-large';
+  return `front-${frontTier}-back-${backTier}` as TshirtPrintPackage;
 }

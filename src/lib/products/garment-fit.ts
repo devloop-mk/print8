@@ -1,9 +1,9 @@
 import type { GarmentFit, Product, ProductDesignTemplate } from '@/lib/data/catalog';
 import { products } from '@/lib/data/catalog';
 import {
-  productIdsInclude,
   resolveProductId,
 } from '@/lib/products/product-id-aliases';
+import { premadeDesignAppliesToProduct } from '@/lib/products/premade-design-product-match';
 
 export type { GarmentFit };
 
@@ -138,17 +138,18 @@ export function resolveDesignProduct(
     products.find(
       (product) =>
         product.type === productType &&
-        (!design.productIds || productIdsInclude(design.productIds, product.id)),
+        premadeDesignAppliesToProduct(design, product),
     ) ??
     products.find(
       (product) =>
         product.type === productType &&
-        design.productTypes.includes(product.type),
+        design.productTypes.includes(product.type) &&
+        premadeDesignAppliesToProduct(design, product),
     ) ??
     products.find(
       (product) =>
         design.productTypes.includes(product.type) &&
-        (!design.productIds || productIdsInclude(design.productIds, product.id)),
+        premadeDesignAppliesToProduct(design, product),
     ) ??
     products.find((item) => item.id === 'tshirt-unisex');
 

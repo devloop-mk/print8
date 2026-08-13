@@ -14,6 +14,10 @@ import {
   getKidsTshirtCustomizerScaleFromMockup,
 } from '@/lib/products/tshirt-kids-colors';
 import {
+  getPoloMockupScale,
+  isPoloProduct,
+} from '@/lib/products/polo-mockup-paths';
+import {
   BAG_PRINT_AREA_INSETS,
   CAP_PRINT_AREA_INSETS,
   getPrintAreaMaxScale,
@@ -234,6 +238,9 @@ export function resolveMockupDisplayScale(
   const layout = getProductMockupLayout(product);
 
   if (product.type === 't-shirt' && mockupPath) {
+    if (isPoloProduct(product)) {
+      return getPoloMockupScale(variant);
+    }
     return getPerColorTshirtMockupScale(product, mockupPath, variant);
   }
 
