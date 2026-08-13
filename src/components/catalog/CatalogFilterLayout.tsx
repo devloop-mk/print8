@@ -1,6 +1,14 @@
 'use client';
 
-import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
+import { flushSync } from 'react-dom';
 import { ChevronDown, SlidersHorizontal, type LucideIcon } from 'lucide-react';
 import { CatalogSearchField } from '@/components/catalog/CatalogSearchField';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
@@ -9,6 +17,18 @@ import {
   isLightColorSwatch,
 } from '@/lib/products/product-color-labels';
 import { cn } from '@/lib/utils';
+
+export const CATALOG_RESULTS_SCROLL_MARGIN_CLASS =
+  'scroll-mt-[calc(var(--site-header-height,4.5rem)+0.75rem)]';
+
+const CATALOG_SCROLL_TARGET_SELECTOR =
+  '#products-grid, #ready-designs, #product-designs, [data-catalog-scroll-target]';
+
+function resolveCatalogScrollTarget(root: HTMLElement): HTMLElement {
+  return (
+    root.querySelector<HTMLElement>(CATALOG_SCROLL_TARGET_SELECTOR) ?? root
+  );
+}
 
 export type FilterOption<T extends string> = {
   value: T;
@@ -236,7 +256,14 @@ function MobileFilterPanel({
   onFilterSelect?: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [skipCloseAnimation, setSkipCloseAnimation] = useState(false);
   const panelId = useId();
+
+  useEffect(() => {
+    if (!expanded) {
+      setSkipCloseAnimation(false);
+    }
+  }, [expanded]);
 
   const activeCount = groups.reduce((count, group) => {
     if (group.kind === 'options') {
@@ -302,7 +329,10 @@ function MobileFilterPanel({
       <div
         id={panelId}
         className={cn(
-          'grid transition-[grid-template-rows,opacity] duration-300 ease-out',
+          'grid',
+          skipCloseAnimation
+            ? 'transition-none'
+            : 'transition-[grid-template-rows,opacity] duration-300 ease-out',
           expanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0',
         )}
       >
@@ -317,7 +347,8 @@ function MobileFilterPanel({
                 key={group.id}
                 group={group}
                 onSelect={() => {
-                  setExpanded(false);
+                  setSkipCloseAnimation(true);
+                  flushSync(() => setExpanded(false));
                   onFilterSelect?.();
                 }}
               />
@@ -373,9 +404,18 @@ export function CatalogFilterLayout({
   }, [debouncedDraft, searchQuery]);
 
   const scrollToResults = useCallback(() => {
-    resultsRef.current?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
+    // Desktop sidebar sits beside results — scrolling misaligns the grid under the header.
+    if (window.matchMedia('(min-width: 1024px)').matches) return;
+
+    const run = () => {
+      const root = resultsRef.current;
+      if (!root) return;
+      const target = resolveCatalogScrollTarget(root);
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(run);
     });
   }, []);
 
@@ -444,7 +484,7 @@ export function CatalogFilterLayout({
             onFilterSelect={scrollToResults}
           />
         </div>
-        <div ref={resultsRef} className="scroll-mt-24">
+        <div ref={resultsRef} className={CATALOG_RESULTS_SCROLL_MARGIN_CLASS}>
           {children}
         </div>
       </div>

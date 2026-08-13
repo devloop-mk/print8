@@ -25,6 +25,7 @@ import { buildProductTypeFilterOptions } from '@/lib/products/product-type-icons
 import { ProductCardGrid } from '@/components/products/ProductCardGrid';
 import {
   CatalogFilterLayout,
+  CATALOG_RESULTS_SCROLL_MARGIN_CLASS,
   type CatalogFilterGroup,
 } from '@/components/catalog/CatalogFilterLayout';
 import { filterProductsBySearchQuery } from '@/lib/catalog/catalog-search';
@@ -221,7 +222,7 @@ export function ProductsHubCatalog({
       searchClearLabel={ts('clear')}
     >
       <Reveal delay={80}>
-        <div id="products-grid" className="scroll-mt-24">
+        <div id="products-grid" className={CATALOG_RESULTS_SCROLL_MARGIN_CLASS}>
           <ProductCardGrid items={visibleProducts} linkTarget="detail" />
           <CatalogPagination
             page={page}
