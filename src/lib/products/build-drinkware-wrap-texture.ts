@@ -14,7 +14,7 @@ import {
   getStickerById,
   type PlacedSticker,
 } from '@/lib/products/sticker-library';
-import { resolveAssetUrl } from '@/lib/storage/asset-url';
+import { resolveAssetUrl, resolveCanvasAssetUrl } from '@/lib/storage/asset-url';
 import {
   getDrinkwareSublimationPatch,
   paintSublimationPatch,

@@ -21,7 +21,7 @@ import {
   getPrintAreaWidthPercent,
   type PrintAreaInsets,
 } from '@/lib/products/print-area';
-import { resolveAssetUrl } from '@/lib/storage/asset-url';
+import { resolveAssetUrl, resolveCanvasAssetUrl } from '@/lib/storage/asset-url';
 import { getPlacedPhotos } from '@/lib/products/photo-layers';
 
 /** Long edge (px) for print-ready PNG — ~300 DPI at typical garment print width. */
@@ -122,7 +122,7 @@ function resolveOverlayAssetUrl(
   }
 
   if (design.premadeDesignImage) {
-    return resolveAssetUrl(design.premadeDesignImage);
+    return resolveCanvasAssetUrl(design.premadeDesignImage);
   }
 
   return null;

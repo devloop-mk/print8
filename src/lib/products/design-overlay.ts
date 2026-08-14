@@ -12,7 +12,7 @@ import {
   HOODIE_PRINT_AREA_INSETS,
   TSHIRT_PRINT_AREA_INSETS,
 } from '@/lib/products/print-area';
-import { resolveAssetUrl, resolveMasterAssetUrl } from '@/lib/storage/asset-url';
+import { resolveAssetUrl, resolveCanvasAssetUrl, resolveMasterAssetUrl } from '@/lib/storage/asset-url';
 import { sanitizeCssHexColor } from '@/lib/security/sanitize-svg';
 
 /**
@@ -370,7 +370,7 @@ export function resolveComposableOverlayUrl(
     return resolveMasterAssetUrl(path);
   }
 
-  return resolveAssetUrl(path);
+  return resolveCanvasAssetUrl(path);
 }
 
 /**
@@ -414,7 +414,7 @@ export function getDesignCompositeOverlayUrl(
   }
 
   if (design.overlayImage) {
-    return resolveAssetUrl(design.overlayImage);
+    return resolveCanvasAssetUrl(design.overlayImage);
   }
 
   return null;

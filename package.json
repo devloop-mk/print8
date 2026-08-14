@@ -40,6 +40,7 @@
     "db:migrate:product-visibility": "node scripts/apply-product-visibility-migration.mjs",
     "build:puzzle-mockups": "node scripts/build-puzzle-lifestyle-mockups.mjs",
     "check:messages": "node scripts/check-messages.mjs",
+    "configure:r2-cors": "node scripts/configure-r2-cors.mjs",
     "cleanup:orphan-uploads:dry-run": "tsx scripts/cleanup-orphan-uploads.ts --dry-run"
   },
   "dependencies": {

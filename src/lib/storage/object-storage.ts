@@ -137,6 +137,17 @@ export async function putCatalogObject(
   });
 }
 
+export async function getCatalogObject(relativePath: string): Promise<{
+  body: Buffer;
+  contentType: string | undefined;
+}> {
+  if (!isR2Configured()) {
+    throw new Error('Catalog download requires Cloudflare R2');
+  }
+
+  return r2GetObject(catalogObjectKey(relativePath));
+}
+
 export function catalogStoragePath(relativePath: string) {
   const normalized = relativePath.startsWith('/')
     ? relativePath

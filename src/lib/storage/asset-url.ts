@@ -70,6 +70,30 @@ export function resolveAssetUrl(path: string): string {
   return normalized;
 }
 
+/**
+ * Same-origin URL for catalog art used with `crossOrigin="anonymous"` (canvas,
+ * html2canvas, Fabric). The public R2 `.r2.dev` host does not send CORS headers
+ * unless configured on the bucket — this route proxies through the app origin.
+ */
+export function resolveCanvasAssetUrl(path: string): string {
+  if (!path || isRemoteAssetUrl(path)) {
+    return path;
+  }
+
+  const normalized = path.startsWith('/') ? path : `/${path}`;
+  const key = normalized.slice(1);
+
+  if (preferLocalPublicAssets()) {
+    return normalized;
+  }
+
+  if (isCatalogDesignAssetPath(normalized)) {
+    return `/api/catalog/${key}`;
+  }
+
+  return resolveAssetUrl(path);
+}
+
 /** Print-ready masters live at bucket root (masters/...), not under catalog/. */
 export function resolveMasterAssetUrl(path: string): string {
   if (!path || isRemoteAssetUrl(path)) {
