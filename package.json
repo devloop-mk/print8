@@ -38,7 +38,8 @@
     "install:kids-tshirt-mockups": "node scripts/install-kids-tshirt-mockups.mjs",
     "db:migrate:home-trending": "node scripts/apply-cms-home-trending-migration.mjs",
     "db:migrate:product-visibility": "node scripts/apply-product-visibility-migration.mjs",
-    "cleanup:orphan-uploads": "tsx scripts/cleanup-orphan-uploads.ts",
+    "build:puzzle-mockups": "node scripts/build-puzzle-lifestyle-mockups.mjs",
+    "check:messages": "node scripts/check-messages.mjs",
     "cleanup:orphan-uploads:dry-run": "tsx scripts/cleanup-orphan-uploads.ts --dry-run"
   },
   "dependencies": {

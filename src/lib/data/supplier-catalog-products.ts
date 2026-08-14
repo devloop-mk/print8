@@ -6,6 +6,20 @@ export function supplierCatalogImage(sku: string): string {
   return `/supplier/koni/${file}`;
 }
 
+/** Lifestyle + plain supplier gallery for upload-only puzzles. */
+export function puzzleGalleryImages(
+  puzzleId: string,
+  sku: string,
+  color: string,
+) {
+  return {
+    [color]: {
+      primary: `/puzzles/${puzzleId}-lifestyle.jpg`,
+      secondary: supplierCatalogImage(sku),
+    },
+  };
+}
+
 /** New catalog products mapped to supplier SKUs (retail = print + margin). */
 export const supplierCatalogProducts: Product[] = [
   {
@@ -156,8 +170,8 @@ export const supplierCatalogProducts: Product[] = [
     type: 'puzzle',
     nameKey: 'puzzleA4',
     vendorSku: 'PTA4',
-    image: supplierCatalogImage('PTA4'),
-    colorsImages: { '#fafaf9': supplierCatalogImage('PTA4') },
+    image: '/puzzles/puzzle-a4-lifestyle.jpg',
+    colorsImages: puzzleGalleryImages('puzzle-a4', 'PTA4', '#fafaf9'),
     basePrice: 400,
     colors: ['#fafaf9'],
     uploadAspect: 210 / 297,
@@ -167,8 +181,8 @@ export const supplierCatalogProducts: Product[] = [
     type: 'puzzle',
     nameKey: 'puzzleA5',
     vendorSku: 'PTA5',
-    image: supplierCatalogImage('PTA5'),
-    colorsImages: { '#fafaf9': supplierCatalogImage('PTA5') },
+    image: '/puzzles/puzzle-a5-lifestyle.jpg',
+    colorsImages: puzzleGalleryImages('puzzle-a5', 'PTA5', '#fafaf9'),
     basePrice: 270,
     colors: ['#fafaf9'],
     uploadAspect: 148 / 210,
@@ -178,8 +192,8 @@ export const supplierCatalogProducts: Product[] = [
     type: 'puzzle',
     nameKey: 'puzzleHeart',
     vendorSku: 'PTA8',
-    image: supplierCatalogImage('PTA8'),
-    colorsImages: { '#fafaf9': supplierCatalogImage('PTA8') },
+    image: '/puzzles/puzzle-heart-lifestyle.jpg',
+    colorsImages: puzzleGalleryImages('puzzle-heart', 'PTA8', '#fafaf9'),
     basePrice: 300,
     colors: ['#fafaf9'],
     uploadAspect: 1,
@@ -189,8 +203,8 @@ export const supplierCatalogProducts: Product[] = [
     type: 'puzzle',
     nameKey: 'puzzleA4Wood',
     vendorSku: 'PTA4-M1',
-    image: supplierCatalogImage('PTA4-M1'),
-    colorsImages: { '#d6c4a8': supplierCatalogImage('PTA4-M1') },
+    image: '/puzzles/puzzle-a4-wood-lifestyle.jpg',
+    colorsImages: puzzleGalleryImages('puzzle-a4-wood', 'PTA4-M1', '#d6c4a8'),
     basePrice: 550,
     colors: ['#d6c4a8'],
     uploadAspect: 210 / 297,

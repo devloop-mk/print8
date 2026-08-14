@@ -1775,6 +1775,21 @@
       },
       "gift-set": {
         "subtitle": "Personalized gift sets — complete solutions for your brand or event."
+      },
+      "puzzle": {
+        "subtitle": "Photo puzzles with your picture — A4, A5, heart shape, and wood options for a unique gift."
+      },
+      "plaque": {
+        "subtitle": "Elegant wooden plaques and awards — personalized for recognition, events, and keepsakes."
+      },
+      "photo-stone": {
+        "subtitle": "A lasting keepsake with your photo on stone — ideal for home decor and gifts."
+      },
+      "gift-box": {
+        "subtitle": "Gift boxes and cases for mugs and cloths — complete the presentation of your personalized gift."
+      },
+      "microfiber-cloth": {
+        "subtitle": "Microfiber cloths with your photo or logo — practical promo gifts with optional gift sleeve."
       }
     },
     "paths": {
@@ -1966,6 +1981,23 @@
       "backToProduct": "Back to product",
       "productPreview": "Preview",
       "instructions": "Upload the image you want printed. Crop it to fit the product shape, then add to cart.",
+      "uploadTitle": "Your image",
+      "uploadHint": "Choose a photo — you can crop it before uploading.",
+      "yourImage": "Your image",
+      "removeImage": "Remove image",
+      "quantity": "Quantity",
+      "uploadRequired": "Please upload an image before adding to cart.",
+      "photoLimit": "Too many photos in this order. Remove some from your cart first.",
+      "addToCart": "Add to cart",
+      "updateCart": "Update cart"
+    },
+    "magnetOrder": {
+      "title": "Order magnet",
+      "notFound": "Magnet not found.",
+      "backToMagnets": "Back to magnets",
+      "backToProduct": "Back to product",
+      "productPreview": "Magnet",
+      "instructions": "Upload the image you want printed on the magnet. Crop it to the shape, then add to cart.",
       "uploadTitle": "Your image",
       "uploadHint": "Choose a photo — you can crop it before uploading.",
       "yourImage": "Your image",
