@@ -61,7 +61,7 @@ export async function GET(
 
   try {
     const { body, contentType } = await getCatalogObject(relativePath);
-    return new NextResponse(body, {
+    return new NextResponse(new Uint8Array(body), {
       headers: {
         'Content-Type': contentType ?? contentTypeFromPath(relativePath),
         'Cache-Control': 'public, max-age=31536000, immutable',
@@ -80,7 +80,7 @@ export async function GET(
   }
 
   const body = fs.readFileSync(localPath);
-  return new NextResponse(body, {
+  return new NextResponse(new Uint8Array(body), {
     headers: {
       'Content-Type': contentTypeFromPath(localPath),
       'Cache-Control': 'public, max-age=3600',
