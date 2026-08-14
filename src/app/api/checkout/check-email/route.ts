@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { customersDb } from '@/lib/db/customers';
-import { getCustomerSignInMethods } from '@/lib/auth/customer-sign-in-methods';
 import { enforceRateLimit } from '@/lib/security/rate-limit';
 import { createSupabaseRequestClient } from '@/lib/supabase/server-auth';
 
@@ -9,6 +7,7 @@ const checkEmailSchema = z.object({
   email: z.string().trim().email().max(254),
 });
 
+/** Validates email shape only — never reveals whether an account exists. */
 export async function POST(request: NextRequest) {
   const rateLimited = enforceRateLimit(
     request,
@@ -22,7 +21,7 @@ export async function POST(request: NextRequest) {
     const supabase = createSupabaseRequestClient(request);
     const { data: authData } = await supabase.auth.getUser();
     if (authData.user?.email) {
-      return NextResponse.json({ exists: false, authenticated: true });
+      return NextResponse.json({ ok: true, authenticated: true });
     }
 
     const body = await request.json();
@@ -31,16 +30,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid email' }, { status: 400 });
     }
 
-    const customer = await customersDb.findByEmailNormalized(parsed.data.email);
-    if (!customer) {
-      return NextResponse.json({ exists: false });
-    }
-
-    const signInMethods = await getCustomerSignInMethods(customer.id);
-    return NextResponse.json({
-      exists: true,
-      signInMethods,
-    });
+    return NextResponse.json({ ok: true });
   } catch (error) {
     console.error('[checkout/check-email] error:', error);
     return NextResponse.json({ error: 'Check failed' }, { status: 500 });

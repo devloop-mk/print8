@@ -15,6 +15,7 @@ import { mkFolkPackTemplates } from '@/lib/data/mk-folk-pack';
 import { mkMugsPackTemplates } from '@/lib/data/mk-mugs-pack';
 import { capPackTemplates } from '@/lib/data/cap-pack';
 import { bagPackTemplates } from '@/lib/data/bag-pack';
+import { poloPackTemplates } from '@/lib/data/polo-pack';
 import { streetwearPackTemplates } from '@/lib/data/streetwear-pack';
 import { getCouplePackDesignTemplates } from '@/lib/data/couple-pack';
 import {
@@ -1234,6 +1235,7 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
   ...mkMugsPackTemplates,
   ...capPackTemplates,
   ...bagPackTemplates,
+  ...poloPackTemplates,
   ...babyPackTemplates,
   ...trendingMkPackTemplates,
   ...chemistryDramaPackTemplates,

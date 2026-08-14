@@ -37,7 +37,9 @@
     "install:women-tshirt-mockups": "node scripts/install-women-tshirt-mockups.mjs",
     "install:kids-tshirt-mockups": "node scripts/install-kids-tshirt-mockups.mjs",
     "db:migrate:home-trending": "node scripts/apply-cms-home-trending-migration.mjs",
-    "db:migrate:product-visibility": "node scripts/apply-product-visibility-migration.mjs"
+    "db:migrate:product-visibility": "node scripts/apply-product-visibility-migration.mjs",
+    "cleanup:orphan-uploads": "tsx scripts/cleanup-orphan-uploads.ts",
+    "cleanup:orphan-uploads:dry-run": "tsx scripts/cleanup-orphan-uploads.ts --dry-run"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1085.0",

@@ -437,20 +437,35 @@ export const db = {
       return mapUploadSession(data);
     },
 
-    async incrementUploadCount(id: string) {
-      // read current count and update (not fully atomic but acceptable for most cases)
-      const { data, error: selErr } = await getSupabaseAdmin()
-        .from('upload_sessions')
-        .select('upload_count')
-        .eq('id', id)
-        .single();
-      if (selErr) throw new Error(selErr.message);
-      const current = (data?.upload_count as number) || 0;
-      const { error } = await getSupabaseAdmin()
-        .from('upload_sessions')
-        .update({ upload_count: current + 1 })
-        .eq('id', id);
-      if (error) throw new Error(error.message);
+    async incrementUploadCount(id: string, maxCount: number): Promise<boolean> {
+      const { data, error } = await getSupabaseAdmin().rpc(
+        'increment_upload_session_count',
+        { p_session_id: id, p_max_count: maxCount },
+      );
+      if (error) {
+        // Fallback when migration not applied yet (optimistic compare-and-swap).
+        if (error.message.includes('increment_upload_session_count')) {
+          const { data: row, error: selErr } = await getSupabaseAdmin()
+            .from('upload_sessions')
+            .select('upload_count')
+            .eq('id', id)
+            .single();
+          if (selErr) throw new Error(selErr.message);
+          const current = (row?.upload_count as number) || 0;
+          if (current >= maxCount) return false;
+          const { data: updated, error: updErr } = await getSupabaseAdmin()
+            .from('upload_sessions')
+            .update({ upload_count: current + 1 })
+            .eq('id', id)
+            .eq('upload_count', current)
+            .select('id')
+            .maybeSingle();
+          if (updErr) throw new Error(updErr.message);
+          return Boolean(updated);
+        }
+        throw new Error(error.message);
+      }
+      return Boolean(data);
     },
   },
 

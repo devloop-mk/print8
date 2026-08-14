@@ -38,8 +38,6 @@ export async function POST(request: NextRequest) {
       orderNumber: order.orderNumber,
       status: order.status,
       fulfillmentMethod: order.fulfillmentMethod,
-      customerName: order.customerName,
-      customerCity: order.customerCity,
       totalAmount: order.totalAmount,
       locale: order.locale,
       createdAt: order.createdAt,

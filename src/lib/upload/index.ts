@@ -18,21 +18,17 @@ export {
   MAX_UPLOADS_PER_SESSION,
 } from '@/lib/upload/constants';
 
-function resolveMimeType(file: File): string {
-  if (file.type && ALLOWED_MIME_TYPES.includes(file.type)) {
-    return file.type;
+async function detectMimeTypeFromBuffer(buffer: Buffer): Promise<string> {
+  if (buffer.subarray(0, 5).toString('ascii').startsWith('%PDF-')) {
+    return 'application/pdf';
   }
 
-  const ext = file.name.split('.').pop()?.toLowerCase();
-  const byExt: Record<string, string> = {
-    jpg: 'image/jpeg',
-    jpeg: 'image/jpeg',
-    png: 'image/png',
-    webp: 'image/webp',
-    pdf: 'application/pdf',
-  };
+  const meta = await sharp(buffer).metadata();
+  if (meta.format === 'jpeg') return 'image/jpeg';
+  if (meta.format === 'png') return 'image/png';
+  if (meta.format === 'webp') return 'image/webp';
 
-  return byExt[ext ?? ''] ?? file.type;
+  throw new Error('File type not allowed');
 }
 
 function extensionForMime(mimeType: string) {
@@ -92,14 +88,22 @@ export async function processUpload(
     throw new Error('File too large');
   }
 
-  const mimeType = resolveMimeType(file);
-  if (!ALLOWED_MIME_TYPES.includes(mimeType)) {
-    throw new Error('File type not allowed');
+  const reserved = await db.uploadSessions.incrementUploadCount(
+    session.id,
+    MAX_UPLOADS_PER_SESSION,
+  );
+  if (!reserved) {
+    throw new Error('Upload limit reached for this session');
   }
 
   const fileId = nanoid();
   const arrayBuffer = await file.arrayBuffer();
   const sourceBuffer = Buffer.from(arrayBuffer) as unknown as Buffer;
+
+  const mimeType = await detectMimeTypeFromBuffer(sourceBuffer);
+  if (!ALLOWED_MIME_TYPES.includes(mimeType)) {
+    throw new Error('File type not allowed');
+  }
 
   await validateUploadBuffer(sourceBuffer, mimeType);
 
@@ -142,8 +146,6 @@ export async function processUpload(
     throw new Error(formatSupabaseError(err));
   });
 
-  await db.uploadSessions.incrementUploadCount(session.id);
-
   return { fileId, originalName: file.name };
 }
 
@@ -168,14 +170,22 @@ export async function processPrintUpload(
     throw new Error('File too large');
   }
 
-  const mimeType = resolveMimeType(file);
-  if (mimeType !== 'image/png') {
-    throw new Error('Print uploads must be PNG');
+  const reserved = await db.uploadSessions.incrementUploadCount(
+    session.id,
+    MAX_UPLOADS_PER_SESSION,
+  );
+  if (!reserved) {
+    throw new Error('Upload limit reached for this session');
   }
 
   const fileId = nanoid();
   const arrayBuffer = await file.arrayBuffer();
   const sourceBuffer = Buffer.from(arrayBuffer) as unknown as Buffer;
+
+  const mimeType = await detectMimeTypeFromBuffer(sourceBuffer);
+  if (mimeType !== 'image/png') {
+    throw new Error('Print uploads must be PNG');
+  }
 
   await validateUploadBuffer(sourceBuffer, mimeType);
 
@@ -197,8 +207,6 @@ export async function processPrintUpload(
   }).catch((err) => {
     throw new Error(formatSupabaseError(err));
   });
-
-  await db.uploadSessions.incrementUploadCount(session.id);
 
   return { fileId, originalName: file.name };
 }

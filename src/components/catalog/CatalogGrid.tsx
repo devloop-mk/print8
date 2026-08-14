@@ -96,7 +96,7 @@ export function getCatalogGridClassName({
   className?: string;
 }) {
   return cn(
-    'grid',
+    'grid items-stretch',
     gapClassName,
     mobileColumnToggle
       ? cn(

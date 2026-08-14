@@ -10,8 +10,6 @@ type OrderStatusResult = {
   orderNumber: string;
   status: string;
   fulfillmentMethod: 'cargo' | 'pickup';
-  customerName: string;
-  customerCity: string;
   totalAmount: number;
   locale: string;
   createdAt: string;
@@ -139,10 +137,6 @@ export function OrderStatusLookupForm() {
               <dd className="font-medium text-ink-900">
                 {formatPrice(result.totalAmount, locale)}
               </dd>
-            </div>
-            <div>
-              <dt className="text-ink-500">{t('city')}</dt>
-              <dd className="font-medium text-ink-900">{result.customerCity}</dd>
             </div>
             <div>
               <dt className="text-ink-500">{t('items')}</dt>

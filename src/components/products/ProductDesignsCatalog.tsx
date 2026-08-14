@@ -36,7 +36,6 @@ import {
 } from '@/lib/products/design-catalog-sort';
 import {
   COUPLES_DESIGN_COLLECTION,
-  KIDS_DESIGN_COLLECTION,
   PRODUCT_OFFERING_PATHS,
 } from '@/lib/products/paths';
 import {
@@ -59,6 +58,11 @@ import { Reveal } from '@/components/motion/Reveal';
 import { CatalogGridLayout } from '@/components/catalog/CatalogGrid';
 import { CatalogPagination } from '@/components/catalog/CatalogPagination';
 import { useCatalogPagination } from '@/hooks/useCatalogPagination';
+import {
+  getDesignCollectionLabel,
+  matchesDesignCollection,
+  normalizeDesignCollectionId,
+} from '@/lib/products/design-collection-labels';
 
 type ProductDesignsCatalogProps = {
   category: ProductDesignCategory;
@@ -69,38 +73,6 @@ type ProductDesignsCatalogProps = {
 };
 
 type TypeFilter = ProductType | 'all';
-
-const COLLECTION_LABELS: Record<string, { en: string; mk: string }> = {
-  basketball: { en: 'Basketball', mk: 'Кошарка' },
-  anime: { en: 'Japanese Anime', mk: 'Јапонско аниме' },
-  typography: { en: 'Streetwear Typography', mk: 'Стритвер типографија' },
-  streetwear: { en: 'Streetwear', mk: 'Стритвер' },
-  'baby-milestones': { en: 'Baby milestones', mk: 'Беби пресвртници' },
-  'couple-packs': { en: 'Couple packs', mk: 'Парски пакети' },
-  'trending-mk': { en: 'Trending MK', mk: 'Тренд МК' },
-  'chemistry-drama': { en: 'Chemistry Drama', mk: 'Кемија драма' },
-  'stranger-80s': { en: 'Stranger 80s', mk: 'Странџер 80-ти' },
-  'peaky-era': { en: 'Peaky Era', mk: 'Пики ера' },
-  'zombie-survival': { en: 'Zombie Survival', mk: 'Зомби преживување' },
-  'cartel-crime': { en: 'Cartel Crime', mk: 'Картел криминал' },
-  'biker-rebel': { en: 'Biker Rebel', mk: 'Бајкер бунтовник' },
-  'neon-retro': { en: 'Neon Retro', mk: 'Неон ретро' },
-  'vintage-dapper': { en: 'Vintage Dapper', mk: 'Винтиџ стил' },
-  'science-core': { en: 'Science Core', mk: 'Наука' },
-  'wild-outdoors': { en: 'Wild Outdoors', mk: 'Авантура надвор' },
-  'daily-grind': { en: 'Daily Grind', mk: 'Дневен ритам' },
-  'mk-slang': { en: 'MK Slang', mk: 'МК сленг' },
-  'mk-retro-plates': { en: 'MK Retro Plates', mk: 'МК ретро таблици' },
-  'mk-mugs': { en: 'MK Mugs', mk: 'МК шолји' },
-  'mk-folk': { en: 'MK Folk', mk: 'МК фолклор' },
-  family: { en: 'Family', mk: 'Семејство' },
-  'kids-birthday': { en: 'Kids & birthday', mk: 'Деца и роденден' },
-  'local-mk': { en: 'Local designs', mk: 'Локални дизајни' },
-  'caps-local': { en: 'Caps', mk: 'Капи' },
-  'bags-local': { en: 'Bags', mk: 'Торби' },
-  drinkware: { en: 'Drinkware', mk: 'Шолји' },
-  'family-gifts': { en: 'Family gifts', mk: 'Семејни подароци' },
-};
 
 export function ProductDesignsCatalog({
   category,
@@ -142,7 +114,8 @@ export function ProductDesignsCatalog({
   const [colorFilter, setColorFilter] = useState<string | 'all'>('all');
   const [collectionFilter, setCollectionFilter] = useState<string | 'all'>(() => {
     const fromUrl = searchParams.get('collection');
-    return fromUrl && fromUrl.trim() ? fromUrl.trim() : 'all';
+    const trimmed = fromUrl?.trim();
+    return trimmed ? normalizeDesignCollectionId(trimmed) : 'all';
   });
   const [sort, setSort] = useState<DesignCatalogSort>(() =>
     parseDesignCatalogSort(searchParams.get('sort')),
@@ -151,8 +124,8 @@ export function ProductDesignsCatalog({
 
   useEffect(() => {
     const fromUrl = searchParams.get('collection');
-    const next = fromUrl && fromUrl.trim() ? fromUrl.trim() : 'all';
-    setCollectionFilter(next);
+    const trimmed = fromUrl?.trim();
+    setCollectionFilter(trimmed ? normalizeDesignCollectionId(trimmed) : 'all');
     setSort(parseDesignCatalogSort(searchParams.get('sort')));
   }, [searchParams]);
 
@@ -203,7 +176,9 @@ export function ProductDesignsCatalog({
   const collectionOptions = useMemo(() => {
     const collections = new Set<string>();
     for (const entry of entriesForCollectionOptions) {
-      if (entry.design.collection) collections.add(entry.design.collection);
+      if (entry.design.collection) {
+        collections.add(normalizeDesignCollectionId(entry.design.collection));
+      }
     }
 
     // Couple packs are listed separately — include their collection when any pack matches.
@@ -236,10 +211,7 @@ export function ProductDesignsCatalog({
     return [...collections]
       .map((value) => ({
         value,
-        label:
-          locale === 'mk'
-            ? (COLLECTION_LABELS[value]?.mk ?? value)
-            : (COLLECTION_LABELS[value]?.en ?? value),
+        label: getDesignCollectionLabel(value, locale),
       }))
       .sort((a, b) => a.label.localeCompare(b.label));
   }, [
@@ -268,7 +240,9 @@ export function ProductDesignsCatalog({
       const typesInCollection = new Set<ProductType>();
       for (const entry of allEntries) {
         if (couplePackPartnerIds.has(entry.design.id)) continue;
-        if (entry.design.collection !== collectionFilter) continue;
+        if (!matchesDesignCollection(entry.design.collection, collectionFilter)) {
+          continue;
+        }
         for (const product of entry.products) {
           typesInCollection.add(normalizeProductTypeRoute(product.type));
         }
@@ -332,9 +306,7 @@ export function ProductDesignsCatalog({
       })
         .filter((entry) => !couplePackPartnerIds.has(entry.design.id))
         .filter((entry) =>
-          collectionFilter === 'all'
-            ? true
-            : entry.design.collection === collectionFilter,
+          matchesDesignCollection(entry.design.collection, collectionFilter),
         ),
     [
       allEntries,
@@ -517,10 +489,6 @@ export function ProductDesignsCatalog({
         ],
         value: collectionFilter,
         onChange: (value) => {
-          if (value === KIDS_DESIGN_COLLECTION) {
-            router.push(PRODUCT_OFFERING_PATHS.kidsReadyDesigns);
-            return;
-          }
           if (value === COUPLES_DESIGN_COLLECTION) {
             router.push(PRODUCT_OFFERING_PATHS.couplesReadyDesigns);
             return;

@@ -4,8 +4,9 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter, Link } from "@/i18n/navigation";
 import { useCart } from "@/components/cart/CartProvider";
-import { useUploadSession } from "@/hooks/useUploadSession";
+import { useUploadSessionGate } from "@/hooks/useUploadSessionGate";
 import { SecureUpload } from "@/components/upload/SecureUpload";
+import { TurnstileWidget } from "@/components/security/TurnstileWidget";
 import { formatPrice } from "@/lib/utils";
 import {
   MAX_PHOTOS_PER_ORDER,
@@ -40,7 +41,18 @@ export function CheckoutForm() {
   const router = useRouter();
   const { items, total, hydrated } = useCart();
   const auth = useOptionalAuth();
-  const { token, loading: uploadLoading, error: uploadSessionError, refreshSession } = useUploadSession();
+  const {
+    token,
+    loading: uploadLoading,
+    error: uploadSessionError,
+    pendingTurnstile,
+    setTurnstileToken,
+    refreshSession,
+  } = useUploadSessionGate();
+  const [checkoutTurnstileToken, setCheckoutTurnstileToken] = useState("");
+  const checkoutTurnstileRequired = Boolean(
+    process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim(),
+  );
 
   const [form, setForm] = useState({
     fullName: "",
@@ -61,19 +73,15 @@ export function CheckoutForm() {
   const [pointsToRedeem, setPointsToRedeem] = useState(0);
   const [pointsDiscount, setPointsDiscount] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [emailAccountExists, setEmailAccountExists] = useState(false);
-  const [emailSignInMethods, setEmailSignInMethods] = useState<{
-    google: boolean;
-    email: boolean;
-  } | null>(null);
   const [processing, setProcessing] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
   const pendingCouponAutoApply = useRef(false);
   const pendingCouponEmail = useRef<string | undefined>(undefined);
-  const emailCheckAbortRef = useRef<AbortController | null>(null);
 
   const payableTotal = Math.max(0, total - couponDiscount - pointsDiscount);
   const isLoggedIn = Boolean(auth?.customer);
+  const showReturningCustomerSignIn =
+    !isLoggedIn && isCheckoutEmailValid(form.email.trim());
 
   const handlePointsChange = useCallback(
     (value: {
@@ -98,78 +106,6 @@ export function CheckoutForm() {
       address: prev.address || auth.customer?.defaultAddress || prev.address,
     }));
   }, [auth?.customer]);
-
-  useEffect(() => {
-    if (isLoggedIn) {
-      setEmailAccountExists(false);
-      setEmailSignInMethods(null);
-    }
-  }, [isLoggedIn]);
-
-  const checkEmailAccount = useCallback(
-    async (email: string) => {
-      if (auth?.loading || isLoggedIn) {
-        setEmailAccountExists(false);
-        setEmailSignInMethods(null);
-        return;
-      }
-
-      const trimmed = email.trim();
-      if (!isCheckoutEmailValid(trimmed)) {
-        setEmailAccountExists(false);
-        setEmailSignInMethods(null);
-        return;
-      }
-
-      emailCheckAbortRef.current?.abort();
-      const controller = new AbortController();
-      emailCheckAbortRef.current = controller;
-
-      try {
-        const res = await fetch("/api/checkout/check-email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: trimmed }),
-          signal: controller.signal,
-        });
-        const data = (await res.json().catch(() => ({}))) as {
-          exists?: boolean;
-          signInMethods?: { google?: boolean; email?: boolean };
-        };
-        if (!res.ok) return;
-        const exists = Boolean(data.exists);
-        setEmailAccountExists(exists);
-        setEmailSignInMethods(
-          exists && data.signInMethods
-            ? {
-                google: Boolean(data.signInMethods.google),
-                email: Boolean(data.signInMethods.email),
-              }
-            : null,
-        );
-      } catch (err) {
-        if (err instanceof DOMException && err.name === "AbortError") return;
-      }
-    },
-    [auth?.loading, isLoggedIn],
-  );
-
-  useEffect(() => {
-    if (auth?.loading || isLoggedIn) return;
-
-    const trimmed = form.email.trim();
-    if (!isCheckoutEmailValid(trimmed)) {
-      setEmailAccountExists(false);
-      setEmailSignInMethods(null);
-      return;
-    }
-
-    const timer = window.setTimeout(() => {
-      void checkEmailAccount(trimmed);
-    }, 500);
-
-    return () => window.clearTimeout(timer);
-  }, [form.email, auth?.loading, isLoggedIn, checkEmailAccount]);
 
   function storeCheckoutPrefill() {
     try {
@@ -314,10 +250,6 @@ export function CheckoutForm() {
   function updateField(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: "" }));
-    if (field === "email") {
-      setEmailAccountExists(false);
-      setEmailSignInMethods(null);
-    }
   }
 
   function getValidationMessages() {
@@ -430,6 +362,11 @@ export function CheckoutForm() {
     e.preventDefault();
     if (!validate() || items.length === 0) return;
 
+    if (checkoutTurnstileRequired && !checkoutTurnstileToken) {
+      setErrors({ form: t("turnstileRequired") });
+      return;
+    }
+
     setProcessing(true);
     try {
       const uploadToken = await resolveUploadTokenForCheckout();
@@ -456,7 +393,10 @@ export function CheckoutForm() {
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          ...payload,
+          turnstileToken: checkoutTurnstileToken || undefined,
+        }),
       });
 
       type OrderApiResponse = {
@@ -475,6 +415,12 @@ export function CheckoutForm() {
       if (!res.ok) {
         if (res.status === 413 || data.code === "payload_too_large") {
           setErrors({ form: t("payloadTooLarge") });
+          setProcessing(false);
+          return;
+        }
+        if (data.code === "turnstile_failed") {
+          setCheckoutTurnstileToken("");
+          setErrors({ form: t("turnstileFailed") });
           setProcessing(false);
           return;
         }
@@ -623,50 +569,32 @@ export function CheckoutForm() {
               label={t("email")}
               value={form.email}
               onChange={(v) => updateField("email", v)}
-              onBlur={() => void checkEmailAccount(form.email)}
               type="email"
               error={errors.email}
               required
               className="sm:col-span-2"
-              hint={!emailAccountExists && !isLoggedIn ? t("emailHint") : undefined}
+              hint={!showReturningCustomerSignIn ? t("emailHint") : undefined}
             />
-            {!isLoggedIn && emailAccountExists ? (
+            {showReturningCustomerSignIn ? (
               <div
                 className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-900 sm:col-span-2"
               >
-                <p>
-                  {emailSignInMethods?.google && !emailSignInMethods?.email
-                    ? t("emailAccountExistsGoogleOnly")
-                    : t("emailAccountExists")}
-                </p>
+                <p>{t("emailReturningCustomer")}</p>
                 <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
-                  {emailSignInMethods?.google ? (
-                    <button
-                      type="button"
-                      onClick={goToGoogleFromCheckout}
-                      className="font-semibold text-brand-700 hover:text-brand-800 hover:underline"
-                    >
-                      {t("emailAccountExistsGoogle")}
-                    </button>
-                  ) : null}
-                  {emailSignInMethods?.email ? (
-                    <button
-                      type="button"
-                      onClick={goToLoginFromCheckout}
-                      className="font-semibold text-brand-700 hover:text-brand-800 hover:underline"
-                    >
-                      {t("emailAccountExistsLogin")}
-                    </button>
-                  ) : null}
-                  {!emailSignInMethods ? (
-                    <button
-                      type="button"
-                      onClick={goToLoginFromCheckout}
-                      className="font-semibold text-brand-700 hover:text-brand-800 hover:underline"
-                    >
-                      {t("emailAccountExistsLogin")}
-                    </button>
-                  ) : null}
+                  <button
+                    type="button"
+                    onClick={goToGoogleFromCheckout}
+                    className="font-semibold text-brand-700 hover:text-brand-800 hover:underline"
+                  >
+                    {t("emailAccountExistsGoogle")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={goToLoginFromCheckout}
+                    className="font-semibold text-brand-700 hover:text-brand-800 hover:underline"
+                  >
+                    {t("emailAccountExistsLogin")}
+                  </button>
                 </div>
               </div>
             ) : null}
@@ -768,6 +696,12 @@ export function CheckoutForm() {
             </p>
           )}
           <p className="mb-4 text-sm text-ink-500">{t("uploadHint")}</p>
+          {pendingTurnstile ? (
+            <TurnstileWidget
+              onToken={setTurnstileToken}
+              className="mb-3"
+            />
+          ) : null}
           <SecureUpload
             token={token}
             loading={uploadLoading}
@@ -925,6 +859,13 @@ export function CheckoutForm() {
 
           {errors.form ? (
             <p className="mt-2 text-sm text-red-600">{errors.form}</p>
+          ) : null}
+
+          {checkoutTurnstileRequired ? (
+            <TurnstileWidget
+              onToken={setCheckoutTurnstileToken}
+              className="mt-4"
+            />
           ) : null}
 
           <Button

@@ -2,10 +2,13 @@ import {
   getProductDesignCatalogEntries,
   type ProductDesignCatalogEntry,
 } from '@/lib/products/design-catalog';
-import { KIDS_DESIGN_COLLECTION } from '@/lib/products/paths';
+import { KIDS_DESIGN_COLLECTIONS } from '@/lib/products/paths';
 
 export function isKidsDesignCollection(collection: string | undefined): boolean {
-  return collection === KIDS_DESIGN_COLLECTION;
+  return (
+    collection != null &&
+    (KIDS_DESIGN_COLLECTIONS as readonly string[]).includes(collection)
+  );
 }
 
 export function filterKidsDesignCatalogEntries(

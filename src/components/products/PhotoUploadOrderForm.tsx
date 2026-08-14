@@ -12,7 +12,8 @@ import {
 import type { UploadOnlyProductType } from '@/lib/products/upload-only-products';
 import { withVendorSkuMetadata } from '@/lib/products/vendor-sku';
 import { useCart } from '@/components/cart/CartProvider';
-import { useUploadSession } from '@/hooks/useUploadSession';
+import { useUploadSessionGate } from '@/hooks/useUploadSessionGate';
+import { TurnstileWidget } from '@/components/security/TurnstileWidget';
 import { ProductPhotoUpload } from '@/components/products/ProductPhotoUpload';
 import { ProductImageCarousel } from '@/components/products/ProductImageCarousel';
 import { Button } from '@/components/ui/Button';
@@ -39,8 +40,14 @@ export function PhotoUploadOrderForm({ productType }: PhotoUploadOrderFormProps)
   const searchParams = useSearchParams();
   const router = useRouter();
   const { addItem, updateItem, items: cartItems } = useCart();
-  const { token, loading: uploadLoading, error: uploadError, refreshSession } =
-    useUploadSession();
+  const {
+    token,
+    loading: uploadLoading,
+    error: uploadError,
+    pendingTurnstile,
+    setTurnstileToken,
+    refreshSession,
+  } = useUploadSessionGate();
 
   const productId = searchParams.get('id');
   const editCartItemId = searchParams.get('edit');
@@ -212,6 +219,12 @@ export function PhotoUploadOrderForm({ productType }: PhotoUploadOrderFormProps)
             ) : null}
 
             <div className="mt-4">
+              {pendingTurnstile ? (
+                <TurnstileWidget
+                  onToken={setTurnstileToken}
+                  className="mb-3"
+                />
+              ) : null}
               <ProductPhotoUpload
                 token={token}
                 uploadLoading={uploadLoading}

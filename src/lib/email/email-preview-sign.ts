@@ -1,11 +1,8 @@
 import { createHmac, timingSafeEqual } from 'crypto';
+import { getRequiredSecret } from '@/lib/security/secrets';
 
 function emailPreviewSecret(): string {
-  return (
-    process.env.EMAIL_PREVIEW_SECRET?.trim() ||
-    process.env.ADMIN_SESSION_SECRET?.trim() ||
-    'print8-email-preview-fallback'
-  );
+  return getRequiredSecret('EMAIL_PREVIEW_SECRET', ['ADMIN_SESSION_SECRET']);
 }
 
 export function signEmailPreviewUrl(orderNumber: string, filename: string): string {

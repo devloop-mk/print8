@@ -17,8 +17,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { useCart } from '@/components/cart/CartProvider';
-import { useUploadSession } from '@/hooks/useUploadSession';
-import { SecureUpload } from '@/components/upload/SecureUpload';
+import { SecureUploadWithSession } from '@/components/upload/SecureUploadWithSession';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { formatPrice } from '@/lib/utils';
@@ -69,8 +68,6 @@ export function CustomDesignOrderForm() {
   const locale = useLocale();
   const router = useRouter();
   const { addItem } = useCart();
-  const { token, loading: uploadLoading, error: uploadSessionError, refreshSession } =
-    useUploadSession();
 
   const [form, setForm] = useState<FormState>({
     category: '',
@@ -381,13 +378,7 @@ export function CustomDesignOrderForm() {
           <div className="flex items-start gap-3 border border-dashed border-ink-300 bg-ink-50/50 p-4">
             <ImageIcon className="mt-0.5 h-5 w-5 shrink-0 text-ink-500" aria-hidden />
             <div className="min-w-0 flex-1">
-              <SecureUpload
-                token={token}
-                loading={uploadLoading}
-                sessionError={uploadSessionError}
-                onRefreshSession={refreshSession}
-                onUpload={handleReferenceUpload}
-              />
+              <SecureUploadWithSession onUpload={handleReferenceUpload} />
               {referenceFileIds.length > 0 ? (
                 <p className="mt-2 text-xs text-ink-600">
                   {t('referencesAttached', { count: referenceFileIds.length })}

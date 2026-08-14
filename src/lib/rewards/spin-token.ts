@@ -1,14 +1,11 @@
 import { createHmac, timingSafeEqual } from 'crypto';
 import type { SpinPrizeKey } from '@/lib/rewards/spin-config';
+import { getRequiredSecret } from '@/lib/security/secrets';
 
 const TOKEN_TTL_MS = 15 * 60 * 1000;
 
 function tokenSecret(): string {
-  return (
-    process.env.SPIN_HASH_SALT ||
-    process.env.ADMIN_SESSION_SECRET ||
-    'print8-spin-fallback-salt'
-  );
+  return getRequiredSecret('SPIN_HASH_SALT', ['ADMIN_SESSION_SECRET']);
 }
 
 export type SpinClaimPayload = {

@@ -1,6 +1,7 @@
 import { createHash, randomInt } from 'crypto';
 import { nanoid } from 'nanoid';
 import { getSupabaseAdmin } from '@/lib/supabase/client';
+import { getRequiredSecret } from '@/lib/security/secrets';
 import {
   SPIN_SEGMENTS,
   type SpinPrizeKey,
@@ -56,12 +57,7 @@ export function normalizeSpinEmail(email: string): string {
 }
 
 function hashSalt(): string {
-  // Prefer a dedicated salt; never couple fingerprint hashing to Resend keys.
-  return (
-    process.env.SPIN_HASH_SALT ||
-    process.env.ADMIN_SESSION_SECRET ||
-    'print8-spin-fallback-salt'
-  );
+  return getRequiredSecret('SPIN_HASH_SALT', ['ADMIN_SESSION_SECRET']);
 }
 
 export function hashSpinFingerprint(value: string): string {

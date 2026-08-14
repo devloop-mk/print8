@@ -14,7 +14,8 @@ import {
 } from 'lucide-react';
 import { useCart } from '@/components/cart/CartProvider';
 import { CartAddedModal } from '@/components/cart/CartAddedModal';
-import { useUploadSession } from '@/hooks/useUploadSession';
+import { useUploadSessionGate } from '@/hooks/useUploadSessionGate';
+import { TurnstileWidget } from '@/components/security/TurnstileWidget';
 import { StudentPrintStepNav } from '@/components/students/StudentPrintStepNav';
 import { StudentPrintPdfUpload } from '@/components/students/StudentPrintPdfUpload';
 import { Button } from '@/components/ui/Button';
@@ -59,8 +60,10 @@ export function StudentPrintWizard() {
     token,
     loading: uploadLoading,
     error: uploadError,
+    pendingTurnstile,
+    setTurnstileToken,
     refreshSession,
-  } = useUploadSession();
+  } = useUploadSessionGate();
 
   const [state, setState] = useState<StudentPrintState>(() =>
     createDefaultStudentPrintState(),
@@ -301,6 +304,12 @@ export function StudentPrintWizard() {
         <p className="mt-1 text-sm text-ink-500">{t('uploadStepHint')}</p>
 
         <div className="mt-6">
+          {pendingTurnstile ? (
+            <TurnstileWidget
+              onToken={setTurnstileToken}
+              className="mb-3"
+            />
+          ) : null}
           <StudentPrintPdfUpload
             token={token}
             loading={uploadLoading}

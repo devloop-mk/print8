@@ -49,6 +49,13 @@ export async function GET(
   _request: Request,
   context: { params: Promise<{ path: string[] }> },
 ) {
+  if (
+    process.env.NODE_ENV === 'production' ||
+    process.env.VERCEL_ENV === 'production'
+  ) {
+    return NextResponse.json({ error: 'Not available' }, { status: 404 });
+  }
+
   const { path: segments } = await context.params;
   const filePath = resolveLocalMasterPath(segments);
 

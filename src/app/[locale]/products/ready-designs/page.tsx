@@ -13,7 +13,7 @@ import { buildPageMetadata, buildOgImageUrl } from '@/lib/seo/metadata';
 import { redirect } from '@/i18n/navigation';
 import {
   COUPLES_DESIGN_COLLECTION,
-  KIDS_DESIGN_COLLECTION,
+  KIDS_DESIGN_COLLECTIONS,
   PRODUCT_OFFERING_PATHS,
 } from '@/lib/products/paths';
 import { parseProductTypeFilter } from '@/lib/data/service-routes';
@@ -61,7 +61,10 @@ export default async function ProductReadyDesignsPage({
     ? collectionRaw[0]
     : collectionRaw;
 
-  if (collection === KIDS_DESIGN_COLLECTION) {
+  if (
+    collection != null &&
+    (KIDS_DESIGN_COLLECTIONS as readonly string[]).includes(collection)
+  ) {
     redirect({
       href: PRODUCT_OFFERING_PATHS.kidsReadyDesigns,
       locale: locale as Locale,

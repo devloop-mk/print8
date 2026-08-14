@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
+import type { NextRequest } from 'next/server';
 import { LOGO_HORIZONTAL_LIGHT } from '@/lib/brand/logos';
 import { absoluteUrl } from '@/lib/seo/site';
 import {
@@ -8,6 +9,8 @@ import {
   toCatalogStoragePath,
   isRemoteAssetUrl,
 } from '@/lib/storage/asset-url';
+import { isAllowedOgRasterUrl } from '@/lib/security/og-fetch-allowlist';
+import { enforceRateLimit } from '@/lib/security/rate-limit';
 
 export const runtime = 'nodejs';
 
@@ -17,6 +20,7 @@ const RESPONSE_HEADERS = {
   'Cache-Control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800',
 };
 const RENDER_TIMEOUT_MS = 8000;
+const MAX_FETCH_BYTES = 8 * 1024 * 1024;
 
 /** Matches design-overlay DEFAULT_OVERLAY_POSITION / DEFAULT_OVERLAY_SCALE. */
 const DEFAULT_PLACEMENT = { x: 50, y: 54, scale: 40 };
@@ -68,6 +72,11 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
 }
 
 async function fetchRasterUrl(url: string): Promise<Buffer | null> {
+  if (!isAllowedOgRasterUrl(url)) {
+    console.warn('[api/og/design] Blocked fetch to non-allowlisted host:', url);
+    return null;
+  }
+
   try {
     // encodeURI keeps already-encoded sequences but encodes spaces in paths.
     const response = await withTimeout(
@@ -76,7 +85,11 @@ async function fetchRasterUrl(url: string): Promise<Buffer | null> {
       'design og fetch',
     );
     if (!response.ok) return null;
-    return Buffer.from(await response.arrayBuffer());
+    const length = Number(response.headers.get('content-length') ?? 0);
+    if (length > MAX_FETCH_BYTES) return null;
+    const buf = Buffer.from(await response.arrayBuffer());
+    if (buf.byteLength > MAX_FETCH_BYTES) return null;
+    return buf;
   } catch (error) {
     console.error('[api/og/design] Failed to fetch image:', url, error);
     return null;
@@ -489,7 +502,15 @@ async function fallbackResponse(): Promise<Response> {
   });
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  const rateLimited = enforceRateLimit(
+    request,
+    'og-design',
+    60,
+    60 * 60 * 1000,
+  );
+  if (rateLimited) return rateLimited;
+
   const { searchParams } = new URL(request.url);
 
   try {

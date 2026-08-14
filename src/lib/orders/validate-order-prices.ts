@@ -27,6 +27,10 @@ import {
 } from '@/lib/products/bag-print-pricing';
 import { getPremadeDesignUnitPrice } from '@/lib/products/premade-design-order';
 import { getStaticProductDesignTemplates } from '@/lib/products/merged-product-designs';
+import {
+  getStudentPrintUnitPrice,
+  isStudentPrintOrderMetadata,
+} from '@/lib/students/validate-student-print-price';
 
 const STUDIO_DESIGN_UNIT_PRICE = 500;
 const PRICE_EPSILON = 0.01;
@@ -165,10 +169,17 @@ export async function validateOrderPrices(
 
     switch (item.type) {
       case 'service': {
+        if (isStudentPrintOrderMetadata(item.metadata)) {
+          expectedUnitPrice = getStudentPrintUnitPrice(item.metadata);
+          break;
+        }
+
         const serviceId =
           typeof item.metadata?.serviceId === 'string'
             ? item.metadata.serviceId
-            : undefined;
+            : typeof item.metadata?.catalogServiceId === 'string'
+              ? item.metadata.catalogServiceId
+              : undefined;
         if (!serviceId) {
           return { ok: false, code: 'invalid_price', itemIndex: index };
         }

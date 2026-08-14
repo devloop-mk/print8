@@ -4,7 +4,10 @@ import { db } from '@/lib/db';
 import { checkoutSchema, normalizeCheckoutFulfillment } from '@/lib/validations/order';
 import { generateOrderNumber } from '@/lib/utils';
 import { sendOrderEmails } from '@/lib/email/order-emails';
-import { validateOrderAssetLimits } from '@/lib/orders/order-assets';
+import {
+  validateOrderAssetLimits,
+  validateOrderInlineAssetSize,
+} from '@/lib/orders/order-assets';
 import { validateOrderPrices } from '@/lib/orders/validate-order-prices';
 import { validateOrderUploadFiles } from '@/lib/orders/validate-order-uploads';
 import {
@@ -28,6 +31,7 @@ import { createSupabaseRequestClient } from '@/lib/supabase/server-auth';
 import { customersDb } from '@/lib/db/customers';
 import { validatePointsRedemptionForCheckout } from '@/lib/loyalty/validate-redemption';
 import { redeemPointsForOrder, reservePendingPointsForOrder } from '@/lib/loyalty/order-loyalty';
+import { requireTurnstileOrReject } from '@/lib/security/turnstile';
 
 const MAX_ORDER_BODY_BYTES = 6_000_000;
 
@@ -66,6 +70,17 @@ export async function POST(request: NextRequest) {
 
     const data = normalizeCheckoutFulfillment(parsed.data);
 
+    const turnstile = await requireTurnstileOrReject(
+      parsed.data.turnstileToken,
+      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+    );
+    if (!turnstile.ok) {
+      return NextResponse.json(
+        { error: turnstile.message, code: 'turnstile_failed' },
+        { status: turnstile.status },
+      );
+    }
+
     const uploadValidation = await validateOrderUploadFiles(data);
     if (!uploadValidation.ok) {
       return NextResponse.json(
@@ -88,6 +103,17 @@ export async function POST(request: NextRequest) {
           code: assetLimits.error,
         },
         { status: 400 },
+      );
+    }
+
+    const inlineAssets = validateOrderInlineAssetSize(data);
+    if (!inlineAssets.ok) {
+      return NextResponse.json(
+        {
+          error: 'Order inline assets too large',
+          code: inlineAssets.error,
+        },
+        { status: 413 },
       );
     }
 

@@ -1,24 +1,35 @@
-"use client";
+'use client';
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from 'react';
 
-const STORAGE_KEY = "print8-upload-token";
+const STORAGE_KEY = 'print8-upload-token';
+
+function isTurnstileRequired(): boolean {
+  return Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim());
+}
 
 export function useUploadSession() {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const turnstileRequired = isTurnstileRequired();
 
-  const createSession = useCallback(async () => {
+  const createSession = useCallback(async (turnstileToken?: string) => {
     setLoading(true);
     setError(null);
 
     try {
-      const res = await fetch("/api/upload/session", { method: "POST" });
+      const res = await fetch('/api/upload/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(
+          turnstileToken ? { turnstileToken } : {},
+        ),
+      });
       const data = await res.json();
 
       if (!res.ok || !data.token) {
-        throw new Error(data.error || "Failed to create upload session");
+        throw new Error(data.error || 'Failed to create upload session');
       }
 
       sessionStorage.setItem(STORAGE_KEY, data.token);
@@ -26,7 +37,7 @@ export function useUploadSession() {
       return data.token as string;
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Failed to create upload session";
+        err instanceof Error ? err.message : 'Failed to create upload session';
       setError(message);
       setToken(null);
       sessionStorage.removeItem(STORAGE_KEY);
@@ -36,11 +47,14 @@ export function useUploadSession() {
     }
   }, []);
 
-  const refreshSession = useCallback(async () => {
-    sessionStorage.removeItem(STORAGE_KEY);
-    setToken(null);
-    return createSession();
-  }, [createSession]);
+  const refreshSession = useCallback(
+    async (turnstileToken?: string) => {
+      sessionStorage.removeItem(STORAGE_KEY);
+      setToken(null);
+      return createSession(turnstileToken);
+    },
+    [createSession],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -55,6 +69,11 @@ export function useUploadSession() {
         return;
       }
 
+      if (turnstileRequired) {
+        if (!cancelled) setLoading(false);
+        return;
+      }
+
       await createSession();
     }
 
@@ -62,7 +81,14 @@ export function useUploadSession() {
     return () => {
       cancelled = true;
     };
-  }, [createSession]);
+  }, [createSession, turnstileRequired]);
 
-  return { token, loading, error, refreshSession };
+  return {
+    token,
+    loading,
+    error,
+    turnstileRequired,
+    createSession,
+    refreshSession,
+  };
 }

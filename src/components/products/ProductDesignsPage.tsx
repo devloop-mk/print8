@@ -9,14 +9,18 @@ import {
   products,
   type ProductDesignCategory,
 } from '@/lib/data/catalog';
-import { getProductPaths, PRODUCT_OFFERING_PATHS, COUPLES_DESIGN_COLLECTION, KIDS_DESIGN_COLLECTION } from '@/lib/products/paths';
+import { getProductPaths, PRODUCT_OFFERING_PATHS, COUPLES_DESIGN_COLLECTION } from '@/lib/products/paths';
 import { getProductDisplayPrice } from '@/lib/products/tshirt-print-pricing';
 import {
   filterDesignCatalogEntries,
   getCatalogColors,
   type ProductDesignCatalogEntry,
 } from '@/lib/products/design-catalog';
-import { getDesignCollectionLabel } from '@/lib/products/design-collection-labels';
+import {
+  getDesignCollectionLabel,
+  matchesDesignCollection,
+  normalizeDesignCollectionId,
+} from '@/lib/products/design-collection-labels';
 import {
   sortDesignCatalogEntries,
   type DesignCatalogSort,
@@ -73,7 +77,8 @@ export function ProductDesignsPage({
   const [colorFilter, setColorFilter] = useState<string | 'all'>('all');
   const [collectionFilter, setCollectionFilter] = useState<string | 'all'>(() => {
     const fromUrl = searchParams.get('collection');
-    return fromUrl && fromUrl.trim() ? fromUrl.trim() : 'all';
+    const trimmed = fromUrl?.trim();
+    return trimmed ? normalizeDesignCollectionId(trimmed) : 'all';
   });
   const [sort, setSort] = useState<DesignCatalogSort>('featured');
   const [searchQuery, setSearchQuery] = useState(
@@ -82,7 +87,8 @@ export function ProductDesignsPage({
 
   useEffect(() => {
     const fromUrl = searchParams.get('collection');
-    setCollectionFilter(fromUrl && fromUrl.trim() ? fromUrl.trim() : 'all');
+    const trimmed = fromUrl?.trim();
+    setCollectionFilter(trimmed ? normalizeDesignCollectionId(trimmed) : 'all');
     setSearchQuery(searchParams.get('q') ?? '');
   }, [searchParams]);
 
@@ -128,7 +134,9 @@ export function ProductDesignsPage({
     if (!product) return [];
     const collections = new Set<string>();
     for (const entry of entriesForCollectionOptions) {
-      if (entry.design.collection) collections.add(entry.design.collection);
+      if (entry.design.collection) {
+        collections.add(normalizeDesignCollectionId(entry.design.collection));
+      }
     }
 
     let packs = getCouplePackTemplates().filter((pack) =>
@@ -176,10 +184,6 @@ export function ProductDesignsPage({
 
   const handleCollectionChange = useCallback(
     (value: string | 'all') => {
-      if (value === KIDS_DESIGN_COLLECTION) {
-        router.push(PRODUCT_OFFERING_PATHS.kidsReadyDesigns);
-        return;
-      }
       if (value === COUPLES_DESIGN_COLLECTION) {
         router.push(PRODUCT_OFFERING_PATHS.couplesReadyDesigns);
         return;
@@ -200,11 +204,7 @@ export function ProductDesignsPage({
     return filterDesignCatalogEntries(entries, {
       type: product.type,
       color: colorFilter,
-    }).filter((entry) =>
-      collectionFilter === 'all'
-        ? true
-        : entry.design.collection === collectionFilter,
-    );
+    }).filter((entry) => matchesDesignCollection(entry.design.collection, collectionFilter));
   }, [collectionFilter, colorFilter, entries, product]);
 
   const filtered = useMemo(() => {

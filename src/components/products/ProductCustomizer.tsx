@@ -61,7 +61,8 @@ import {
   MAX_STICKERS_PER_ORDER,
 } from '@/lib/orders/order-assets';
 import { useCart } from '@/components/cart/CartProvider';
-import { useUploadSession } from '@/hooks/useUploadSession';
+import { useUploadSessionGate } from '@/hooks/useUploadSessionGate';
+import { TurnstileWidget } from '@/components/security/TurnstileWidget';
 import { Button } from '@/components/ui/Button';
 import { LoadingIndicator } from '@/components/ui/LoadingIndicator';
 import { cn, formatPrice } from '@/lib/utils';
@@ -934,7 +935,14 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { addItem, updateItem, items: cartItems } = useCart();
-  const { token, loading: uploadLoading, error: uploadError, refreshSession } = useUploadSession();
+  const {
+    token,
+    loading: uploadLoading,
+    error: uploadError,
+    pendingTurnstile,
+    setTurnstileToken,
+    refreshSession,
+  } = useUploadSessionGate();
   const isDrinkware = isCylindricalDrinkwareType(type);
   const isDesktopSplitPreview = useMediaQuery('(min-width: 1280px)') && isDrinkware;
   const isLargeCustomizerViewport = useMediaQuery('(min-width: 1024px)');
@@ -2616,6 +2624,8 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       uploadLoading={uploadLoading}
       uploadError={uploadError}
       refreshSession={refreshSession}
+      uploadPendingTurnstile={pendingTurnstile}
+      onUploadTurnstileToken={setTurnstileToken}
       imageMaxScale={imageMaxScale}
       isTshirt={isTshirt}
       printPackage={printPackage}
@@ -3878,6 +3888,8 @@ function EditorPanelContent({
   uploadLoading,
   uploadError,
   refreshSession,
+  uploadPendingTurnstile,
+  onUploadTurnstileToken,
   imageMaxScale,
   isTshirt,
   printPackage,
@@ -3921,6 +3933,8 @@ function EditorPanelContent({
   uploadLoading: boolean;
   uploadError: string | null;
   refreshSession: () => Promise<string | null>;
+  uploadPendingTurnstile?: boolean;
+  onUploadTurnstileToken?: (token: string) => void;
   imageMaxScale: number;
   isTshirt: boolean;
   printPackage: TshirtPrintPackage;
@@ -4244,7 +4258,14 @@ function EditorPanelContent({
         ) : null}
 
         {!photosAtLimit ? (
-          <ProductPhotoUpload
+          <>
+            {uploadPendingTurnstile && onUploadTurnstileToken ? (
+              <TurnstileWidget
+                onToken={onUploadTurnstileToken}
+                className="mb-3"
+              />
+            ) : null}
+            <ProductPhotoUpload
             token={token}
             uploadLoading={uploadLoading}
             uploadError={uploadError}
@@ -4254,6 +4275,7 @@ function EditorPanelContent({
               onAddPhoto(fileId, name, previewUrl);
             }}
           />
+          </>
         ) : null}
       </div>
     );

@@ -13,8 +13,19 @@ export const PRODUCT_OFFERING_PATHS = {
   type: (type: string) => `/products/type/${type}`,
 } as const;
 
-/** Collection id used by kids birthday + generated animal tee packs. */
-export const KIDS_DESIGN_COLLECTION = 'kids-birthday';
+/** Kids animal / character tees (not birthday-themed). */
+export const KIDS_GENERATED_COLLECTION = 'kids';
+
+/** Birthday-themed kids & family matching tees. */
+export const KIDS_BIRTHDAY_COLLECTION = 'kids-birthday';
+
+/** @deprecated Use {@link KIDS_BIRTHDAY_COLLECTION} — kept for legacy URLs. */
+export const KIDS_DESIGN_COLLECTION = KIDS_BIRTHDAY_COLLECTION;
+
+export const KIDS_DESIGN_COLLECTIONS = [
+  KIDS_GENERATED_COLLECTION,
+  KIDS_BIRTHDAY_COLLECTION,
+] as const;
 
 /** Collection id used by matching couple-pack designs. */
 export const COUPLES_DESIGN_COLLECTION = 'couple-packs';

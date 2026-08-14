@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 
-/** Soft same-site check for public spin API (blocks casual cross-site POSTs). */
+/** Same-site check for public spin API (blocks casual cross-site POSTs). */
 export function hasValidSpinOrigin(request: NextRequest): boolean {
   const host = request.headers.get('host');
   if (!host) return false;
@@ -24,13 +24,5 @@ export function hasValidSpinOrigin(request: NextRequest): boolean {
   }
 
   const fetchSite = request.headers.get('sec-fetch-site');
-  if (
-    fetchSite === 'same-origin' ||
-    fetchSite === 'same-site' ||
-    fetchSite === 'none'
-  ) {
-    return true;
-  }
-
-  return false;
+  return fetchSite === 'same-origin' || fetchSite === 'same-site';
 }

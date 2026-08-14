@@ -20,7 +20,8 @@ import {
   Upload,
 } from 'lucide-react';
 import { useCart } from '@/components/cart/CartProvider';
-import { useUploadSession } from '@/hooks/useUploadSession';
+import { useUploadSessionGate } from '@/hooks/useUploadSessionGate';
+import { TurnstileWidget } from '@/components/security/TurnstileWidget';
 import { ProductPhotoUpload } from '@/components/products/ProductPhotoUpload';
 import { BrandingPackMockup } from '@/components/products/branding-pack/BrandingPackMockup';
 import { BrandingPackQuantityInput } from '@/components/products/branding-pack/BrandingPackQuantityInput';
@@ -98,8 +99,10 @@ export function BrandingPackWizard() {
     token,
     loading: uploadLoading,
     error: uploadError,
+    pendingTurnstile,
+    setTurnstileToken,
     refreshSession,
-  } = useUploadSession();
+  } = useUploadSessionGate();
 
   const [state, setState] = useState<BrandingPackState>(() =>
     createDefaultBrandingPackState(createBrandingPackId()),
@@ -459,6 +462,12 @@ export function BrandingPackWizard() {
         <h2 className="text-lg font-semibold text-ink-900">{t('logoTitle')}</h2>
         <p className="mt-1 text-sm text-ink-500">{t('logoHint')}</p>
         <div className="mt-4">
+          {pendingTurnstile ? (
+            <TurnstileWidget
+              onToken={setTurnstileToken}
+              className="mb-3"
+            />
+          ) : null}
           <ProductPhotoUpload
             token={token}
             uploadLoading={uploadLoading}

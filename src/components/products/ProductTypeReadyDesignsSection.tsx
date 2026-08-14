@@ -12,14 +12,17 @@ import {
   getCatalogColors,
   type ProductDesignCatalogEntry,
 } from '@/lib/products/design-catalog';
-import { getDesignCollectionLabel } from '@/lib/products/design-collection-labels';
+import {
+  getDesignCollectionLabel,
+  matchesDesignCollection,
+  normalizeDesignCollectionId,
+} from '@/lib/products/design-collection-labels';
 import {
   sortDesignCatalogEntries,
   type DesignCatalogSort,
 } from '@/lib/products/design-catalog-sort';
 import {
   COUPLES_DESIGN_COLLECTION,
-  KIDS_DESIGN_COLLECTION,
   PRODUCT_OFFERING_PATHS,
 } from '@/lib/products/paths';
 import {
@@ -63,14 +66,16 @@ export function ProductTypeReadyDesignsSection({
   const [colorFilter, setColorFilter] = useState<string | 'all'>('all');
   const [collectionFilter, setCollectionFilter] = useState<string | 'all'>(() => {
     const fromUrl = searchParams.get('collection');
-    return fromUrl && fromUrl.trim() ? fromUrl.trim() : 'all';
+    const trimmed = fromUrl?.trim();
+    return trimmed ? normalizeDesignCollectionId(trimmed) : 'all';
   });
   const [sort, setSort] = useState<DesignCatalogSort>('featured');
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const fromUrl = searchParams.get('collection');
-    const next = fromUrl && fromUrl.trim() ? fromUrl.trim() : 'all';
+    const trimmed = fromUrl?.trim();
+    const next = trimmed ? normalizeDesignCollectionId(trimmed) : 'all';
     setCollectionFilter(next);
   }, [searchParams]);
 
@@ -116,7 +121,9 @@ export function ProductTypeReadyDesignsSection({
   const collectionOptions = useMemo(() => {
     const collections = new Set<string>();
     for (const entry of entriesForCollectionOptions) {
-      if (entry.design.collection) collections.add(entry.design.collection);
+      if (entry.design.collection) {
+        collections.add(normalizeDesignCollectionId(entry.design.collection));
+      }
     }
 
     let packs = getCouplePackTemplates().filter((pack) =>
@@ -164,10 +171,6 @@ export function ProductTypeReadyDesignsSection({
 
   const handleCollectionChange = useCallback(
     (value: string | 'all') => {
-      if (value === KIDS_DESIGN_COLLECTION) {
-        router.push(PRODUCT_OFFERING_PATHS.kidsReadyDesigns);
-        return;
-      }
       if (value === COUPLES_DESIGN_COLLECTION) {
         router.push(PRODUCT_OFFERING_PATHS.couplesReadyDesigns);
         return;
@@ -188,11 +191,7 @@ export function ProductTypeReadyDesignsSection({
       filterDesignCatalogEntries(entries, {
         type,
         color: colorFilter,
-      }).filter((entry) =>
-        collectionFilter === 'all'
-          ? true
-          : entry.design.collection === collectionFilter,
-      ),
+      }).filter((entry) => matchesDesignCollection(entry.design.collection, collectionFilter)),
     [collectionFilter, entries, type, colorFilter],
   );
 

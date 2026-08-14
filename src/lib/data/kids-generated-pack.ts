@@ -13,7 +13,7 @@ const BASE = {
   recommendedColor: '#ffffff',
   applicableFits: ['kids'] as const,
   defaultSide: 'front' as const,
-  collection: 'kids-birthday',
+  collection: 'kids',
 };
 
 type KidsGeneratedItem = {

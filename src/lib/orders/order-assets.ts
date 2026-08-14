@@ -7,6 +7,8 @@ import { parsePlacedPhotos } from '@/lib/products/photo-layers';
 
 export const MAX_STICKERS_PER_ORDER = 24;
 export const MAX_PHOTOS_PER_ORDER = 10;
+/** Total inline preview/SVG/PNG payload per order (chars ≈ bytes for ASCII). */
+export const MAX_ORDER_INLINE_ASSET_CHARS = 2_500_000;
 
 export type OrderItemLike = {
   metadata?: Record<string, string | number | boolean>;
@@ -193,4 +195,39 @@ export function validateOrderAssetLimits(
   }
 
   return { ok: true, stickerCount, photoCount };
+}
+
+function countInlineAssetChars(data: Pick<CheckoutInput, 'items'>): number {
+  let total = 0;
+  for (const item of data.items) {
+    const previews = [
+      item.designPreview,
+      item.backDesignPreview,
+      item.leftDesignPreview,
+      item.rightDesignPreview,
+      item.frontPrintPng,
+      item.backPrintPng,
+      item.leftPrintPng,
+      item.rightPrintPng,
+    ];
+    for (const value of previews) {
+      if (typeof value === 'string') total += value.length;
+    }
+    const meta = item.metadata;
+    if (!meta) continue;
+    for (const [key, value] of Object.entries(meta)) {
+      if (typeof value === 'string') total += value.length;
+    }
+  }
+  return total;
+}
+
+export function validateOrderInlineAssetSize(
+  data: Pick<CheckoutInput, 'items'>,
+): { ok: true } | { ok: false; error: 'inline_assets_too_large'; chars: number } {
+  const chars = countInlineAssetChars(data);
+  if (chars > MAX_ORDER_INLINE_ASSET_CHARS) {
+    return { ok: false, error: 'inline_assets_too_large', chars };
+  }
+  return { ok: true };
 }

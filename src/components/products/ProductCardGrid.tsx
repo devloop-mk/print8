@@ -58,13 +58,13 @@ function ProductCardGridItem({
   return (
     <Reveal
       delay={Math.min(index * 40, 120)}
-      className={getCatalogItemClassName(grid)}
+      className={cn(getCatalogItemClassName(grid), 'h-full')}
     >
       <Link
         href={productHref}
-        className="group block transition hover:shadow-lift-brand"
+        className="group block h-full transition hover:shadow-lift-brand"
       >
-        <Card className="h-full overflow-hidden p-0 transition group-hover:shadow-lift-brand">
+        <Card className="flex h-full flex-col overflow-hidden p-0 transition group-hover:shadow-lift-brand">
           <div className="p-4 pb-0">
             <ProductCatalogImage
               product={product}
@@ -72,8 +72,10 @@ function ProductCardGridItem({
               typeLabel={productLabel}
             />
           </div>
-          <div className="p-4">
-            <p className="font-medium text-ink-900 group-hover:text-brand-700">
+          <div className="flex flex-1 flex-col p-4">
+            <p
+              className="line-clamp-3 min-h-[4.5rem] font-medium leading-snug text-ink-900 group-hover:text-brand-700"
+            >
               {productLabel}
             </p>
             <p className="mt-1 text-sm text-brand-600">
@@ -81,7 +83,7 @@ function ProductCardGridItem({
               {formatPrice(getProductDisplayPrice(product), locale)}
             </p>
 
-            <div className="mt-3 flex flex-wrap gap-1.5">
+            <div className="mt-3 flex min-h-[1.625rem] flex-wrap gap-1.5">
               <span className="badge-brand">{t('card.customOption')}</span>
               {offering.hasPremade ? (
                 <span className="badge-sharp">
@@ -90,37 +92,36 @@ function ProductCardGridItem({
               ) : null}
             </div>
 
-            {product.colors && product.colors.length > 0 && (
-              <div
-                className="mt-3 flex flex-wrap gap-1.5"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                onKeyDown={(e) => e.stopPropagation()}
-              >
-                {product.colors.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onPreviewColor(c);
-                    }}
-                    className={cn(
-                      'h-5 w-5 rounded-full border-2 transition',
-                      cardColor === c
-                        ? 'border-brand-600 ring-2 ring-brand-200'
-                        : 'border-ink-300 hover:border-ink-400',
-                    )}
-                    style={{ backgroundColor: getColorSwatchDisplayHex(c) }}
-                    aria-label={c}
-                  />
-                ))}
-              </div>
-            )}
-            <p className="mt-3 text-sm font-medium text-brand-600">
+            <div
+              className="mt-3 flex min-h-[2.625rem] flex-wrap gap-1.5"
+              onClick={(e) => {
+                if (!product.colors?.length) return;
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onKeyDown={(e) => e.stopPropagation()}
+            >
+              {product.colors?.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onPreviewColor(c);
+                  }}
+                  className={cn(
+                    'h-5 w-5 rounded-full border-2 transition',
+                    cardColor === c
+                      ? 'border-brand-600 ring-2 ring-brand-200'
+                      : 'border-ink-300 hover:border-ink-400',
+                  )}
+                  style={{ backgroundColor: getColorSwatchDisplayHex(c) }}
+                  aria-label={c}
+                />
+              ))}
+            </div>
+            <p className="mt-auto pt-3 text-sm font-medium text-brand-600">
               {actionLabel} →
             </p>
           </div>
