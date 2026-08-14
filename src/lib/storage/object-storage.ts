@@ -4,6 +4,7 @@ import {
   r2DeleteObject,
   r2GetObject,
   r2PutObject,
+  isR2NoSuchKeyError,
 } from '@/lib/storage/r2-client';
 
 const UPLOAD_PREFIX = 'uploads/';
@@ -39,6 +40,21 @@ function orderPrintObjectKey(storedName: string) {
     .replace(/^\/+/, '')
     .replace(/^order-prints\//, '');
   return `${ORDER_PRINT_PREFIX}${normalized}`;
+}
+
+async function getOrderPrintObjectFromSupabase(key: string): Promise<{
+  body: Buffer;
+  contentType: string | undefined;
+} | null> {
+  const bucket = process.env.SUPABASE_STORAGE_BUCKET;
+  if (!bucket) return null;
+
+  const { data, error } = await getSupabaseAdmin().storage.from(bucket).download(key);
+
+  if (error || !data) return null;
+
+  const buffer = Buffer.from(await data.arrayBuffer());
+  return { body: buffer, contentType: undefined };
 }
 
 function emailPreviewObjectKey(orderNumber: string, filename: string) {
@@ -163,19 +179,22 @@ export async function getOrderPrintObject(storedName: string): Promise<{
   const key = orderPrintObjectKey(storedName);
 
   if (isR2Configured()) {
-    return r2GetObject(key);
+    try {
+      return await r2GetObject(key);
+    } catch (error) {
+      if (!isR2NoSuchKeyError(error)) throw error;
+
+      const fromSupabase = await getOrderPrintObjectFromSupabase(key);
+      if (fromSupabase) return fromSupabase;
+
+      throw new Error(`Order print object not found in R2 or Supabase: ${key}`);
+    }
   }
 
-  const { data, error } = await getSupabaseAdmin().storage
-    .from(getSupabaseBucket())
-    .download(key);
+  const fromSupabase = await getOrderPrintObjectFromSupabase(key);
+  if (fromSupabase) return fromSupabase;
 
-  if (error || !data) {
-    throw new Error(error?.message ?? 'Download failed');
-  }
-
-  const buffer = Buffer.from(await data.arrayBuffer());
-  return { body: buffer, contentType: undefined };
+  throw new Error(`Order print object not found: ${key}`);
 }
 
 export async function putEmailPreviewObject(

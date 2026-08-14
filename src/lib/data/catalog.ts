@@ -1710,20 +1710,6 @@ export const products: Product[] = [
     colors: ['#ffffff'],
   },
   {
-    id: 'bag-tote',
-    type: 'bag',
-    image: '/bags/bag-beige.jpg',
-    colorsImages: {
-      '#D8C3A5': {
-        front: '/bags/bag-beige.jpg',
-        back: '/bags/bag-beige-back.jpg',
-      },
-    },
-    basePrice: 300,
-    colors: ['#D8C3A5'],
-    sides: ['front', 'back'],
-  },
-  {
     id: 'bag-naturella-natural',
     type: 'bag',
     nameKey: 'bagNaturellaNatural',

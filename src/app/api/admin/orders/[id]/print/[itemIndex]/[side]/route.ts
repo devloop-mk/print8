@@ -3,12 +3,79 @@ import { requireAdminApi } from '@/lib/admin/api-auth';
 import { getAdminOrder } from '@/lib/admin/orders';
 import { listSvgPrintFileRefsFromMetadata } from '@/lib/designs/svg-order-assets';
 import { listProductPrintPngRefsFromItem } from '@/lib/orders/product-order-assets';
+import type { OrderItem } from '@/lib/orders/product-order-assets';
 import { listPremadeMasterAssetRefsFromItem } from '@/lib/orders/premade-master-assets';
-import { getOrderPrintObject } from '@/lib/storage/object-storage';
+import {
+  getOrderPrintObject,
+  getUploadObject,
+} from '@/lib/storage/object-storage';
 import { getPremadeMasterObject } from '@/lib/storage/premade-master-storage';
 import { contentDispositionAttachment } from '@/lib/security/sanitize';
+import type { ProductSide } from '@/lib/data/catalog';
+import { getSideMetadataPrefix } from '@/lib/products/product-sides';
+import { getUploadedFile } from '@/lib/upload';
 
 export const runtime = 'nodejs';
+
+function printFileNotFound(message = 'Print file not found') {
+  return NextResponse.json({ error: message, code: 'print_file_not_found' }, {
+    status: 404,
+  });
+}
+
+async function loadStoredPrintBody(storedName: string): Promise<Buffer | null> {
+  try {
+    const stored = await getOrderPrintObject(storedName);
+    return stored.body;
+  } catch (error) {
+    console.error('[admin/orders/print] stored print missing:', {
+      storedName,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}
+
+async function loadProductPrintPngBody(
+  item: OrderItem,
+  side: ProductSide,
+): Promise<Buffer | null> {
+  const pngFile = listProductPrintPngRefsFromItem(item).find(
+    (entry) => entry.side === side,
+  );
+  if (!pngFile) return null;
+
+  if (pngFile.pngDataUrl) {
+    const match = pngFile.pngDataUrl.match(/^data:image\/png;base64,(.+)$/);
+    return match ? Buffer.from(match[1], 'base64') : null;
+  }
+
+  if (pngFile.storedName) {
+    const body = await loadStoredPrintBody(pngFile.storedName);
+    if (body) return body;
+  }
+
+  const fileIdKey = `${getSideMetadataPrefix(side)}PrintPngFileId`;
+  const fileId = item.metadata?.[fileIdKey];
+  if (typeof fileId === 'string' && fileId.trim()) {
+    try {
+      const uploaded = await getUploadedFile(fileId.trim());
+      if (uploaded) {
+        const sourceName =
+          uploaded.originalStoredName ?? uploaded.storedName;
+        const { body } = await getUploadObject(sourceName);
+        return body;
+      }
+    } catch (error) {
+      console.error('[admin/orders/print] upload fallback failed:', {
+        fileId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  return null;
+}
 
 export async function GET(
   request: NextRequest,
@@ -53,7 +120,7 @@ export async function GET(
         masterRefs = await listPremadeMasterAssetRefsFromItem(item);
       } catch (refsError) {
         console.error('[admin/orders/print] master refs failed:', refsError);
-        return NextResponse.json({ error: 'Master file not found' }, { status: 404 });
+        return printFileNotFound('Master file not found');
       }
 
       const masterFile = masterRefs.find((entry) => entry.side === side);
@@ -62,7 +129,7 @@ export async function GET(
         masterFile?.masterUrl?.trim() ||
         '';
       if (!masterFile || !storagePath) {
-        return NextResponse.json({ error: 'Master file not found' }, { status: 404 });
+        return printFileNotFound('Master file not found');
       }
 
       try {
@@ -86,12 +153,12 @@ export async function GET(
           orderId: id,
           itemIndex,
           side,
-          storagePath: storagePath,
+          storagePath,
           masterUrl: masterFile.masterUrl,
           error:
             loadError instanceof Error ? loadError.message : String(loadError),
         });
-        return NextResponse.json({ error: 'Master file not found' }, { status: 404 });
+        return printFileNotFound('Master file not found');
       }
     }
 
@@ -100,37 +167,23 @@ export async function GET(
         (entry) => entry.side === side,
       );
       if (!pngFile) {
-        return NextResponse.json({ error: 'Print file not found' }, { status: 404 });
+        return printFileNotFound();
       }
 
       if (pngFile.externalUrl) {
         return NextResponse.redirect(pngFile.externalUrl);
       }
 
-      if (pngFile.pngDataUrl) {
-        const match = pngFile.pngDataUrl.match(/^data:image\/png;base64,(.+)$/);
-        if (!match) {
-          return NextResponse.json({ error: 'Print file not found' }, { status: 404 });
-        }
-        const body = Buffer.from(match[1], 'base64');
-        return new NextResponse(new Uint8Array(body), {
-          headers: {
-            'Content-Type': 'image/png',
-            'Cache-Control': 'private, no-store',
-            'Content-Disposition': contentDispositionAttachment(pngFile.filename),
-            'X-Content-Type-Options': 'nosniff',
-          },
-        });
+      const body = await loadProductPrintPngBody(item, side);
+      if (!body) {
+        return printFileNotFound(
+          'Print PNG is missing from storage. The file may not have been copied when the order was placed.',
+        );
       }
 
-      if (!pngFile.storedName) {
-        return NextResponse.json({ error: 'Print file not found' }, { status: 404 });
-      }
-
-      const stored = await getOrderPrintObject(pngFile.storedName);
-      return new NextResponse(new Uint8Array(stored.body), {
+      return new NextResponse(new Uint8Array(body), {
         headers: {
-          'Content-Type': stored.contentType ?? 'image/png',
+          'Content-Type': 'image/png',
           'Cache-Control': 'private, no-store',
           'Content-Disposition': contentDispositionAttachment(pngFile.filename),
           'X-Content-Type-Options': 'nosniff',
@@ -142,17 +195,20 @@ export async function GET(
       (entry) => entry.side === side,
     );
     if (!file) {
-      return NextResponse.json({ error: 'Print file not found' }, { status: 404 });
+      return printFileNotFound();
     }
 
-    let body: Buffer;
+    let body: Buffer | null = null;
     if (typeof file.svg === 'string' && file.svg.trim()) {
       body = Buffer.from(file.svg, 'utf8');
     } else if (file.storedName) {
-      const stored = await getOrderPrintObject(file.storedName);
-      body = stored.body;
-    } else {
-      return NextResponse.json({ error: 'Print file not found' }, { status: 404 });
+      body = await loadStoredPrintBody(file.storedName);
+    }
+
+    if (!body) {
+      return printFileNotFound(
+        'Print SVG is missing from storage. The file may not have been saved when the order was placed.',
+      );
     }
 
     return new NextResponse(new Uint8Array(body), {

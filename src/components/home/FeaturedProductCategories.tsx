@@ -40,7 +40,7 @@ const categoryMeta: Record<
     accent: 'from-sky-900/80',
   },
   bags: {
-    images: ['/bags/bag-beige.jpg', '/bags/bag-beige-back.jpg'],
+    images: ['/bags/bag-naturella-natural.jpg'],
     accent: 'from-amber-900/80',
   },
   gifts: {

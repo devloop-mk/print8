@@ -427,7 +427,7 @@ export function getFeaturedCatalogResults(
     'tshirt-unisex',
     'mug-classic',
     'hoodie-basic',
-    'bag-tote',
+    'bag-naturella-natural',
   ];
 
   const featured: GlobalSearchResult[] = [];

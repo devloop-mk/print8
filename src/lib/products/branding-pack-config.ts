@@ -25,7 +25,7 @@ export const BRANDING_PACK_DEFAULT_PRODUCT_ID: Record<
   mug: 'mug-classic',
   cap: 'cap-classic',
   thermos: 'thermos-classic',
-  bag: 'bag-tote',
+  bag: 'bag-naturella-natural',
 };
 
 export const BRANDING_PACK_DEFAULT_COLOR: Record<

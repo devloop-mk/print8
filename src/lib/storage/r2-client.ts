@@ -82,6 +82,16 @@ export async function r2GetObject(key: string): Promise<{
   };
 }
 
+export function isR2NoSuchKeyError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const record = error as { name?: string; Code?: string; code?: string };
+  return (
+    record.name === 'NoSuchKey' ||
+    record.Code === 'NoSuchKey' ||
+    record.code === 'NoSuchKey'
+  );
+}
+
 export async function r2DeleteObject(key: string) {
   await getR2Client().send(
     new DeleteObjectCommand({

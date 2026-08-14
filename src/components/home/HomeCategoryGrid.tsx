@@ -65,7 +65,7 @@ const categoryTiles: CategoryTile[] = [
     id: 'bag',
     kind: 'category',
     categoryId: 'bags',
-    image: '/bags/bag-beige.jpg',
+    image: '/bags/bag-naturella-natural.jpg',
     // Local hover-only scale (card padding + contain) — smaller than PDP print area.
     designOverlay: {
       src: '/NEW_DESIGNS/bags/tote-skopje-line.png',

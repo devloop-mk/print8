@@ -60,7 +60,7 @@ const PREVIEW_PRODUCT_BY_TYPE: Partial<Record<ProductType, string>> = {
   't-shirt': 'tshirt-unisex',
   hoodie: 'hoodie-basic',
   cap: 'cap-classic',
-  bag: 'bag-tote',
+  bag: 'bag-naturella-natural',
   bodysuit: 'bodysuit-basic',
 };
 

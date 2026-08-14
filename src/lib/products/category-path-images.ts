@@ -71,7 +71,7 @@ const categoryPathImages: Record<
   },
   bags: {
     custom: {
-      src: '/bags/bag-beige.jpg',
+      src: '/bags/bag-naturella-natural.jpg',
       objectFit: 'cover',
       objectPosition: 'center',
       accent: 'from-brand-800/85',
@@ -80,7 +80,7 @@ const categoryPathImages: Record<
     },
     photo: {
       // Blank tote + design overlay (same pattern as HomeCategoryGrid bags tile).
-      src: '/bags/bag-beige.jpg',
+      src: '/bags/bag-naturella-natural.jpg',
       objectFit: 'contain',
       objectPosition: 'center',
       imageBg: 'bg-ink-50',
