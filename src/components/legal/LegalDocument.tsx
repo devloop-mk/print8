@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import type { ReactNode } from 'react';
 import { Link } from '@/i18n/navigation';
 import { PageIntro } from '@/components/brand/PageIntro';
 import type { LegalPageKey } from '@/lib/legal/pages';
@@ -13,10 +14,42 @@ type LegalDocumentProps = {
   documentKey: LegalPageKey;
 };
 
+function linkifyParagraph(text: string) {
+  const urlPattern = /(https?:\/\/[^\s]+)/g;
+  const parts: ReactNode[] = [];
+  let lastIndex = 0;
+
+  for (const match of text.matchAll(urlPattern)) {
+    const start = match.index ?? 0;
+    if (start > lastIndex) {
+      parts.push(text.slice(lastIndex, start));
+    }
+    const url = match[0];
+    parts.push(
+      <a
+        key={start}
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-medium text-brand-600 hover:text-brand-700"
+      >
+        {url}
+      </a>,
+    );
+    lastIndex = start + url.length;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return parts.length > 0 ? parts : text;
+}
+
 function renderParagraphs(body: string) {
   return body.split('\n\n').map((paragraph) => (
     <p key={paragraph.slice(0, 48)} className="leading-relaxed text-ink-600">
-      {paragraph}
+      {linkifyParagraph(paragraph)}
     </p>
   ));
 }

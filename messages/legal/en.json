@@ -29,7 +29,7 @@
   "privacy": {
     "title": "Privacy Policy",
     "subtitle": "How Print 8 collects, uses, and protects your personal data.",
-    "lastUpdated": "Last updated: 26 July 2026",
+    "lastUpdated": "Last updated: 15 August 2026",
     "metaDescription": "Print 8 privacy policy — how we process personal data for orders, contact requests, and website use.",
     "intro": "Print 8 (“we”, “us”) respects your privacy. This policy explains what personal data we collect when you use print8.mk, why we collect it, how long we keep it, and what rights you have under applicable data protection law, including the Law on Personal Data Protection of North Macedonia and the EU General Data Protection Regulation (GDPR) where it applies.",
     "sections": [
@@ -76,6 +76,7 @@
         "body": "We may share personal data only when necessary:",
         "items": [
           "Hosting, database, email delivery, and file storage providers that help us operate the website and process orders.",
+          "Cloudflare Turnstile (bot protection when you upload files or place an order). Cloudflare processes limited technical and interaction data under its Turnstile Privacy Addendum: https://www.cloudflare.com/turnstile-privacy-policy/",
           "Supabase (authentication and database hosting) and Brevo (transactional email delivery).",
           "Google only if you choose “Sign in with Google” (Google processes sign-in under its own terms).",
           "Courier or delivery partners to deliver your order.",
@@ -110,7 +111,11 @@
         ]
       },
       {
-        "title": "12. Changes",
+        "title": "12. Bot protection (Cloudflare Turnstile)",
+        "body": "We use Cloudflare Turnstile on actions such as uploading files and placing orders to protect print8.mk from automated abuse. Depending on configuration, Turnstile may run as a visible challenge or in invisible mode.\n\nCloudflare may collect and process limited technical and interaction signals when Turnstile runs. That processing is described in the Cloudflare Turnstile Privacy Addendum, which we reference here as required when invisible mode is enabled:\n\nhttps://www.cloudflare.com/turnstile-privacy-policy/\n\nWe use Turnstile for website security and fraud prevention (legitimate interest). It is not used for advertising or profiling beyond what is necessary for the security check."
+      },
+      {
+        "title": "13. Changes",
         "body": "We may update this policy from time to time. The latest version will always be published on this page with an updated date."
       }
     ]
@@ -189,7 +194,7 @@
   "cookies": {
     "title": "Cookie Policy",
     "subtitle": "What cookies and similar technologies we use on print8.mk.",
-    "lastUpdated": "Last updated: 26 July 2026",
+    "lastUpdated": "Last updated: 15 August 2026",
     "metaDescription": "Print 8 cookie policy — essential and analytics cookies used on print8.mk.",
     "intro": "This policy explains how Print 8 uses cookies and similar browser technologies. Essential technologies are required for the site to function. Analytics cookies are optional and used only with your consent.",
     "sections": [
@@ -203,6 +208,7 @@
         "items": [
           "Shopping cart contents stored in your browser so items remain while you browse.",
           "Upload session token for securely attaching files to an order.",
+          "Cloudflare Turnstile security challenge when you upload files or place an order (may run visibly or invisibly). See the Cloudflare Turnstile Privacy Addendum: https://www.cloudflare.com/turnstile-privacy-policy/",
           "Logged-in customer session (Supabase authentication), short-lived print8_oauth_next cookie during Google sign-in, and similar security session cookies.",
           "Admin session cookie for authorized staff access to the admin area (not set for regular customers).",
           "Language preference as part of normal site navigation."
@@ -218,7 +224,7 @@
       },
       {
         "title": "5. Third-party cookies",
-        "body": "If you choose Sign in with Google, Google may set cookies in your browser under its own policies. We do not use third-party advertising or tracking cookies for analytics."
+        "body": "If you choose Sign in with Google, Google may set cookies in your browser under its own policies. Cloudflare Turnstile may set cookies or use similar browser storage when you upload files or checkout; see https://www.cloudflare.com/turnstile-privacy-policy/. We do not use third-party advertising or tracking cookies for analytics."
       },
       {
         "title": "6. Contact",
