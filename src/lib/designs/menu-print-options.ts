@@ -8,86 +8,73 @@ export const MENU_PRINT_SIZE = 'a5';
 export const MENU_PRINT_SIZE_MM = '148 × 210';
 export const MENU_PRINT_BINDING = 'spiral';
 
-export const MENU_PAGE_COUNT_OPTIONS = [8, 12, 16, 20] as const;
-export type MenuPageCount = (typeof MENU_PAGE_COUNT_OPTIONS)[number];
+export const MENU_MIN_PAGES = 4;
+export const MENU_MAX_PAGES = 200;
+export const MENU_MIN_QUANTITY = 1;
+export const MENU_MAX_QUANTITY = 999;
 
-export const MENU_PAPER_OPTIONS = ['coated-300gsm', 'waterproof'] as const;
+/** Base page count included in the unit price before signature add-ons. */
+export const MENU_BASE_PAGES = 8;
+export const MENU_PAGE_SIGNATURE_SIZE = 4;
+export const MENU_PAGE_ADD_PER_SIGNATURE = 12;
+
+export const MENU_PAPER_OPTIONS = ['240gsm', '300gsm'] as const;
 export type MenuPaper = (typeof MENU_PAPER_OPTIONS)[number];
 
 export const MENU_LAMINATION_OPTIONS = ['none', 'matte', 'glossy'] as const;
 export type MenuLamination = (typeof MENU_LAMINATION_OPTIONS)[number];
 
-export const MENU_QUANTITY_OPTIONS = [10, 20, 30, 50] as const;
-export type MenuQuantity = (typeof MENU_QUANTITY_OPTIONS)[number];
-
-/** Above this tirage the price table stops being reliable — send to a quote. */
-export const MENU_QUOTE_QUANTITY_THRESHOLD = 50;
-
 export const MENU_PRINT_ORDER_TYPE = 'menu-print';
 
 export interface MenuPrintOptions {
-  pages: MenuPageCount;
+  pages: number;
   paper: MenuPaper;
   lamination: MenuLamination;
-  quantity: MenuQuantity;
+  quantity: number;
 }
 
 export const DEFAULT_MENU_PRINT_OPTIONS: MenuPrintOptions = {
   pages: 8,
-  paper: 'coated-300gsm',
+  paper: '300gsm',
   lamination: 'none',
   quantity: 20,
 };
 
 /**
  * Price table in MKD, calibrated against the local market floor for A5 spiral
- * menus (coated stock ~50 MKD/pc at 10 pcs sliding to ~40 MKD/pc at 50 pcs,
- * waterproof stock ~2x, spiral ~15 MKD/pc, lamination ~10 MKD/pc).
+ * menus (coated 240/300 gsm, spiral ~15 MKD/pc, lamination ~10 MKD/pc).
  *
  * Shape: unitBase(quantity, paper) + pageAdd(pages) + spiral + lamination,
  * multiplied by the tirage, plus the one-off design fee for the template path.
- * Prices are quoted as final amounts with no separate VAT line, matching
- * business cards and student print.
  */
-const MENU_UNIT_BASE_BY_QUANTITY: Record<MenuQuantity, number> = {
-  10: 50,
-  20: 46,
-  30: 43,
-  50: 40,
-};
+const MENU_UNIT_BASE_TIERS: Array<{ quantity: number; unitBase: number }> = [
+  { quantity: 10, unitBase: 50 },
+  { quantity: 20, unitBase: 46 },
+  { quantity: 30, unitBase: 43 },
+  { quantity: 50, unitBase: 40 },
+];
 
-/** Synthetic waterproof stock costs roughly double coated 300 gsm. */
+/** 300 gsm is the baseline; 240 gsm is slightly cheaper. */
 const MENU_PAPER_MULTIPLIER: Record<MenuPaper, number> = {
-  'coated-300gsm': 1,
-  waterproof: 2,
-};
-
-/**
- * Stepped add-on rather than a flat per-page rate: 8 pages is the base SKU and
- * every extra 4-page signature adds 12 MKD/pc (~3 MKD per printed page).
- */
-const MENU_PAGE_ADD_BY_PAGES: Record<MenuPageCount, number> = {
-  8: 0,
-  12: 12,
-  16: 24,
-  20: 36,
+  '240gsm': 0.92,
+  '300gsm': 1,
 };
 
 export const MENU_SPIRAL_FEE_PER_PIECE = 15;
 export const MENU_LAMINATION_FEE_PER_PIECE = 10;
-
-export function isMenuPageCount(value: unknown): value is MenuPageCount {
-  return (
-    typeof value === 'number' &&
-    (MENU_PAGE_COUNT_OPTIONS as readonly number[]).includes(value)
-  );
-}
 
 export function isMenuPaper(value: unknown): value is MenuPaper {
   return (
     typeof value === 'string' &&
     (MENU_PAPER_OPTIONS as readonly string[]).includes(value)
   );
+}
+
+/** Maps legacy cart metadata to current paper options. */
+export function normalizeMenuPaper(value: unknown): MenuPaper {
+  if (value === 'coated-300gsm' || value === 'waterproof') return '300gsm';
+  if (isMenuPaper(value)) return value;
+  return DEFAULT_MENU_PRINT_OPTIONS.paper;
 }
 
 export function isMenuLamination(value: unknown): value is MenuLamination {
@@ -97,16 +84,56 @@ export function isMenuLamination(value: unknown): value is MenuLamination {
   );
 }
 
-export function isMenuQuantity(value: unknown): value is MenuQuantity {
-  return (
-    typeof value === 'number' &&
-    (MENU_QUANTITY_OPTIONS as readonly number[]).includes(value)
+export function clampMenuPages(value: number): number {
+  return Math.min(
+    MENU_MAX_PAGES,
+    Math.max(MENU_MIN_PAGES, Math.round(value)),
   );
 }
 
-/** Waterproof stock is already sealed, so lamination is not offered on it. */
-export function supportsMenuLamination(paper: MenuPaper): boolean {
-  return paper !== 'waterproof';
+export function clampMenuQuantity(value: number): number {
+  return Math.min(
+    MENU_MAX_QUANTITY,
+    Math.max(MENU_MIN_QUANTITY, Math.round(value)),
+  );
+}
+
+/**
+ * Stepped add-on: 8 pages is the base SKU and every extra 4-page signature
+ * adds 12 MKD/pc (~3 MKD per printed page).
+ */
+export function getMenuPageAdd(pages: number): number {
+  const normalized = clampMenuPages(pages);
+  if (normalized <= MENU_BASE_PAGES) return 0;
+  const extraSignatures = Math.ceil(
+    (normalized - MENU_BASE_PAGES) / MENU_PAGE_SIGNATURE_SIZE,
+  );
+  return extraSignatures * MENU_PAGE_ADD_PER_SIGNATURE;
+}
+
+function interpolateUnitBase(quantity: number): number {
+  const q = clampMenuQuantity(quantity);
+  const first = MENU_UNIT_BASE_TIERS[0];
+  const last = MENU_UNIT_BASE_TIERS[MENU_UNIT_BASE_TIERS.length - 1];
+
+  if (q <= first.quantity) return first.unitBase;
+  if (q >= last.quantity) return last.unitBase;
+
+  for (let i = 0; i < MENU_UNIT_BASE_TIERS.length - 1; i += 1) {
+    const low = MENU_UNIT_BASE_TIERS[i];
+    const high = MENU_UNIT_BASE_TIERS[i + 1];
+    if (q <= high.quantity) {
+      const ratio = (q - low.quantity) / (high.quantity - low.quantity);
+      return Math.round(low.unitBase + (high.unitBase - low.unitBase) * ratio);
+    }
+  }
+
+  return last.unitBase;
+}
+
+/** Coated menu stock supports lamination on both weights. */
+export function supportsMenuLamination(_paper: MenuPaper): boolean {
+  return true;
 }
 
 export function resolveMenuLamination(options: {
@@ -114,10 +141,6 @@ export function resolveMenuLamination(options: {
   lamination: MenuLamination;
 }): MenuLamination {
   return supportsMenuLamination(options.paper) ? options.lamination : 'none';
-}
-
-export function requiresMenuQuote(quantity: number): boolean {
-  return quantity > MENU_QUOTE_QUANTITY_THRESHOLD;
 }
 
 export interface MenuPrintPriceBreakdown {
@@ -137,21 +160,22 @@ export function calculateMenuPrintPrice(
   options: MenuPrintOptions,
   designFee = 0,
 ): MenuPrintPriceBreakdown {
+  const pages = clampMenuPages(options.pages);
+  const quantity = clampMenuQuantity(options.quantity);
   const lamination = resolveMenuLamination(options);
   const unitBase = Math.round(
-    MENU_UNIT_BASE_BY_QUANTITY[options.quantity] *
-      MENU_PAPER_MULTIPLIER[options.paper],
+    interpolateUnitBase(quantity) * MENU_PAPER_MULTIPLIER[options.paper],
   );
-  const pageAdd = MENU_PAGE_ADD_BY_PAGES[options.pages];
+  const pageAdd = getMenuPageAdd(pages);
   const spiralFee = MENU_SPIRAL_FEE_PER_PIECE;
   const laminationFee =
     lamination === 'none' ? 0 : MENU_LAMINATION_FEE_PER_PIECE;
 
   const unitTotal = unitBase + pageAdd + spiralFee + laminationFee;
-  const printTotal = unitTotal * options.quantity;
+  const printTotal = unitTotal * quantity;
 
   return {
-    quantity: options.quantity,
+    quantity,
     unitBase,
     pageAdd,
     spiralFee,
@@ -169,14 +193,16 @@ export function menuPrintMetadata(
 ): Record<string, string | number> {
   const lamination = resolveMenuLamination(options);
   const price = breakdown ?? calculateMenuPrintPrice(options);
+  const pages = clampMenuPages(options.pages);
+  const quantity = clampMenuQuantity(options.quantity);
 
   return {
     menuSize: MENU_PRINT_SIZE,
     menuBinding: MENU_PRINT_BINDING,
-    menuPages: options.pages,
+    menuPages: pages,
     menuPaper: options.paper,
     menuLamination: lamination,
-    menuQuantity: options.quantity,
+    menuQuantity: quantity,
     menuUnitPrice: price.unitTotal,
     menuPrintTotal: price.printTotal,
     menuDesignFee: price.designFee,
@@ -186,22 +212,27 @@ export function menuPrintMetadata(
 export function parseMenuPrintOptions(
   metadata?: CartItem['metadata'],
 ): MenuPrintOptions {
-  const paper = isMenuPaper(metadata?.menuPaper)
-    ? metadata.menuPaper
-    : DEFAULT_MENU_PRINT_OPTIONS.paper;
+  const paper = normalizeMenuPaper(metadata?.menuPaper);
   const lamination = isMenuLamination(metadata?.menuLamination)
     ? metadata.menuLamination
     : DEFAULT_MENU_PRINT_OPTIONS.lamination;
 
+  const pages =
+    typeof metadata?.menuPages === 'number' && Number.isFinite(metadata.menuPages)
+      ? clampMenuPages(metadata.menuPages)
+      : DEFAULT_MENU_PRINT_OPTIONS.pages;
+
+  const quantity =
+    typeof metadata?.menuQuantity === 'number' &&
+    Number.isFinite(metadata.menuQuantity)
+      ? clampMenuQuantity(metadata.menuQuantity)
+      : DEFAULT_MENU_PRINT_OPTIONS.quantity;
+
   return {
-    pages: isMenuPageCount(metadata?.menuPages)
-      ? metadata.menuPages
-      : DEFAULT_MENU_PRINT_OPTIONS.pages,
+    pages,
     paper,
     lamination: resolveMenuLamination({ paper, lamination }),
-    quantity: isMenuQuantity(metadata?.menuQuantity)
-      ? metadata.menuQuantity
-      : DEFAULT_MENU_PRINT_OPTIONS.quantity,
+    quantity,
   };
 }
 
@@ -210,7 +241,10 @@ export function parseMenuPrintOptions(
  * menu design order, which is priced at the design fee alone).
  */
 export function hasMenuPrintOptions(metadata?: CartItem['metadata']): boolean {
-  return isMenuQuantity(metadata?.menuQuantity);
+  return (
+    typeof metadata?.menuQuantity === 'number' &&
+    Number.isFinite(metadata.menuQuantity)
+  );
 }
 
 export function isMenuPrintCartItem(item: CartItem): boolean {

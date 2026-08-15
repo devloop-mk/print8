@@ -9,6 +9,11 @@ import {
   parseMenuPrintOptions,
 } from '@/lib/designs/menu-print-options';
 import {
+  calculateWeddingPrintPrice,
+  hasWeddingPrintOptions,
+  parseWeddingPrintOptions,
+} from '@/lib/designs/wedding-print-options';
+import {
   calculateBrandingPackTotal,
   parseBrandingPackState,
 } from '@/lib/products/branding-pack-state';
@@ -94,6 +99,10 @@ async function getDesignUnitPrice(
   if (template.category === 'menus' && hasMenuPrintOptions(metadata)) {
     return calculateMenuPrintPrice(parseMenuPrintOptions(metadata), designFee)
       .total;
+  }
+
+  if (template.category === 'wedding' && hasWeddingPrintOptions(metadata)) {
+    return calculateWeddingPrintPrice(parseWeddingPrintOptions(metadata)).total;
   }
 
   return designFee;

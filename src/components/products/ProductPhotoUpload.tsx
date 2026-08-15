@@ -13,6 +13,7 @@ import {
 } from '@/lib/products/upload-terms-consent';
 import { Button } from '@/components/ui/Button';
 import { LoadingIndicator } from '@/components/ui/LoadingIndicator';
+import { TurnstileWidget } from '@/components/security/TurnstileWidget';
 
 type ProductPhotoUploadProps = {
   token: string | null;
@@ -20,6 +21,7 @@ type ProductPhotoUploadProps = {
   uploadError: string | null;
   refreshSession: () => Promise<string | null>;
   pendingTurnstile?: boolean;
+  onTurnstileToken?: (token: string) => void;
   hasPhoto: boolean;
   previewUrl?: string;
   cropAspect?: number;
@@ -66,6 +68,7 @@ export function ProductPhotoUpload({
   uploadError,
   refreshSession,
   pendingTurnstile = false,
+  onTurnstileToken,
   hasPhoto,
   previewUrl,
   cropAspect,
@@ -257,6 +260,10 @@ export function ProductPhotoUpload({
             {tc('uploadRetry')}
           </button>
         </div>
+      ) : null}
+
+      {pendingTurnstile && onTurnstileToken ? (
+        <TurnstileWidget onToken={onTurnstileToken} className="mb-3" />
       ) : null}
 
       {pendingTurnstile ? (

@@ -46,6 +46,13 @@ const KEY_LABELS: Record<string, string> = {
   vendorSku: 'Добавувач SKU',
   paper: 'Хартија',
   lamination: 'Пластификат',
+  weddingSize: 'Големина на покана',
+  weddingQuantity: 'Број покани',
+  weddingDesignFee: 'Надомест за дизајн',
+  weddingPrintTotal: 'Печатење покани',
+  weddingPricePerInvitation: 'Цена по покана',
+  designDetailsPending: 'Детали за дизајн — контакт подоцна',
+  customizeMode: 'Начин на прилагодување',
 };
 
 const METADATA_VALUE_LABELS: Record<string, Record<string, string>> = {
@@ -57,6 +64,16 @@ const METADATA_VALUE_LABELS: Record<string, Record<string, string>> = {
     none: 'Без пластификат',
     matte: 'Мат пластификат',
     glossy: 'Сјај пластификат',
+  },
+  weddingSize: {
+    '13x18': '13 × 18 cm',
+    '10x15': '10 × 15 cm',
+    a5: '13 × 18 cm',
+  },
+  customizeMode: {
+    quick: 'Брза нарачка',
+    form: 'Форма',
+    canvas: 'Уредување на дизајн',
   },
 };
 

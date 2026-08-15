@@ -1,4 +1,4 @@
-export const DESIGN_CUSTOMIZE_MODES = ['form', 'canvas'] as const;
+export const DESIGN_CUSTOMIZE_MODES = ['quick', 'form', 'canvas'] as const;
 
 export type DesignCustomizeMode = (typeof DESIGN_CUSTOMIZE_MODES)[number];
 

@@ -1,35 +1,23 @@
 'use client';
 
 import { useLocale, useTranslations } from 'next-intl';
-import { Link } from '@/i18n/navigation';
 import { cn, formatPrice } from '@/lib/utils';
+import { QuantityInput } from '@/components/ui/QuantityInput';
 import {
   MENU_LAMINATION_OPTIONS,
-  MENU_PAGE_COUNT_OPTIONS,
+  MENU_MAX_PAGES,
+  MENU_MAX_QUANTITY,
+  MENU_MIN_PAGES,
+  MENU_MIN_QUANTITY,
   MENU_PAPER_OPTIONS,
   MENU_PRINT_SIZE_MM,
-  MENU_QUANTITY_OPTIONS,
-  MENU_QUOTE_QUANTITY_THRESHOLD,
   calculateMenuPrintPrice,
-  supportsMenuLamination,
+  clampMenuPages,
+  clampMenuQuantity,
   type MenuLamination,
-  type MenuPageCount,
   type MenuPaper,
   type MenuPrintOptions,
-  type MenuQuantity,
 } from '@/lib/designs/menu-print-options';
-
-const chipClass =
-  'rounded-xl border px-4 py-2.5 text-sm font-semibold transition touch-manipulation';
-
-function chipStyle(selected: boolean) {
-  return cn(
-    chipClass,
-    selected
-      ? 'border-brand-600 bg-brand-50 text-brand-800 ring-2 ring-brand-200'
-      : 'border-ink-200 bg-white text-ink-700 hover:border-brand-300',
-  );
-}
 
 export function MenuPrintOptionsPanel({
   options,
@@ -45,7 +33,6 @@ export function MenuPrintOptionsPanel({
   const t = useTranslations('designs.order.menuPrintOptions');
   const locale = useLocale();
 
-  const laminationAvailable = supportsMenuLamination(options.paper);
   const price = calculateMenuPrintPrice(options, designFee);
 
   function update(patch: Partial<MenuPrintOptions>) {
@@ -53,10 +40,7 @@ export function MenuPrintOptionsPanel({
   }
 
   function selectPaper(paper: MenuPaper) {
-    update({
-      paper,
-      lamination: supportsMenuLamination(paper) ? options.lamination : 'none',
-    });
+    update({ paper });
   }
 
   return (
@@ -68,25 +52,23 @@ export function MenuPrintOptionsPanel({
         <p className="mt-1 text-xs text-ink-600">{t('skuHint')}</p>
       </div>
 
-      <fieldset>
-        <legend className="text-sm font-semibold text-ink-800">
+      <div>
+        <label
+          htmlFor="menu-pages"
+          className="text-sm font-semibold text-ink-800"
+        >
           {t('pagesLabel')}
-        </legend>
+        </label>
         <p className="mt-1 text-xs text-ink-500">{t('pagesHint')}</p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {MENU_PAGE_COUNT_OPTIONS.map((option: MenuPageCount) => (
-            <button
-              key={option}
-              type="button"
-              onClick={() => update({ pages: option })}
-              aria-pressed={options.pages === option}
-              className={chipStyle(options.pages === option)}
-            >
-              {t('pagesValue', { pages: option })}
-            </button>
-          ))}
-        </div>
-      </fieldset>
+        <QuantityInput
+          id="menu-pages"
+          min={MENU_MIN_PAGES}
+          max={MENU_MAX_PAGES}
+          value={options.pages}
+          onChange={(pages) => update({ pages: clampMenuPages(pages) })}
+          className="mt-3 w-32"
+        />
+      </div>
 
       <fieldset>
         <legend className="text-sm font-semibold text-ink-800">
@@ -121,70 +103,55 @@ export function MenuPrintOptionsPanel({
         </div>
       </fieldset>
 
-      {laminationAvailable ? (
-        <fieldset>
-          <legend className="text-sm font-semibold text-ink-800">
-            {t('laminationLabel')}
-          </legend>
-          <p className="mt-1 text-xs text-ink-500">{t('laminationHint')}</p>
-          <div className="mt-3 grid gap-2 sm:grid-cols-3">
-            {MENU_LAMINATION_OPTIONS.map((option: MenuLamination) => {
-              const selected = options.lamination === option;
-              return (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => update({ lamination: option })}
-                  aria-pressed={selected}
-                  className={cn(
-                    'rounded-xl border px-4 py-3 text-left transition',
-                    selected
-                      ? 'border-brand-600 bg-brand-50 ring-2 ring-brand-200'
-                      : 'border-ink-200 bg-white hover:border-brand-300',
-                  )}
-                >
-                  <span className="block font-semibold text-ink-900">
-                    {t(`lamination.${option}.title`)}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </fieldset>
-      ) : (
-        <p className="rounded-xl border border-ink-200 bg-ink-50/60 px-4 py-3 text-sm text-ink-600">
-          {t('laminationWaterproofNote')}
-        </p>
-      )}
-
       <fieldset>
         <legend className="text-sm font-semibold text-ink-800">
-          {t('quantityLabel')}
+          {t('laminationLabel')}
         </legend>
-        <p className="mt-1 text-xs text-ink-500">{t('quantityHint')}</p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {MENU_QUANTITY_OPTIONS.map((option: MenuQuantity) => (
-            <button
-              key={option}
-              type="button"
-              onClick={() => update({ quantity: option })}
-              aria-pressed={options.quantity === option}
-              className={chipStyle(options.quantity === option)}
-            >
-              {t('quantityValue', { quantity: option })}
-            </button>
-          ))}
+        <p className="mt-1 text-xs text-ink-500">{t('laminationHint')}</p>
+        <div className="mt-3 grid gap-2 sm:grid-cols-3">
+          {MENU_LAMINATION_OPTIONS.map((option: MenuLamination) => {
+            const selected = options.lamination === option;
+            return (
+              <button
+                key={option}
+                type="button"
+                onClick={() => update({ lamination: option })}
+                aria-pressed={selected}
+                className={cn(
+                  'rounded-xl border px-4 py-3 text-left transition',
+                  selected
+                    ? 'border-brand-600 bg-brand-50 ring-2 ring-brand-200'
+                    : 'border-ink-200 bg-white hover:border-brand-300',
+                )}
+              >
+                <span className="block font-semibold text-ink-900">
+                  {t(`lamination.${option}.title`)}
+                </span>
+              </button>
+            );
+          })}
         </div>
-        <p className="mt-3 text-sm text-ink-600">
-          {t('quoteAbove', { max: MENU_QUOTE_QUANTITY_THRESHOLD })}{' '}
-          <Link
-            href="/contact"
-            className="font-semibold text-brand-700 underline underline-offset-2 hover:text-brand-800"
-          >
-            {t('quoteCta')}
-          </Link>
-        </p>
       </fieldset>
+
+      <div>
+        <label
+          htmlFor="menu-quantity"
+          className="text-sm font-semibold text-ink-800"
+        >
+          {t('quantityLabel')}
+        </label>
+        <p className="mt-1 text-xs text-ink-500">{t('quantityHint')}</p>
+        <QuantityInput
+          id="menu-quantity"
+          min={MENU_MIN_QUANTITY}
+          max={MENU_MAX_QUANTITY}
+          value={options.quantity}
+          onChange={(quantity) =>
+            update({ quantity: clampMenuQuantity(quantity) })
+          }
+          className="mt-3 w-32"
+        />
+      </div>
 
       <dl className="rounded-xl border border-ink-200 bg-white px-4 py-3 text-sm">
         <div className="flex items-baseline justify-between gap-3">

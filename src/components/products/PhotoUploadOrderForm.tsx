@@ -13,7 +13,6 @@ import type { UploadOnlyProductType } from '@/lib/products/upload-only-products'
 import { withVendorSkuMetadata } from '@/lib/products/vendor-sku';
 import { useCart } from '@/components/cart/CartProvider';
 import { useUploadSessionGate } from '@/hooks/useUploadSessionGate';
-import { TurnstileWidget } from '@/components/security/TurnstileWidget';
 import { ProductPhotoUpload } from '@/components/products/ProductPhotoUpload';
 import { ProductImageCarousel } from '@/components/products/ProductImageCarousel';
 import { Button } from '@/components/ui/Button';
@@ -221,18 +220,13 @@ export function PhotoUploadOrderForm({ productType }: PhotoUploadOrderFormProps)
             ) : null}
 
             <div className="mt-4">
-              {pendingTurnstile ? (
-                <TurnstileWidget
-                  onToken={setTurnstileToken}
-                  className="mb-3"
-                />
-              ) : null}
               <ProductPhotoUpload
                 token={token}
                 uploadLoading={uploadLoading}
                 uploadError={uploadError}
                 refreshSession={refreshSession}
                 pendingTurnstile={pendingTurnstile}
+                onTurnstileToken={setTurnstileToken}
                 hasPhoto={Boolean(uploadedPhoto)}
                 previewUrl={uploadedPhoto?.previewUrl}
                 cropAspect={product.uploadAspect}

@@ -143,7 +143,11 @@ export default async function CustomizeDesignPage({
   const managedDefaults = await getManagedSvgTemplateDefaults(svgTemplate.id);
 
   const subtitle =
-    mode === 'form' ? t('pageSubtitleForm') : t('pageSubtitleCanvas');
+    mode === 'quick'
+      ? t('pageSubtitleQuick')
+      : mode === 'form'
+        ? t('pageSubtitleForm')
+        : t('pageSubtitleCanvas');
 
   return (
     <div className="mx-auto w-full min-w-0 max-w-[96rem] px-4 py-8 sm:px-6 lg:px-8 lg:py-10">

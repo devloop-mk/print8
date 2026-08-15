@@ -7,7 +7,6 @@ import { useRouter } from '@/i18n/navigation';
 import { useCart } from '@/components/cart/CartProvider';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { QuantityInput } from '@/components/ui/QuantityInput';
 import { DesignCustomizerStepNav } from '@/components/designs/DesignCustomizerStepNav';
 import { DesignLogoUploadField } from '@/components/designs/DesignLogoUploadField';
 import { DesignCustomizerMobileFieldBar, type DesignCustomizerMobileFieldBarHandle } from '@/components/designs/DesignCustomizerMobileFieldBar';
@@ -25,6 +24,11 @@ import { useUnsavedWorkGuard } from '@/hooks/useUnsavedWorkGuard';
 import { formatPrice } from '@/lib/utils';
 import type { DesignTemplate } from '@/lib/data/catalog';
 import { designCategoryPrices } from '@/lib/data/design-order-fields';
+import {
+  categoryOrderFields,
+  requiredOrderFields,
+  type DesignOrderFieldId,
+} from '@/lib/data/design-order-fields';
 import type { SvgDesignTemplate, SvgTemplateState } from '@/lib/data/svg-design-templates';
 import type { ManagedSvgTemplateDefaultsPayload } from '@/lib/db/managed-svg-templates';
 import { buildMergedDefaultSvgTemplateState } from '@/lib/designs/merge-svg-template-defaults';
@@ -77,6 +81,7 @@ import {
   type BusinessCardPaper,
 } from '@/lib/designs/business-card-print-options';
 import { MenuPrintOptionsPanel } from '@/components/designs/MenuPrintOptionsPanel';
+import { MenuPrintOptionsSummary } from '@/components/designs/MenuPrintOptionsSummary';
 import {
   calculateMenuPrintPrice,
   DEFAULT_MENU_PRINT_OPTIONS,
@@ -84,14 +89,38 @@ import {
   parseMenuPrintOptions,
   type MenuPrintOptions,
 } from '@/lib/designs/menu-print-options';
+import { WeddingPrintOptionsPanel } from '@/components/designs/WeddingPrintOptionsPanel';
+import { WeddingPrintOptionsSummary } from '@/components/designs/WeddingPrintOptionsSummary';
+import { DesignQuickContactFields } from '@/components/designs/DesignQuickContactFields';
+import {
+  calculateWeddingPrintPrice,
+  DEFAULT_WEDDING_PRINT_OPTIONS,
+  weddingPrintMetadata,
+  parseWeddingPrintOptions,
+  type WeddingPrintOptions,
+} from '@/lib/designs/wedding-print-options';
+import { resolveAssetUrl } from '@/lib/storage/asset-url';
+import { parseOrderFieldsFromCartMetadata } from '@/lib/cart/design-cart';
 import { cn } from '@/lib/utils';
 import { BookOpen, ChevronLeft, ChevronRight, FileText, Layers, Palette, ShoppingCart, Info, Layers2 } from 'lucide-react';
 
-type EditorStep = 'print' | 'menuPrint' | 'front' | 'back' | 'colors' | 'review';
+type EditorStep =
+  | 'print'
+  | 'menuPrint'
+  | 'weddingPrint'
+  | 'contact'
+  | 'details'
+  | 'front'
+  | 'back'
+  | 'colors'
+  | 'review';
 
 const stepIcons: Record<EditorStep, typeof FileText> = {
   print: Layers2,
   menuPrint: BookOpen,
+  weddingPrint: Layers2,
+  contact: FileText,
+  details: FileText,
   front: FileText,
   back: Layers,
   colors: Palette,
@@ -102,6 +131,9 @@ function isEditorStep(value: unknown): value is EditorStep {
   return (
     value === 'print' ||
     value === 'menuPrint' ||
+    value === 'weddingPrint' ||
+    value === 'contact' ||
+    value === 'details' ||
     value === 'front' ||
     value === 'back' ||
     value === 'colors' ||
@@ -135,14 +167,32 @@ export function SvgCustomizableDesignForm({
   const hasBack = Boolean(svgTemplate.sides.back);
   const isBusinessCard = template.category === 'business-cards';
   const isMenu = template.category === 'menus';
+  const isWedding = template.category === 'wedding';
+  const isQuick = mode === 'quick';
   const steps = useMemo<EditorStep[]>(() => {
+    if (mode === 'quick') {
+      if (isWedding) return ['weddingPrint', 'contact', 'review'];
+      if (isBusinessCard) return ['print', 'contact', 'review'];
+      if (isMenu) return ['menuPrint', 'contact', 'review'];
+      return ['contact', 'review'];
+    }
+
+    if (mode === 'form') {
+      const tail: EditorStep[] = ['details', 'colors', 'review'];
+      if (isWedding) return ['weddingPrint', ...tail];
+      if (isBusinessCard) return ['print', ...tail];
+      if (isMenu) return ['menuPrint', ...tail];
+      return tail;
+    }
+
     const core: EditorStep[] = hasBack
       ? ['front', 'back', 'colors', 'review']
       : ['front', 'colors', 'review'];
+    if (isWedding) return ['weddingPrint', ...core];
     if (isBusinessCard) return ['print', ...core];
     if (isMenu) return ['menuPrint', ...core];
     return core;
-  }, [hasBack, isBusinessCard, isMenu]);
+  }, [hasBack, isBusinessCard, isMenu, isWedding, mode]);
 
   // Mirrors the server-side fee resolution in lib/orders/validate-order-prices,
   // otherwise a managed design with its own price is rejected at checkout.
@@ -153,8 +203,11 @@ export function SvgCustomizableDesignForm({
       ? template.customPrice
       : designCategoryPrices[template.category];
   const [step, setStep] = useState<EditorStep>(() => {
+    if (isWedding) return 'weddingPrint';
     if (isBusinessCard) return 'print';
     if (isMenu) return 'menuPrint';
+    if (mode === 'quick') return 'contact';
+    if (mode === 'form') return 'details';
     return 'front';
   });
   const [previewSide, setPreviewSide] = useState<'front' | 'back'>('front');
@@ -177,6 +230,15 @@ export function SvgCustomizableDesignForm({
   const [menuOptions, setMenuOptions] = useState<MenuPrintOptions>(
     DEFAULT_MENU_PRINT_OPTIONS,
   );
+  const [weddingOptions, setWeddingOptions] = useState<WeddingPrintOptions>(
+    DEFAULT_WEDDING_PRINT_OPTIONS,
+  );
+  const [quickContactValues, setQuickContactValues] = useState<
+    Partial<Record<DesignOrderFieldId, string>>
+  >({});
+  const [quickContactErrors, setQuickContactErrors] = useState<
+    Partial<Record<DesignOrderFieldId, string>>
+  >({});
   const [capturing, setCapturing] = useState(false);
   const [draftHydrated, setDraftHydrated] = useState(false);
   const [activeFieldKey, setActiveFieldKey] = useState<string | null>(null);
@@ -199,8 +261,16 @@ export function SvgCustomizableDesignForm({
     () => calculateMenuPrintPrice(menuOptions, designFee),
     [designFee, menuOptions],
   );
-  const cartPrice = isMenu ? menuPrice.total : designFee;
-  const cartQuantity = isMenu ? 1 : quantity;
+  const weddingPrice = useMemo(
+    () => calculateWeddingPrintPrice(weddingOptions),
+    [weddingOptions],
+  );
+  const cartPrice = isMenu
+    ? menuPrice.total
+    : isWedding
+      ? weddingPrice.total
+      : designFee;
+  const cartQuantity = isMenu || isWedding ? 1 : quantity;
 
   useEffect(() => {
     const defaults = buildMergedDefaultSvgTemplateState(
@@ -237,6 +307,17 @@ export function SvgCustomizableDesignForm({
       }
       if (template.category === 'menus') {
         setMenuOptions(parseMenuPrintOptions(editingItem.metadata));
+      }
+      if (template.category === 'wedding') {
+        setWeddingOptions(parseWeddingPrintOptions(editingItem.metadata));
+      }
+      if (editingItem.metadata?.designDetailsPending === true) {
+        setQuickContactValues(
+          parseOrderFieldsFromCartMetadata(
+            editingItem.metadata,
+            categoryOrderFields[template.category],
+          ),
+        );
       }
       setDraftHydrated(true);
       return;
@@ -275,6 +356,18 @@ export function SvgCustomizableDesignForm({
           ),
         );
       }
+      if (template.category === 'wedding' && payload.weddingPrint) {
+        setWeddingOptions(
+          parseWeddingPrintOptions(
+            payload.weddingPrint as Record<string, string | number | boolean>,
+          ),
+        );
+      }
+      if (payload.quickContact && typeof payload.quickContact === 'object') {
+        setQuickContactValues(
+          payload.quickContact as Partial<Record<DesignOrderFieldId, string>>,
+        );
+      }
     } else {
       resetEditorState(defaults);
     }
@@ -290,8 +383,16 @@ export function SvgCustomizableDesignForm({
   });
 
   const serializedDraft = useMemo(
-    () => JSON.stringify({ state, step, quantity, menuOptions }),
-    [state, step, quantity, menuOptions],
+    () =>
+      JSON.stringify({
+        state,
+        step,
+        quantity,
+        menuOptions,
+        weddingOptions,
+        quickContactValues,
+      }),
+    [state, step, quantity, menuOptions, weddingOptions, quickContactValues],
   );
   const { isDirty, markClean } = useDirtySnapshot(serializedDraft, draftHydrated);
 
@@ -309,6 +410,8 @@ export function SvgCustomizableDesignForm({
           svgTemplateId: svgTemplate.id,
           customizeMode: mode,
           ...(isMenu ? { menuPrint: menuPrintMetadata(menuOptions) } : {}),
+          ...(isWedding ? { weddingPrint: weddingPrintMetadata(weddingOptions, weddingPrice) } : {}),
+          ...(isQuick ? { quickContact: quickContactValues } : {}),
         },
         updatedAt: new Date().toISOString(),
       });
@@ -319,15 +422,20 @@ export function SvgCustomizableDesignForm({
     }
   }, [
     isMenu,
+    isQuick,
+    isWedding,
     markClean,
     menuOptions,
     mode,
     quantity,
+    quickContactValues,
     state,
     step,
     svgTemplate.id,
     td,
     template.id,
+    weddingOptions,
+    weddingPrice,
   ]);
 
   const unsavedWorkGuard = useUnsavedWorkGuard({
@@ -336,8 +444,16 @@ export function SvgCustomizableDesignForm({
   });
 
   const stepIndex = steps.indexOf(step);
-  const isTextStep = step === 'front' || step === 'back';
-  const textSide = step === 'back' ? 'back' : 'front';
+  const isTextStep =
+    step === 'details' || step === 'front' || step === 'back';
+  const textSide =
+    step === 'back'
+      ? 'back'
+      : step === 'front'
+        ? 'front'
+        : activeFieldKey?.startsWith('back:')
+          ? 'back'
+          : 'front';
   const textFields =
     textSide === 'front' ? svgTemplate.sides.front.texts : svgTemplate.sides.back?.texts ?? [];
   const logoFallbackIndices = useMemo(
@@ -484,6 +600,35 @@ export function SvgCustomizableDesignForm({
     return t(labelKey);
   }
 
+  function validateQuickContact() {
+    const next: Partial<Record<DesignOrderFieldId, string>> = {};
+    const required = requiredOrderFields[template.category];
+    for (const field of required) {
+      if (!quickContactValues[field]?.trim()) {
+        next[field] = to('required');
+      }
+    }
+    if (
+      quickContactValues.email?.trim() &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(quickContactValues.email)
+    ) {
+      next.email = to('invalidEmail');
+    }
+    if (
+      quickContactValues.phone?.trim() &&
+      quickContactValues.phone.trim().length < 8
+    ) {
+      next.phone = to('invalidPhone');
+    }
+    setQuickContactErrors(next);
+    return Object.keys(next).length === 0;
+  }
+
+  function updateQuickContact(id: DesignOrderFieldId, value: string) {
+    setQuickContactValues((prev) => ({ ...prev, [id]: value }));
+    setQuickContactErrors((prev) => ({ ...prev, [id]: undefined }));
+  }
+
   function goToStep(next: EditorStep) {
     setStep(next);
     if (next === 'back') {
@@ -494,6 +639,7 @@ export function SvgCustomizableDesignForm({
   }
 
   function goNext() {
+    if (step === 'contact' && !validateQuickContact()) return;
     const next = steps[stepIndex + 1];
     if (next) goToStep(next);
   }
@@ -514,10 +660,25 @@ export function SvgCustomizableDesignForm({
   }
 
   async function handleSubmit() {
+    if (isQuick && !validateQuickContact()) {
+      setStep('contact');
+      return;
+    }
+
     setCapturing(true);
     try {
-      const assets = await captureSvgTemplateOrderAssets(svgTemplate, state);
-      const svgFields = buildSvgMetadataFields(assets, svgTemplate);
+      let designPreview: string;
+      let backDesignPreview: string | undefined;
+      let svgFields: Record<string, string | number | boolean> = {};
+
+      if (isQuick) {
+        designPreview = resolveAssetUrl(template.image);
+      } else {
+        const assets = await captureSvgTemplateOrderAssets(svgTemplate, state);
+        designPreview = assets.front.pngDataUrl;
+        backDesignPreview = assets.back?.pngDataUrl;
+        svgFields = buildSvgMetadataFields(assets, svgTemplate);
+      }
 
       const metadata: Record<string, string | number | boolean> = {
         designTemplateId: template.id,
@@ -525,22 +686,32 @@ export function SvgCustomizableDesignForm({
         orderType: 'svg-template',
         customizeMode: mode,
         svgTemplateId: svgTemplate.id,
-        svgState: JSON.stringify(state),
+        ...(isQuick
+          ? { designDetailsPending: true }
+          : { svgState: JSON.stringify(state) }),
         ...svgFields,
         ...(isBusinessCard
           ? businessCardPrintMetadata({ paper, lamination })
           : {}),
         ...(isMenu ? menuPrintMetadata(menuOptions, menuPrice) : {}),
+        ...(isWedding ? weddingPrintMetadata(weddingOptions, weddingPrice) : {}),
       };
 
-      for (const [key, value] of Object.entries(state.texts)) {
-        metadata[`text_${key}`] = value;
-      }
-      for (const [key, value] of Object.entries(state.colors)) {
-        metadata[`color_${key}`] = value;
-      }
-      for (const [key, value] of Object.entries(state.logos ?? {})) {
-        if (value) metadata[`logo_${key}`] = value;
+      if (isQuick) {
+        for (const fieldId of categoryOrderFields[template.category]) {
+          const value = quickContactValues[fieldId]?.trim();
+          if (value) metadata[fieldId] = value;
+        }
+      } else {
+        for (const [key, value] of Object.entries(state.texts)) {
+          metadata[`text_${key}`] = value;
+        }
+        for (const [key, value] of Object.entries(state.colors)) {
+          metadata[`color_${key}`] = value;
+        }
+        for (const [key, value] of Object.entries(state.logos ?? {})) {
+          if (value) metadata[`logo_${key}`] = value;
+        }
       }
 
       const cartPayload = {
@@ -548,8 +719,8 @@ export function SvgCustomizableDesignForm({
         name: `${td(`categories.${template.category}`)} — ${td(`templates.${template.id}`)}`,
         price: cartPrice,
         quantity: cartQuantity,
-        designPreview: assets.front.pngDataUrl,
-        backDesignPreview: assets.back?.pngDataUrl,
+        designPreview,
+        backDesignPreview,
         metadata,
       };
 
@@ -604,7 +775,7 @@ export function SvgCustomizableDesignForm({
           inputMode={inputProps.inputMode}
           onChange={(e) => updateText(key, e.target.value)}
           onFocus={() => {
-            if (editOnCanvas) setActiveFieldKey(key);
+            if (editOnCanvas || step === 'details') setActiveFieldKey(key);
           }}
           className={cn(
             'w-full rounded-lg border px-3 py-2.5 text-ink-900 placeholder:text-ink-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200',
@@ -712,8 +883,8 @@ export function SvgCustomizableDesignForm({
                       type="button"
                       onClick={() => {
                         setPreviewSide(side);
-                        if (side === 'front' && step === 'back') setStep('front');
-                        if (side === 'back' && step === 'front') setStep('back');
+                        if (step === 'front' && side === 'back') setStep('back');
+                        if (step === 'back' && side === 'front') setStep('front');
                       }}
                       className={cn(
                         'rounded-md px-3 py-1.5 text-xs font-semibold transition',
@@ -881,12 +1052,16 @@ export function SvgCustomizableDesignForm({
               <h2 className="break-words text-lg font-semibold text-ink-900 sm:text-xl">
                 {t(`steps.${step}.title`)}
               </h2>
-              <p className="mt-1 break-words text-sm text-ink-600">{t(`steps.${step}.desc`)}</p>
+              <p className="mt-1 break-words text-sm text-ink-600">
+                {step === 'review' ? t('reviewStepHint') : t(`steps.${step}.desc`)}
+              </p>
 
               {isTextStep && !editOnCanvas ? (
                 <div className="mt-5 rounded-xl border border-ink-200 bg-ink-50/60 p-4">
                   <p className="text-sm font-semibold text-ink-900">{t('formSectionTitle')}</p>
-                  <p className="mt-1 text-xs text-ink-600 sm:text-sm">{t('formSectionHint')}</p>
+                  <p className="mt-1 text-xs text-ink-600 sm:text-sm">
+                    {step === 'details' ? t('detailsSectionHint') : t('formSectionHint')}
+                  </p>
                 </div>
               ) : null}
 
@@ -906,6 +1081,11 @@ export function SvgCustomizableDesignForm({
                   step === 'back' &&
                     (svgTemplate.sides.back?.texts.length ?? 0) > 4 &&
                     'lg:grid-cols-2 lg:gap-4',
+                  step === 'details' &&
+                    svgTemplate.sides.front.texts.length +
+                      (svgTemplate.sides.back?.texts.length ?? 0) >
+                      4 &&
+                    'lg:grid-cols-2 lg:gap-4',
                 )}
               >
                 {step === 'print' && isBusinessCard ? (
@@ -923,10 +1103,32 @@ export function SvgCustomizableDesignForm({
                     designFee={designFee}
                   />
                 ) : null}
+                {step === 'weddingPrint' && isWedding ? (
+                  <WeddingPrintOptionsPanel
+                    options={weddingOptions}
+                    onChange={setWeddingOptions}
+                  />
+                ) : null}
+                {step === 'contact' ? (
+                  <DesignQuickContactFields
+                    category={template.category}
+                    values={quickContactValues}
+                    errors={quickContactErrors}
+                    onChange={updateQuickContact}
+                  />
+                ) : null}
                 {step === 'front' && renderLogoFields('front')}
                 {step === 'back' && renderLogoFields('back')}
                 {step === 'front' && !editOnCanvas && renderTextFields('front')}
                 {step === 'back' && !editOnCanvas && renderTextFields('back')}
+                {step === 'details' && !editOnCanvas ? (
+                  <>
+                    {renderLogoFields('front')}
+                    {renderTextFields('front')}
+                    {hasBack ? renderLogoFields('back') : null}
+                    {hasBack ? renderTextFields('back') : null}
+                  </>
+                ) : null}
                 {step === 'colors' && (
                   <div className="space-y-4">
                     <div className="flex justify-end">
@@ -970,34 +1172,44 @@ export function SvgCustomizableDesignForm({
                 )}
                 {step === 'review' &&
                   (isMenu ? (
-                    <MenuPrintOptionsPanel
+                    <MenuPrintOptionsSummary
                       options={menuOptions}
-                      onChange={setMenuOptions}
                       designFee={designFee}
                     />
+                  ) : isWedding ? (
+                    <WeddingPrintOptionsSummary options={weddingOptions} />
                   ) : (
-                    <div className="space-y-4">
-                      <div>
-                        <label
-                          htmlFor="quantity"
-                          className="mb-1.5 block text-sm font-medium text-ink-700"
-                        >
-                          {to('quantity')}
-                        </label>
-                        <QuantityInput
-                          id="quantity"
-                          min={1}
-                          max={999}
-                          value={quantity}
-                          onChange={setQuantity}
-                          className="w-28"
-                        />
+                    <dl className="space-y-2 rounded-xl border border-ink-200 bg-ink-50/60 px-4 py-3 text-sm">
+                      <div className="flex flex-wrap gap-x-2 gap-y-0.5">
+                        <dt className="shrink-0 text-ink-500">{to('quantity')}:</dt>
+                        <dd className="font-medium text-ink-900">{quantity}</dd>
                       </div>
-                      <p className="text-lg font-semibold text-ink-900">
-                        {formatPrice(designFee * quantity, locale)}
-                      </p>
-                    </div>
+                      <div className="flex flex-wrap gap-x-2 gap-y-0.5 border-t border-ink-200/80 pt-2">
+                        <dt className="shrink-0 font-semibold text-ink-900">
+                          {t('reviewTotalLabel')}
+                        </dt>
+                        <dd className="font-semibold text-ink-900">
+                          {formatPrice(designFee * quantity, locale)}
+                        </dd>
+                      </div>
+                    </dl>
                   ))}
+                {step === 'review' && isQuick ? (
+                  <dl className="mt-4 space-y-2 rounded-xl border border-ink-200 bg-ink-50/60 p-4 text-sm">
+                    {categoryOrderFields[template.category].map((fieldId) => {
+                      const value = quickContactValues[fieldId]?.trim();
+                      if (!value) return null;
+                      return (
+                        <div key={fieldId}>
+                          <dt className="font-medium text-ink-600">
+                            {to(`fields.${fieldId}`)}
+                          </dt>
+                          <dd className="text-ink-900">{value}</dd>
+                        </div>
+                      );
+                    })}
+                  </dl>
+                ) : null}
               </div>
 
               <div className="mt-8 flex flex-col gap-3 border-t border-ink-100 pt-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
@@ -1042,7 +1254,7 @@ export function SvgCustomizableDesignForm({
       {!editOnCanvas ? (
         <DesignCustomizerMobileFieldBar
         ref={mobileFieldBarRef}
-        open={isTextStep && Boolean(activeFieldKey)}
+        open={isTextStep && step === 'details' && Boolean(activeFieldKey)}
         inputId={
           activeFieldKey
             ? `mobile-field-${activeFieldKey.replace(/[^a-zA-Z0-9_-]/g, '-')}`

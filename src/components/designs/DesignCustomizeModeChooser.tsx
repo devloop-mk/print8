@@ -121,6 +121,11 @@ export function DesignCustomizeModeChooser({
 
   const options: ModeOption[] = [
     {
+      mode: 'quick',
+      title: t('modeQuickTitle'),
+      description: t('modeQuickDesc'),
+    },
+    {
       mode: 'form',
       title: t('modeFormTitle'),
       description: t('modeFormDesc'),
@@ -132,7 +137,7 @@ export function DesignCustomizeModeChooser({
     },
   ];
 
-  const [selectedMode, setSelectedMode] = useState<DesignCustomizeMode>('form');
+  const [selectedMode, setSelectedMode] = useState<DesignCustomizeMode>('quick');
 
   function handleContinue() {
     router.push(buildModeHref(template.id, selectedMode, editCartItemId));

@@ -1,6 +1,8 @@
 const VERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
 
 export function isTurnstileEnabled(): boolean {
+  if (process.env.NODE_ENV === 'development') return false;
+
   return Boolean(
     process.env.TURNSTILE_SECRET_KEY?.trim() &&
       process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim(),

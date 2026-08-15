@@ -44,7 +44,14 @@ export function QuantityInput({
         setDraft(String(value));
         setFocused(true);
       }}
-      onChange={(event) => setDraft(event.target.value)}
+      onChange={(event) => {
+        const nextDraft = event.target.value;
+        setDraft(nextDraft);
+        if (nextDraft === '') return;
+        const parsed = parseInt(nextDraft, 10);
+        if (!Number.isFinite(parsed)) return;
+        onChange(Math.min(max, Math.max(min, parsed)));
+      }}
       onBlur={() => {
         const parsed = parseInt(draft, 10);
         const next = Math.min(

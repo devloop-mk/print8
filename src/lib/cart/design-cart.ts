@@ -21,6 +21,10 @@ export function isEditableDesignCartItem(item: CartItem): boolean {
 function inferSvgCustomizeMode(
   metadata: Record<string, string | number | boolean>,
 ): DesignCustomizeMode {
+  if (metadata.designDetailsPending === true) {
+    return 'quick';
+  }
+
   const raw = metadata.svgState;
   if (typeof raw === 'string') {
     try {

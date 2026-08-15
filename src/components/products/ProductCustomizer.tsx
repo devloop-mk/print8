@@ -62,7 +62,6 @@ import {
 } from '@/lib/orders/order-assets';
 import { useCart } from '@/components/cart/CartProvider';
 import { useUploadSessionGate } from '@/hooks/useUploadSessionGate';
-import { TurnstileWidget } from '@/components/security/TurnstileWidget';
 import { Button } from '@/components/ui/Button';
 import { LoadingIndicator } from '@/components/ui/LoadingIndicator';
 import { cn, formatPrice } from '@/lib/utils';
@@ -4263,25 +4262,18 @@ function EditorPanelContent({
         ) : null}
 
         {!photosAtLimit ? (
-          <>
-            {uploadPendingTurnstile && onUploadTurnstileToken ? (
-              <TurnstileWidget
-                onToken={onUploadTurnstileToken}
-                className="mb-3"
-              />
-            ) : null}
-            <ProductPhotoUpload
+          <ProductPhotoUpload
             token={token}
             uploadLoading={uploadLoading}
             uploadError={uploadError}
             refreshSession={refreshSession}
             pendingTurnstile={uploadPendingTurnstile}
+            onTurnstileToken={onUploadTurnstileToken}
             hasPhoto={false}
             onUploadComplete={(fileId, name, previewUrl) => {
               onAddPhoto(fileId, name, previewUrl);
             }}
           />
-          </>
         ) : null}
       </div>
     );
