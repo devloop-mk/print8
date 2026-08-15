@@ -216,7 +216,9 @@ export async function embedSvgExternalImages(svg: string): Promise<string> {
 
 export function toAbsoluteSvgAssetUrls(svg: string): string {
   if (typeof window === 'undefined') return svg;
-  return svg.replace(/href="(\/NEW_DESIGNS\/[^"]+)"/g, (_, catalogPath: string) => {
-    return `href="${resolveCanvasAssetUrl(catalogPath)}"`;
-  });
+  return svg.replace(
+    /(\s(?:xlink:)?href=")(\/NEW_DESIGNS\/[^"]+)"/g,
+    (_, prefix: string, catalogPath: string) =>
+      `${prefix}${resolveCanvasAssetUrl(catalogPath)}"`,
+  );
 }

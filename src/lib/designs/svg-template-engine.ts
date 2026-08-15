@@ -6,6 +6,7 @@ import type {
 import {
   SVG_BACKGROUND_ASSETS,
   resolveSvgEmbeddedImages,
+  toAbsoluteSvgAssetUrls,
 } from '@/lib/designs/svg-background-assets';
 import { resolveCanvasAssetUrl } from '@/lib/storage/asset-url';
 import {
@@ -348,7 +349,7 @@ export function buildDefaultSvgTemplateState(
 }
 
 export function prepareSvgForInlineDom(svg: string): string {
-  return sanitizeSvgMarkup(svg);
+  return sanitizeSvgMarkup(toAbsoluteSvgAssetUrls(svg));
 }
 
 /** Prefix SVG ids so multiple inline previews on one page do not clash. */
