@@ -8,7 +8,7 @@ export function isTurnstileEnabled(): boolean {
 }
 
 export function isTurnstileConfiguredOnClient(): boolean {
-  return Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim());
+  return isTurnstileEnabled();
 }
 
 export async function verifyTurnstileToken(

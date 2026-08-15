@@ -7,6 +7,7 @@ import { useCart } from "@/components/cart/CartProvider";
 import { useUploadSessionGate } from "@/hooks/useUploadSessionGate";
 import { SecureUpload } from "@/components/upload/SecureUpload";
 import { TurnstileWidget } from "@/components/security/TurnstileWidget";
+import { isTurnstileActiveOnClient } from "@/lib/security/turnstile-public";
 import { formatPrice } from "@/lib/utils";
 import {
   MAX_PHOTOS_PER_ORDER,
@@ -50,9 +51,7 @@ export function CheckoutForm() {
     refreshSession,
   } = useUploadSessionGate();
   const [checkoutTurnstileToken, setCheckoutTurnstileToken] = useState("");
-  const checkoutTurnstileRequired = Boolean(
-    process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim(),
-  );
+  const checkoutTurnstileRequired = isTurnstileActiveOnClient();
 
   const [form, setForm] = useState({
     fullName: "",

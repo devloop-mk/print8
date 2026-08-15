@@ -1,8 +1,16 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { getTurnstileSiteKey } from '@/lib/security/turnstile-public';
 
-const SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim();
+const SITE_KEY = getTurnstileSiteKey();
+
+/** Client-side codes for invalid sitekey / unauthorized hostname (Cloudflare may surface 400020). */
+function isTurnstileConfigError(code: string | number): boolean {
+  const n = typeof code === 'number' ? code : Number(code);
+  return n === 400020 || n === 110100 || n === 110110 || n === 110200 || n === 400070;
+}
 
 declare global {
   interface Window {
@@ -13,6 +21,7 @@ declare global {
           sitekey: string;
           callback: (token: string) => void;
           'expired-callback'?: () => void;
+          'error-callback'?: (errorCode: string | number) => void;
           theme?: 'light' | 'dark' | 'auto';
         },
       ) => string;
@@ -57,15 +66,18 @@ export function TurnstileWidget({
   onToken: (token: string) => void;
   className?: string;
 }) {
+  const t = useTranslations('common');
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
   const [loadError, setLoadError] = useState(false);
+  const [configError, setConfigError] = useState(false);
 
   useEffect(() => {
     if (!SITE_KEY || !containerRef.current) return;
 
     let cancelled = false;
     setLoadError(false);
+    setConfigError(false);
 
     loadTurnstileScript()
       .then(() => {
@@ -74,6 +86,15 @@ export function TurnstileWidget({
           sitekey: SITE_KEY,
           callback: (token) => onToken(token),
           'expired-callback': () => onToken(''),
+          'error-callback': (errorCode) => {
+            console.error('[TurnstileWidget] error', errorCode);
+            onToken('');
+            if (!cancelled && isTurnstileConfigError(errorCode)) {
+              setConfigError(true);
+            } else if (!cancelled) {
+              setLoadError(true);
+            }
+          },
           theme: 'light',
         });
       })
@@ -95,10 +116,10 @@ export function TurnstileWidget({
 
   return (
     <div className={className}>
-      {loadError ? (
-        <p className="text-sm text-red-600">
-          Security check could not load. Refresh the page or try again later.
-        </p>
+      {configError ? (
+        <p className="text-sm text-red-600">{t('turnstileConfigError')}</p>
+      ) : loadError ? (
+        <p className="text-sm text-red-600">{t('turnstileLoadError')}</p>
       ) : null}
       <div ref={containerRef} />
     </div>

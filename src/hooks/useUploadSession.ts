@@ -1,18 +1,15 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { isTurnstileActiveOnClient } from '@/lib/security/turnstile-public';
 
 const STORAGE_KEY = 'print8-upload-token';
-
-function isTurnstileRequired(): boolean {
-  return Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim());
-}
 
 export function useUploadSession() {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const turnstileRequired = isTurnstileRequired();
+  const turnstileRequired = isTurnstileActiveOnClient();
 
   const createSession = useCallback(async (turnstileToken?: string) => {
     setLoading(true);

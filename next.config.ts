@@ -6,6 +6,10 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 
+const turnstileActive =
+  Boolean(process.env.TURNSTILE_SECRET_KEY?.trim()) &&
+  Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim());
+
 function getAssetRemotePatterns() {
   const cdn = process.env.NEXT_PUBLIC_ASSETS_CDN_URL;
   if (!cdn) return [];
@@ -25,6 +29,9 @@ function getAssetRemotePatterns() {
 }
 
 const nextConfig: NextConfig = {
+  env: {
+    NEXT_PUBLIC_TURNSTILE_ACTIVE: turnstileActive ? "1" : "",
+  },
   outputFileTracingRoot: projectRoot,
   serverExternalPackages: ['sharp'],
   // Static catalog images are served by CDN / Vercel static, not the serverless

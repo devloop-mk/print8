@@ -2721,6 +2721,8 @@
     "uploadLimit": "Upload limit reached. Please try again later.",
     "uploadPreparing": "Preparing upload...",
     "uploadTurnstileHint": "Complete the security check above, then you can choose a file.",
+    "turnstileConfigError": "Security check is misconfigured for this site (invalid Turnstile key or domain). Add this hostname in the Cloudflare Turnstile dashboard and verify Vercel env keys.",
+    "turnstileLoadError": "Security check could not load. Refresh the page or try again later.",
     "uploadSessionError": "Upload is unavailable. Check your connection or try again.",
     "uploadSessionHint": "Check .env.local Supabase settings and run supabase/schema.sql if tables are missing.",
     "uploadRetry": "Retry",
