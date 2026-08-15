@@ -2720,6 +2720,7 @@
     "uploadSuccess": "File uploaded.",
     "uploadLimit": "Upload limit reached. Please try again later.",
     "uploadPreparing": "Preparing upload...",
+    "uploadTurnstileHint": "Complete the security check above, then you can choose a file.",
     "uploadSessionError": "Upload is unavailable. Check your connection or try again.",
     "uploadSessionHint": "Check .env.local Supabase settings and run supabase/schema.sql if tables are missing.",
     "uploadRetry": "Retry",

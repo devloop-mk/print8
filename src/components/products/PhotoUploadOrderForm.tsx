@@ -230,6 +230,7 @@ export function PhotoUploadOrderForm({ productType }: PhotoUploadOrderFormProps)
                 uploadLoading={uploadLoading}
                 uploadError={uploadError}
                 refreshSession={refreshSession}
+                pendingTurnstile={pendingTurnstile}
                 hasPhoto={Boolean(uploadedPhoto)}
                 previewUrl={uploadedPhoto?.previewUrl}
                 cropAspect={product.uploadAspect}

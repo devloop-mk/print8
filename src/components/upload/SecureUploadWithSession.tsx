@@ -34,6 +34,7 @@ export function SecureUploadWithSession({
         token={token}
         loading={loading}
         sessionError={error}
+        pendingTurnstile={pendingTurnstile}
         onRefreshSession={() => refreshSession()}
         onUpload={onUpload}
         disabled={disabled}

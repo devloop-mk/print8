@@ -9,6 +9,7 @@ interface SecureUploadProps {
   token: string | null;
   loading?: boolean;
   sessionError?: string | null;
+  pendingTurnstile?: boolean;
   onRefreshSession?: () => Promise<string | null>;
   onUpload: (fileId: string, originalName: string) => void;
   disabled?: boolean;
@@ -18,6 +19,7 @@ export function SecureUpload({
   token,
   loading = false,
   sessionError = null,
+  pendingTurnstile = false,
   onRefreshSession,
   onUpload,
   disabled,
@@ -116,8 +118,12 @@ export function SecureUpload({
         </div>
       )}
 
+      {pendingTurnstile ? (
+        <p className="mb-3 text-sm text-ink-600">{t('uploadTurnstileHint')}</p>
+      ) : null}
+
       <label
-        className={`inline-flex cursor-pointer items-center gap-2 rounded-lg border-2 border-dashed border-ink-300 px-4 py-3 text-sm text-ink-600 transition hover:border-brand-500 hover:text-brand-600 ${!canUpload ? 'pointer-events-none opacity-50' : ''}`}
+        className={`inline-flex cursor-pointer items-center gap-2 rounded-lg border-2 border-dashed border-ink-300 px-4 py-3 text-sm text-ink-600 transition hover:border-brand-500 hover:text-brand-600 ${!canUpload ? 'cursor-not-allowed opacity-50' : ''}`}
       >
         {uploading ? (
           <Spinner size="sm" />

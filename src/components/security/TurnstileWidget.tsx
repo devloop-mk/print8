@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim();
 
@@ -59,11 +59,13 @@ export function TurnstileWidget({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     if (!SITE_KEY || !containerRef.current) return;
 
     let cancelled = false;
+    setLoadError(false);
 
     loadTurnstileScript()
       .then(() => {
@@ -77,6 +79,7 @@ export function TurnstileWidget({
       })
       .catch((err) => {
         console.error('[TurnstileWidget]', err);
+        if (!cancelled) setLoadError(true);
       });
 
     return () => {
@@ -90,5 +93,14 @@ export function TurnstileWidget({
 
   if (!SITE_KEY) return null;
 
-  return <div ref={containerRef} className={className} />;
+  return (
+    <div className={className}>
+      {loadError ? (
+        <p className="text-sm text-red-600">
+          Security check could not load. Refresh the page or try again later.
+        </p>
+      ) : null}
+      <div ref={containerRef} />
+    </div>
+  );
 }

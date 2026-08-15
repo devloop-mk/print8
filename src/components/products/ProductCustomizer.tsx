@@ -4270,6 +4270,7 @@ function EditorPanelContent({
             uploadLoading={uploadLoading}
             uploadError={uploadError}
             refreshSession={refreshSession}
+            pendingTurnstile={uploadPendingTurnstile}
             hasPhoto={false}
             onUploadComplete={(fileId, name, previewUrl) => {
               onAddPhoto(fileId, name, previewUrl);

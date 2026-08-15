@@ -62,11 +62,24 @@ export function useUploadSession() {
     async function init() {
       const stored = sessionStorage.getItem(STORAGE_KEY);
       if (stored) {
-        if (!cancelled) {
-          setToken(stored);
-          setLoading(false);
+        try {
+          const validRes = await fetch('/api/upload/session/validate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: stored }),
+          });
+          const validData = (await validRes.json()) as { valid?: boolean };
+          if (validData.valid) {
+            if (!cancelled) {
+              setToken(stored);
+              setLoading(false);
+            }
+            return;
+          }
+        } catch {
+          // fall through and create a fresh session
         }
-        return;
+        sessionStorage.removeItem(STORAGE_KEY);
       }
 
       if (turnstileRequired) {

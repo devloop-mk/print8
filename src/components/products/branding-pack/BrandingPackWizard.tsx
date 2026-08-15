@@ -473,6 +473,7 @@ export function BrandingPackWizard() {
             uploadLoading={uploadLoading}
             uploadError={uploadError}
             refreshSession={refreshSession}
+            pendingTurnstile={pendingTurnstile}
             hasPhoto={Boolean(state.logo)}
             previewUrl={state.logo?.previewUrl}
             skipCrop

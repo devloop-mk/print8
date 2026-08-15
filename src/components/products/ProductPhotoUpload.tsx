@@ -19,6 +19,7 @@ type ProductPhotoUploadProps = {
   uploadLoading: boolean;
   uploadError: string | null;
   refreshSession: () => Promise<string | null>;
+  pendingTurnstile?: boolean;
   hasPhoto: boolean;
   previewUrl?: string;
   cropAspect?: number;
@@ -64,6 +65,7 @@ export function ProductPhotoUpload({
   uploadLoading,
   uploadError,
   refreshSession,
+  pendingTurnstile = false,
   hasPhoto,
   previewUrl,
   cropAspect,
@@ -86,7 +88,8 @@ export function ProductPhotoUpload({
   const isDisabled = uploadLoading || uploading || Boolean(cropSource) || !token;
 
   function openFilePicker() {
-    if (!isDisabled) fileInputRef.current?.click();
+    if (!token || uploadLoading || uploading || cropSource) return;
+    fileInputRef.current?.click();
   }
 
   function beginFileProcessing(file: File) {
@@ -256,6 +259,14 @@ export function ProductPhotoUpload({
         </div>
       ) : null}
 
+      {pendingTurnstile ? (
+        <p className="text-sm text-ink-600">{tc('uploadTurnstileHint')}</p>
+      ) : null}
+
+      {!token && !uploadLoading && !uploading && !pendingTurnstile && !uploadError ? (
+        <p className="text-sm text-ink-500">{tc('uploadPreparing')}</p>
+      ) : null}
+
       {!hasPhoto ? (
         <>
           <p className="text-sm text-ink-600">{t('photoUploadInstructions')}</p>
@@ -263,7 +274,7 @@ export function ProductPhotoUpload({
             type="button"
             onClick={openFilePicker}
             disabled={isDisabled}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-ink-300 px-4 py-3 text-sm font-medium text-ink-600 transition hover:border-brand-500 hover:text-brand-600 disabled:pointer-events-none disabled:opacity-50"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-ink-300 px-4 py-3 text-sm font-medium text-ink-600 transition hover:border-brand-500 hover:text-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Upload className="h-5 w-5" />
             {tc('chooseFile')}
