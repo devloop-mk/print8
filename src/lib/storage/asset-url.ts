@@ -61,6 +61,10 @@ export function resolveAssetUrl(path: string): string {
     return `${cdn}/catalog/${key}`;
   }
 
+  if (!preferLocalPublicAssets() && isCatalogDesignAssetPath(normalized)) {
+    return `/api/catalog/${key}`;
+  }
+
   if (isProductionRuntime() && isCatalogDesignAssetPath(normalized)) {
     console.warn(
       `[assets] NEXT_PUBLIC_ASSETS_CDN_URL is unset; design asset may be missing in production: ${normalized}`,

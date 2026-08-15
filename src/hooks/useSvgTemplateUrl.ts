@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocale } from 'next-intl';
 import type { SvgDesignTemplate, SvgTemplateState } from '@/lib/data/svg-design-templates';
+import { resolveCanvasAssetUrl } from '@/lib/storage/asset-url';
 import {
   applySvgTemplate,
   prepareSvgForInlineDom,
@@ -22,7 +23,7 @@ async function loadRawSvg(path: string): Promise<string> {
   const inflight = rawSvgInflight.get(path);
   if (inflight) return inflight;
 
-  const promise = fetch(path)
+  const promise = fetch(resolveCanvasAssetUrl(path))
     .then((response) => response.text())
     .then((svg) => {
       rawSvgCache.set(path, svg);

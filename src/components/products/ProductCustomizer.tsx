@@ -175,6 +175,7 @@ import type {
   SelectedElement,
 } from '@/components/products/customizer/types';
 import { CustomizerShell } from '@/components/products/customizer/CustomizerShell';
+import { CustomizerViewport } from '@/components/products/customizer/CustomizerViewport';
 import { CustomizerContextBar } from '@/components/products/customizer/CustomizerContextBar';
 import { CustomizerSidesPreviewModal } from '@/components/products/customizer/CustomizerSidesPreviewModal';
 import { PrintAreaGuideSwitch } from '@/components/products/customizer/PrintAreaGuideSwitch';
@@ -2642,9 +2643,10 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   );
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <OutOfPrintAreaToast />
-      <CustomizerShell
+    <CustomizerViewport>
+      <div className="flex h-full min-h-0 flex-col">
+        <OutOfPrintAreaToast />
+        <CustomizerShell
       topBar={
         <div
           className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-ink-100 bg-white px-3 md:px-5"
@@ -2882,8 +2884,8 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
             />
             <div
               className={cn(
-                'absolute inset-x-0 bottom-0 flex max-h-[min(72vh,32rem)] flex-col rounded-t-2xl bg-white shadow-2xl',
-                activePanel === 'stickers' && 'h-[min(58vh,30rem)] max-h-none',
+                'absolute inset-x-0 bottom-0 flex h-[min(85dvh,40rem)] max-h-[min(85dvh,40rem)] flex-col rounded-t-2xl bg-white shadow-2xl',
+                activePanel === 'stickers' && 'h-[min(58vh,30rem)] max-h-[min(58vh,30rem)]',
               )}
               data-customizer-editor-chrome
             >
@@ -2918,7 +2920,9 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
                   <X className="h-4 w-4" aria-hidden />
                 </button>
               </div>
-              <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+              <div
+                className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))] [-webkit-overflow-scrolling:touch]"
+              >
                 {panelNode}
               </div>
             </div>
@@ -3015,6 +3019,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         onLeaveWithoutSaving={unsavedWorkGuard.handleLeaveWithoutSaving}
       />
     </div>
+    </CustomizerViewport>
   );
 }
 

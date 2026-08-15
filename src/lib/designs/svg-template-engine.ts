@@ -7,6 +7,7 @@ import {
   SVG_BACKGROUND_ASSETS,
   resolveSvgEmbeddedImages,
 } from '@/lib/designs/svg-background-assets';
+import { resolveCanvasAssetUrl } from '@/lib/storage/asset-url';
 import {
   applySvgGroupTransform,
   applySvgTextNodeTransform,
@@ -403,7 +404,8 @@ export async function fetchRenderedSvg(
   side: 'front' | 'back',
   locale: SvgSiteLocale = 'en',
 ): Promise<string> {
-  const response = await fetch(path);
+  const fetchUrl = resolveCanvasAssetUrl(path);
+  const response = await fetch(fetchUrl);
   const svg = await response.text();
   return applySvgTemplate(svg, template, state, side, locale);
 }

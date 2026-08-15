@@ -2,6 +2,8 @@
  * Maps each customizable design SVG to its full-bleed background PNG.
  * Source filenames match the original file:// asset names from the design exports.
  */
+import { resolveCanvasAssetUrl } from '@/lib/storage/asset-url';
+
 export const SVG_DESIGN_BACKGROUND_MAP = [
   {
     designSvg: '/NEW_DESIGNS/wedding/wedding-print-beach.svg',
@@ -203,7 +205,7 @@ export async function embedSvgExternalImages(svg: string): Promise<string> {
 
   let result = svg;
   for (const url of urls) {
-    const response = await fetch(url);
+    const response = await fetch(resolveCanvasAssetUrl(url));
     if (!response.ok) continue;
     const dataUrl = await blobToDataUrl(await response.blob());
     result = result.replaceAll(`href="${url}"`, `href="${dataUrl}"`);
@@ -214,6 +216,7 @@ export async function embedSvgExternalImages(svg: string): Promise<string> {
 
 export function toAbsoluteSvgAssetUrls(svg: string): string {
   if (typeof window === 'undefined') return svg;
-  const origin = window.location.origin;
-  return svg.replace(/href="(\/NEW_DESIGNS\/[^"]+)"/g, `href="${origin}$1"`);
+  return svg.replace(/href="(\/NEW_DESIGNS\/[^"]+)"/g, (_, catalogPath: string) => {
+    return `href="${resolveCanvasAssetUrl(catalogPath)}"`;
+  });
 }

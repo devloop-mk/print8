@@ -178,19 +178,21 @@ export function PhotoUploadOrderForm({ productType }: PhotoUploadOrderFormProps)
         {t('backToProduct')}
       </Link>
 
-      <div className="grid gap-8 lg:grid-cols-2">
-        <Card className="flex flex-col items-center p-6">
-          <p className="mb-4 text-sm font-medium text-ink-500">
+      <div className="grid gap-6 lg:grid-cols-2 lg:gap-8">
+        <Card className="order-2 flex flex-col items-center p-4 lg:order-none lg:p-6">
+          <p className="mb-3 text-sm font-medium text-ink-500 lg:mb-4">
             {t('productPreview')}
           </p>
-          <ProductImageCarousel
-            product={product}
-            color={resolvedColor}
-            typeLabel={productLabel}
-          />
+          <div className="w-full max-w-[min(100%,16rem)] lg:max-w-none">
+            <ProductImageCarousel
+              product={product}
+              color={resolvedColor}
+              typeLabel={productLabel}
+            />
+          </div>
         </Card>
 
-        <div className="space-y-6">
+        <div className="order-1 space-y-6 lg:order-none">
           <div>
             <h2 className="text-2xl font-bold text-ink-900">{productLabel}</h2>
             <p className="mt-1 text-lg text-brand-600">
@@ -283,7 +285,9 @@ export function PhotoUploadOrderForm({ productType }: PhotoUploadOrderFormProps)
         </div>
       </div>
 
-      <div className="sticky bottom-0 z-10 -mx-4 space-y-2 border-t border-ink-100 bg-white/95 px-4 py-3 backdrop-blur-sm sm:-mx-0 sm:rounded-xl sm:border sm:shadow-sm sm:py-4">
+      <div
+        className="sticky bottom-0 z-10 -mx-4 space-y-2 border-t border-ink-100 bg-white/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] backdrop-blur-sm sm:-mx-0 sm:rounded-xl sm:border sm:shadow-sm sm:py-4"
+      >
         {submitError ? (
           <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
             {submitError}

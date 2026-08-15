@@ -49,23 +49,17 @@ export default async function CustomizeProductPage({
     : null;
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <Suspense fallback={<LocalePageLoading />}>
-        {uploadType ? (
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
-              <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
-                <h1 className="mb-6 text-2xl font-bold text-ink-900">
-                  {tu("title")}
-                </h1>
-                <PhotoUploadOrderForm productType={uploadType} />
-              </div>
-            </div>
-          </div>
-        ) : (
-          <ProductCustomizer type={type as ProductType} />
-        )}
-      </Suspense>
-    </div>
+    <Suspense fallback={<LocalePageLoading />}>
+      {uploadType ? (
+        <div className="mx-auto max-w-3xl px-4 py-6 pb-[max(6rem,env(safe-area-inset-bottom,0px))] sm:px-6 sm:py-8">
+          <h1 className="mb-6 text-2xl font-bold text-ink-900">
+            {tu("title")}
+          </h1>
+          <PhotoUploadOrderForm productType={uploadType} />
+        </div>
+      ) : (
+        <ProductCustomizer type={type as ProductType} />
+      )}
+    </Suspense>
   );
 }
