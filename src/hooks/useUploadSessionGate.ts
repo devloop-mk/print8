@@ -14,7 +14,7 @@ export function useUploadSessionGate() {
 
   useEffect(() => {
     if (!session.turnstileRequired) return;
-    if (session.token || session.loading) return;
+    if (session.token) return;
     if (!turnstileToken) return;
 
     let cancelled = false;
@@ -25,7 +25,10 @@ export function useUploadSessionGate() {
         if (!cancelled && !created) setTurnstileToken('');
       })
       .finally(() => {
-        if (!cancelled) setCreating(false);
+        // Always clear — a prior effect cleanup can cancel the promise handlers
+        // when session.loading flips during createSession, which previously left
+        // creating stuck true and the upload UI spinning forever.
+        setCreating(false);
       });
 
     return () => {
@@ -34,7 +37,6 @@ export function useUploadSessionGate() {
   }, [
     session.turnstileRequired,
     session.token,
-    session.loading,
     session.createSession,
     turnstileToken,
   ]);
@@ -65,11 +67,9 @@ export function useUploadSessionGate() {
     !creating &&
     !turnstileToken;
 
-  const loading =
-    session.loading ||
-    creating ||
-    (session.turnstileRequired && !session.token && Boolean(turnstileToken));
-
+  const loading = session.turnstileRequired
+    ? creating || (session.loading && !turnstileToken)
+    : session.loading;
   return {
     token: session.token,
     loading,
