@@ -12,46 +12,42 @@ export type ServicesHeroSlideConfig = {
 export const servicesHeroSlides: ServicesHeroSlideConfig[] = [
   {
     serviceId: 'color-bw-printing',
-    image: '/hero/hero-ready-designs-v2.png',
+    image: '/services/hero/service-hero-color-bw-printing.png',
     accent: 'from-brand-900/90',
   },
   {
     serviceId: 'a3-posters',
-    image: '/hero/hero-ready-designs-v2.png',
+    image: '/services/hero/service-hero-a3-posters.png',
     accent: 'from-amber-900/90',
   },
   {
     serviceId: 'business-cards',
-    image: '/hero/hero-ready-designs-v2.png',
+    image: '/services/hero/service-hero-business-cards.png',
     accent: 'from-rose-900/90',
   },
   {
     serviceId: 'laminating',
-    image: '/hero/hero-your-brand-v2.png',
+    image: '/services/hero/service-hero-laminating.png',
     accent: 'from-sky-900/90',
-    imageFit: 'contain',
   },
   {
     serviceId: 'plastification',
-    image: '/hero/hero-your-brand-v2.png',
+    image: '/services/hero/service-hero-plastification.png',
     accent: 'from-indigo-900/90',
-    imageFit: 'contain',
   },
   {
     serviceId: 'bookbinding',
-    image: '/hero/hero-your-brand-v2.png',
+    image: '/services/hero/service-hero-bookbinding.png',
     accent: 'from-emerald-900/90',
-    imageFit: 'contain',
   },
   {
     serviceId: 'thesis-hardcover',
-    image: '/hero/hero-your-brand-v2.png',
+    image: '/services/hero/service-hero-thesis-hardcover.png',
     accent: 'from-violet-900/90',
-    imageFit: 'contain',
   },
   {
     serviceId: 'wedding-invitations',
-    image: '/hero/hero-ready-designs-v2.png',
+    image: '/services/hero/service-hero-wedding-invitations.png',
     accent: 'from-pink-900/90',
   },
 ];
