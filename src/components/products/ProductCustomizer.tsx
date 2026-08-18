@@ -15,9 +15,8 @@ import {
   capturePreviewElement,
   waitForPaint,
 } from '@/lib/products/capture-preview';
-import { capturePrintAreaDesign } from '@/lib/products/capture-print-area';
+import { renderMockupPreview } from '@/lib/products/render-print-area-design';
 import {
-  premadeSideSkipsPrintPngCapture,
   writePremadeArtworkSourceMetadata,
 } from '@/lib/products/premade-artwork-source';
 import { useTranslations, useLocale } from 'next-intl';
@@ -74,6 +73,7 @@ import {
   getMockupImageDisplayStyle,
   getProductMockupLayout,
   isCylindricalDrinkwareType,
+  resolveMockupDisplayScale,
 } from '@/lib/products/product-mockup-layout';
 import {
   DRINKWARE_FLAT_CANVAS_HEIGHT_PX,
@@ -753,7 +753,7 @@ function ResizableImageOverlay({
     >
       <div
         className={cn(
-          'relative rounded-lg',
+          'relative',
           showChrome && 'ring-2 ring-brand-500 ring-offset-2',
         )}
       >
@@ -763,7 +763,7 @@ function ResizableImageOverlay({
             alt={alt}
             draggable={false}
             crossOrigin="anonymous"
-            className="pointer-events-none block w-full rounded-lg object-contain shadow-sm"
+            className="pointer-events-none block w-full object-contain shadow-sm"
           />
         {showChrome ? controls : null}
       </div>
@@ -2076,6 +2076,39 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     setActiveSide(otherSide);
   }, [activeSide, otherSide]);
 
+  async function captureMockupSidePreview(
+    side: ProductSide,
+    sideDesign: SideDesign,
+  ): Promise<string | undefined> {
+    if (!previewRef.current || !product) return undefined;
+
+    const rect = previewRef.current.getBoundingClientRect();
+    const mockupPath = getProductMockup(product, color, side);
+    if (!mockupPath) return undefined;
+
+    const insets = isTshirtProduct(product)
+      ? getTshirtPrintAreaInsets('front-large', side, product)
+      : getProductMockupLayout(product).printArea;
+
+    return renderMockupPreview({
+      mockupUrl: mockupPath,
+      design: sideDesign,
+      template: activeDesignTemplate,
+      product,
+      shirtColor: color,
+      insets,
+      side,
+      widthPx: rect.width,
+      heightPx: rect.height,
+      mockupDisplayScale: resolveMockupDisplayScale(
+        product,
+        mockupPath,
+        'customizer',
+        { largeCustomizerViewport: isLargeCustomizerViewport },
+      ),
+    });
+  }
+
   async function capturePreview(
     ref: RefObject<HTMLDivElement | null>,
   ): Promise<string | undefined> {
@@ -2092,56 +2125,8 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     for (const side of cartSides) {
       flushSync(() => setActiveSide(side));
       await waitForPaint();
-      if (!previewRef.current) continue;
-      const captured = await capturePreview(previewRef);
-      if (captured) results[side] = captured;
-    }
-
-    flushSync(() => setActiveSide(originalSide));
-    return results;
-  }
-
-  async function captureAllSidePrintPngs(): Promise<
-    Partial<Record<ProductSide, string>>
-  > {
-    if (!product || isDrinkware) return {};
-
-    const results: Partial<Record<ProductSide, string>> = {};
-    const originalSide = activeSide;
-
-    for (const side of cartSides) {
-      if (!sideHasContent(side)) continue;
-
       const sideDesign = sideDesigns[side] ?? createDefaultSideDesign();
-      if (
-        premadeSideSkipsPrintPngCapture(
-          sideDesign,
-          activeDesignTemplate,
-          side,
-        )
-      ) {
-        continue;
-      }
-
-      flushSync(() => setActiveSide(side));
-      await waitForPaint();
-      if (!previewRef.current) continue;
-
-      const insets = isTshirtProduct(product)
-        ? getTshirtPrintAreaInsets('front-large', side, product)
-        : getProductMockupLayout(product).printArea;
-
-      const captured = await capturePrintAreaDesign(
-        previewRef.current,
-        insets,
-        {
-          design: sideDesign,
-          template: activeDesignTemplate,
-          product,
-          shirtColor: color,
-          side,
-        },
-      );
+      const captured = await captureMockupSidePreview(side, sideDesign);
       if (captured) results[side] = captured;
     }
 
@@ -2206,7 +2191,6 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     flushSync(() => setIsCapturing(true));
 
     let captured: Partial<Record<ProductSide, string>> = {};
-    let printPngs: Partial<Record<ProductSide, string>> = {};
 
     try {
       if (isDrinkware) {
@@ -2232,11 +2216,13 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         }
       } else if (cartSides.length > 1) {
         captured = await captureAllSidePreviews();
-        printPngs = await captureAllSidePrintPngs();
       } else {
-        const front = await capturePreview(previewRef);
+        const side = cartSides[0] ?? 'front';
+        const front = await captureMockupSidePreview(
+          side,
+          sideDesigns[side] ?? createDefaultSideDesign(),
+        );
         if (front) captured.front = front;
-        printPngs = await captureAllSidePrintPngs();
       }
     } finally {
       flushSync(() => setIsCapturing(false));
@@ -2349,10 +2335,6 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       backDesignPreview: captured.back,
       leftDesignPreview: captured.left,
       rightDesignPreview: captured.right,
-      frontPrintPng: printPngs.front,
-      backPrintPng: printPngs.back,
-      leftPrintPng: printPngs.left,
-      rightPrintPng: printPngs.right,
       metadata,
       fileIds,
     };

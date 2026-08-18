@@ -801,6 +801,10 @@ export interface Product {
   uploadAspect?: number;
   /** Koni / supplier SKU — internal only (orders, admin), not on storefront cards */
   vendorSku?: string;
+  /** Optional i18n key under `products.detail.productDescriptions` — replaces the default blurb. */
+  detailDescriptionKey?: string;
+  /** Optional i18n key under `products.detail.productNotes` — shown below the main blurb. */
+  detailNoteKey?: string;
   /** Optional t-shirt / polo print tier overrides (MKD). */
   tshirtPricing?: TshirtPricingOverride;
 }
@@ -1639,6 +1643,7 @@ export const products: Product[] = [
     type: 'mug',
     nameKey: 'mugInsideDaddy',
     vendorSku: 'BD101-FD',
+    detailNoteKey: 'mugInside',
     image: '/mugs/mug-inside-daddy.jpg',
     colorsImages: {
       '#ffffff': {
@@ -1654,6 +1659,7 @@ export const products: Product[] = [
     type: 'mug',
     nameKey: 'mugInsideLove',
     vendorSku: 'BD101-H',
+    detailNoteKey: 'mugInside',
     image: '/mugs/mug-inside-love.jpg',
     colorsImages: {
       '#ffffff': {
@@ -1669,6 +1675,7 @@ export const products: Product[] = [
     type: 'mug',
     nameKey: 'mugInsideBirthday',
     vendorSku: 'BD101-HB',
+    detailNoteKey: 'mugInside',
     image: '/mugs/mug-inside-birthday.jpg',
     colorsImages: {
       '#ffffff': {
@@ -1684,6 +1691,7 @@ export const products: Product[] = [
     type: 'mug',
     nameKey: 'mugInsideMothersDay',
     vendorSku: 'BD101-MD',
+    detailNoteKey: 'mugInside',
     image: '/mugs/mug-inside-mothers-day.jpg',
     colorsImages: {
       '#ffffff': {
@@ -1699,6 +1707,7 @@ export const products: Product[] = [
     type: 'mug',
     nameKey: 'mugInsideThanksgiving',
     vendorSku: 'BD101-TKG',
+    detailNoteKey: 'mugInside',
     image: '/mugs/mug-inside-thanksgiving.jpg',
     colorsImages: {
       '#ffffff': {

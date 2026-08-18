@@ -31,6 +31,13 @@ import {
 import { normalizeHex } from '@/lib/products/design-overlay';
 import { buildPremadeDesignCartPayload } from '@/lib/products/premade-design-order';
 import { capturePreviewElement } from '@/lib/products/capture-preview';
+import { captureDrinkware3DPreviews } from '@/components/products/customizer/Drinkware3DCapture';
+import {
+  getOverlayPrintBounds,
+  getProductMockupLayout,
+  shouldUseDrinkwareWrapDesignPreviewForTemplate,
+} from '@/lib/products/product-mockup-layout';
+import { sideDesignFromOverlayTemplate } from '@/lib/products/design-state';
 import { buildCustomizerUrl, buildDesignDetailUrl } from '@/lib/products/paths';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -153,7 +160,47 @@ export function ProductDesignCatalogCard({
     setOrdering(true);
     try {
       let capturedPreview: string | undefined;
-      if (previewRef.current) {
+      let capturedSidePreviews:
+        | { leftDesignPreview: string; rightDesignPreview: string }
+        | undefined;
+
+      const mockupSide = isDualSided ? 'front' : design.defaultSide ?? 'front';
+      const useDrinkwareWrap3D =
+        isOverlayDesignTemplate(design) &&
+        shouldUseDrinkwareWrapDesignPreviewForTemplate(
+          product,
+          design,
+          mockupSide,
+        );
+
+      if (useDrinkwareWrap3D) {
+        const sideDesign = sideDesignFromOverlayTemplate(
+          design,
+          product,
+          previewColor,
+          mockupSide,
+        );
+        if (sideDesign) {
+          const mockupLayout = getProductMockupLayout(product);
+          const drinkware3D = await captureDrinkware3DPreviews({
+            productType: product.type,
+            productId: product.id,
+            productColor: previewColor,
+            sideDesign,
+            designTemplate: design,
+            textLayers: sideDesign.textLayers,
+            printBounds: getOverlayPrintBounds(mockupLayout),
+          });
+          if (drinkware3D?.left && drinkware3D?.right) {
+            capturedSidePreviews = {
+              leftDesignPreview: drinkware3D.left,
+              rightDesignPreview: drinkware3D.right,
+            };
+          }
+        }
+      }
+
+      if (!capturedSidePreviews && previewRef.current) {
         capturedPreview = await capturePreviewElement(previewRef.current);
       }
 
@@ -165,6 +212,7 @@ export function ProductDesignCatalogCard({
           name: `${tp(product.type)} — ${displayName}`,
           price: product.basePrice,
           capturedPreview,
+          capturedSidePreviews,
         }),
       );
       router.push('/cart');

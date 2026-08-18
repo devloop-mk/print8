@@ -114,11 +114,18 @@ export function DrinkwarePrintAreaGuide({
           <div
             className="absolute rounded-sm border-2 border-dashed border-ink-400/55 bg-transparent"
             style={wrapFrame}
+          />
+
+          <span
+            className="absolute hidden rounded bg-white/55 px-1.5 py-0.5 text-[10px] font-medium text-ink-600/75 shadow-sm md:inline"
+            style={{
+              left: wrapFrame.left,
+              top: wrapFrame.top,
+              transform: 'translateY(calc(-100% - 3px))',
+            }}
           >
-            <span className="absolute left-1.5 top-1.5 hidden rounded bg-white/95 px-1.5 py-0.5 text-[10px] font-medium text-ink-600 shadow-sm md:inline">
-              {wrapLabel}
-            </span>
-          </div>
+            {wrapLabel}
+          </span>
         </>
       ) : null}
 

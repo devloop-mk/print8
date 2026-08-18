@@ -13,8 +13,12 @@ import { MockupLoadingOverlay } from '@/components/products/MockupLoadingOverlay
 import { ProductMockupFrame } from '@/components/products/ProductMockupFrame';
 import {
   getMockupImageDisplayStyle,
+  getOverlayPrintBounds,
   getProductMockupLayout,
+  shouldUseDrinkwareWrapDesignPreview,
 } from '@/lib/products/product-mockup-layout';
+import { sideDesignFromOverlayTemplate } from '@/lib/products/design-state';
+import { DrinkwareDesignPreview3D } from '@/components/products/customizer/DrinkwareDesignPreview3D';
 import { resolveDesignPreviewColor } from '@/lib/products/design-applicable-colors';
 import {
   DESIGN_OVERLAY_LAYER_CLASS,
@@ -151,6 +155,35 @@ export function DesignTemplatePreview({
     overlaySvg: sideConfig?.overlaySvg ?? design.overlaySvg,
   });
   const mockupLayout = getProductMockupLayout(product);
+  const overlayPrintBounds = getOverlayPrintBounds(mockupLayout);
+  const useDrinkwareWrap3D =
+    isOverlayDesignTemplate(design) &&
+    shouldUseDrinkwareWrapDesignPreview(product, placement);
+  const drinkwareSideDesign = useDrinkwareWrap3D
+    ? sideDesignFromOverlayTemplate(design, product, previewColor, mockupSide)
+    : null;
+
+  if (useDrinkwareWrap3D && drinkwareSideDesign) {
+    return (
+      <ProductMockupFrame
+        variant="catalog"
+        layout={mockupLayout}
+        className={className}
+      >
+        <DrinkwareDesignPreview3D
+          productType={product.type}
+          productId={product.id}
+          shirtColor={previewColor}
+          sideDesign={drinkwareSideDesign}
+          designTemplate={design}
+          printBounds={overlayPrintBounds}
+          textLayers={drinkwareSideDesign.textLayers}
+          variant="pane"
+          className="absolute inset-0 h-full w-full"
+        />
+      </ProductMockupFrame>
+    );
+  }
 
   const sideHasRecolorableOverlay = Boolean(
     sideConfig?.overlaySvg && sideConfig.overlayRecolor,

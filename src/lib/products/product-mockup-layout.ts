@@ -1,5 +1,14 @@
 import type { CSSProperties } from 'react';
-import type { Product, ProductType } from '@/lib/data/catalog';
+import type {
+  Product,
+  ProductDesignTemplate,
+  ProductSide,
+  ProductType,
+} from '@/lib/data/catalog';
+import {
+  resolveOverlayPlacementForSide,
+  type OverlayPlacement,
+} from '@/lib/products/design-overlay';
 import { PRODUCT_PRINT_AREA_INSET_PERCENT } from '@/lib/products/customizer-constants';
 import {
   getUnisexTshirtCatalogScaleFromMockup,
@@ -28,10 +37,42 @@ import {
   BODYSUIT_PRINT_AREA_INSETS,
   type PrintAreaInsets,
   getDrinkwareUnwrapPrintInsets,
+  getPrintAreaWidthPercent,
 } from '@/lib/products/print-area';
 
 export function isCylindricalDrinkwareType(type: ProductType): boolean {
   return type === 'mug' || type === 'cup' || type === 'thermos';
+}
+
+/**
+ * Wrap-style drinkware overlays span most of the unwrap circumference — the flat
+ * 2D mockup shows wings of the art past the mug silhouette. Use the 3D preview instead.
+ */
+export function shouldUseDrinkwareWrapDesignPreview(
+  product: Product,
+  placement: OverlayPlacement,
+): boolean {
+  if (!isCylindricalDrinkwareType(product.type)) return false;
+
+  const layout = getProductMockupLayout(product);
+  const bounds = getOverlayPrintBounds(layout);
+  const printWidth = getPrintAreaWidthPercent(bounds);
+  const wrapThreshold = Math.max(65, printWidth * 0.82);
+
+  return placement.scale >= wrapThreshold;
+}
+
+export function shouldUseDrinkwareWrapDesignPreviewForTemplate(
+  product: Product,
+  design: ProductDesignTemplate,
+  side?: ProductSide,
+): boolean {
+  if (design.kind !== 'overlay') return false;
+
+  const mockupSide = side ?? design.defaultSide ?? 'front';
+  const placement = resolveOverlayPlacementForSide(design, mockupSide, product);
+
+  return shouldUseDrinkwareWrapDesignPreview(product, placement);
 }
 
 export type ProductMockupLayout = {

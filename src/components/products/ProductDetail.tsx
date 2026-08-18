@@ -49,6 +49,14 @@ export function ProductDetail({ productId }: { productId: string }) {
     ? ti(product.nameKey)
     : tp(product.type);
   const isUpload = isUploadOnlyProduct(product);
+  const detailDescription = isUpload
+    ? td('uploadDescription')
+    : product.detailDescriptionKey
+      ? td(`productDescriptions.${product.detailDescriptionKey}`)
+      : td('description');
+  const detailNote = product.detailNoteKey
+    ? td(`productNotes.${product.detailNoteKey}`)
+    : null;
 
   return (
     <div className="min-w-0 max-w-full space-y-10 pb-24 lg:pb-0">
@@ -131,9 +139,10 @@ export function ProductDetail({ productId }: { productId: string }) {
               <p className="mt-2 text-xl text-brand-600">
                 {t('startingFrom')} {formatPrice(getProductDisplayPrice(product), locale)}
               </p>
-              <p className="mt-4 text-ink-600">
-                {isUpload ? td('uploadDescription') : td('description')}
-              </p>
+              <p className="mt-4 text-ink-600">{detailDescription}</p>
+              {detailNote ? (
+                <p className="mt-2 text-sm text-ink-500">{detailNote}</p>
+              ) : null}
             </div>
 
             {isUpload ? (

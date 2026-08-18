@@ -9,12 +9,9 @@ import {
 } from '@/lib/validations/order';
 import { isAdvancedMetadataKey } from '@/lib/admin/order-metadata';
 import { isDataUrl } from '@/lib/storage/cart-storage';
-import { uploadCheckoutAsset } from '@/lib/orders/upload-checkout-asset';
-import { orderItemSideUsesPremadeMasterForProduction } from '@/lib/products/premade-artwork-source';
 import {
   PRODUCT_SIDES,
   SIDE_PREVIEW_CART_KEYS,
-  SIDE_PRINT_PNG_CART_KEYS,
   getSideMetadataPrefix,
   type SidePreviewCartKey,
 } from '@/lib/products/product-sides';
@@ -56,10 +53,6 @@ type SidePreviewFields = Pick<
   | 'backDesignPreview'
   | 'leftDesignPreview'
   | 'rightDesignPreview'
-  | 'frontPrintPng'
-  | 'backPrintPng'
-  | 'leftPrintPng'
-  | 'rightPrintPng'
 >;
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -238,13 +231,8 @@ function fitCheckoutItem(item: CheckoutItem): CheckoutItem {
   return parsed.success ? parsed.data : fitted;
 }
 
-function sidePrintPngFileIdKey(side: (typeof PRODUCT_SIDES)[number]): string {
-  return `${getSideMetadataPrefix(side)}PrintPngFileId`;
-}
-
 async function prepareCheckoutItem(
   item: CartItem,
-  uploadToken?: string | null,
 ): Promise<CheckoutItem> {
   const previewKeys: SidePreviewCartKey[] = [
     'designPreview',
@@ -254,50 +242,21 @@ async function prepareCheckoutItem(
   ];
 
   const previews = {} as SidePreviewFields;
-  for (const key of previewKeys) {
-    const value = item[key];
-    if (typeof value === 'string' && value.length > 0) {
+  const previewResults = await Promise.all(
+    previewKeys.map(async (key) => {
+      const value = item[key];
+      if (typeof value !== 'string' || value.length === 0) return null;
       const compressed = await compressPreviewUrl(value);
-      if (compressed) previews[key] = compressed;
-    }
+      return compressed ? { key, compressed } : null;
+    }),
+  );
+  for (const result of previewResults) {
+    if (result) previews[result.key] = result.compressed;
   }
 
   let metadata = item.metadata
     ? stripCheckoutMetadata(item.metadata, previews)
     : undefined;
-
-  for (const side of PRODUCT_SIDES) {
-    const inlineKey = SIDE_PRINT_PNG_CART_KEYS[side];
-    const value = item[inlineKey];
-    if (typeof value !== 'string' || !isDataUrl(value)) continue;
-
-    if (orderItemSideUsesPremadeMasterForProduction(item.metadata, side)) {
-      continue;
-    }
-
-    if (!uploadToken) {
-      throw new CheckoutPrepareError('print_upload_requires_session');
-    }
-
-    try {
-      const { fileId } = await uploadCheckoutAsset(
-        uploadToken,
-        value,
-        `${side}-print.png`,
-      );
-      metadata = metadata ?? {};
-      metadata[sidePrintPngFileIdKey(side)] = fileId;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'upload_failed';
-      if (message === 'File too large') {
-        throw new CheckoutPrepareError('print_file_too_large');
-      }
-      if (message.includes('Invalid or expired upload session')) {
-        throw new CheckoutPrepareError('invalid_upload_token');
-      }
-      throw new CheckoutPrepareError('print_upload_failed', message);
-    }
-  }
 
   const prepared: CheckoutItem = {
     type: item.type,
@@ -347,7 +306,7 @@ export async function prepareCheckoutPayload(input: {
   pointsToRedeem?: number;
 }): Promise<CheckoutOrderPayload> {
   const items = await Promise.all(
-    input.items.map((item) => prepareCheckoutItem(item, input.uploadToken)),
+    input.items.map((item) => prepareCheckoutItem(item)),
   );
   const couponCode = input.couponCode?.trim();
 

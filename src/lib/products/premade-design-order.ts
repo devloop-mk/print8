@@ -247,6 +247,7 @@ export function buildPremadeDesignCartPayload({
   name,
   quantity = 1,
   capturedPreview,
+  capturedSidePreviews,
 }: {
   product: Product;
   design: ProductDesignTemplate;
@@ -257,6 +258,10 @@ export function buildPremadeDesignCartPayload({
   price?: number;
   quantity?: number;
   capturedPreview?: string;
+  /** Drinkware 3D snapshots (left/right profile views). */
+  capturedSidePreviews?: Partial<
+    Pick<CartItem, 'leftDesignPreview' | 'rightDesignPreview'>
+  >;
 }): Omit<CartItem, 'id'> {
   const metadata = buildPremadeDesignOrderMetadata({
     product,
@@ -265,15 +270,28 @@ export function buildPremadeDesignCartPayload({
     size,
   });
   const activeSide = getInitialCustomizerSide(design);
+  const sides = getDesignSides(design);
+  const unitPrice = getPremadeDesignUnitPrice(product, design);
+
+  if (capturedSidePreviews?.leftDesignPreview && capturedSidePreviews?.rightDesignPreview) {
+    return {
+      type: 'product',
+      name,
+      price: unitPrice,
+      quantity,
+      metadata,
+      leftDesignPreview: capturedSidePreviews.leftDesignPreview,
+      rightDesignPreview: capturedSidePreviews.rightDesignPreview,
+    };
+  }
+
   const preview =
     capturedPreview ?? getPremadeDesignOrderPreview(product, design, color);
   const previewField = sidePreviewFieldForSide(activeSide);
-  const sides = getDesignSides(design);
   const backPreview =
     sides.includes('back') && activeSide !== 'back'
       ? getProductMockup(product, color, 'back') ?? undefined
       : undefined;
-  const unitPrice = getPremadeDesignUnitPrice(product, design);
 
   return {
     type: 'product',

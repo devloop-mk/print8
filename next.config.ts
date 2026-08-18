@@ -76,8 +76,10 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     optimizePackageImports: ['lucide-react'],
+    // Print PNG checkout uploads (up to 25MB) pass through proxy.ts — default 10MB truncates the body.
+    proxyClientMaxBodySize: '28mb',
     serverActions: {
-      bodySizeLimit: "12mb",
+      bodySizeLimit: '12mb',
     },
   },
   async redirects() {

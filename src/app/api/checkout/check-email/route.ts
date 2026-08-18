@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { enforceRateLimit } from '@/lib/security/rate-limit';
 import { createSupabaseRequestClient } from '@/lib/supabase/server-auth';
+import { customersDb } from '@/lib/db/customers';
+import { getCustomerSignInMethods } from '@/lib/auth/customer-sign-in-methods';
 
 const checkEmailSchema = z.object({
   email: z.string().trim().email().max(254),
 });
 
-/** Validates email shape only — never reveals whether an account exists. */
+/** Checkout helper — reveals whether an account exists so guests can sign in. */
 export async function POST(request: NextRequest) {
   const rateLimited = enforceRateLimit(
     request,
@@ -30,7 +32,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid email' }, { status: 400 });
     }
 
-    return NextResponse.json({ ok: true });
+    const customer = await customersDb.findByEmailNormalized(parsed.data.email);
+    if (!customer) {
+      return NextResponse.json({ ok: true, registered: false });
+    }
+
+    const signInMethods = await getCustomerSignInMethods(customer.id);
+    return NextResponse.json({
+      ok: true,
+      registered: true,
+      google: signInMethods.google,
+      email: signInMethods.email,
+    });
   } catch (error) {
     console.error('[checkout/check-email] error:', error);
     return NextResponse.json({ error: 'Check failed' }, { status: 500 });

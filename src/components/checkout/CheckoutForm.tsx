@@ -26,7 +26,6 @@ import {
   CheckoutPrepareError,
   prepareCheckoutPayload,
 } from "@/lib/orders/prepare-checkout-payload";
-import { cartHasInlinePrintPngs } from "@/lib/cart/print-png-cart";
 import { SPIN_PENDING_COUPON_KEY } from "@/lib/rewards/spin-config";
 import { PointsRedemption } from "@/components/checkout/PointsRedemption";
 import { PointsEarnPreview } from "@/components/checkout/PointsEarnPreview";
@@ -76,11 +75,16 @@ export function CheckoutForm() {
   const [redirecting, setRedirecting] = useState(false);
   const pendingCouponAutoApply = useRef(false);
   const pendingCouponEmail = useRef<string | undefined>(undefined);
+  const [registeredEmailCheck, setRegisteredEmailCheck] = useState<{
+    registered: boolean;
+    google: boolean;
+    email: boolean;
+  }>({ registered: false, google: false, email: false });
 
   const payableTotal = Math.max(0, total - couponDiscount - pointsDiscount);
   const isLoggedIn = Boolean(auth?.customer);
   const showReturningCustomerSignIn =
-    !isLoggedIn && isCheckoutEmailValid(form.email.trim());
+    !isLoggedIn && registeredEmailCheck.registered;
 
   const handlePointsChange = useCallback(
     (value: {
@@ -105,6 +109,65 @@ export function CheckoutForm() {
       address: prev.address || auth.customer?.defaultAddress || prev.address,
     }));
   }, [auth?.customer]);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      setRegisteredEmailCheck({
+        registered: false,
+        google: false,
+        email: false,
+      });
+      return;
+    }
+
+    const email = form.email.trim();
+    if (!isCheckoutEmailValid(email)) {
+      setRegisteredEmailCheck({
+        registered: false,
+        google: false,
+        email: false,
+      });
+      return;
+    }
+
+    const timer = window.setTimeout(async () => {
+      try {
+        const response = await fetch('/api/checkout/check-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+        const data = (await response.json()) as {
+          registered?: boolean;
+          google?: boolean;
+          email?: boolean;
+        };
+
+        if (!response.ok || !data.registered) {
+          setRegisteredEmailCheck({
+            registered: false,
+            google: false,
+            email: false,
+          });
+          return;
+        }
+
+        setRegisteredEmailCheck({
+          registered: true,
+          google: Boolean(data.google),
+          email: Boolean(data.email),
+        });
+      } catch {
+        setRegisteredEmailCheck({
+          registered: false,
+          google: false,
+          email: false,
+        });
+      }
+    }, 400);
+
+    return () => window.clearTimeout(timer);
+  }, [form.email, isLoggedIn]);
 
   function storeCheckoutPrefill() {
     try {
@@ -310,7 +373,6 @@ export function CheckoutForm() {
 
   async function resolveUploadTokenForCheckout(): Promise<string | null> {
     const needsSession =
-      cartHasInlinePrintPngs(items) ||
       fileIds.length > 0 ||
       items.some((item) => (item.fileIds?.length ?? 0) > 0);
 
@@ -369,14 +431,6 @@ export function CheckoutForm() {
     setProcessing(true);
     try {
       const uploadToken = await resolveUploadTokenForCheckout();
-      if (
-        cartHasInlinePrintPngs(items) &&
-        !uploadToken
-      ) {
-        setErrors({ form: t("uploadSessionError") });
-        setProcessing(false);
-        return;
-      }
 
       const payload = await prepareCheckoutPayload({
         ...form,
@@ -578,22 +632,30 @@ export function CheckoutForm() {
               <div
                 className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-900 sm:col-span-2"
               >
-                <p>{t("emailReturningCustomer")}</p>
+                <p>
+                  {registeredEmailCheck.google && !registeredEmailCheck.email
+                    ? t("emailAccountExistsGoogleOnly")
+                    : t("emailReturningCustomer")}
+                </p>
                 <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
-                  <button
-                    type="button"
-                    onClick={goToGoogleFromCheckout}
-                    className="font-semibold text-brand-700 hover:text-brand-800 hover:underline"
-                  >
-                    {t("emailAccountExistsGoogle")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={goToLoginFromCheckout}
-                    className="font-semibold text-brand-700 hover:text-brand-800 hover:underline"
-                  >
-                    {t("emailAccountExistsLogin")}
-                  </button>
+                  {registeredEmailCheck.google ? (
+                    <button
+                      type="button"
+                      onClick={goToGoogleFromCheckout}
+                      className="font-semibold text-brand-700 hover:text-brand-800 hover:underline"
+                    >
+                      {t("emailAccountExistsGoogle")}
+                    </button>
+                  ) : null}
+                  {registeredEmailCheck.email ? (
+                    <button
+                      type="button"
+                      onClick={goToLoginFromCheckout}
+                      className="font-semibold text-brand-700 hover:text-brand-800 hover:underline"
+                    >
+                      {t("emailAccountExistsLogin")}
+                    </button>
+                  ) : null}
                 </div>
               </div>
             ) : null}

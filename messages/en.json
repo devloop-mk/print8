@@ -2015,7 +2015,10 @@
       "magnetDescription": "Upload your photo — we print it on this magnet. You can crop the image before ordering.",
       "magnetUploadCta": "Upload image & order",
       "uploadDescription": "Upload your photo — we print it on this product. You can crop the image before ordering.",
-      "uploadCta": "Upload image & order"
+      "uploadCta": "Upload image & order",
+      "productNotes": {
+        "mugInside": "The interior is always the same (pre-printed). Only the exterior is customizable."
+      }
     },
     "uploadOrder": {
       "title": "Upload image & order",
