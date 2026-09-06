@@ -412,7 +412,7 @@ export function ProductDesignsCatalog({
         {
           locale,
           colorFilter,
-          translateName: (key) => t(key),
+          translateName: t,
         },
       ),
     [colorFilter, filtered, locale, sort, t, visibleCouplePacks],

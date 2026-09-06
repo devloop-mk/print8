@@ -146,7 +146,7 @@ export function sideDesignFromTextStyle(
     uploadedImageScale: textStyle.photoScale ?? 40,
     premadeDesignId: templateId,
     isTextTemplate: true,
-    showPhotoGuide: false,
+    showPhotoGuide: Boolean(textStyle.photoPosition),
   };
 }
 

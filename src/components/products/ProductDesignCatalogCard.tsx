@@ -10,6 +10,7 @@ import {
   type ProductDesignCatalogEntry,
 } from '@/lib/products/design-catalog';
 import {
+  getProductMockup,
   isImageDesignTemplate,
   isOverlayDesignTemplate,
   isTextDesignTemplate,
@@ -115,9 +116,7 @@ export function ProductDesignCatalogCard({
     preferredProductId,
   );
   const { design } = entry;
-  const displayName = resolveProductDesignDisplayName(design, locale, (key) =>
-    t(key),
-  );
+  const displayName = resolveProductDesignDisplayName(design, locale, t);
   const isDualSided = isDualSidedDesign(design);
 
   const applicableColors = useMemo(
@@ -165,12 +164,14 @@ export function ProductDesignCatalogCard({
         | undefined;
 
       const mockupSide = isDualSided ? 'front' : design.defaultSide ?? 'front';
+      const shirtMockup = getProductMockup(product, previewColor, mockupSide);
       const useDrinkwareWrap3D =
         isOverlayDesignTemplate(design) &&
         shouldUseDrinkwareWrapDesignPreviewForTemplate(
           product,
           design,
           mockupSide,
+          shirtMockup,
         );
 
       if (useDrinkwareWrap3D) {
@@ -285,6 +286,7 @@ export function ProductDesignCatalogCard({
                     design={design}
                     typeLabel={tp(product.type)}
                     side={isDualSided ? 'front' : undefined}
+                    allowDrinkware3d={false}
                   />
                 </div>
                 {isDualSided ? (
@@ -301,6 +303,7 @@ export function ProductDesignCatalogCard({
                       design={design}
                       typeLabel={tp(product.type)}
                       side="back"
+                      allowDrinkware3d={false}
                     />
                   </div>
                 ) : null}
@@ -345,26 +348,30 @@ export function ProductDesignCatalogCard({
           className="flex flex-1 flex-col outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500"
         >
           <div className="flex flex-1 flex-col gap-3 p-4 pb-3">
-            <div className="flex flex-wrap gap-1.5">
-              {(preferredProductType
-                ? design.productTypes.filter((productType) => productType === preferredProductType)
-                : design.productTypes
-              ).map((productType) => (
-                <span
-                  key={productType}
-                  className="rounded-full bg-ink-100 px-2 py-0.5 text-[11px] font-medium text-ink-700"
-                >
-                  {tp(productType)}
-                </span>
-              ))}
-              {!isDualSided ? (
-                <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-medium text-brand-700">
-                  {getDesignSideMode(design) === 'back'
-                    ? tc('sideBack')
-                    : tc('sideFront')}
-                </span>
-              ) : null}
-            </div>
+            {!preferredProductId ? (
+              <div className="flex flex-wrap gap-1.5">
+                {(preferredProductType
+                  ? design.productTypes.filter(
+                      (productType) => productType === preferredProductType,
+                    )
+                  : design.productTypes
+                ).map((productType) => (
+                  <span
+                    key={productType}
+                    className="rounded-full bg-ink-100 px-2 py-0.5 text-[11px] font-medium text-ink-700"
+                  >
+                    {tp(productType)}
+                  </span>
+                ))}
+                {!isDualSided ? (
+                  <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-medium text-brand-700">
+                    {getDesignSideMode(design) === 'back'
+                      ? tc('sideBack')
+                      : tc('sideFront')}
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
 
             <div>
               <p className="font-medium text-ink-900 group-hover:text-brand-700">

@@ -29,7 +29,7 @@ export function quoteOrderPointsEarn(input: {
   return { earned, bonus, total: earned + bonus };
 }
 
-/** MKD discount from a points amount (generous redemption rate). */
+/** MKD discount from a points amount (1 point = 1 MKD). */
 export function pointsToDiscountMkd(points: number): number {
   if (!Number.isFinite(points) || points <= 0) return 0;
   return Math.floor(points * LOYALTY_POINT_MKDISCOUNT_VALUE);

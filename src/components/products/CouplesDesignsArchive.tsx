@@ -144,6 +144,7 @@ function CouplesHeroPackPreview({
           design={heroDesign1}
           typeLabel={partner1.labelEn}
           className={heroPreviewFrameClass}
+          allowDrinkware3d={false}
         />
         <DesignTemplatePreview
           product={product}
@@ -151,6 +152,7 @@ function CouplesHeroPackPreview({
           design={heroDesign2}
           typeLabel={partner2.labelEn}
           className={heroPreviewFrameClass}
+          allowDrinkware3d={false}
         />
       </div>
       {showTitle ? (

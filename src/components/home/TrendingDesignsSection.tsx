@@ -63,6 +63,7 @@ function TrendingCard({
   compact = false,
   name,
   customizeLabel,
+  productTypeLabel,
 }: {
   design: TrendingProductDesign;
   rank: number;
@@ -70,6 +71,7 @@ function TrendingCard({
   compact?: boolean;
   name: string;
   customizeLabel: string;
+  productTypeLabel: string;
 }) {
   const href = buildDesignDetailUrl(design.id);
 
@@ -121,7 +123,7 @@ function TrendingCard({
           </span>
           {!compact ? (
             <span className="text-[10px] font-semibold uppercase tracking-wider text-white/60">
-              T-shirt
+              {productTypeLabel}
             </span>
           ) : null}
         </div>
@@ -184,7 +186,9 @@ export function TrendingDesignsSection({
 }) {
   const t = useTranslations('home.trending');
   const tp = useTranslations('products');
+  const tTypes = useTranslations('products.types');
   const locale = useLocale() as 'mk' | 'en';
+  const productTypeLabel = tTypes('t-shirt');
 
   if (designs.length === 0) return null;
 
@@ -248,8 +252,9 @@ export function TrendingDesignsSection({
                 design={design}
                 rank={index + 1}
                 compact
-                name={resolveProductDesignDisplayName(design, locale, (key) => tp(key))}
+                name={resolveProductDesignDisplayName(design, locale, tp)}
                 customizeLabel={tp('customize')}
+                productTypeLabel={productTypeLabel}
               />
             ))}
           </div>
@@ -263,8 +268,9 @@ export function TrendingDesignsSection({
                 design={hero}
                 rank={1}
                 featured
-                name={resolveProductDesignDisplayName(hero, locale, (key) => tp(key))}
+                name={resolveProductDesignDisplayName(hero, locale, tp)}
                 customizeLabel={tp('customize')}
+                productTypeLabel={productTypeLabel}
               />
             </div>
           ) : null}
@@ -274,8 +280,9 @@ export function TrendingDesignsSection({
               key={design.id}
               design={design}
               rank={index + 2}
-              name={resolveProductDesignDisplayName(design, locale, (key) => tp(key))}
+              name={resolveProductDesignDisplayName(design, locale, tp)}
               customizeLabel={tp('customize')}
+              productTypeLabel={productTypeLabel}
             />
           ))}
         </div>

@@ -63,6 +63,7 @@ export function resolveSideOverlayConfig(
       overlayScale: template.overlayScale,
       overlayPosition: template.overlayPosition,
       overlayByProductType: template.overlayByProductType,
+      overlayByProductId: template.overlayByProductId,
     };
   }
 
@@ -75,6 +76,7 @@ export function resolveSideOverlayConfig(
       overlayScale: template.overlayScale,
       overlayPosition: template.overlayPosition,
       overlayByProductType: template.overlayByProductType,
+      overlayByProductId: template.overlayByProductId,
     };
   }
 

@@ -1,5 +1,6 @@
 import { getSupabaseAdmin } from '@/lib/supabase/client';
 import { normalizeCustomerEmail } from '@/lib/loyalty/points';
+import { expireCustomerPoints } from '@/lib/loyalty/expire-points';
 
 export type CustomerRecord = {
   id: string;
@@ -50,6 +51,12 @@ function mapCustomer(row: CustomerRow): CustomerRecord {
 
 export const customersDb = {
   async findById(id: string): Promise<CustomerRecord | null> {
+    try {
+      await expireCustomerPoints(id);
+    } catch (expireError) {
+      console.error('[customers] expire points failed:', expireError);
+    }
+
     const { data, error } = await getSupabaseAdmin()
       .from('customers')
       .select('*')
@@ -64,12 +71,14 @@ export const customersDb = {
     const normalized = normalizeCustomerEmail(email);
     const { data, error } = await getSupabaseAdmin()
       .from('customers')
-      .select('*')
+      .select('id')
       .eq('email_normalized', normalized)
       .maybeSingle();
 
     if (error) throw new Error(error.message);
-    return data ? mapCustomer(data as CustomerRow) : null;
+    if (!data) return null;
+
+    return this.findById(data.id as string);
   },
 
   async ensureProfile(input: {

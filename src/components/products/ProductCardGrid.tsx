@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { formatPrice } from '@/lib/utils';
 import { getProductOffering } from '@/lib/products/offering';
 import { Card } from '@/components/ui/Card';
 import { ProductCatalogImage } from '@/components/products/ProductCatalogImage';
+import { ProductCatalogDesignsProvider } from '@/components/products/ProductCatalogDesignsProvider';
 import { Reveal } from '@/components/motion/Reveal';
 import { cn } from '@/lib/utils';
 import type { Product } from '@/lib/data/catalog';
@@ -18,8 +19,36 @@ import {
 import { buildCustomizerUrl } from '@/lib/products/paths';
 import { getColorSwatchDisplayHex } from '@/lib/products/product-color-labels';
 import { getProductDisplayPrice } from '@/lib/products/tshirt-print-pricing';
+import { isUploadOnlyProduct } from '@/lib/products/upload-only-products';
 
 export type ProductCardLinkTarget = 'detail' | 'customizer';
+
+function formatReadyDesignsLabel(
+  count: number,
+  t: ReturnType<typeof useTranslations<'products'>>,
+) {
+  if (count === 1) return t('card.readyDesignOne');
+  return t('card.readyDesignsMany', { count: String(count) });
+}
+
+function getProductCardActionLabel(
+  product: Product,
+  offering: ReturnType<typeof getProductOffering>,
+  linkTarget: ProductCardLinkTarget,
+  t: ReturnType<typeof useTranslations<'products'>>,
+) {
+  const uploadOnly = isUploadOnlyProduct(product);
+
+  if (linkTarget === 'customizer') {
+    if (uploadOnly) return t('card.uploadPhoto');
+    if (offering.hasPremade) return t('card.startOrPickDesign');
+    return t('card.startDesigning');
+  }
+
+  if (uploadOnly) return t('card.uploadAndOrder');
+  if (offering.hasPremade) return t('card.browseReadyDesigns');
+  return t('viewProduct');
+}
 
 function ProductCardGridItem({
   product,
@@ -27,12 +56,14 @@ function ProductCardGridItem({
   linkTarget,
   cardColor,
   onPreviewColor,
+  designPreviewOnHover,
 }: {
   product: Product;
   index: number;
   linkTarget: ProductCardLinkTarget;
   cardColor: string;
   onPreviewColor: (color: string) => void;
+  designPreviewOnHover?: boolean;
 }) {
   const t = useTranslations('products');
   const tp = useTranslations('products.types');
@@ -50,10 +81,18 @@ function ProductCardGridItem({
           color: cardColor !== defaultColor ? cardColor : undefined,
         })
       : `/products/${product.id}`;
-  const actionLabel =
-    linkTarget === 'customizer'
-      ? t('card.startDesigning')
-      : t('card.exploreOptions');
+  const actionLabel = getProductCardActionLabel(
+    product,
+    offering,
+    linkTarget,
+    t,
+  );
+  const isCompactCard =
+    grid?.mobileColumnToggle && grid.mobileColumns === 2;
+  const badgeClass = cn(
+    'whitespace-nowrap leading-none',
+    isCompactCard && 'px-1.5 py-0 text-[9px] tracking-normal',
+  );
 
   return (
     <Reveal
@@ -70,6 +109,7 @@ function ProductCardGridItem({
               product={product}
               color={cardColor}
               typeLabel={productLabel}
+              designPreviewOnHover={designPreviewOnHover}
             />
           </div>
           <div className="flex flex-1 flex-col p-4">
@@ -83,11 +123,18 @@ function ProductCardGridItem({
               {formatPrice(getProductDisplayPrice(product), locale)}
             </p>
 
-            <div className="mt-3 flex min-h-[1.625rem] flex-wrap gap-1.5">
-              <span className="badge-brand">{t('card.customOption')}</span>
+            <div
+              className={cn(
+                'mt-3 flex flex-wrap items-center',
+                isCompactCard ? 'gap-1' : 'gap-1.5',
+              )}
+            >
+              <span className={cn('badge-brand', badgeClass)}>
+                {t('card.customOption')}
+              </span>
               {offering.hasPremade ? (
-                <span className="badge-sharp">
-                  {t('card.readyDesigns', { count: offering.premadeCount })}
+                <span className={cn('badge-sharp', badgeClass)}>
+                  {formatReadyDesignsLabel(offering.premadeCount, t)}
                 </span>
               ) : null}
             </div>
@@ -140,6 +187,7 @@ export function ProductCardGrid({
   toggleClassName,
   gapClassName = 'gap-3 sm:gap-4',
   linkTarget = 'detail',
+  designPreviewOnHover = false,
 }: {
   items: Product[];
   gridClassName?: string;
@@ -149,11 +197,14 @@ export function ProductCardGrid({
   toggleClassName?: string;
   gapClassName?: string;
   linkTarget?: ProductCardLinkTarget;
+  designPreviewOnHover?: boolean;
 }) {
   const [previewColors, setPreviewColors] = useState<Record<string, string>>({});
+  const productIds = useMemo(() => items.map((product) => product.id), [items]);
 
   return (
-    <CatalogGridLayout
+    <ProductCatalogDesignsProvider productIds={productIds}>
+      <CatalogGridLayout
       defaultDesktopColumns={desktopColumns}
       desktopColumnToggle={desktopColumnToggle}
       mobileColumnToggle={mobileColumnToggle}
@@ -172,6 +223,7 @@ export function ProductCardGrid({
             index={index}
             linkTarget={linkTarget}
             cardColor={cardColor}
+            designPreviewOnHover={designPreviewOnHover}
             onPreviewColor={(color) =>
               setPreviewColors((prev) => ({
                 ...prev,
@@ -182,5 +234,6 @@ export function ProductCardGrid({
         );
       })}
     </CatalogGridLayout>
+    </ProductCatalogDesignsProvider>
   );
 }

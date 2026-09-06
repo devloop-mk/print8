@@ -4,6 +4,12 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Spinner } from '@/components/ui/Spinner';
 import { LoadingIndicator } from '@/components/ui/LoadingIndicator';
+import { MAX_FILE_SIZE } from '@/lib/upload/constants';
+import { formatBytes } from '@/lib/students/student-print-config';
+import {
+  resolveUploadUserMessage,
+  uploadMessageFns,
+} from '@/lib/upload/upload-user-messages';
 
 interface SecureUploadProps {
   token: string | null;
@@ -15,6 +21,13 @@ interface SecureUploadProps {
   disabled?: boolean;
 }
 
+const ACCEPTED_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'application/pdf',
+]);
+
 export function SecureUpload({
   token,
   loading = false,
@@ -25,6 +38,8 @@ export function SecureUpload({
   disabled,
 }: SecureUploadProps) {
   const t = useTranslations('common');
+  const messages = uploadMessageFns(t);
+  const maxSizeLabel = formatBytes(MAX_FILE_SIZE);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState<{
     type: 'error' | 'success';
@@ -33,6 +48,9 @@ export function SecureUpload({
 
   const isDisabled = disabled || loading || uploading;
   const canUpload = Boolean(token) && !isDisabled;
+  const sessionErrorMessage = resolveUploadUserMessage(sessionError, messages, {
+    maxSizeLabel,
+  });
 
   async function uploadWithToken(uploadToken: string, file: File) {
     const formData = new FormData();
@@ -74,6 +92,21 @@ export function SecureUpload({
       return;
     }
 
+    if (!ACCEPTED_TYPES.has(file.type)) {
+      setMessage({ type: 'error', text: t('uploadTypeNotAllowed') });
+      e.target.value = '';
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      setMessage({
+        type: 'error',
+        text: t('uploadTooLarge', { max: maxSizeLabel }),
+      });
+      e.target.value = '';
+      return;
+    }
+
     setUploading(true);
     setMessage(null);
 
@@ -84,9 +117,8 @@ export function SecureUpload({
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : '';
       const errorText =
-        errorMsg === 'UPLOAD_LIMIT_REACHED'
-          ? t('uploadLimit')
-          : errorMsg || t('uploadError');
+        resolveUploadUserMessage(errorMsg, messages, { maxSizeLabel }) ??
+        t('uploadError');
       setMessage({ type: 'error', text: errorText });
     } finally {
       setUploading(false);
@@ -102,9 +134,9 @@ export function SecureUpload({
         </div>
       ) : null}
 
-      {!loading && sessionError && (
+      {!loading && sessionErrorMessage && (
         <div className="mb-3 space-y-2">
-          <p className="text-sm text-red-600">{sessionError}</p>
+          <p className="text-sm text-red-600">{sessionErrorMessage}</p>
           <p className="text-xs text-ink-500">{t('uploadSessionHint')}</p>
           {onRefreshSession && (
             <button
@@ -151,6 +183,10 @@ export function SecureUpload({
           disabled={!canUpload}
         />
       </label>
+
+      <p className="mt-2 text-xs text-ink-500">
+        {t('uploadFormatsHint', { max: maxSizeLabel })}
+      </p>
 
       {message && (
         <p

@@ -204,7 +204,7 @@ export function ProductTypeReadyDesignsSection({
     return sortDesignCatalogEntries(searched, sort, {
       locale,
       colorFilter,
-      translateName: (key) => t(key),
+      translateName: t,
     });
   }, [
     colorFilter,

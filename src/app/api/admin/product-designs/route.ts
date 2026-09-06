@@ -39,6 +39,14 @@ const templateSchema = z.object({
       }),
     )
     .optional(),
+  overlayByProductId: z
+    .record(
+      z.object({
+        scale: z.number().optional(),
+        position: z.object({ x: z.number(), y: z.number() }).optional(),
+      }),
+    )
+    .optional(),
   designSides: z.array(z.enum(['front', 'back', 'left', 'right'])).optional(),
   backOverlay: z.record(z.unknown()).optional(),
   recommendedColor: z.string().optional(),

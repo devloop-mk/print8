@@ -15,7 +15,7 @@ import {
   getMockupImageDisplayStyle,
   getOverlayPrintBounds,
   getProductMockupLayout,
-  shouldUseDrinkwareWrapDesignPreview,
+  shouldUseDrinkware3DDesignPreview,
 } from '@/lib/products/product-mockup-layout';
 import { sideDesignFromOverlayTemplate } from '@/lib/products/design-state';
 import { DrinkwareDesignPreview3D } from '@/components/products/customizer/DrinkwareDesignPreview3D';
@@ -128,6 +128,7 @@ export function DesignTemplatePreview({
   showPhotoGuide = false,
   className,
   side,
+  allowDrinkware3d = true,
 }: {
   product: Product;
   color: string;
@@ -138,6 +139,8 @@ export function DesignTemplatePreview({
   className?: string;
   /** Which garment side to show. Defaults to design.defaultSide. */
   side?: ProductSide;
+  /** Grid/catalog cards disable 3D — too many WebGL contexts break previews. */
+  allowDrinkware3d?: boolean;
 }) {
   const textStyle = design.textStyle;
   const photoGuide = textStyle?.photoPosition;
@@ -157,8 +160,9 @@ export function DesignTemplatePreview({
   const mockupLayout = getProductMockupLayout(product);
   const overlayPrintBounds = getOverlayPrintBounds(mockupLayout);
   const useDrinkwareWrap3D =
+    allowDrinkware3d &&
     isOverlayDesignTemplate(design) &&
-    shouldUseDrinkwareWrapDesignPreview(product, placement);
+    shouldUseDrinkware3DDesignPreview(product, shirtMockup, placement);
   const drinkwareSideDesign = useDrinkwareWrap3D
     ? sideDesignFromOverlayTemplate(design, product, previewColor, mockupSide)
     : null;

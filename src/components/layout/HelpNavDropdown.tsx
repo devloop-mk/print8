@@ -90,7 +90,7 @@ export function HelpNavDropdown() {
         aria-controls={panelId}
         onClick={() => setOpen((value) => !value)}
         className={cn(
-          'flex items-center gap-1 rounded-lg border-x border-transparent px-2.5 py-2.5 text-sm font-semibold uppercase tracking-wide transition lg:px-3',
+          'flex items-center gap-1 whitespace-nowrap rounded-lg border-x border-transparent px-2 py-2.5 text-[13px] font-semibold uppercase tracking-wide transition xl:px-2.5 xl:text-sm 2xl:px-3',
           active || open
             ? 'bg-brand-50 text-brand-700'
             : 'text-ink-600 hover:bg-ink-50 hover:text-ink-900',

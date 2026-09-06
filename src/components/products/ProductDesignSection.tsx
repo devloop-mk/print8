@@ -165,9 +165,7 @@ function DesignCard({
   const productLabel = product.nameKey
     ? ti(product.nameKey)
     : tp(product.type);
-  const displayName = resolveProductDesignDisplayName(design, locale, (key) =>
-    t(key),
-  );
+  const displayName = resolveProductDesignDisplayName(design, locale, t);
 
   const grid = useOptionalCatalogGrid();
   const canQuickOrder =
@@ -197,6 +195,7 @@ function DesignCard({
             color={color}
             design={design}
             typeLabel={productLabel}
+            allowDrinkware3d={false}
           />
         ) : isImageDesignTemplate(design) ? (
           <div className="relative aspect-square overflow-hidden bg-white">

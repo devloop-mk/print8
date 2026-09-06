@@ -156,9 +156,7 @@ export function ProductDesignDetail({
   const designSides = getDesignSides(design);
   const isDualSided = isDualSidedDesign(design);
   const activePreviewSide = isDualSided ? previewSide : design.defaultSide;
-  const displayName = resolveProductDesignDisplayName(design, locale as 'mk' | 'en', (key) =>
-    t(key),
-  );
+  const displayName = resolveProductDesignDisplayName(design, locale as 'mk' | 'en', t);
   const couplePackTitle = couplePack
     ? locale === 'mk'
       ? couplePack.titleMk

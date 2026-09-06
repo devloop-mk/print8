@@ -118,11 +118,11 @@ export function Drinkware3DPreview({
             </button>
           )}
         </>
-      ) : (
+      ) : variant !== 'pane' ? (
         <p className="pointer-events-none absolute inset-x-0 bottom-2 z-10 text-center text-[10px] font-medium text-ink-500/90">
           {t('preview3dDragHint')}
         </p>
-      )}
+      ) : null}
     </div>
   );
 }

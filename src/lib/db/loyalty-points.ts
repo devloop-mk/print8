@@ -9,7 +9,8 @@ export type LoyaltyTransactionType =
   | 'adjust'
   | 'clawback'
   | 'pending_earn'
-  | 'pending_cancel';
+  | 'pending_cancel'
+  | 'expire';
 
 export type LoyaltyPointTransaction = {
   id: string;
@@ -20,6 +21,7 @@ export type LoyaltyPointTransaction = {
   orderId: string | null;
   note: string | null;
   createdAt: string;
+  expiresAt: string | null;
 };
 
 type LoyaltyRow = {
@@ -31,6 +33,7 @@ type LoyaltyRow = {
   order_id: string | null;
   note: string | null;
   created_at: string;
+  expires_at: string | null;
 };
 
 function mapTransaction(row: LoyaltyRow): LoyaltyPointTransaction {
@@ -43,6 +46,7 @@ function mapTransaction(row: LoyaltyRow): LoyaltyPointTransaction {
     orderId: row.order_id,
     note: row.note,
     createdAt: row.created_at,
+    expiresAt: row.expires_at,
   };
 }
 

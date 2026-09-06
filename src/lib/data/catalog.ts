@@ -1,3 +1,4 @@
+import { transparentMugsPackTemplates } from '@/lib/data/transparent-mugs-pack';
 import { drinkwarePackTemplates } from '@/lib/data/drinkware-pack';
 import { babyPackTemplates } from '@/lib/data/baby-pack';
 import { trendingMkPackTemplates } from '@/lib/data/trending-mk-pack';
@@ -751,7 +752,7 @@ export type ProductColorImages = Record<
 
 export type ProductGallerySlide = {
   image: string;
-  /** Customization side — only for multi-side products */
+  /** Customization side â€” only for multi-side products */
   labelKey?: 'front' | 'back' | 'left' | 'right';
   kind: 'photo' | 'side';
 };
@@ -784,7 +785,7 @@ export function isProductSideImages(
 export interface Product {
   id: string;
   type: ProductType;
-  /** Translation key under `products.items` — falls back to product type */
+  /** Translation key under `products.items` â€” falls back to product type */
   nameKey?: string;
   image: string;
   basePrice: number;
@@ -793,17 +794,17 @@ export interface Product {
   sizes?: string[];
   /** Products that support separate front/back customization */
   sides?: ProductSide[];
-  /** Garment fit — women's-only SKUs (e.g. fitted white/black tee) use `women`. */
+  /** Garment fit â€” women's-only SKUs (e.g. fitted white/black tee) use `women`. */
   fit?: GarmentFit;
   /** When true, product is only reachable via garment-fit selection on designs. */
   fitOnly?: boolean;
   /** Default crop aspect for upload-only products (e.g. magnets) */
   uploadAspect?: number;
-  /** Koni / supplier SKU — internal only (orders, admin), not on storefront cards */
+  /** Koni / supplier SKU â€” internal only (orders, admin), not on storefront cards */
   vendorSku?: string;
-  /** Optional i18n key under `products.detail.productDescriptions` — replaces the default blurb. */
+  /** Optional i18n key under `products.detail.productDescriptions` â€” replaces the default blurb. */
   detailDescriptionKey?: string;
-  /** Optional i18n key under `products.detail.productNotes` — shown below the main blurb. */
+  /** Optional i18n key under `products.detail.productNotes` â€” shown below the main blurb. */
   detailNoteKey?: string;
   /** Optional t-shirt / polo print tier overrides (MKD). */
   tshirtPricing?: TshirtPricingOverride;
@@ -860,6 +861,10 @@ export interface ProductDesignSideOverlay {
   overlayByProductType?: Partial<
     Record<ProductType, { position?: { x: number; y: number }; scale?: number }>
   >;
+  /** Per blank SKU when mug/cup shape differs from the type default preview. */
+  overlayByProductId?: Partial<
+    Record<string, { position?: { x: number; y: number }; scale?: number }>
+  >;
 }
 
 export interface ProductDesignTemplate {
@@ -874,18 +879,18 @@ export interface ProductDesignTemplate {
   designSides?: ProductSide[];
   /** Back-side overlay when designSides includes both front and back. */
   backOverlay?: ProductDesignSideOverlay;
-  /** Full product JPEG — used for `image` kind thumbnails & customizer base */
+  /** Full product JPEG â€” used for `image` kind thumbnails & customizer base */
   image?: string;
-  /** Transparent print artwork (PNG) — overlaid on product mockup */
+  /** Transparent print artwork (PNG) â€” overlaid on product mockup */
   overlayImage?: string;
-  /** Recolorable SVG source (1–2 ink slots via CSS variables) */
+  /** Recolorable SVG source (1â€“2 ink slots via CSS variables) */
   overlaySvg?: string;
   overlayRecolor?: {
     primary: string;
     secondary?: string;
     slots?: 1 | 2;
   };
-  /** Fixed multi-color art — map shirt hex to tuned PNG/SVG variant */
+  /** Fixed multi-color art â€” map shirt hex to tuned PNG/SVG variant */
   overlayColorVariants?: Record<string, string>;
   overlayScale?: number;
   overlayPosition?: { x: number; y: number };
@@ -893,17 +898,21 @@ export interface ProductDesignTemplate {
   overlayByProductType?: Partial<
     Record<ProductType, { position?: { x: number; y: number }; scale?: number }>
   >;
+  /** Per blank SKU placement when shape/handle differs from type default. */
+  overlayByProductId?: Partial<
+    Record<string, { position?: { x: number; y: number }; scale?: number }>
+  >;
   /** Recommended shirt color hex for this ink (e.g. cream on black) */
   recommendedColor?: string;
-  /** Shirt colors this design supports — omit to infer from variants / contrast */
+  /** Shirt colors this design supports â€” omit to infer from variants / contrast */
   applicableColors?: string[];
-  /** Per t-shirt fit palette — overrides applicableColors for that fit when set */
+  /** Per t-shirt fit palette â€” overrides applicableColors for that fit when set */
   applicableColorsByFit?: Partial<Record<GarmentFit, string[]>>;
-  /** Per product-type palette (hoodie, bodysuit, …) — overrides applicableColors when set */
+  /** Per product-type palette (hoodie, bodysuit, â€¦) â€” overrides applicableColors when set */
   applicableColorsByProductType?: Partial<Record<ProductType, string[]>>;
-  /** T-shirt garment fits this design supports — omit defaults to unisex only */
+  /** T-shirt garment fits this design supports â€” omit defaults to unisex only */
   applicableFits?: GarmentFit[];
-  /** Styled Macedonian text layout — used for `text` kind */
+  /** Styled Macedonian text layout â€” used for `text` kind */
   textStyle?: ProductDesignTextStyle;
   /** Display title (bulk-imported designs) */
   titleEn?: string;
@@ -912,6 +921,8 @@ export interface ProductDesignTemplate {
   printMasterImage?: string;
   /** Browse grouping, e.g. basketball, anime */
   collection?: string;
+  /** ISO timestamp when the design was added to the managed catalog */
+  catalogAddedAt?: string;
 }
 
 export const productDesignTemplates: ProductDesignTemplate[] = [
@@ -1084,7 +1095,7 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
     nameKey: 'loveFamily',
     defaultSide: 'front',
     textStyle: {
-      text: 'Го сакам\nмоето семејство',
+      text: 'Ð“Ð¾ ÑÐ°ÐºÐ°Ð¼\nÐ¼Ð¾ÐµÑ‚Ð¾ ÑÐµÐ¼ÐµÑ˜ÑÑ‚Ð²Ð¾',
       textColor: '#1e3a5f',
       textSize: 17,
       textPosition: { x: 50, y: 33 },
@@ -1103,7 +1114,7 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
     nameKey: 'bestMother',
     defaultSide: 'front',
     textStyle: {
-      text: 'Најдобрата\nмајка',
+      text: 'ÐÐ°Ñ˜Ð´Ð¾Ð±Ñ€Ð°Ñ‚Ð°\nÐ¼Ð°Ñ˜ÐºÐ°',
       textColor: '#9d174d',
       textSize: 20,
       textPosition: { x: 50, y: 34 },
@@ -1122,7 +1133,7 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
     nameKey: 'bestFather',
     defaultSide: 'front',
     textStyle: {
-      text: 'Најдобриот\nтатко',
+      text: 'ÐÐ°Ñ˜Ð´Ð¾Ð±Ñ€Ð¸Ð¾Ñ‚\nÑ‚Ð°Ñ‚ÐºÐ¾',
       textColor: '#1e40af',
       textSize: 20,
       textPosition: { x: 50, y: 34 },
@@ -1141,7 +1152,7 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
     nameKey: 'loveMacedonia',
     defaultSide: 'front',
     textStyle: {
-      text: 'Ја сакам\nМакедонија',
+      text: 'ÐˆÐ° ÑÐ°ÐºÐ°Ð¼\nÐœÐ°ÐºÐµÐ´Ð¾Ð½Ð¸Ñ˜Ð°',
       textColor: '#fc0000',
       textSize: 19,
       textPosition: { x: 50, y: 34 },
@@ -1234,6 +1245,7 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
   },
   ...streetwearPackTemplates,
   ...drinkwarePackTemplates,
+  ...transparentMugsPackTemplates,
   ...localMkDrinkwarePackTemplates,
   ...mkFolkPackTemplates,
   ...mkMugsPackTemplates,
@@ -1456,7 +1468,7 @@ export const products: Product[] = [
     nameKey: 'tshirtUnisex',
     image: getUnisexTshirtMockupPath('bela', 'front'),
     colorsImages: buildUnisexTshirtColorImages(),
-    /** Fallback when printPackage missing — matches front-small. Display uses blank (350). */
+    /** Fallback when printPackage missing â€” matches front-small. Display uses blank (350). */
     basePrice: 500,
     colors: TSHIRT_UNISEX_COLOR_HEXES,
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
@@ -1470,7 +1482,7 @@ export const products: Product[] = [
     nameKey: 'tshirtWomenFitted',
     image: getWomenTshirtMockupPath('bela', 'front'),
     colorsImages: buildWomenTshirtColorImages(),
-    /** Fallback when printPackage missing — matches front-small. */
+    /** Fallback when printPackage missing â€” matches front-small. */
     basePrice: 500,
     colors: TSHIRT_WOMEN_COLOR_HEXES,
     sizes: ['XS', 'S', 'M', 'L', 'XL'],
@@ -1484,7 +1496,7 @@ export const products: Product[] = [
     nameKey: 'tshirtKids',
     image: getKidsTshirtMockupPath('bela', 'front'),
     colorsImages: buildKidsTshirtColorImages(),
-    /** Fallback when printPackage missing — matches front-small. */
+    /** Fallback when printPackage missing â€” matches front-small. */
     basePrice: 500,
     colors: TSHIRT_KIDS_COLOR_HEXES,
     sizes: ['2-3', '4-5', '6-7', '8-9', '10-12', '12-14'],
@@ -1507,7 +1519,7 @@ export const products: Product[] = [
       blank: 700,
       front: { small: 850, medium: 950, large: 1100 },
     },
-    /** Fallback when printPackage missing — matches front-small. */
+    /** Fallback when printPackage missing â€” matches front-small. */
     basePrice: 850,
     colors: ['#ffffff'],
     sizes: ['S', 'M', 'L', 'XXL'],

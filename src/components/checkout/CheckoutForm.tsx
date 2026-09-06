@@ -34,6 +34,11 @@ import { useOptionalAuth } from "@/components/auth/AuthProvider";
 import type { CheckoutInput } from "@/lib/validations/order";
 import type { Locale } from "@/i18n/routing";
 import { buildLocalizedAccountPath } from "@/lib/auth/oauth";
+import {
+  MAX_FILE_SIZE,
+  MAX_PRINT_FILE_SIZE,
+} from "@/lib/upload/constants";
+import { formatBytes } from "@/lib/students/student-print-config";
 
 export function CheckoutForm() {
   const t = useTranslations("checkout");
@@ -308,6 +313,8 @@ export function CheckoutForm() {
 
   const hasServiceItems = items.some((item) => item.type === "service");
   const hasCustomProductItems = items.some((item) => item.type === "product");
+  const referenceUploadMaxLabel = formatBytes(MAX_FILE_SIZE);
+  const printUploadMaxLabel = formatBytes(MAX_PRINT_FILE_SIZE);
 
   function updateField(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -756,7 +763,14 @@ export function CheckoutForm() {
               {hasServiceItems ? t("uploadRecommended") : t("uploadOptional")}
             </p>
           )}
-          <p className="mb-4 text-sm text-ink-500">{t("uploadHint")}</p>
+          <p className="mb-4 text-sm text-ink-500">
+            {t("uploadHint", { max: referenceUploadMaxLabel })}
+          </p>
+          {hasCustomProductItems ? (
+            <p className="mb-4 text-sm text-ink-500">
+              {t("uploadHintPrintNote", { max: printUploadMaxLabel })}
+            </p>
+          ) : null}
           {pendingTurnstile ? (
             <TurnstileWidget
               onToken={setTurnstileToken}

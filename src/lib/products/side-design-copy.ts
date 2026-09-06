@@ -1,13 +1,32 @@
+import type { ProductSide } from '@/lib/data/catalog';
 import {
   createDefaultSideDesign,
   type SideDesign,
 } from '@/lib/products/design-state';
+import { getPlacedPhotos } from '@/lib/products/photo-layers';
 import { createPlacedSticker } from '@/lib/products/sticker-library';
 import {
   createPlacedTextLayer,
   sideHasTextContent,
   syncFlatTextFields,
 } from '@/lib/products/text-layers';
+
+export function sideRequiresUploadedPhoto(
+  design: SideDesign | undefined,
+): boolean {
+  if (!design?.isTextTemplate || !design.showPhotoGuide) return false;
+  return getPlacedPhotos(design).length === 0;
+}
+
+export function findSideMissingRequiredPhoto(
+  sides: ProductSide[],
+  designs: Partial<Record<ProductSide, SideDesign>>,
+): ProductSide | null {
+  for (const side of sides) {
+    if (sideRequiresUploadedPhoto(designs[side])) return side;
+  }
+  return null;
+}
 
 export function sideHasDesignContent(design: SideDesign | undefined): boolean {
   if (!design) return false;

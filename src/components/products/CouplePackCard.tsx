@@ -119,6 +119,7 @@ export function CouplePackCard({
                 design={design1}
                 typeLabel={partner1.labelEn}
                 className={couplePreviewFrameClass}
+                allowDrinkware3d={false}
               />
             </div>
             <div className="min-w-0">
@@ -128,6 +129,7 @@ export function CouplePackCard({
                 design={design2}
                 typeLabel={partner2.labelEn}
                 className={couplePreviewFrameClass}
+                allowDrinkware3d={false}
               />
             </div>
           </div>

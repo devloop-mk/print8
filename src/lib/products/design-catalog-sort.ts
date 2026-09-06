@@ -4,11 +4,16 @@ import {
   resolveDesignProduct,
   type ProductDesignCatalogEntry,
 } from '@/lib/products/design-catalog';
-import { resolveProductDesignDisplayName } from '@/lib/products/design-display-name';
+import {
+  resolveProductDesignDisplayName,
+  type ProductDesignNameTranslator,
+} from '@/lib/products/design-display-name';
 import { getProductDisplayPrice } from '@/lib/products/tshirt-print-pricing';
 
 export const DESIGN_CATALOG_SORT_OPTIONS = [
   'featured',
+  'date-desc',
+  'date-asc',
   'name-asc',
   'name-desc',
   'price-asc',
@@ -36,7 +41,7 @@ export type DesignCatalogListItem =
 function designSortName(
   design: ProductDesignTemplate,
   locale: 'mk' | 'en',
-  translateName: (key: string) => string,
+  translateName: ProductDesignNameTranslator,
 ): string {
   return resolveProductDesignDisplayName(design, locale, translateName);
 }
@@ -53,13 +58,32 @@ function packSortName(pack: CouplePackTemplate, locale: 'mk' | 'en'): string {
   return locale === 'mk' ? pack.titleMk : pack.titleEn;
 }
 
+function designSortAddedAt(design: ProductDesignTemplate): number | null {
+  const raw = design.catalogAddedAt;
+  if (!raw) return null;
+  const parsed = Date.parse(raw);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function compareAddedAt(
+  a: number | null,
+  b: number | null,
+  descending: boolean,
+): number {
+  if (a === null && b === null) return 0;
+  if (a === null) return 1;
+  if (b === null) return -1;
+  const cmp = a - b;
+  return descending ? -cmp : cmp;
+}
+
 export function sortDesignCatalogItems(
   items: DesignCatalogListItem[],
   sort: DesignCatalogSort,
   options: {
     locale: 'mk' | 'en';
     colorFilter: string | 'all';
-    translateName: (key: string) => string;
+    translateName: ProductDesignNameTranslator;
   },
 ): DesignCatalogListItem[] {
   if (sort === 'featured') return items;
@@ -71,6 +95,7 @@ export function sortDesignCatalogItems(
         index,
         name: packSortName(item.pack, options.locale),
         price: Number.POSITIVE_INFINITY,
+        addedAt: null as number | null,
       };
     }
 
@@ -83,10 +108,21 @@ export function sortDesignCatalogItems(
         options.translateName,
       ),
       price: designSortPrice(item.entry, options.colorFilter),
+      addedAt: designSortAddedAt(item.entry.design),
     };
   });
 
   decorated.sort((a, b) => {
+    if (sort === 'date-desc' || sort === 'date-asc') {
+      const dateCmp = compareAddedAt(
+        a.addedAt,
+        b.addedAt,
+        sort === 'date-desc',
+      );
+      if (dateCmp !== 0) return dateCmp;
+      return a.index - b.index;
+    }
+
     if (sort === 'name-asc' || sort === 'name-desc') {
       const cmp = a.name.localeCompare(b.name, options.locale, {
         sensitivity: 'base',
@@ -111,7 +147,7 @@ export function sortDesignCatalogEntries(
   options: {
     locale: 'mk' | 'en';
     colorFilter: string | 'all';
-    translateName: (key: string) => string;
+    translateName: ProductDesignNameTranslator;
   },
 ): ProductDesignCatalogEntry[] {
   const items = sortDesignCatalogItems(

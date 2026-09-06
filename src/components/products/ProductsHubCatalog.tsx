@@ -223,7 +223,11 @@ export function ProductsHubCatalog({
     >
       <Reveal delay={80}>
         <div id="products-grid" className={CATALOG_RESULTS_SCROLL_MARGIN_CLASS}>
-          <ProductCardGrid items={visibleProducts} linkTarget="detail" />
+          <ProductCardGrid
+            items={visibleProducts}
+            linkTarget="detail"
+            designPreviewOnHover
+          />
           <CatalogPagination
             page={page}
             totalItems={filtered.length}

@@ -101,7 +101,7 @@ export function ProductTypeCatalog({
           </div>
 
           <Reveal delay={80} className="min-w-0">
-            <ProductCardGrid items={products} />
+            <ProductCardGrid items={products} designPreviewOnHover />
           </Reveal>
 
           <ProductTypeDesignCategories

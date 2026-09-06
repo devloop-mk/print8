@@ -298,6 +298,7 @@ function SearchProductDesignThumb({
           color={previewColor}
           design={design}
           typeLabel={tp(product.type)}
+          allowDrinkware3d={false}
         />
       </div>
     </div>

@@ -99,6 +99,7 @@ import {
 import { getInitialCustomizerSide } from '@/lib/products/design-sides';
 import {
   copySideDesignToTarget,
+  findSideMissingRequiredPhoto,
   sideHasDesignContent,
 } from '@/lib/products/side-design-copy';
 import {
@@ -1220,10 +1221,18 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   /** Fixed unwrap height — parent CSS zoom must not affect 2D↔3D text mapping. */
   const drinkwareCanvasHeightPx = DRINKWARE_FLAT_CANVAS_HEIGHT_PX;
   const designInitializedRef = useRef<string | null>(null);
+  const [designSeeded, setDesignSeeded] = useState(false);
+  const [productSidesReady, setProductSidesReady] = useState(false);
+  const [cartRestored, setCartRestored] = useState(false);
+  const [draftRestored, setDraftRestored] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
   const [cartLimitError, setCartLimitError] = useState<
     'stickers' | 'photos' | null
   >(null);
+  const [photoRequiredSide, setPhotoRequiredSide] =
+    useState<ProductSide | null>(null);
+  const [blankDesignWarning, setBlankDesignWarning] = useState(false);
+  const [baselineReady, setBaselineReady] = useState(false);
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>(
     'idle',
   );
@@ -1239,23 +1248,6 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       }),
     [color, size, quantity, activeSide, sideDesigns],
   );
-  const [baselineReady, setBaselineReady] = useState(false);
-
-  useEffect(() => {
-    if (!product) return;
-    const timer = window.setTimeout(() => setBaselineReady(true), 500);
-    return () => window.clearTimeout(timer);
-  }, [product?.id, designId, editCartItemId, product]);
-
-  const { isDirty, markClean } = useDirtySnapshot(serializedDraft, baselineReady);
-
-  useUndoRedoKeyboard({
-    undo: undoSideDesigns,
-    redo: redoSideDesigns,
-    canUndo,
-    canRedo,
-    enabled: baselineReady,
-  });
 
   useEffect(() => {
     if (!selectedElement) return;
@@ -1325,6 +1317,88 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     };
   }, [selectedElement]);
 
+  const currentDesign = useMemo(() => {
+    const normalized = normalizeSideDesignText(
+      normalizeSideDesignPhotos(
+        sideDesigns[activeSide] ?? createDefaultSideDesign(),
+      ),
+    );
+    const photos = normalized.uploadedPhotos;
+    if (
+      photos.length === 0 ||
+      photos.every((photo) => photo.previewUrl || !photo.fileId?.trim())
+    ) {
+      return normalized;
+    }
+    return {
+      ...normalized,
+      uploadedPhotos: hydratePlacedPhotoPreviewUrls(photos, token),
+    };
+  }, [sideDesigns, activeSide, token]);
+
+  const activeDesignTemplateId = designId ?? currentDesign.premadeDesignId ?? null;
+  const {
+    template: activeDesignTemplate,
+    isResolved: designTemplateResolved,
+  } = useMergedProductDesignTemplateQuery(activeDesignTemplateId);
+
+  const dirtyResetKey = `${product?.id ?? ''}:${designId ?? ''}:${editCartItemId ?? ''}:${resumeParam ? '1' : '0'}`;
+  const cartRestorePending = Boolean(
+    editCartItemId && product && !cartRestored,
+  );
+  const designInitPending =
+    Boolean(designId && !editCartItemId && product) &&
+    (!designTemplateResolved ||
+      !activeDesignTemplate ||
+      activeDesignTemplate.id !== designId ||
+      !designSeeded);
+  const draftRestorePending = Boolean(
+    resumeParam && !editCartItemId && product && !draftRestored,
+  );
+  const initStable = Boolean(
+    product &&
+      productSidesReady &&
+      !cartRestorePending &&
+      !designInitPending &&
+      !draftRestorePending,
+  );
+
+  useEffect(() => {
+    setDesignSeeded(false);
+    setProductSidesReady(false);
+    setCartRestored(false);
+    setDraftRestored(!resumeParam);
+    designInitializedRef.current = null;
+  }, [dirtyResetKey, resumeParam]);
+
+  const { isDirty, markClean } = useDirtySnapshot(
+    serializedDraft,
+    baselineReady,
+    dirtyResetKey,
+  );
+
+  useEffect(() => {
+    if (!initStable) {
+      setBaselineReady(false);
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      markClean();
+      setBaselineReady(true);
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [initStable, dirtyResetKey, markClean]);
+
+  useUndoRedoKeyboard({
+    undo: undoSideDesigns,
+    redo: redoSideDesigns,
+    canUndo,
+    canRedo,
+    enabled: baselineReady,
+  });
+
   const saveDraft = useCallback(async () => {
     if (!product) return false;
 
@@ -1381,31 +1455,6 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       setSaveState('idle');
     }
   }, [saveDraft]);
-
-  const currentDesign = useMemo(() => {
-    const normalized = normalizeSideDesignText(
-      normalizeSideDesignPhotos(
-        sideDesigns[activeSide] ?? createDefaultSideDesign(),
-      ),
-    );
-    const photos = normalized.uploadedPhotos;
-    if (
-      photos.length === 0 ||
-      photos.every((photo) => photo.previewUrl || !photo.fileId?.trim())
-    ) {
-      return normalized;
-    }
-    return {
-      ...normalized,
-      uploadedPhotos: hydratePlacedPhotoPreviewUrls(photos, token),
-    };
-  }, [sideDesigns, activeSide, token]);
-
-  const activeDesignTemplateId = designId ?? currentDesign.premadeDesignId ?? null;
-  const {
-    template: activeDesignTemplate,
-    isResolved: designTemplateResolved,
-  } = useMergedProductDesignTemplateQuery(activeDesignTemplateId);
 
   const overlayAssetUrl = useOverlayAssetUrl({
     design: currentDesign,
@@ -1709,6 +1758,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         };
       });
       setSelectedElement(`photo:${placed.instanceId}`);
+      setPhotoRequiredSide((prev) => (prev === activeSide ? null : prev));
     },
     [activeSide, sideDesigns],
   );
@@ -1891,7 +1941,10 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   }, [sides, editCartItemId, replaceSideDesigns]);
 
   useEffect(() => {
-    if (!product || editCartItemId) return;
+    if (!product || editCartItemId) {
+      if (!editCartItemId) setProductSidesReady(true);
+      return;
+    }
     const productSides = getProductSides(product);
     resetSideDesigns((prev) => {
       const next = createSideDesignsForSides(productSides);
@@ -1901,6 +1954,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       return next;
     });
     setActiveSide('front');
+    setProductSidesReady(true);
   }, [product?.id, product, editCartItemId, resetSideDesigns]);
 
   useEffect(() => {
@@ -1919,13 +1973,22 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   }, [product, colorParam, sizeParam, editCartItemId]);
 
   useEffect(() => {
-    if (!designId || editCartItemId || !product || !activeDesignTemplate) return;
+    if (!designId || editCartItemId || !product || !activeDesignTemplate) {
+      if (!designId || editCartItemId) setDesignSeeded(true);
+      return;
+    }
     // Wait for catalog fetch so we seed from admin-merged placement, not
     // static couple/catalog defaults (which made customizer overlays too large).
     if (!designTemplateResolved) return;
     if (activeDesignTemplate.id !== designId) return;
-    if (resumeParam && findProductCustomizerDraft(product.id, designId)) return;
-    if (designInitializedRef.current === designId) return;
+    if (resumeParam && findProductCustomizerDraft(product.id, designId)) {
+      setDesignSeeded(true);
+      return;
+    }
+    if (designInitializedRef.current === designId) {
+      setDesignSeeded(true);
+      return;
+    }
     designInitializedRef.current = designId;
 
     const template = activeDesignTemplate;
@@ -1959,6 +2022,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     }
 
     setActiveSide(initialSide);
+    setDesignSeeded(true);
   }, [
     activeDesignTemplate,
     color,
@@ -1972,10 +2036,16 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   ]);
 
   useEffect(() => {
-    if (!resumeParam || !product || editCartItemId) return;
+    if (!resumeParam || !product || editCartItemId) {
+      if (!resumeParam || editCartItemId) setDraftRestored(true);
+      return;
+    }
 
     const draft = findProductCustomizerDraft(product.id, designId);
-    if (!draft) return;
+    if (!draft) {
+      setDraftRestored(true);
+      return;
+    }
 
     setColor(draft.color);
     setSize(draft.size);
@@ -1994,10 +2064,14 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       }
     }
     resetSideDesigns(restored);
+    setDraftRestored(true);
   }, [product, designId, editCartItemId, resumeParam, resetSideDesigns]);
 
   useEffect(() => {
-    if (!editCartItemId || !product) return;
+    if (!editCartItemId || !product) {
+      if (!editCartItemId) setCartRestored(true);
+      return;
+    }
     const cartItem = cartItems.find((i) => i.id === editCartItemId);
     if (!cartItem?.metadata) return;
 
@@ -2022,6 +2096,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     ) {
       setActiveSide(meta.activeSide);
     }
+    setCartRestored(true);
   }, [editCartItemId, product, cartItems, sides, resetSideDesigns]);
 
   const getSideDesignForPreview = useCallback(
@@ -2062,6 +2137,13 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     if (!isTshirt) return sides;
     return sides.filter((side) => side === 'front' || sideHasContent(side));
   }, [isTshirt, sides, sideHasContent]);
+
+  useEffect(() => {
+    if (!blankDesignWarning) return;
+    if (cartSides.some((side) => sideHasContent(side))) {
+      setBlankDesignWarning(false);
+    }
+  }, [blankDesignWarning, cartSides, sideHasContent]);
 
   const otherSide =
     sides.length === 2 ? sides.find((side) => side !== activeSide) : undefined;
@@ -2134,7 +2216,39 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     return results;
   }
 
+  function blockAddToCartForMissingPhoto(): boolean {
+    const missingSide = findSideMissingRequiredPhoto(cartSides, sideDesigns);
+    if (!missingSide) {
+      setPhotoRequiredSide(null);
+      return false;
+    }
+
+    setCartLimitError(null);
+    setPhotoRequiredSide(missingSide);
+    setSidesPreviewOpen(false);
+    flushSync(() => {
+      setActiveSide(missingSide);
+      setActivePanel('photo');
+    });
+    setSideDesigns((prev) => {
+      const sideDesign = prev[missingSide] ?? createDefaultSideDesign();
+      if (sideDesign.showPhotoGuide) return prev;
+      return {
+        ...prev,
+        [missingSide]: { ...sideDesign, showPhotoGuide: true },
+      };
+    });
+    return true;
+  }
+
   function openAddToCartPreview() {
+    if (blockAddToCartForMissingPhoto()) return;
+
+    const hasDesignContent = cartSides.some((side) =>
+      sideHasDesignContent(sideDesigns[side]),
+    );
+    setBlankDesignWarning(!hasDesignContent);
+
     const incomingStickers = cartSides.reduce(
       (total, side) => total + (sideDesigns[side]?.stickers.length ?? 0),
       0,
@@ -2163,6 +2277,8 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   }
 
   async function handleAddToCart() {
+    if (blockAddToCartForMissingPhoto()) return;
+
     const incomingStickers = cartSides.reduce(
       (total, side) => total + (sideDesigns[side]?.stickers.length ?? 0),
       0,
@@ -2620,6 +2736,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       drinkwareBodyColors={drinkwareBodyColors}
       compatibleDrinkwareProducts={compatibleDrinkwareProducts}
       onDrinkwareProductChange={handleDrinkwareProductChange}
+      photoRequired={photoRequiredSide === activeSide}
     />
   );
 
@@ -2629,10 +2746,24 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         <OutOfPrintAreaToast />
         <CustomizerShell
       topBar={
-        <div
-          className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-ink-100 bg-white px-3 md:px-5"
-          data-customizer-editor-chrome
-        >
+        <div className="shrink-0 border-b border-ink-100 bg-white">
+          {photoRequiredSide || cartLimitError || blankDesignWarning ? (
+            <div className="hidden border-b border-amber-100 bg-amber-50 px-3 py-2 md:block md:px-5">
+              <p className="text-xs text-amber-800">
+                {photoRequiredSide
+                  ? t('photoRequiredForDesign')
+                  : cartLimitError === 'stickers'
+                    ? t('orderStickerLimit', { max: MAX_STICKERS_PER_ORDER })
+                    : cartLimitError === 'photos'
+                      ? t('orderPhotoLimit', { max: MAX_PHOTOS_PER_ORDER })
+                      : t('blankDesignWarning')}
+              </p>
+            </div>
+          ) : null}
+          <div
+            className="flex h-14 items-center justify-between gap-3 px-3 md:px-5"
+            data-customizer-editor-chrome
+          >
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
@@ -2704,6 +2835,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
               {isCapturing ? t('capturing') : t('addToCart')}
             </Button>
           </div>
+          </div>
         </div>
       }
       contextBar={
@@ -2744,11 +2876,15 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
           className="fixed inset-x-0 bottom-0 z-[55] border-t border-ink-200 bg-white/95 px-3 pt-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] shadow-[0_-4px_24px_rgba(15,23,42,0.08)] backdrop-blur md:hidden"
           data-customizer-editor-chrome
         >
-          {cartLimitError ? (
+          {photoRequiredSide || cartLimitError || blankDesignWarning ? (
             <p className="mb-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
-              {cartLimitError === 'stickers'
-                ? t('orderStickerLimit', { max: MAX_STICKERS_PER_ORDER })
-                : t('orderPhotoLimit', { max: MAX_PHOTOS_PER_ORDER })}
+              {photoRequiredSide
+                ? t('photoRequiredForDesign')
+                : cartLimitError === 'stickers'
+                  ? t('orderStickerLimit', { max: MAX_STICKERS_PER_ORDER })
+                  : cartLimitError === 'photos'
+                    ? t('orderPhotoLimit', { max: MAX_PHOTOS_PER_ORDER })
+                    : t('blankDesignWarning')}
             </p>
           ) : null}
           <div className="mx-auto mb-2.5 flex max-w-lg items-stretch gap-1.5">
@@ -2917,6 +3053,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         sideLabel={sideLabel}
         sideHasContent={sideHasContent}
         use3DPreviewLabels={isDrinkware}
+        blankDesignWarning={blankDesignWarning}
         onClose={() => setSidesPreviewOpen(false)}
         onAddToCart={() => {
           setSidesPreviewOpen(false);
@@ -3888,6 +4025,7 @@ function EditorPanelContent({
   drinkwareBodyColors = [],
   compatibleDrinkwareProducts,
   onDrinkwareProductChange,
+  photoRequired = false,
 }: {
   panel: EditorPanel;
   currentDesign: SideDesign;
@@ -3933,6 +4071,7 @@ function EditorPanelContent({
   drinkwareBodyColors?: string[];
   compatibleDrinkwareProducts?: Product[];
   onDrinkwareProductChange?: (productId: string) => void;
+  photoRequired?: boolean;
 }) {
   const t = useTranslations('products.customizer');
   const tProducts = useTranslations('products');
@@ -4192,6 +4331,16 @@ function EditorPanelContent({
 
     return (
       <div className="space-y-4">
+        {photoRequired ? (
+          <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-900">
+            {t('photoRequiredForDesign')}
+          </p>
+        ) : null}
+
+        {currentDesign.isTextTemplate ? (
+          <p className="text-sm text-ink-600">{t('textTemplateHint')}</p>
+        ) : null}
+
         {hasIncludedDesign ? (
           <div className="rounded-lg border border-brand-200 bg-brand-50/60 px-3 py-2.5">
             <p className="text-sm font-medium text-ink-900">
@@ -4199,7 +4348,7 @@ function EditorPanelContent({
                 ? resolveProductDesignDisplayName(
                     designTemplate,
                     locale as 'mk' | 'en',
-                    (key) => tProducts(key),
+                    tProducts,
                   )
                 : t('includedDesign')}
             </p>

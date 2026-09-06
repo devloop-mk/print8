@@ -401,9 +401,7 @@ export async function buildDesignProductMetadata(
   const tdp = await getTranslations({ locale, namespace: 'products.designPdp' });
   const tm = await getTranslations({ locale, namespace: 'metadata' });
 
-  const designName = resolveProductDesignDisplayName(design, locale, (key) =>
-    t(key),
-  );
+  const designName = resolveProductDesignDisplayName(design, locale, t);
   const title = `${designName} | Print 8`;
   const description = tdp('metaDescription', { name: designName });
 

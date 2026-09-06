@@ -216,7 +216,7 @@ export function ProductDesignsPage({
     return sortDesignCatalogEntries(searched, sort, {
       locale,
       colorFilter,
-      translateName: (key) => t(key),
+      translateName: t,
     });
   }, [
     colorFilter,

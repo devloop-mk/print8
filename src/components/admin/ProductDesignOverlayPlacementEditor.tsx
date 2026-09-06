@@ -64,6 +64,8 @@ const PREVIEW_PRODUCT_BY_TYPE: Partial<Record<ProductType, string>> = {
   bodysuit: 'bodysuit-basic',
 };
 
+export const ADMIN_PREVIEW_PRODUCT_BY_TYPE = PREVIEW_PRODUCT_BY_TYPE;
+
 const HANDLE_PAD_PX = 14;
 
 function previewProductForType(type: ProductType): Product | null {
@@ -129,8 +131,12 @@ type PlacementValue = {
 
 type ProductDesignOverlayPlacementEditorProps = {
   template: ProductDesignTemplate;
-  /** Persist placement for the currently selected product type. */
-  onPlacementChange: (productType: ProductType, next: PlacementValue) => void;
+  /** Persist placement for the selected product type / blank model. */
+  onPlacementChange: (
+    productType: ProductType,
+    previewProductId: string | null,
+    next: PlacementValue,
+  ) => void;
   /** Mockup side to preview (defaults to template.defaultSide). */
   previewSide?: ProductSide;
   /**
@@ -145,6 +151,7 @@ type ProductDesignOverlayPlacementEditorProps = {
     | 'overlayScale'
     | 'overlayPosition'
     | 'overlayByProductType'
+    | 'overlayByProductId'
   >;
   title?: string;
 };
@@ -160,14 +167,24 @@ export function ProductDesignOverlayPlacementEditor({
     ? template.productTypes
     : (['t-shirt'] as ProductType[]);
   const [previewType, setPreviewType] = useState<ProductType>(previewTypes[0]);
+  const [previewProductId, setPreviewProductId] = useState('');
   const containerRef = useRef<HTMLDivElement | null>(null);
   const frameRef = useRef<HTMLDivElement | null>(null);
+
+  const previewProducts = useMemo(
+    () => products.filter((product) => product.type === previewType),
+    [previewType],
+  );
 
   useEffect(() => {
     if (!previewTypes.includes(previewType)) {
       setPreviewType(previewTypes[0]);
+      return;
     }
-  }, [previewTypes, previewType]);
+    const defaultId =
+      PREVIEW_PRODUCT_BY_TYPE[previewType] ?? previewProducts[0]?.id ?? '';
+    setPreviewProductId(defaultId);
+  }, [previewProducts, previewTypes, previewType]);
 
   const sideOverlay = overlayConfig ?? {
     overlayImage: template.overlayImage,
@@ -176,26 +193,44 @@ export function ProductDesignOverlayPlacementEditor({
     overlayScale: template.overlayScale,
     overlayPosition: template.overlayPosition,
     overlayByProductType: template.overlayByProductType,
+    overlayByProductId: template.overlayByProductId,
   };
 
+  const previewProduct = useMemo(
+    () =>
+      previewProducts.find((product) => product.id === previewProductId) ??
+      previewProductForType(previewType),
+    [previewProductId, previewProducts, previewType],
+  );
+
   const placement = useMemo(() => {
+    if (!previewProduct) {
+      return overlayConfig
+        ? resolveSideOverlayPlacement(
+            overlayConfig,
+            previewType,
+            template.productTypes,
+          )
+        : resolveOverlayPlacement(template, previewType);
+    }
     if (overlayConfig) {
       return resolveSideOverlayPlacement(
         overlayConfig,
-        previewType,
+        previewProduct,
         template.productTypes,
       );
     }
-    return resolveOverlayPlacement(template, previewType);
-  }, [overlayConfig, previewType, template]);
+    return resolveOverlayPlacement(template, previewProduct);
+  }, [overlayConfig, previewProduct, previewType, template]);
 
+  const defaultPreviewProductId = PREVIEW_PRODUCT_BY_TYPE[previewType];
+  const hasProductOverride = Boolean(
+    previewProductId &&
+      previewProductId !== defaultPreviewProductId &&
+      (overlayConfig ?? template).overlayByProductId?.[previewProductId],
+  );
   const hasTypeOverride = Boolean(
     (overlayConfig ?? template).overlayByProductType?.[previewType],
-  );
-
-  const previewProduct = useMemo(
-    () => previewProductForType(previewType),
-    [previewType],
   );
 
   const previewColor = useMemo(() => {
@@ -249,9 +284,9 @@ export function ProductDesignOverlayPlacementEditor({
 
   const commitPlacement = useCallback(
     (next: PlacementValue) => {
-      onPlacementChange(previewType, next);
+      onPlacementChange(previewType, previewProductId, next);
     },
-    [onPlacementChange, previewType],
+    [onPlacementChange, previewProductId, previewType],
   );
 
   const applyScale = useCallback(
@@ -345,11 +380,16 @@ export function ProductDesignOverlayPlacementEditor({
             посебно.
             {hasTypeOverride ? (
               <span className="ml-1 font-medium text-brand-700">
-                (прилагодено за {PRODUCT_TYPE_LABELS_MK[previewType]})
+                (тип: {PRODUCT_TYPE_LABELS_MK[previewType]})
+              </span>
+            ) : null}
+            {hasProductOverride ? (
+              <span className="ml-1 font-medium text-brand-700">
+                (модел: {previewProductId})
               </span>
             ) : (
               <span className="ml-1 text-ink-400">
-                (основна позиција — уредете за да зачувате за овој тип)
+                (основна позиција — уредете за да зачувате)
               </span>
             )}
           </p>
@@ -385,6 +425,30 @@ export function ProductDesignOverlayPlacementEditor({
           );
         })}
       </div>
+
+      {previewProducts.length > 1 ? (
+        <div>
+          <label className="mb-1 block text-xs font-medium text-ink-600">
+            Модел за преглед
+          </label>
+          <select
+            value={previewProductId}
+            onChange={(event) => setPreviewProductId(event.target.value)}
+            className="w-full rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm text-ink-900"
+          >
+            {previewProducts.map((product) => (
+              <option key={product.id} value={product.id}>
+                {product.id}
+                {product.id === defaultPreviewProductId ? ' (стандард)' : ''}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-ink-500">
+            За нестандардни шолји (срце/златна рачка…) изберете модел и
+            зачувете — позицијата важи само за тој blank.
+          </p>
+        </div>
+      ) : null}
 
       <div className="mx-auto max-w-md space-y-3">
         <div ref={frameRef} className="relative">

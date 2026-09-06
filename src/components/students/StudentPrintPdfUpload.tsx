@@ -11,6 +11,10 @@ import {
 } from '@/lib/students/student-print-config';
 import { countPdfPages, isPdfFile } from '@/lib/students/count-pdf-pages';
 import type { StudentPrintUploadedFile } from '@/lib/students/student-print-state';
+import {
+  resolveUploadUserMessage,
+  uploadMessageFns,
+} from '@/lib/upload/upload-user-messages';
 
 interface StudentPrintPdfUploadProps {
   token: string | null;
@@ -33,6 +37,7 @@ export function StudentPrintPdfUpload({
 }: StudentPrintPdfUploadProps) {
   const t = useTranslations('students.print');
   const tc = useTranslations('common');
+  const uploadMessages = uploadMessageFns(tc);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState<{
     type: 'error' | 'success';
@@ -42,6 +47,9 @@ export function StudentPrintPdfUpload({
   const isDisabled = disabled || loading || uploading;
   const canUpload = Boolean(token) && !isDisabled;
   const maxSizeLabel = formatBytes(STUDENT_PRINT_MAX_FILE_SIZE);
+  const sessionErrorMessage = resolveUploadUserMessage(sessionError, uploadMessages, {
+    maxSizeLabel,
+  });
 
   async function uploadWithToken(uploadToken: string, file: File) {
     const formData = new FormData();
@@ -119,9 +127,8 @@ export function StudentPrintPdfUpload({
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : '';
       const errorText =
-        errorMsg === 'UPLOAD_LIMIT_REACHED'
-          ? tc('uploadLimit')
-          : errorMsg || tc('uploadError');
+        resolveUploadUserMessage(errorMsg, uploadMessages, { maxSizeLabel }) ??
+        tc('uploadError');
       setMessage({ type: 'error', text: errorText });
       onChange(null);
     } finally {
@@ -143,9 +150,9 @@ export function StudentPrintPdfUpload({
         </div>
       ) : null}
 
-      {!loading && sessionError && (
+      {!loading && sessionErrorMessage && (
         <div className="mb-3 space-y-2">
-          <p className="text-sm text-red-600">{sessionError}</p>
+          <p className="text-sm text-red-600">{sessionErrorMessage}</p>
           <p className="text-xs text-ink-500">{tc('uploadSessionHint')}</p>
           {onRefreshSession && (
             <button

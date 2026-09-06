@@ -92,6 +92,7 @@ export function ProductTypeDesignCategories({
                           design={preview.design}
                           typeLabel={tp(preview.product.type)}
                           className="!aspect-auto h-full rounded-none border-0 bg-ink-100"
+                          allowDrinkware3d={false}
                         />
                       ) : (
                         <span className="block h-full w-full bg-ink-100" />

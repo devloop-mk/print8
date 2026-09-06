@@ -45,6 +45,26 @@ export function isCylindricalDrinkwareType(type: ProductType): boolean {
 }
 
 /**
+ * Flat unwrap assets used in the customizer 2D editor (wide cylinder unwrap).
+ * Catalog photos of a mug with a visible handle need 3D preview for placement.
+ */
+const DRINKWARE_FLAT_UNWRAP_MOCKUP_BASENAMES = new Set([
+  'mug-white-classic-v2',
+  'mug-white-classic',
+  'mug-white',
+  'mug-milkyblue',
+  'mug-black',
+]);
+
+export function isDrinkwareFlatUnwrapMockupPath(
+  mockupPath: string | undefined,
+): boolean {
+  if (!mockupPath) return false;
+  const file = mockupPath.split('/').pop()?.replace(/\.[^.]+$/, '') ?? '';
+  return DRINKWARE_FLAT_UNWRAP_MOCKUP_BASENAMES.has(file);
+}
+
+/**
  * Wrap-style drinkware overlays span most of the unwrap circumference — the flat
  * 2D mockup shows wings of the art past the mug silhouette. Use the 3D preview instead.
  */
@@ -62,17 +82,36 @@ export function shouldUseDrinkwareWrapDesignPreview(
   return placement.scale >= wrapThreshold;
 }
 
+/**
+ * Catalog / PDP overlay preview: photo drinkware mockups need 3D wrapping;
+ * unwrap templates can use flat 2D overlays unless the art is wrap-sized.
+ */
+export function shouldUseDrinkware3DDesignPreview(
+  product: Product,
+  mockupPath: string | undefined,
+  placement: OverlayPlacement,
+): boolean {
+  if (!isCylindricalDrinkwareType(product.type)) return false;
+
+  if (mockupPath && !isDrinkwareFlatUnwrapMockupPath(mockupPath)) {
+    return true;
+  }
+
+  return shouldUseDrinkwareWrapDesignPreview(product, placement);
+}
+
 export function shouldUseDrinkwareWrapDesignPreviewForTemplate(
   product: Product,
   design: ProductDesignTemplate,
   side?: ProductSide,
+  mockupPath?: string,
 ): boolean {
   if (design.kind !== 'overlay') return false;
 
   const mockupSide = side ?? design.defaultSide ?? 'front';
   const placement = resolveOverlayPlacementForSide(design, mockupSide, product);
 
-  return shouldUseDrinkwareWrapDesignPreview(product, placement);
+  return shouldUseDrinkware3DDesignPreview(product, mockupPath, placement);
 }
 
 export type ProductMockupLayout = {

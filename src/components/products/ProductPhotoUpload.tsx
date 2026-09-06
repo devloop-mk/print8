@@ -14,6 +14,12 @@ import {
 import { Button } from '@/components/ui/Button';
 import { LoadingIndicator } from '@/components/ui/LoadingIndicator';
 import { TurnstileWidget } from '@/components/security/TurnstileWidget';
+import { MAX_FILE_SIZE } from '@/lib/upload/constants';
+import { formatBytes } from '@/lib/students/student-print-config';
+import {
+  resolveUploadUserMessage,
+  uploadMessageFns,
+} from '@/lib/upload/upload-user-messages';
 
 type ProductPhotoUploadProps = {
   token: string | null;
@@ -77,6 +83,8 @@ export function ProductPhotoUpload({
 }: ProductPhotoUploadProps) {
   const t = useTranslations('products.customizer');
   const tc = useTranslations('common');
+  const uploadMessages = uploadMessageFns(tc);
+  const maxSizeLabel = formatBytes(MAX_FILE_SIZE);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [cropSource, setCropSource] = useState<string | null>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
@@ -87,6 +95,9 @@ export function ProductPhotoUpload({
   } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [pendingTermsFile, setPendingTermsFile] = useState<File | null>(null);
+  const sessionErrorMessage = resolveUploadUserMessage(uploadError, uploadMessages, {
+    maxSizeLabel,
+  });
 
   const isDisabled = uploadLoading || uploading || Boolean(cropSource) || !token;
 
@@ -113,10 +124,26 @@ export function ProductPhotoUpload({
     reader.readAsDataURL(file);
   }
 
+  function validateImageFile(file: File): string | null {
+    if (!file.type.startsWith('image/')) {
+      return tc('uploadImageTypeNotAllowed');
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      return tc('uploadTooLarge', { max: maxSizeLabel });
+    }
+    return null;
+  }
+
   function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = '';
-    if (!file || !file.type.startsWith('image/')) return;
+    if (!file) return;
+
+    const validationError = validateImageFile(file);
+    if (validationError) {
+      setMessage({ type: 'error', text: validationError });
+      return;
+    }
 
     if (!hasAcceptedUploadTerms()) {
       setPendingTermsFile(file);
@@ -153,8 +180,14 @@ export function ProductPhotoUpload({
         buildUploadedFileUrl(result.fileId, token),
       );
       setMessage({ type: 'success', text: tc('uploadSuccess') });
-    } catch {
-      setMessage({ type: 'error', text: tc('uploadError') });
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : '';
+      setMessage({
+        type: 'error',
+        text:
+          resolveUploadUserMessage(errorMsg, uploadMessages, { maxSizeLabel }) ??
+          tc('uploadError'),
+      });
     } finally {
       setUploading(false);
     }
@@ -199,8 +232,14 @@ export function ProductPhotoUpload({
       setMessage({ type: 'success', text: tc('uploadSuccess') });
       setCropSource(null);
       setPendingFile(null);
-    } catch {
-      setMessage({ type: 'error', text: tc('uploadError') });
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : '';
+      setMessage({
+        type: 'error',
+        text:
+          resolveUploadUserMessage(errorMsg, uploadMessages, { maxSizeLabel }) ??
+          tc('uploadError'),
+      });
       throw new Error('Upload failed');
     } finally {
       setUploading(false);
@@ -231,8 +270,14 @@ export function ProductPhotoUpload({
       setMessage({ type: 'success', text: tc('uploadSuccess') });
       setCropSource(null);
       setPendingFile(null);
-    } catch {
-      setMessage({ type: 'error', text: tc('uploadError') });
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : '';
+      setMessage({
+        type: 'error',
+        text:
+          resolveUploadUserMessage(errorMsg, uploadMessages, { maxSizeLabel }) ??
+          tc('uploadError'),
+      });
       throw new Error('Upload failed');
     } finally {
       setUploading(false);
@@ -248,9 +293,9 @@ export function ProductPhotoUpload({
         />
       ) : null}
 
-      {!uploadLoading && !uploading && uploadError ? (
+      {!uploadLoading && !uploading && sessionErrorMessage ? (
         <div className="space-y-2">
-          <p className="text-sm text-red-600">{uploadError}</p>
+          <p className="text-sm text-red-600">{sessionErrorMessage}</p>
           <p className="text-xs text-ink-500">{tc('uploadSessionHint')}</p>
           <button
             type="button"
@@ -270,13 +315,16 @@ export function ProductPhotoUpload({
         <p className="text-sm text-ink-600">{tc('uploadTurnstileHint')}</p>
       ) : null}
 
-      {!token && !uploadLoading && !uploading && !pendingTurnstile && !uploadError ? (
+      {!token && !uploadLoading && !uploading && !pendingTurnstile && !sessionErrorMessage ? (
         <p className="text-sm text-ink-500">{tc('uploadPreparing')}</p>
       ) : null}
 
       {!hasPhoto ? (
         <>
           <p className="text-sm text-ink-600">{t('photoUploadInstructions')}</p>
+          <p className="text-xs text-ink-500">
+            {tc('uploadImageFormatsHint', { max: maxSizeLabel })}
+          </p>
           <button
             type="button"
             onClick={openFilePicker}
@@ -314,7 +362,7 @@ export function ProductPhotoUpload({
         ref={fileInputRef}
         type="file"
         className="hidden"
-        accept="image/jpeg,image/png,image/webp,image/gif"
+        accept="image/jpeg,image/png,image/webp"
         onChange={handleFileSelected}
       />
 

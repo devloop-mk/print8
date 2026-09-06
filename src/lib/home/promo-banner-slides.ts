@@ -54,7 +54,7 @@ export const promoBannerSlides: PromoBannerSlide[] = [
   },
   {
     id: 'coupons',
-    href: '/products',
+    href: '/products/custom',
     imageDesktop: '/banners/banner-desktop-coupons.png',
     imageMobile: '/banners/banner-mobile-coupons.png',
   },

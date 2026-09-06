@@ -42,9 +42,7 @@ function KidsHeroTee({
   const locale = useLocale() as 'mk' | 'en';
   const { product } = resolveDesignProduct(entry, 'all');
   const color = pickVariedDesignPreviewColor(entry.design, product);
-  const name = resolveProductDesignDisplayName(entry.design, locale, (key) =>
-    t(key),
-  );
+  const name = resolveProductDesignDisplayName(entry.design, locale, t);
 
   return (
     <div className={cn('min-w-0', className)}>
@@ -54,6 +52,7 @@ function KidsHeroTee({
         design={entry.design}
         typeLabel={name}
         className={heroPreviewFrameClass}
+        allowDrinkware3d={false}
       />
     </div>
   );

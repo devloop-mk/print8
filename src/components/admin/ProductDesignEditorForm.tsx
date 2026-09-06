@@ -30,7 +30,7 @@ import {
 } from '@/lib/products/product-id-aliases';
 import { ProductDesignColorMatrix } from '@/components/admin/ProductDesignColorMatrix';
 import { ProductDesignFitMatrix } from '@/components/admin/ProductDesignFitMatrix';
-import { ProductDesignOverlayPlacementEditor } from '@/components/admin/ProductDesignOverlayPlacementEditor';
+import { ProductDesignOverlayPlacementEditor, ADMIN_PREVIEW_PRODUCT_BY_TYPE } from '@/components/admin/ProductDesignOverlayPlacementEditor';
 import { AdminAssetUploader } from '@/components/admin/AdminAssetUploader';
 import { Button } from '@/components/ui/Button';
 import { resolveAssetUrl } from '@/lib/storage/asset-url';
@@ -167,8 +167,24 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
 
   function patchFrontPlacement(
     productType: ProductType,
+    previewProductId: string | null,
     next: { scale: number; position: { x: number; y: number } },
   ) {
+    const defaultId = ADMIN_PREVIEW_PRODUCT_BY_TYPE[productType];
+    if (previewProductId && previewProductId !== defaultId) {
+      setTemplate((current) => ({
+        ...current,
+        overlayByProductId: {
+          ...current.overlayByProductId,
+          [previewProductId]: {
+            scale: next.scale,
+            position: next.position,
+          },
+        },
+      }));
+      return;
+    }
+
     setTemplate((current) => ({
       ...current,
       overlayByProductType: {
@@ -185,8 +201,27 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
 
   function patchBackPlacement(
     productType: ProductType,
+    previewProductId: string | null,
     next: { scale: number; position: { x: number; y: number } },
   ) {
+    const defaultId = ADMIN_PREVIEW_PRODUCT_BY_TYPE[productType];
+    if (previewProductId && previewProductId !== defaultId) {
+      setTemplate((current) => ({
+        ...current,
+        backOverlay: {
+          ...current.backOverlay,
+          overlayByProductId: {
+            ...current.backOverlay?.overlayByProductId,
+            [previewProductId]: {
+              scale: next.scale,
+              position: next.position,
+            },
+          },
+        },
+      }));
+      return;
+    }
+
     setTemplate((current) => ({
       ...current,
       backOverlay: {
@@ -358,36 +393,50 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
     const isStatic = Boolean(design.staticTemplate);
 
     if (isStatic) {
-      if (
-        !confirm(
-          'Овој дизајн е дефиниран во кодот и не може целосно да се избрише.\n\n' +
-            'Да се скрие од каталог и продавница? (може повторно да се активира подоцна)',
-        )
+      const willHide = active;
+      if (willHide) {
+        if (
+          !confirm(
+            'Овој дизајн е дефиниран во кодот и не може целосно да се избрише.\n\n' +
+              'Да се скрие од каталог и продавница? (може повторно да се активира подоцна)',
+          )
+        ) {
+          return;
+        }
+      } else if (
+        !confirm('Да се прикаже повторно во каталог и продавница?')
       ) {
         return;
       }
 
       setSaving(true);
       setError(null);
+      setMessage(null);
       try {
         const response = await fetch(`/api/admin/product-designs/${design.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             template,
-            active: false,
+            active: !willHide,
             sortOrder: Number(sortOrder) || 0,
           }),
         });
         if (!response.ok) {
           const data = await response.json().catch(() => ({}));
-          throw new Error(data.error ?? 'Failed to hide design');
+          throw new Error(
+            data.error ?? (willHide ? 'Failed to hide design' : 'Failed to show design'),
+          );
         }
-        setActive(false);
-        setMessage('Дизајнот е скриен од каталог и продавница.');
+        setActive(!willHide);
+        setMessage(
+          willHide
+            ? 'Дизајнот е скриен од каталог и продавница.'
+            : 'Дизајнот е повторно активен во каталог и продавница.',
+        );
         router.refresh();
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to hide');
+        setError(err instanceof Error ? err.message : 'Failed to update visibility');
       } finally {
         setSaving(false);
       }
@@ -428,8 +477,27 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
       ? Object.values(template.overlayColorVariants)[0]
       : undefined);
 
+  const catalogToggleLabel = design.staticTemplate
+    ? active
+      ? 'Скриј од каталог'
+      : 'Прикажи во каталог'
+    : 'Избриши дизајн';
+
   return (
     <form onSubmit={handleSubmit} className="grid gap-8 xl:grid-cols-[280px_1fr]">
+      {message || error ? (
+        <div
+          role="status"
+          className={`col-span-full rounded-xl border px-4 py-3 text-sm ${
+            error
+              ? 'border-red-200 bg-red-50 text-red-800'
+              : 'border-emerald-200 bg-emerald-50 text-emerald-800'
+          }`}
+        >
+          {error ?? message}
+        </div>
+      ) : null}
+
       <div className="space-y-4">
         <div className="overflow-hidden rounded-xl border border-ink-200 bg-white">
           <div className="relative aspect-square bg-ink-50">
@@ -482,16 +550,21 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
         <Button
           type="button"
           variant="outline"
-          className="w-full border-red-300 text-red-700 hover:border-red-400 hover:bg-red-50"
+          className={`w-full ${
+            design.staticTemplate && !active
+              ? 'border-brand-300 text-brand-700 hover:border-brand-400 hover:bg-brand-50'
+              : 'border-red-300 text-red-700 hover:border-red-400 hover:bg-red-50'
+          }`}
           disabled={saving}
           onClick={() => void handleDeleteOrHideDesign()}
         >
-          {design.staticTemplate ? 'Скриј од каталог' : 'Избриши дизајн'}
+          {catalogToggleLabel}
         </Button>
         {design.staticTemplate ? (
           <p className="text-xs text-ink-500">
-            Дизајните од кодот не може целосно да се избришат — скривањето ги
-            отстранува од продавницата.
+            {active
+              ? 'Дизајните од кодот не може целосно да се избришат — скривањето ги отстранува од продавницата.'
+              : 'Дизајнот е скриен од продавницата. Кликнете «Прикажи во каталог» за повторно да го активирате.'}
           </p>
         ) : (
           <p className="text-xs text-ink-500">
@@ -717,7 +790,7 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
                 template={template}
                 previewSide="back"
                 title="Задна страна — позиција по тип"
-                onPlacementChange={patchFrontPlacement}
+                onPlacementChange={patchBackPlacement}
               />
             </div>
           ) : null}
@@ -1069,8 +1142,6 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
           <Button type="submit" disabled={saving}>
             {saving ? 'Се зачувува…' : 'Зачувај'}
           </Button>
-          {message ? <p className="text-sm text-emerald-700">{message}</p> : null}
-          {error ? <p className="text-sm text-red-600">{error}</p> : null}
         </div>
       </div>
     </form>

@@ -1,0 +1,164 @@
+[
+  {
+    "raw": "design-mug-ai-cozy-book-lover-Photoroom.png",
+    "out": "mug-cozy-book-lover.png",
+    "id": "mug-dw-cozy-book-lover",
+    "nameKey": "mugDwCozyBookLover",
+    "titleEn": "Book lover",
+    "titleMk": "Лубител на книги",
+    "collection": "drinkware"
+  },
+  {
+    "raw": "design-mug-cozy-baking-kitchen-Photoroom.png",
+    "out": "mug-cozy-baking-kitchen.png",
+    "id": "mug-dw-cozy-baking-kitchen",
+    "nameKey": "mugDwCozyBakingKitchen",
+    "titleEn": "Baking kitchen",
+    "titleMk": "Кујна за печење",
+    "collection": "drinkware"
+  },
+  {
+    "raw": "design-mug-cozy-cat-books-tea-Photoroom.png",
+    "out": "mug-cozy-cat-books-tea.png",
+    "id": "mug-dw-cozy-cat-books-tea",
+    "nameKey": "mugDwCozyCatBooksTea",
+    "titleEn": "Cat, books & tea",
+    "titleMk": "Мачка, книги и чај",
+    "collection": "drinkware"
+  },
+  {
+    "raw": "design-mug-cozy-fireplace-hearth-Photoroom.png",
+    "out": "mug-cozy-fireplace-hearth.png",
+    "id": "mug-dw-cozy-fireplace-hearth",
+    "nameKey": "mugDwCozyFireplaceHearth",
+    "titleEn": "Fireplace hearth",
+    "titleMk": "Камин",
+    "collection": "drinkware"
+  },
+  {
+    "raw": "design-mug-cozy-honey-bee-garden-Photoroom.png",
+    "out": "mug-cozy-honey-bee-garden.png",
+    "id": "mug-dw-cozy-honey-bee-garden",
+    "nameKey": "mugDwCozyHoneyBeeGarden",
+    "titleEn": "Honey bee garden",
+    "titleMk": "Пчелна градина",
+    "collection": "drinkware"
+  },
+  {
+    "raw": "design-mug-cozy-knitting-yarn-Photoroom.png",
+    "out": "mug-cozy-knitting-yarn.png",
+    "id": "mug-dw-cozy-knitting-yarn",
+    "nameKey": "mugDwCozyKnittingYarn",
+    "titleEn": "Knitting & yarn",
+    "titleMk": "Плетење и предиво",
+    "collection": "drinkware"
+  },
+  {
+    "raw": "design-mug-cozy-lavender-herbal-tea-Photoroom.png",
+    "out": "mug-cozy-lavender-herbal-tea.png",
+    "id": "mug-dw-cozy-lavender-herbal-tea",
+    "nameKey": "mugDwCozyLavenderHerbalTea",
+    "titleEn": "Lavender herbal tea",
+    "titleMk": "Лаванда и билен чај",
+    "collection": "drinkware"
+  },
+  {
+    "raw": "design-mug-cozy-morning-croissant-Photoroom.png",
+    "out": "mug-cozy-morning-croissant.png",
+    "id": "mug-dw-cozy-morning-croissant",
+    "nameKey": "mugDwCozyMorningCroissant",
+    "titleEn": "Morning croissant",
+    "titleMk": "Утрински кroасан",
+    "collection": "drinkware"
+  },
+  {
+    "raw": "design-mug-cozy-rainy-day-tea-Photoroom.png",
+    "out": "mug-cozy-rainy-day-tea.png",
+    "id": "mug-dw-cozy-rainy-day-tea",
+    "nameKey": "mugDwCozyRainyDayTea",
+    "titleEn": "Rainy day tea",
+    "titleMk": "Чај за дождовен ден",
+    "collection": "drinkware"
+  },
+  {
+    "raw": "design-mug-cozy-stargazing-night-Photoroom.png",
+    "out": "mug-cozy-stargazing-night.png",
+    "id": "mug-dw-cozy-stargazing-night",
+    "nameKey": "mugDwCozyStargazingNight",
+    "titleEn": "Stargazing night",
+    "titleMk": "Ноќ под ѕвезди",
+    "collection": "drinkware"
+  },
+  {
+    "raw": "design-mug-cozy-vintage-writer-desk-Photoroom.png",
+    "out": "mug-cozy-vintage-writer-desk.png",
+    "id": "mug-dw-cozy-vintage-writer-desk",
+    "nameKey": "mugDwCozyVintageWriterDesk",
+    "titleEn": "Vintage writer desk",
+    "titleMk": "Писателско работно место",
+    "collection": "drinkware"
+  },
+  {
+    "raw": "design-mug-cozy-winter-cocoa-Photoroom.png",
+    "out": "mug-cozy-winter-cocoa.png",
+    "id": "mug-dw-cozy-winter-cocoa",
+    "nameKey": "mugDwCozyWinterCocoa",
+    "titleEn": "Winter cocoa",
+    "titleMk": "Зимско какао",
+    "collection": "drinkware"
+  },
+  {
+    "raw": "design-mug-kids-letter-ana-Photoroom.png",
+    "out": "mug-kids-letter-ana.png",
+    "id": "mug-dw-kids-letter-ana",
+    "nameKey": "mugDwKidsLetterAna",
+    "titleEn": "Name mug — Ana",
+    "titleMk": "Шолја со име — Ana",
+    "collection": "kids"
+  },
+  {
+    "raw": "marko.png",
+    "out": "mug-kids-letter-marko.png",
+    "id": "mug-dw-kids-letter-marko",
+    "nameKey": "mugDwKidsLetterMarko",
+    "titleEn": "Name mug — Marko",
+    "titleMk": "Шолја со име — Marko",
+    "collection": "kids"
+  },
+  {
+    "raw": "nikola.png",
+    "out": "mug-kids-letter-nikola.png",
+    "id": "mug-dw-kids-letter-nikola",
+    "nameKey": "mugDwKidsLetterNikola",
+    "titleEn": "Name mug — Nikola",
+    "titleMk": "Шолја со име — Nikola",
+    "collection": "kids"
+  },
+  {
+    "raw": "design-mug-kids-letter-sofija-Photoroom.png",
+    "out": "mug-kids-letter-sofia.png",
+    "id": "mug-dw-kids-letter-sofia",
+    "nameKey": "mugDwKidsLetterSofia",
+    "titleEn": "Name mug — Sofia",
+    "titleMk": "Шолја со име — Софиа",
+    "collection": "kids"
+  },
+  {
+    "raw": "design-mug-mk-ne-me-budi-Photoroom.png",
+    "out": "mug-mk-ne-me-budi.png",
+    "id": "mug-dw-mk-ne-me-budi",
+    "nameKey": "mugDwMkNeMeBudi",
+    "titleEn": "Don't wake me",
+    "titleMk": "Не ме буди",
+    "collection": "mk-slang"
+  },
+  {
+    "raw": "design-mug-najdobra-sefica-Photoroom.png",
+    "out": "mug-najdobra-sefica.png",
+    "id": "mug-dw-najdobra-sefica",
+    "nameKey": "mugDwNajdobraSefica",
+    "titleEn": "Best boss",
+    "titleMk": "Најдобра шефица",
+    "collection": "family-gifts"
+  }
+]

@@ -90,15 +90,15 @@ export function Header() {
         className="sticky top-0 z-50 border-b-2 border-ink-200 bg-white/95 backdrop-blur-md"
       >
         <div
-          className="hidden h-1 w-full bg-gradient-to-r from-brand-500 via-brand-700 to-ink-900 lg:block"
+          className="hidden h-1 w-full bg-gradient-to-r from-brand-500 via-brand-700 to-ink-900 xl:block"
           aria-hidden
         />
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 md:py-3.5 lg:px-8">
-          <Link href="/" className="flex items-center">
-            <Logo priority className="h-7 md:h-10" />
+          <Link href="/" className="flex shrink-0 items-center">
+            <Logo priority className="h-7 md:h-9 xl:h-10" />
           </Link>
 
-          <nav className="hidden items-stretch gap-0.5 lg:flex">
+          <nav className="hidden min-w-0 flex-1 items-stretch justify-center gap-1 px-2 xl:flex 2xl:gap-1.5 2xl:px-4">
             {navItems.map((item) => {
               if (item.key === "products") {
                 return <ProductsNavDropdown key={item.key} />;
@@ -118,7 +118,7 @@ export function Header() {
                   key={item.key}
                   href={item.href}
                   className={cn(
-                    "rounded-lg border-x border-transparent px-2.5 py-2.5 text-sm font-semibold uppercase tracking-wide transition lg:px-3",
+                    "whitespace-nowrap rounded-lg border-x border-transparent px-2 py-2.5 text-[13px] font-semibold uppercase tracking-wide transition xl:px-2.5 xl:text-sm 2xl:px-3",
                     active
                       ? "bg-brand-50 text-brand-700"
                       : "text-ink-600 hover:bg-ink-50 hover:text-ink-900",
@@ -130,10 +130,10 @@ export function Header() {
             })}
           </nav>
 
-          <div className="flex items-center gap-1 sm:gap-2">
+          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
             <GlobalSearchButton onClick={() => setSearchOpen(true)} />
 
-            <div className="hidden lg:block">
+            <div className="hidden xl:block">
               <LanguageSwitcher />
             </div>
 
@@ -167,7 +167,7 @@ export function Header() {
 
             <button
               type="button"
-              className="rounded-lg border-2 border-transparent p-2 text-ink-600 transition hover:border-ink-200 hover:bg-ink-50 lg:hidden"
+              className="rounded-lg border-2 border-transparent p-2 text-ink-600 transition hover:border-ink-200 hover:bg-ink-50 xl:hidden"
               onClick={openMenu}
               aria-label={t('openMenu')}
               aria-expanded={mobileOpen}

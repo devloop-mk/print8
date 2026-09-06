@@ -100,7 +100,7 @@ export function ProductCategoryPremadeCatalog({
     return sortDesignCatalogEntries(searched, sort, {
       locale,
       colorFilter,
-      translateName: (key) => t(key),
+      translateName: t,
     });
   }, [
     colorFilter,

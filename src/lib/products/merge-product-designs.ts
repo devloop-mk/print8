@@ -27,6 +27,9 @@ export function mergeProductDesignTemplate(
     overlayByProductType: override.overlayByProductType
       ? { ...base.overlayByProductType, ...override.overlayByProductType }
       : base.overlayByProductType,
+    overlayByProductId: override.overlayByProductId
+      ? { ...base.overlayByProductId, ...override.overlayByProductId }
+      : base.overlayByProductId,
     backOverlay: mergeSideOverlay(base.backOverlay, override.backOverlay),
     textStyle: override.textStyle
       ? { ...base.textStyle, ...override.textStyle }
@@ -71,7 +74,19 @@ function mergeSideOverlay(
     overlayByProductType: override.overlayByProductType
       ? { ...base.overlayByProductType, ...override.overlayByProductType }
       : base.overlayByProductType,
+    overlayByProductId: override.overlayByProductId
+      ? { ...base.overlayByProductId, ...override.overlayByProductId }
+      : base.overlayByProductId,
   };
+}
+
+function attachCatalogAddedAt(
+  template: ProductDesignTemplate,
+  managed?: ManagedProductDesignRecord,
+): ProductDesignTemplate {
+  if (!managed?.createdAt) return template;
+  if (template.catalogAddedAt === managed.createdAt) return template;
+  return { ...template, catalogAddedAt: managed.createdAt };
 }
 
 function readDisplayOrder(
@@ -125,7 +140,9 @@ export function mergeProductDesignCatalog(
     const activeManaged = managedRecords.filter((record) => record.active);
     if (activeManaged.length > 0) {
       return sortProductDesignCatalog(
-        activeManaged.map((record) => record.template),
+        activeManaged.map((record) =>
+          attachCatalogAddedAt(record.template, record),
+        ),
         managedById,
         displayOrder,
       );
@@ -142,14 +159,17 @@ export function mergeProductDesignCatalog(
     if (managed && !managed.active) continue;
     merged.push(
       managed
-        ? mergeProductDesignTemplate(staticTemplate, managed.template)
+        ? attachCatalogAddedAt(
+            mergeProductDesignTemplate(staticTemplate, managed.template),
+            managed,
+          )
         : staticTemplate,
     );
   }
 
   for (const managed of managedRecords) {
     if (staticIds.has(managed.id) || !managed.active) continue;
-    merged.push(managed.template);
+    merged.push(attachCatalogAddedAt(managed.template, managed));
   }
 
   return sortProductDesignCatalog(merged, managedById, displayOrder);

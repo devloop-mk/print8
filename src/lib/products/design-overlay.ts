@@ -112,7 +112,19 @@ function resolvePlacementWithProductType(
     | Partial<Record<ProductType, { position?: { x: number; y: number }; scale?: number }>>
     | undefined,
   productTypes: ProductType[] | undefined,
+  productId?: string,
+  overlayByProductId?:
+    | Partial<Record<string, { position?: { x: number; y: number }; scale?: number }>>
+    | undefined,
 ): OverlayPlacement {
+  if (productId && overlayByProductId?.[productId]) {
+    const productOverride = overlayByProductId[productId];
+    return {
+      position: productOverride.position ?? base.position,
+      scale: productOverride.scale ?? base.scale,
+    };
+  }
+
   if (productType === 'hoodie' && templateIncludesTeeAndHoodie(productTypes)) {
     const typeOverride = overlayByProductType?.hoodie;
     if (typeOverride && !isBadDefaultHoodieOverride(base, typeOverride)) {
@@ -141,12 +153,15 @@ export function resolveOverlayPlacement(
     | 'overlayPosition'
     | 'overlayScale'
     | 'overlayByProductType'
+    | 'overlayByProductId'
     | 'productTypes'
   >,
   productOrType: Product | ProductType,
 ): OverlayPlacement {
   const productType =
     typeof productOrType === 'string' ? productOrType : productOrType.type;
+  const productId =
+    typeof productOrType === 'string' ? undefined : productOrType.id;
 
   const base: OverlayPlacement = {
     position: template.overlayPosition ?? DEFAULT_OVERLAY_POSITION,
@@ -158,19 +173,26 @@ export function resolveOverlayPlacement(
     productType,
     template.overlayByProductType,
     template.productTypes,
+    productId,
+    template.overlayByProductId,
   );
 }
 
 export function resolveSideOverlayPlacement(
   config: Pick<
     ProductDesignSideOverlay,
-    'overlayPosition' | 'overlayScale' | 'overlayByProductType'
+    | 'overlayPosition'
+    | 'overlayScale'
+    | 'overlayByProductType'
+    | 'overlayByProductId'
   >,
   productOrType: Product | ProductType,
   productTypes?: ProductType[],
 ): OverlayPlacement {
   const productType =
     typeof productOrType === 'string' ? productOrType : productOrType.type;
+  const productId =
+    typeof productOrType === 'string' ? undefined : productOrType.id;
 
   const base: OverlayPlacement = {
     position: config.overlayPosition ?? DEFAULT_OVERLAY_POSITION,
@@ -182,6 +204,8 @@ export function resolveSideOverlayPlacement(
     productType,
     config.overlayByProductType,
     productTypes,
+    productId,
+    config.overlayByProductId,
   );
 }
 
