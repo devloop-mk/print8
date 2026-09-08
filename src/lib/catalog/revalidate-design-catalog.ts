@@ -1,13 +1,10 @@
 import 'server-only';
 
-import { revalidatePath, revalidateTag } from 'next/cache';
+import { revalidateTag } from 'next/cache';
 import {
   CATALOG_DESIGNS_CACHE_TAG,
   HOME_FEATURED_DESIGNS_CACHE_TAG,
 } from '@/lib/catalog/design-catalog';
-import { routing } from '@/i18n/routing';
-import { localePath } from '@/lib/seo/site';
-import { designNavCategories } from '@/lib/designs/design-nav';
 
 /** Bust published-design Data Cache (force-dynamic listings + designs hub). */
 export function revalidateDesignCatalogCache() {
@@ -15,17 +12,13 @@ export function revalidateDesignCatalogCache() {
 }
 
 /**
- * Admin design mutations only — refresh light ISR shells (home / designs hub)
- * without relying on `catalog-designs` (which exclusive orders also use).
+ * Admin print-design mutations — bust homepage featured strip + /designs hub
+ * category counts (both use `HOME_FEATURED_DESIGNS_CACHE_TAG`).
+ *
+ * Tag-only: avoids ~16 `revalidatePath` calls per save. Gallery routes
+ * (`/designs/all`, `/designs/[id]`) are force-dynamic; products ISR pages
+ * do not use this tag.
  */
 export function revalidateStorefrontDesignListingPaths() {
   revalidateTag(HOME_FEATURED_DESIGNS_CACHE_TAG, 'max');
-  for (const locale of routing.locales) {
-    revalidatePath(localePath(locale), 'page');
-    revalidatePath(localePath(locale, '/designs'), 'page');
-    revalidatePath(localePath(locale, '/designs/all'), 'page');
-    for (const category of designNavCategories) {
-      revalidatePath(localePath(locale, `/designs/${category.id}`), 'page');
-    }
-  }
 }
