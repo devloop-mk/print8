@@ -31,13 +31,12 @@ import {
   type CustomDesignCategoryId,
   type CustomDesignProductTarget,
 } from '@/lib/data/custom-design-order';
-import { BusinessCardPrintOptions } from '@/components/designs/BusinessCardPrintOptions';
+import { BusinessCardPrintOptions as BusinessCardPrintOptionsPanel } from '@/components/designs/BusinessCardPrintOptions';
 import {
   businessCardPrintMetadata,
-  DEFAULT_BUSINESS_CARD_LAMINATION,
-  DEFAULT_BUSINESS_CARD_PAPER,
-  type BusinessCardLamination,
-  type BusinessCardPaper,
+  calculateBusinessCardPrintPrice,
+  DEFAULT_BUSINESS_CARD_PRINT_OPTIONS,
+  type BusinessCardPrintOptions,
 } from '@/lib/designs/business-card-print-options';
 
 const CATEGORY_ICONS: Record<CustomDesignCategoryId, LucideIcon> = {
@@ -81,22 +80,28 @@ export function CustomDesignOrderForm() {
   const [referenceFileIds, setReferenceFileIds] = useState<string[]>([]);
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
-  const [paper, setPaper] = useState<BusinessCardPaper>(DEFAULT_BUSINESS_CARD_PAPER);
-  const [lamination, setLamination] = useState<BusinessCardLamination>(
-    DEFAULT_BUSINESS_CARD_LAMINATION,
-  );
+  const [businessCardOptions, setBusinessCardOptions] =
+    useState<BusinessCardPrintOptions>(DEFAULT_BUSINESS_CARD_PRINT_OPTIONS);
   const [businessCardStep, setBusinessCardStep] = useState<'print' | 'details'>('print');
   const isBusinessCard = form.category === 'business-cards';
   const showPrintStep = isBusinessCard && businessCardStep === 'print';
   const showDetails = !isBusinessCard || businessCardStep === 'details';
 
-  const unitPrice = useMemo(
+  const designFee = useMemo(
     () =>
       form.category
         ? getCustomDesignUnitPrice(form.category)
         : getCustomDesignUnitPrice('other'),
     [form.category],
   );
+  const businessCardPrice = useMemo(
+    () =>
+      isBusinessCard
+        ? calculateBusinessCardPrintPrice(businessCardOptions, designFee)
+        : null,
+    [businessCardOptions, designFee, isBusinessCard],
+  );
+  const unitPrice = businessCardPrice?.total ?? designFee;
 
   function updateField<K extends keyof FormState>(field: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -150,8 +155,8 @@ export function CustomDesignOrderForm() {
         customDesignCategory: form.category,
         targetProduct: form.targetProduct,
         designBrief: form.designBrief.trim(),
-        ...(isBusinessCard
-          ? businessCardPrintMetadata({ paper, lamination })
+        ...(isBusinessCard && businessCardPrice
+          ? businessCardPrintMetadata(businessCardOptions, businessCardPrice)
           : {}),
       };
 
@@ -283,11 +288,10 @@ export function CustomDesignOrderForm() {
               <h2 className="text-lg font-bold text-ink-900">{to('printStepTitle')}</h2>
               <p className="mt-1 text-sm text-ink-600">{to('printStepSubtitle')}</p>
             </div>
-            <BusinessCardPrintOptions
-              paper={paper}
-              lamination={lamination}
-              onPaperChange={setPaper}
-              onLaminationChange={setLamination}
+            <BusinessCardPrintOptionsPanel
+              options={businessCardOptions}
+              onChange={setBusinessCardOptions}
+              designFee={designFee}
             />
             <Button
               type="button"

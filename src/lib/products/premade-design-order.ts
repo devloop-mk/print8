@@ -25,6 +25,11 @@ import { writePremadeArtworkSourceMetadata } from '@/lib/products/premade-artwor
 import { resolveOverlayPlacementForSide } from '@/lib/products/design-overlay';
 import { getBagUnitPrice, isBagProduct } from '@/lib/products/bag-print-pricing';
 import {
+  classifyDrinkwarePrintTierFromTemplate,
+  getDrinkwareUnitPrice,
+  isDrinkwareProduct,
+} from '@/lib/products/drinkware-print-pricing';
+import {
   deriveTshirtPrintPackage,
   getTshirtUnitPrice,
   isTshirtProduct,
@@ -153,6 +158,10 @@ export function getPremadeDesignUnitPrice(
   }
   if (isBagProduct(product)) {
     return getBagUnitPrice(true);
+  }
+  if (isDrinkwareProduct(product)) {
+    const tier = classifyDrinkwarePrintTierFromTemplate(product, design);
+    return getDrinkwareUnitPrice(product, tier);
   }
   return product.basePrice;
 }

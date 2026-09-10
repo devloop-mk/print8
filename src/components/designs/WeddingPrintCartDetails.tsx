@@ -4,38 +4,32 @@ import { useTranslations, useLocale } from 'next-intl';
 import { formatPrice } from '@/lib/utils';
 import type { CartItem } from '@/lib/cart/types';
 import {
-  calculateBusinessCardPrintPrice,
-  isBusinessCardCartItem,
-  parseBusinessCardPrintOptions,
-} from '@/lib/designs/business-card-print-options';
+  calculateWeddingPrintPrice,
+  isWeddingPrintCartItem,
+  parseWeddingPrintOptions,
+} from '@/lib/designs/wedding-print-options';
 
-export function BusinessCardCartDetails({ item }: { item: CartItem }) {
-  const t = useTranslations('designs.order.printOptions');
-  const tc = useTranslations('cart.businessCard');
+export function WeddingPrintCartDetails({ item }: { item: CartItem }) {
+  const t = useTranslations('designs.order.weddingPrint');
+  const tc = useTranslations('cart.weddingPrint');
   const locale = useLocale();
 
-  if (!isBusinessCardCartItem(item)) return null;
+  if (!isWeddingPrintCartItem(item)) return null;
 
-  const options = parseBusinessCardPrintOptions(item.metadata);
-  const price = calculateBusinessCardPrintPrice(
+  const options = parseWeddingPrintOptions(item.metadata);
+  const price = calculateWeddingPrintPrice(
     options,
-    typeof item.metadata?.bcardDesignFee === 'number'
-      ? item.metadata.bcardDesignFee
+    typeof item.metadata?.weddingDesignFee === 'number'
+      ? item.metadata.weddingDesignFee
       : 0,
   );
 
   return (
     <dl className="mt-3 space-y-1.5 rounded-lg border border-ink-100 bg-ink-50/60 px-3 py-2.5 text-sm">
       <div className="flex flex-wrap gap-x-2 gap-y-0.5">
-        <dt className="shrink-0 text-ink-500">{tc('paper')}:</dt>
+        <dt className="shrink-0 text-ink-500">{tc('size')}:</dt>
         <dd className="min-w-0 font-medium text-ink-800">
-          {t(`paper.${options.paper}.title`)}
-        </dd>
-      </div>
-      <div className="flex flex-wrap gap-x-2 gap-y-0.5">
-        <dt className="shrink-0 text-ink-500">{tc('lamination')}:</dt>
-        <dd className="min-w-0 font-medium text-ink-800">
-          {t(`lamination.${options.lamination}.title`)}
+          {t(`sizes.${options.size}.title`)}
         </dd>
       </div>
       <div className="flex flex-wrap gap-x-2 gap-y-0.5">
@@ -51,7 +45,7 @@ export function BusinessCardCartDetails({ item }: { item: CartItem }) {
       <div className="flex flex-wrap gap-x-2 gap-y-0.5 border-t border-ink-100 pt-1.5">
         <dt className="shrink-0 text-ink-500">{tc('printTotal')}:</dt>
         <dd className="min-w-0 font-medium text-ink-800">
-          {formatPrice(price.tirageTotal, locale)}
+          {formatPrice(price.printTotal, locale)}
         </dd>
       </div>
     </dl>

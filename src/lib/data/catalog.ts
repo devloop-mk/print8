@@ -37,6 +37,7 @@ import {
 } from '@/lib/products/tshirt-kids-colors';
 import { getProductColorImagesEntry } from '@/lib/products/product-color-images';
 import type { TshirtPricingOverride } from '@/lib/products/tshirt-print-pricing';
+import type { DrinkwarePricingOverride } from '@/lib/products/drinkware-print-pricing';
 import { getPoloMockupPath } from '@/lib/products/polo-mockup-paths';
 import { premadeDesignAppliesToProduct } from '@/lib/products/premade-design-product-match';
 import { supplierCatalogProducts } from '@/lib/data/supplier-catalog-products';
@@ -809,6 +810,8 @@ export interface Product {
   detailNoteKey?: string;
   /** Optional t-shirt / polo print tier overrides (MKD). */
   tshirtPricing?: TshirtPricingOverride;
+  /** Half-mug vs full-wrap prices (MKD) — cenovnik drinkware rows. */
+  drinkwarePricing?: DrinkwarePricingOverride;
 }
 
 export function isMagnetProduct(product: Product): boolean {
@@ -1503,6 +1506,9 @@ export const products: Product[] = [
     colors: TSHIRT_KIDS_COLOR_HEXES,
     sizes: ['2-3', '4-5', '6-7', '8-9', '10-12', '12-14'],
     sides: ['front', 'back'],
+    tshirtPricing: {
+      front: { small: 500, medium: 550, large: 550 },
+    },
   },
   {
     id: 'polo-frut-original-white',
@@ -1550,8 +1556,9 @@ export const products: Product[] = [
       '#ADD8E6': '/mugs/mug-milkyblue.jpg',
       '#000000': '/mugs/mug-black.jpg',
     },
-    basePrice: 250,
     colors: ['#ffffff', '#ADD8E6', '#000000'],
+    drinkwarePricing: { half: 280, full: 300 },
+    basePrice: 280,
   },
   {
     id: 'mug-heart-handle',
@@ -1562,8 +1569,9 @@ export const products: Product[] = [
     colorsImages: {
       '#ffffff': '/mugs/mug-heart-handle.jpg',
     },
-    basePrice: 350,
     colors: ['#ffffff'],
+    drinkwarePricing: { half: 300, full: 320 },
+    basePrice: 300,
   },
   {
     id: 'mug-chrome-handle',
@@ -1599,8 +1607,9 @@ export const products: Product[] = [
         secondary: '/mugs/mug-b5kf-angle.jpg',
       },
     },
-    basePrice: 350,
     colors: ['#ffffff'],
+    drinkwarePricing: { half: 280, full: 300 },
+    basePrice: 280,
   },
   {
     id: 'mug-purple-interior',
@@ -1625,8 +1634,8 @@ export const products: Product[] = [
         secondary: '/mugs/mug-red-patch-side.jpg',
       },
     },
-    basePrice: 470,
     colors: ['#dc2626'],
+    basePrice: 470,
   },
   {
     id: 'mug-frosted',
@@ -1637,8 +1646,9 @@ export const products: Product[] = [
     colorsImages: {
       '#f5f5f4': '/mugs/mug-frosted.jpg',
     },
-    basePrice: 450,
     colors: ['#f5f5f4'],
+    drinkwarePricing: { half: 400, full: 420 },
+    basePrice: 400,
   },
   {
     id: 'cup-glass-beer',
@@ -1649,8 +1659,8 @@ export const products: Product[] = [
     colorsImages: {
       '#e8f4fc': '/cups/cup-glass-beer.jpg',
     },
-    basePrice: 600,
     colors: ['#e8f4fc'],
+    basePrice: 550,
   },
   {
     id: 'mug-inside-daddy',
@@ -1665,8 +1675,9 @@ export const products: Product[] = [
         secondary: '/mugs/mug-b5kf-white.jpg',
       },
     },
-    basePrice: 450,
     colors: ['#ffffff'],
+    drinkwarePricing: { half: 360, full: 380 },
+    basePrice: 360,
   },
   {
     id: 'mug-inside-love',
@@ -1681,8 +1692,9 @@ export const products: Product[] = [
         secondary: '/mugs/mug-b5kf-white.jpg',
       },
     },
-    basePrice: 450,
     colors: ['#ffffff'],
+    drinkwarePricing: { half: 360, full: 380 },
+    basePrice: 360,
   },
   {
     id: 'mug-inside-birthday',
@@ -1697,8 +1709,9 @@ export const products: Product[] = [
         secondary: '/mugs/mug-b5kf-white.jpg',
       },
     },
-    basePrice: 450,
     colors: ['#ffffff'],
+    drinkwarePricing: { half: 360, full: 380 },
+    basePrice: 360,
   },
   {
     id: 'mug-inside-mothers-day',
@@ -1713,8 +1726,9 @@ export const products: Product[] = [
         secondary: '/mugs/mug-b5kf-white.jpg',
       },
     },
-    basePrice: 450,
     colors: ['#ffffff'],
+    drinkwarePricing: { half: 360, full: 380 },
+    basePrice: 360,
   },
   {
     id: 'mug-inside-thanksgiving',
@@ -1729,8 +1743,9 @@ export const products: Product[] = [
         secondary: '/mugs/mug-b5kf-white.jpg',
       },
     },
-    basePrice: 450,
     colors: ['#ffffff'],
+    drinkwarePricing: { half: 360, full: 380 },
+    basePrice: 360,
   },
   {
     id: 'bag-naturella-natural',

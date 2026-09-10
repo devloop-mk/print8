@@ -4,6 +4,10 @@ import {
   isBagProduct,
 } from '@/lib/products/bag-print-pricing';
 import {
+  getDrinkwareStartingPrice,
+  isDrinkwareProduct,
+} from '@/lib/products/drinkware-print-pricing';
+import {
   TSHIRT_PRINT_AREA_INSETS,
   WOMEN_TSHIRT_PRINT_AREA_INSETS,
   WOMEN_TSHIRT_SMALL_PRINT_AREA_INSETS,
@@ -51,18 +55,18 @@ export type TshirtPrintPackage = (typeof TSHIRT_PRINT_PACKAGES)[number];
 /** Garment-only (no print). */
 export const TSHIRT_BLANK_PRICE = 350;
 
-/** Front print tiers (MKD) — mal / sredno / golemo logo. */
+/** Front print tiers (MKD) — mal / sredno / golemo logo (cenovnik v24). */
 export const TSHIRT_FRONT_TIER_PRICES: Record<PrintTier, number> = {
   small: 500,
-  medium: 600,
-  large: 750,
+  medium: 550,
+  large: 600,
 };
 
 /** Back-print supplement when front is also printed (MKD). */
 export const TSHIRT_BACK_PRINT_SURCHARGE: Record<PrintTier, number> = {
   small: 50,
   medium: 100,
-  large: 200,
+  large: 150,
 };
 
 /** @deprecated Prefer getTshirtUnitPrice — static matrix no longer used for all tiers. */
@@ -223,6 +227,9 @@ export function getProductDisplayPrice(product: Product): number {
   }
   if (isBagProduct(product)) {
     return getBagStartingPrice();
+  }
+  if (isDrinkwareProduct(product)) {
+    return getDrinkwareStartingPrice(product);
   }
   return product.basePrice;
 }

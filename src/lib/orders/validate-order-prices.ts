@@ -9,6 +9,10 @@ import {
   parseMenuPrintOptions,
 } from '@/lib/designs/menu-print-options';
 import {
+  calculateBusinessCardPrintPrice,
+  parseBusinessCardPrintOptions,
+} from '@/lib/designs/business-card-print-options';
+import {
   calculateWeddingPrintPrice,
   hasWeddingPrintOptions,
   parseWeddingPrintOptions,
@@ -66,10 +70,19 @@ async function getDesignUnitPrice(
 
   if (metadata.orderType === 'custom-design-request') {
     const categoryId = metadata.customDesignCategory;
-    if (typeof categoryId === 'string') {
-      return getCustomDesignUnitPrice(categoryId as CustomDesignCategoryId);
+    const designFee =
+      typeof categoryId === 'string'
+        ? getCustomDesignUnitPrice(categoryId as CustomDesignCategoryId)
+        : STUDIO_DESIGN_UNIT_PRICE;
+
+    if (categoryId === 'business-cards') {
+      return calculateBusinessCardPrintPrice(
+        parseBusinessCardPrintOptions(metadata),
+        designFee,
+      ).total;
     }
-    return STUDIO_DESIGN_UNIT_PRICE;
+
+    return designFee;
   }
 
   const designTemplateId =
@@ -101,8 +114,21 @@ async function getDesignUnitPrice(
       .total;
   }
 
-  if (template.category === 'wedding' && hasWeddingPrintOptions(metadata)) {
-    return calculateWeddingPrintPrice(parseWeddingPrintOptions(metadata)).total;
+  if (template.category === 'business-cards') {
+    return calculateBusinessCardPrintPrice(
+      parseBusinessCardPrintOptions(metadata),
+      designFee,
+    ).total;
+  }
+
+  if (
+    (template.category === 'wedding' || template.category === 'birthday') &&
+    hasWeddingPrintOptions(metadata)
+  ) {
+    return calculateWeddingPrintPrice(
+      parseWeddingPrintOptions(metadata),
+      designFee,
+    ).total;
   }
 
   return designFee;
@@ -157,6 +183,13 @@ function getProductUnitPrice(
     }
 
     return product.basePrice;
+  }
+
+  if (typeof metadata.designTemplateId === 'string') {
+    const design = getStaticProductDesignTemplates().find(
+      (template) => template.id === metadata.designTemplateId,
+    );
+    if (design) return getPremadeDesignUnitPrice(product, design);
   }
 
   return product.basePrice;

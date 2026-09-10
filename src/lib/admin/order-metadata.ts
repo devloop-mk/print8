@@ -46,7 +46,12 @@ const KEY_LABELS: Record<string, string> = {
   vendorSku: 'Добавувач SKU',
   paper: 'Хартија',
   lamination: 'Пластификат',
+  bcardQuantity: 'Тираж визитки',
+  bcardSides: 'Печат визитки',
+  bcardPrintTotal: 'Печатење визитки',
+  bcardDesignFee: 'Дизајн визитки',
   weddingSize: 'Големина на покана',
+  weddingSides: 'Печат покани',
   weddingQuantity: 'Број покани',
   weddingDesignFee: 'Надомест за дизајн',
   weddingPrintTotal: 'Печатење покани',
@@ -59,6 +64,15 @@ const METADATA_VALUE_LABELS: Record<string, Record<string, string>> = {
   paper: {
     '240gsm': '240 gsm (грама)',
     '300gsm': '300 gsm (грама)',
+    premiumWriteOn: 'Premium write-on',
+  },
+  bcardSides: {
+    single: 'Еднострани',
+    double: 'Двострани',
+  },
+  weddingSides: {
+    single: 'Еднострани',
+    double: 'Двострани',
   },
   lamination: {
     none: 'Без пластификат',
@@ -66,9 +80,12 @@ const METADATA_VALUE_LABELS: Record<string, Record<string, string>> = {
     glossy: 'Сјај пластификат',
   },
   weddingSize: {
-    '13x18': '13 × 18 cm',
+    '13x18': '12 × 17 cm',
     '10x15': '10 × 15 cm',
-    a5: '13 × 18 cm',
+    '12x17': '12 × 17 cm',
+    a5: 'A5 (14,8 × 21 cm)',
+    dl: 'DL (10 × 21 cm)',
+    '15x15': '15 × 15 cm',
   },
   customizeMode: {
     quick: 'Брза нарачка',

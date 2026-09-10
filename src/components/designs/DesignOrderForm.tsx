@@ -24,14 +24,13 @@ import {
   cartItemMatchesDesignTemplate,
   parseOrderFieldsFromCartMetadata,
 } from '@/lib/cart/design-cart';
-import { BusinessCardPrintOptions } from '@/components/designs/BusinessCardPrintOptions';
+import { BusinessCardPrintOptions as BusinessCardPrintOptionsPanel } from '@/components/designs/BusinessCardPrintOptions';
 import {
   businessCardPrintMetadata,
-  DEFAULT_BUSINESS_CARD_LAMINATION,
-  DEFAULT_BUSINESS_CARD_PAPER,
+  calculateBusinessCardPrintPrice,
+  DEFAULT_BUSINESS_CARD_PRINT_OPTIONS,
   parseBusinessCardPrintOptions,
-  type BusinessCardLamination,
-  type BusinessCardPaper,
+  type BusinessCardPrintOptions,
 } from '@/lib/designs/business-card-print-options';
 
 const fieldInputType: Partial<
@@ -68,7 +67,7 @@ export function DesignOrderForm({
 
   const fields = categoryOrderFields[template.category];
   const required = requiredOrderFields[template.category];
-  const price =
+  const designFee =
     'customPrice' in template && typeof template.customPrice === 'number'
       ? template.customPrice
       : designCategoryPrices[template.category];
@@ -77,10 +76,8 @@ export function DesignOrderForm({
     {},
   );
   const [quantity, setQuantity] = useState(1);
-  const [paper, setPaper] = useState<BusinessCardPaper>(DEFAULT_BUSINESS_CARD_PAPER);
-  const [lamination, setLamination] = useState<BusinessCardLamination>(
-    DEFAULT_BUSINESS_CARD_LAMINATION,
-  );
+  const [businessCardOptions, setBusinessCardOptions] =
+    useState<BusinessCardPrintOptions>(DEFAULT_BUSINESS_CARD_PRINT_OPTIONS);
   const [errors, setErrors] = useState<Partial<Record<DesignOrderFieldId, string>>>(
     {},
   );
@@ -105,9 +102,7 @@ export function DesignOrderForm({
       setQuantity(editingItem.quantity);
     }
     if (template.category === 'business-cards') {
-      const options = parseBusinessCardPrintOptions(editingItem.metadata);
-      setPaper(options.paper);
-      setLamination(options.lamination);
+      setBusinessCardOptions(parseBusinessCardPrintOptions(editingItem.metadata));
     }
   }, [editingItem, fields, template.id, template.category]);
 
@@ -161,7 +156,10 @@ export function DesignOrderForm({
       category: template.category,
       orderType: 'template-info',
       ...(isBusinessCard
-        ? businessCardPrintMetadata({ paper, lamination })
+        ? businessCardPrintMetadata(
+            businessCardOptions,
+            calculateBusinessCardPrintPrice(businessCardOptions, designFee),
+          )
         : {}),
     };
 
@@ -170,11 +168,15 @@ export function DesignOrderForm({
       if (value) metadata[field] = value;
     }
 
+    const businessCardPrice = isBusinessCard
+      ? calculateBusinessCardPrintPrice(businessCardOptions, designFee)
+      : null;
+
     const cartPayload = {
       type: 'design' as const,
       name: `${td(`categories.${template.category}`)} — ${displayName}`,
-      price,
-      quantity,
+      price: businessCardPrice?.total ?? designFee,
+      quantity: isBusinessCard ? 1 : quantity,
       designPreview: resolveAssetUrl(template.image),
       metadata,
     };
@@ -209,7 +211,16 @@ export function DesignOrderForm({
         <div className="border-t border-ink-100 p-4">
           <p className="text-sm text-ink-500">{t('previewNote')}</p>
           <p className="mt-2 text-lg font-semibold text-brand-600">
-            {t('startingFrom')} {formatPrice(price, locale)}
+            {t('startingFrom')}{' '}
+            {formatPrice(
+              isBusinessCard
+                ? calculateBusinessCardPrintPrice(
+                    DEFAULT_BUSINESS_CARD_PRINT_OPTIONS,
+                    designFee,
+                  ).total
+                : designFee,
+              locale,
+            )}
           </p>
         </div>
       </Card>
@@ -258,11 +269,10 @@ export function DesignOrderForm({
         <form onSubmit={handleSubmit} className="mt-6 space-y-5" noValidate>
           {showPrintStep ? (
             <>
-              <BusinessCardPrintOptions
-                paper={paper}
-                lamination={lamination}
-                onPaperChange={setPaper}
-                onLaminationChange={setLamination}
+              <BusinessCardPrintOptionsPanel
+                options={businessCardOptions}
+                onChange={setBusinessCardOptions}
+                designFee={designFee}
               />
               <Button type="submit" size="lg" className="w-full gap-1 sm:w-auto">
                 {t('nextStep')}
@@ -363,23 +373,25 @@ export function DesignOrderForm({
                 })}
               </fieldset>
 
-              <div>
-                <label
-                  htmlFor="quantity"
-                  className="mb-1.5 block text-sm font-medium text-ink-700"
-                >
-                  {t('quantity')}
-                </label>
-                <QuantityInput
-                  id="quantity"
-                  name="quantity"
-                  min={1}
-                  max={500}
-                  value={quantity}
-                  onChange={setQuantity}
-                  className="w-24"
-                />
-              </div>
+              {!isBusinessCard ? (
+                <div>
+                  <label
+                    htmlFor="quantity"
+                    className="mb-1.5 block text-sm font-medium text-ink-700"
+                  >
+                    {t('quantity')}
+                  </label>
+                  <QuantityInput
+                    id="quantity"
+                    name="quantity"
+                    min={1}
+                    max={500}
+                    value={quantity}
+                    onChange={setQuantity}
+                    className="w-24"
+                  />
+                </div>
+              ) : null}
 
               <p className="text-xs text-ink-500">{t('requiredNote')}</p>
               {unavailableError ? (

@@ -35,14 +35,14 @@ import {
   parseLayoutColorsFromCartMetadata,
   parseOrderFieldsFromCartMetadata,
 } from '@/lib/cart/design-cart';
-import { BusinessCardPrintOptions } from '@/components/designs/BusinessCardPrintOptions';
+import { BusinessCardPrintOptions as BusinessCardPrintOptionsPanel } from '@/components/designs/BusinessCardPrintOptions';
+import { BusinessCardPrintOptionsSummary } from '@/components/designs/BusinessCardPrintOptionsSummary';
 import {
   businessCardPrintMetadata,
-  DEFAULT_BUSINESS_CARD_LAMINATION,
-  DEFAULT_BUSINESS_CARD_PAPER,
+  calculateBusinessCardPrintPrice,
+  DEFAULT_BUSINESS_CARD_PRINT_OPTIONS,
   parseBusinessCardPrintOptions,
-  type BusinessCardLamination,
-  type BusinessCardPaper,
+  type BusinessCardPrintOptions,
 } from '@/lib/designs/business-card-print-options';
 import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight, Palette, FileText, Layers, ShoppingCart, Info, Layers2 } from 'lucide-react';
@@ -88,8 +88,9 @@ export function CustomizableDesignForm({
   const mobileFieldBarRef = useRef<DesignCustomizerMobileFieldBarHandle>(null);
 
   const required = requiredOrderFields[template.category];
-  const price = designCategoryPrices[template.category];
+  const designFee = designCategoryPrices[template.category];
   const allFields = getLayoutFields(layout);
+  const hasBack = layout.backFields.length > 0;
   const isBusinessCard = template.category === 'business-cards';
   const steps = useMemo<EditorStep[]>(
     () =>
@@ -108,10 +109,11 @@ export function CustomizableDesignForm({
     Partial<Record<DesignOrderFieldId, string>>
   >(() => getDefaultFieldValues(allFields, layout.id));
   const [quantity, setQuantity] = useState(1);
-  const [paper, setPaper] = useState<BusinessCardPaper>(DEFAULT_BUSINESS_CARD_PAPER);
-  const [lamination, setLamination] = useState<BusinessCardLamination>(
-    DEFAULT_BUSINESS_CARD_LAMINATION,
-  );
+  const [businessCardOptions, setBusinessCardOptions] =
+    useState<BusinessCardPrintOptions>(() => ({
+      ...DEFAULT_BUSINESS_CARD_PRINT_OPTIONS,
+      sides: hasBack ? 'double' : 'single',
+    }));
   const [errors, setErrors] = useState<
     Partial<Record<DesignOrderFieldId, string>>
   >({});
@@ -142,9 +144,7 @@ export function CustomizableDesignForm({
         setQuantity(editingItem.quantity);
       }
       if (template.category === 'business-cards') {
-        const options = parseBusinessCardPrintOptions(editingItem.metadata);
-        setPaper(options.paper);
-        setLamination(options.lamination);
+        setBusinessCardOptions(parseBusinessCardPrintOptions(editingItem.metadata));
       }
       setDraftHydrated(true);
       return;
@@ -333,7 +333,10 @@ export function CustomizableDesignForm({
         textColor: colors.text,
         secondaryColor: colors.secondary,
         ...(isBusinessCard
-          ? businessCardPrintMetadata({ paper, lamination })
+          ? businessCardPrintMetadata(
+              businessCardOptions,
+              calculateBusinessCardPrintPrice(businessCardOptions, designFee),
+            )
           : {}),
       };
 
@@ -342,11 +345,15 @@ export function CustomizableDesignForm({
         if (value) metadata[field] = value;
       }
 
+      const businessCardPrice = isBusinessCard
+        ? calculateBusinessCardPrintPrice(businessCardOptions, designFee)
+        : null;
+
       const cartPayload = {
         type: 'design' as const,
         name: `${td(`categories.${template.category}`)} — ${td(`templates.${template.id}`)}`,
-        price,
-        quantity,
+        price: businessCardPrice?.total ?? designFee,
+        quantity: isBusinessCard ? 1 : quantity,
         designPreview: frontPreview ?? template.image,
         backDesignPreview: backPreview ?? undefined,
         metadata,
@@ -569,7 +576,16 @@ export function CustomizableDesignForm({
 
           <p className="mt-4 text-sm text-ink-500">{t('previewNote')}</p>
           <p className="mt-2 text-lg font-semibold text-brand-600">
-            {to('startingFrom')} {formatPrice(price, locale)}
+            {to('startingFrom')}{' '}
+            {formatPrice(
+              isBusinessCard
+                ? calculateBusinessCardPrintPrice(
+                    DEFAULT_BUSINESS_CARD_PRINT_OPTIONS,
+                    designFee,
+                  ).total
+                : designFee,
+              locale,
+            )}
           </p>
           {template.category === 'menus' && (
             <p className="mt-2 text-xs leading-relaxed text-amber-800">
@@ -586,11 +602,11 @@ export function CustomizableDesignForm({
                   <h2 className="break-words text-xl font-bold text-ink-900">{t('steps.print.title')}</h2>
                   <p className="mt-1 break-words text-sm text-ink-600">{t('steps.print.desc')}</p>
                 </div>
-                <BusinessCardPrintOptions
-                  paper={paper}
-                  lamination={lamination}
-                  onPaperChange={setPaper}
-                  onLaminationChange={setLamination}
+                <BusinessCardPrintOptionsPanel
+                  options={businessCardOptions}
+                  onChange={setBusinessCardOptions}
+                  designFee={designFee}
+                  defaultSides={hasBack ? 'double' : 'single'}
                 />
               </div>
             ) : null}
@@ -708,20 +724,29 @@ export function CustomizableDesignForm({
                   <h2 className="break-words text-xl font-bold text-ink-900">{t('steps.review.title')}</h2>
                   <p className="mt-1 break-words text-sm text-ink-600">{t('steps.review.desc')}</p>
                 </div>
-                <div>
-                  <label htmlFor="quantity" className="mb-1.5 block text-sm font-medium text-ink-700">
-                    {to('quantity')}
-                  </label>
-                  <QuantityInput
-                    id="quantity"
-                    min={1}
-                    max={500}
-                    value={quantity}
-                    onChange={setQuantity}
-                    className="w-24"
+                {isBusinessCard ? (
+                  <BusinessCardPrintOptionsSummary
+                    options={businessCardOptions}
+                    designFee={designFee}
                   />
-                </div>
-                <p className="text-xs text-ink-500">{to('requiredNote')}</p>
+                ) : (
+                  <>
+                    <div>
+                      <label htmlFor="quantity" className="mb-1.5 block text-sm font-medium text-ink-700">
+                        {to('quantity')}
+                      </label>
+                      <QuantityInput
+                        id="quantity"
+                        min={1}
+                        max={500}
+                        value={quantity}
+                        onChange={setQuantity}
+                        className="w-24"
+                      />
+                    </div>
+                    <p className="text-xs text-ink-500">{to('requiredNote')}</p>
+                  </>
+                )}
               </div>
             )}
 

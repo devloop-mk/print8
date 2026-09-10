@@ -49,6 +49,8 @@ import { BusinessCardCartDetails } from "@/components/designs/BusinessCardCartDe
 import { isBusinessCardCartItem } from "@/lib/designs/business-card-print-options";
 import { MenuPrintCartDetails } from "@/components/designs/MenuPrintCartDetails";
 import { isMenuPrintCartItem } from "@/lib/designs/menu-print-options";
+import { WeddingPrintCartDetails } from "@/components/designs/WeddingPrintCartDetails";
+import { isWeddingPrintCartItem } from "@/lib/designs/wedding-print-options";
 
 
 
@@ -367,6 +369,9 @@ export function CartPageContent() {
                       {isMenuPrintCartItem(item) ? (
                         <MenuPrintCartDetails item={item} />
                       ) : null}
+                      {isWeddingPrintCartItem(item) ? (
+                        <WeddingPrintCartDetails item={item} />
+                      ) : null}
 
                     </div>
 
@@ -456,9 +461,10 @@ export function CartPageContent() {
 
 
 
-                  {/* Menus carry their tirage in the print options, so the
-                      generic per-line stepper would double-charge the job. */}
-                  {isMenuPrintCartItem(item) ? null : (
+                  {/* Print jobs carry tirage in metadata — hide the generic stepper. */}
+                  {isMenuPrintCartItem(item) ||
+                  isBusinessCardCartItem(item) ||
+                  isWeddingPrintCartItem(item) ? null : (
                     <div className="mt-auto flex items-center gap-2 pt-2">
                       <span className="text-sm text-ink-500">{t("quantity")}</span>
                       <button

@@ -71,14 +71,14 @@ import {
   cartItemMatchesDesignTemplate,
   parseSvgStateFromCartMetadata,
 } from '@/lib/cart/design-cart';
-import { BusinessCardPrintOptions } from '@/components/designs/BusinessCardPrintOptions';
+import { BusinessCardPrintOptions as BusinessCardPrintOptionsPanel } from '@/components/designs/BusinessCardPrintOptions';
+import { BusinessCardPrintOptionsSummary } from '@/components/designs/BusinessCardPrintOptionsSummary';
 import {
   businessCardPrintMetadata,
-  DEFAULT_BUSINESS_CARD_LAMINATION,
-  DEFAULT_BUSINESS_CARD_PAPER,
+  calculateBusinessCardPrintPrice,
+  DEFAULT_BUSINESS_CARD_PRINT_OPTIONS,
   parseBusinessCardPrintOptions,
-  type BusinessCardLamination,
-  type BusinessCardPaper,
+  type BusinessCardPrintOptions,
 } from '@/lib/designs/business-card-print-options';
 import { MenuPrintOptionsPanel } from '@/components/designs/MenuPrintOptionsPanel';
 import { MenuPrintOptionsSummary } from '@/components/designs/MenuPrintOptionsSummary';
@@ -167,11 +167,12 @@ export function SvgCustomizableDesignForm({
   const hasBack = Boolean(svgTemplate.sides.back);
   const isBusinessCard = template.category === 'business-cards';
   const isMenu = template.category === 'menus';
-  const isWedding = template.category === 'wedding';
+  const isInvitation =
+    template.category === 'wedding' || template.category === 'birthday';
   const isQuick = mode === 'quick';
   const steps = useMemo<EditorStep[]>(() => {
     if (mode === 'quick') {
-      if (isWedding) return ['weddingPrint', 'contact', 'review'];
+      if (isInvitation) return ['weddingPrint', 'contact', 'review'];
       if (isBusinessCard) return ['print', 'contact', 'review'];
       if (isMenu) return ['menuPrint', 'contact', 'review'];
       return ['contact', 'review'];
@@ -179,7 +180,7 @@ export function SvgCustomizableDesignForm({
 
     if (mode === 'form') {
       const tail: EditorStep[] = ['details', 'colors', 'review'];
-      if (isWedding) return ['weddingPrint', ...tail];
+      if (isInvitation) return ['weddingPrint', ...tail];
       if (isBusinessCard) return ['print', ...tail];
       if (isMenu) return ['menuPrint', ...tail];
       return tail;
@@ -188,11 +189,11 @@ export function SvgCustomizableDesignForm({
     const core: EditorStep[] = hasBack
       ? ['front', 'back', 'colors', 'review']
       : ['front', 'colors', 'review'];
-    if (isWedding) return ['weddingPrint', ...core];
+    if (isInvitation) return ['weddingPrint', ...core];
     if (isBusinessCard) return ['print', ...core];
     if (isMenu) return ['menuPrint', ...core];
     return core;
-  }, [hasBack, isBusinessCard, isMenu, isWedding, mode]);
+  }, [hasBack, isBusinessCard, isInvitation, isMenu, mode]);
 
   // Mirrors the server-side fee resolution in lib/orders/validate-order-prices,
   // otherwise a managed design with its own price is rejected at checkout.
@@ -203,7 +204,7 @@ export function SvgCustomizableDesignForm({
       ? template.customPrice
       : designCategoryPrices[template.category];
   const [step, setStep] = useState<EditorStep>(() => {
-    if (isWedding) return 'weddingPrint';
+    if (isInvitation) return 'weddingPrint';
     if (isBusinessCard) return 'print';
     if (isMenu) return 'menuPrint';
     if (mode === 'quick') return 'contact';
@@ -223,10 +224,11 @@ export function SvgCustomizableDesignForm({
     buildMergedDefaultSvgTemplateState(svgTemplate, svgLocale, managedDefaults),
   );
   const [quantity, setQuantity] = useState(1);
-  const [paper, setPaper] = useState<BusinessCardPaper>(DEFAULT_BUSINESS_CARD_PAPER);
-  const [lamination, setLamination] = useState<BusinessCardLamination>(
-    DEFAULT_BUSINESS_CARD_LAMINATION,
-  );
+  const [businessCardOptions, setBusinessCardOptions] =
+    useState<BusinessCardPrintOptions>(() => ({
+      ...DEFAULT_BUSINESS_CARD_PRINT_OPTIONS,
+      sides: hasBack ? 'double' : 'single',
+    }));
   const [menuOptions, setMenuOptions] = useState<MenuPrintOptions>(
     DEFAULT_MENU_PRINT_OPTIONS,
   );
@@ -261,16 +263,22 @@ export function SvgCustomizableDesignForm({
     () => calculateMenuPrintPrice(menuOptions, designFee),
     [designFee, menuOptions],
   );
+  const businessCardPrice = useMemo(
+    () => calculateBusinessCardPrintPrice(businessCardOptions, designFee),
+    [businessCardOptions, designFee],
+  );
   const weddingPrice = useMemo(
-    () => calculateWeddingPrintPrice(weddingOptions),
-    [weddingOptions],
+    () => calculateWeddingPrintPrice(weddingOptions, designFee),
+    [designFee, weddingOptions],
   );
   const cartPrice = isMenu
     ? menuPrice.total
-    : isWedding
-      ? weddingPrice.total
-      : designFee;
-  const cartQuantity = isMenu || isWedding ? 1 : quantity;
+    : isBusinessCard
+      ? businessCardPrice.total
+      : isInvitation
+        ? weddingPrice.total
+        : designFee;
+  const cartQuantity = isMenu || isBusinessCard || isInvitation ? 1 : quantity;
 
   useEffect(() => {
     const defaults = buildMergedDefaultSvgTemplateState(
@@ -301,14 +309,12 @@ export function SvgCustomizableDesignForm({
         setQuantity(editingItem.quantity);
       }
       if (template.category === 'business-cards') {
-        const options = parseBusinessCardPrintOptions(editingItem.metadata);
-        setPaper(options.paper);
-        setLamination(options.lamination);
+        setBusinessCardOptions(parseBusinessCardPrintOptions(editingItem.metadata));
       }
       if (template.category === 'menus') {
         setMenuOptions(parseMenuPrintOptions(editingItem.metadata));
       }
-      if (template.category === 'wedding') {
+      if (isInvitation) {
         setWeddingOptions(parseWeddingPrintOptions(editingItem.metadata));
       }
       if (editingItem.metadata?.designDetailsPending === true) {
@@ -356,7 +362,7 @@ export function SvgCustomizableDesignForm({
           ),
         );
       }
-      if (template.category === 'wedding' && payload.weddingPrint) {
+      if (isInvitation && payload.weddingPrint) {
         setWeddingOptions(
           parseWeddingPrintOptions(
             payload.weddingPrint as Record<string, string | number | boolean>,
@@ -388,11 +394,20 @@ export function SvgCustomizableDesignForm({
         state,
         step,
         quantity,
+        businessCardOptions,
         menuOptions,
         weddingOptions,
         quickContactValues,
       }),
-    [state, step, quantity, menuOptions, weddingOptions, quickContactValues],
+    [
+      state,
+      step,
+      quantity,
+      businessCardOptions,
+      menuOptions,
+      weddingOptions,
+      quickContactValues,
+    ],
   );
   const { isDirty, markClean } = useDirtySnapshot(serializedDraft, draftHydrated);
 
@@ -409,8 +424,13 @@ export function SvgCustomizableDesignForm({
           quantity,
           svgTemplateId: svgTemplate.id,
           customizeMode: mode,
+          ...(isBusinessCard
+            ? { businessCardPrint: businessCardPrintMetadata(businessCardOptions, businessCardPrice) }
+            : {}),
           ...(isMenu ? { menuPrint: menuPrintMetadata(menuOptions) } : {}),
-          ...(isWedding ? { weddingPrint: weddingPrintMetadata(weddingOptions, weddingPrice) } : {}),
+          ...(isInvitation
+            ? { weddingPrint: weddingPrintMetadata(weddingOptions, weddingPrice) }
+            : {}),
           ...(isQuick ? { quickContact: quickContactValues } : {}),
         },
         updatedAt: new Date().toISOString(),
@@ -421,9 +441,12 @@ export function SvgCustomizableDesignForm({
       return false;
     }
   }, [
+    businessCardOptions,
+    businessCardPrice,
+    isBusinessCard,
+    isInvitation,
     isMenu,
     isQuick,
-    isWedding,
     markClean,
     menuOptions,
     mode,
@@ -691,10 +714,12 @@ export function SvgCustomizableDesignForm({
           : { svgState: JSON.stringify(state) }),
         ...svgFields,
         ...(isBusinessCard
-          ? businessCardPrintMetadata({ paper, lamination })
+          ? businessCardPrintMetadata(businessCardOptions, businessCardPrice)
           : {}),
         ...(isMenu ? menuPrintMetadata(menuOptions, menuPrice) : {}),
-        ...(isWedding ? weddingPrintMetadata(weddingOptions, weddingPrice) : {}),
+        ...(isInvitation
+          ? weddingPrintMetadata(weddingOptions, weddingPrice)
+          : {}),
       };
 
       if (isQuick) {
@@ -1089,11 +1114,11 @@ export function SvgCustomizableDesignForm({
                 )}
               >
                 {step === 'print' && isBusinessCard ? (
-                  <BusinessCardPrintOptions
-                    paper={paper}
-                    lamination={lamination}
-                    onPaperChange={setPaper}
-                    onLaminationChange={setLamination}
+                  <BusinessCardPrintOptionsPanel
+                    options={businessCardOptions}
+                    onChange={setBusinessCardOptions}
+                    designFee={designFee}
+                    defaultSides={hasBack ? 'double' : 'single'}
                   />
                 ) : null}
                 {step === 'menuPrint' && isMenu ? (
@@ -1103,10 +1128,12 @@ export function SvgCustomizableDesignForm({
                     designFee={designFee}
                   />
                 ) : null}
-                {step === 'weddingPrint' && isWedding ? (
+                {step === 'weddingPrint' && isInvitation ? (
                   <WeddingPrintOptionsPanel
                     options={weddingOptions}
                     onChange={setWeddingOptions}
+                    designFee={designFee}
+                    defaultSides={hasBack ? 'double' : 'single'}
                   />
                 ) : null}
                 {step === 'contact' ? (
@@ -1176,8 +1203,16 @@ export function SvgCustomizableDesignForm({
                       options={menuOptions}
                       designFee={designFee}
                     />
-                  ) : isWedding ? (
-                    <WeddingPrintOptionsSummary options={weddingOptions} />
+                  ) : isBusinessCard ? (
+                    <BusinessCardPrintOptionsSummary
+                      options={businessCardOptions}
+                      designFee={designFee}
+                    />
+                  ) : isInvitation ? (
+                    <WeddingPrintOptionsSummary
+                      options={weddingOptions}
+                      designFee={designFee}
+                    />
                   ) : (
                     <dl className="space-y-2 rounded-xl border border-ink-200 bg-ink-50/60 px-4 py-3 text-sm">
                       <div className="flex flex-wrap gap-x-2 gap-y-0.5">

@@ -20,7 +20,11 @@ import {
 } from '@/lib/data/catalog';
 import { resolveAssetUrl } from '@/lib/storage/asset-url';
 import { resolveProductDesignDisplayName } from '@/lib/products/design-display-name';
-import { resolveDesignPreviewColor } from '@/lib/products/design-applicable-colors';
+import {
+  getDesignApplicableColors,
+  pickVariedDesignPreviewColor,
+  resolveDesignPreviewColor,
+} from '@/lib/products/design-applicable-colors';
 import {
   getDesignSideMode,
   isDualSidedDesign,

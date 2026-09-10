@@ -69,8 +69,8 @@ export const requiredOrderFields: Record<
 
 export const designCategoryPrices: Record<DesignCategory, number> = {
   "business-cards": 500,
-  wedding: 1500,
-  birthday: 800,
+  wedding: 300,
+  birthday: 300,
   menus: 800,
   general: 500,
 };

@@ -217,6 +217,10 @@ import {
   isBagProduct,
 } from '@/lib/products/bag-print-pricing';
 import {
+  classifyDrinkwarePrintTier,
+  getDrinkwareUnitPrice,
+} from '@/lib/products/drinkware-print-pricing';
+import {
   deriveTshirtPrintPackage,
   getTshirtPrintAreaInsets,
   getTshirtUnitPrice,
@@ -1555,8 +1559,24 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     if (isBagProduct(product)) {
       return getBagUnitPrice(frontHasContent || backHasContent);
     }
+    if (isDrinkware) {
+      const design = sideDesigns[activeSide] ?? createDefaultSideDesign();
+      const tier = classifyDrinkwarePrintTier(product, {
+        scale: design.uploadedImageScale,
+        position: design.uploadedImagePosition,
+      });
+      return getDrinkwareUnitPrice(product, tier);
+    }
     return product.basePrice;
-  }, [product, printPackage, frontHasContent, backHasContent]);
+  }, [
+    product,
+    isDrinkware,
+    printPackage,
+    frontHasContent,
+    backHasContent,
+    sideDesigns,
+    activeSide,
+  ]);
 
   // Editing always uses the generous chest zone — the tighter "small
   // print" zone (see tshirt-print-pricing.ts) only classifies price/back

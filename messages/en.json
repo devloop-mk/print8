@@ -1263,25 +1263,55 @@
         "paperLabel": "Paper",
         "paperHint": "Choose the paper weight for your business cards.",
         "paper": {
-          "240gsm": "240 gsm",
-          "300gsm": "300 gsm"
+          "240gsm": {
+            "title": "240 gsm",
+            "description": "Lighter coated stock — more economical."
+          },
+          "300gsm": {
+            "title": "300 gsm",
+            "description": "Standard thick stock — most popular choice."
+          },
+          "premiumWriteOn": {
+            "title": "Premium write-on",
+            "description": "Premium writable stock — no lamination."
+          }
         },
         "laminationLabel": "Lamination",
         "laminationHint": "Choose whether to laminate the cards.",
+        "laminationDisabledHint": "Premium write-on cards are not laminated.",
         "lamination": {
           "none": {
             "title": "No lamination",
             "description": "Classic paper finish without a protective layer."
           },
           "matte": {
-            "title": "Matte lamination",
-            "description": "Soft matte finish with less glare."
+            "title": "Matte lamination (100 µm)",
+            "description": "Matte foil — less glare."
           },
           "glossy": {
-            "title": "Glossy lamination",
-            "description": "Glossy finish with stronger protection."
+            "title": "Glossy lamination (40 µm)",
+            "description": "Glossy foil with a protective layer."
           }
-        }
+        },
+        "sidesLabel": "Printing",
+        "sidesHint": "Single-sided or double-sided business cards.",
+        "sides": {
+          "single": {
+            "title": "Single-sided",
+            "description": "Print on the front only."
+          },
+          "double": {
+            "title": "Double-sided",
+            "description": "Print on front and back."
+          }
+        },
+        "sidesUseTemplate": "Use {side} (from design)",
+        "quantityLabel": "Tirage",
+        "quantityHint": "How many business cards you need (min. 50).",
+        "quantityTiers": "Prices are per tirage: {tiers} pcs.",
+        "printTotal": "Printing ({quantity} pcs) — {amount}",
+        "designFee": "Design — {amount}",
+        "total": "Total: {amount}"
       },
       "menuPrintOptions": {
         "sku": "A5 spiral ({size} mm)",
@@ -1328,20 +1358,45 @@
       "weddingPrint": {
         "sizeLabel": "Invitation size",
         "sizeHint": "Choose the print format for your invitations.",
+        "sidesLabel": "Printing",
+        "sidesHint": "Single-sided or double-sided invitations.",
+        "sides": {
+          "single": {
+            "title": "Single-sided",
+            "description": "Print on the front only."
+          },
+          "double": {
+            "title": "Double-sided",
+            "description": "Print on front and back."
+          }
+        },
+        "sidesUseTemplate": "Use {side} (from design)",
         "quantityLabel": "Number of invitations",
-        "quantityHint": "How many printed invitations do you need?",
+        "quantityHint": "How many printed invitations do you need? (min. 20)",
         "priceDesignFee": "Design fee: {amount}",
         "pricePerInvitation": "{count} invitations × {unit} = {print}",
         "pricePerUnit": "{amount} per invitation",
         "priceTotal": "Total: {amount}",
         "sizes": {
-          "13x18": {
-            "title": "13 × 18 cm",
-            "dimensions": "Standard wedding invitation"
-          },
           "10x15": {
             "title": "10 × 15 cm",
             "dimensions": "Compact postcard size"
+          },
+          "12x17": {
+            "title": "12 × 17 cm",
+            "dimensions": "Standard invitation"
+          },
+          "a5": {
+            "title": "A5 (14.8 × 21 cm)",
+            "dimensions": "Large format"
+          },
+          "dl": {
+            "title": "DL (10 × 21 cm)",
+            "dimensions": "Vertical DL format"
+          },
+          "15x15": {
+            "title": "15 × 15 cm",
+            "dimensions": "Square format"
           }
         }
       },
@@ -2460,7 +2515,7 @@
     "email": "Email",
     "address": "Address",
     "hours": "Working hours",
-    "hoursValue": "Mon–Fri: 09:00–17:00, Sat: 09:00–13:00",
+    "hoursValue": "Mon–Fri: 08:30–15:30, Sat: 08:00–13:00",
     "addressValue": "Shtip, North Macedonia",
     "phoneValue": "+389 74 609 906",
     "emailValue": "print8mk@hotmail.com",
@@ -2546,7 +2601,10 @@
     },
     "businessCard": {
       "paper": "Paper",
-      "lamination": "Lamination"
+      "lamination": "Lamination",
+      "sides": "Printing",
+      "quantity": "Tirage",
+      "printTotal": "Printing"
     },
     "menuPrint": {
       "format": "Format",
@@ -2557,6 +2615,7 @@
     },
     "weddingPrint": {
       "size": "Invitation size",
+      "sides": "Printing",
       "quantity": "Quantity",
       "designFee": "Design fee",
       "printTotal": "Printing"

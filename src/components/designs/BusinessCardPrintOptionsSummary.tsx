@@ -3,31 +3,36 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { cn, formatPrice } from '@/lib/utils';
 import {
-  calculateWeddingPrintPrice,
-  type WeddingPrintOptions,
-} from '@/lib/designs/wedding-print-options';
+  calculateBusinessCardPrintPrice,
+  type BusinessCardPrintOptions,
+} from '@/lib/designs/business-card-print-options';
 
-export function WeddingPrintOptionsSummary({
+export function BusinessCardPrintOptionsSummary({
   options,
   designFee = 0,
   className,
 }: {
-  options: WeddingPrintOptions;
+  options: BusinessCardPrintOptions;
   designFee?: number;
   className?: string;
 }) {
-  const t = useTranslations('designs.order.weddingPrint');
+  const t = useTranslations('designs.order.printOptions');
   const locale = useLocale();
-  const price = calculateWeddingPrintPrice(options, designFee);
+  const price = calculateBusinessCardPrintPrice(options, designFee);
 
   return (
     <div className={cn('space-y-4', className)}>
       <dl className="space-y-2 rounded-xl border border-ink-200 bg-ink-50/60 px-4 py-3 text-sm">
         <div className="flex flex-wrap gap-x-2 gap-y-0.5">
-          <dt className="shrink-0 text-ink-500">{t('sizeLabel')}:</dt>
+          <dt className="shrink-0 text-ink-500">{t('paperLabel')}:</dt>
           <dd className="min-w-0 font-medium text-ink-900">
-            {t(`sizes.${options.size}.title`)} —{' '}
-            {t(`sizes.${options.size}.dimensions`)}
+            {t(`paper.${options.paper}.title`)}
+          </dd>
+        </div>
+        <div className="flex flex-wrap gap-x-2 gap-y-0.5">
+          <dt className="shrink-0 text-ink-500">{t('laminationLabel')}:</dt>
+          <dd className="min-w-0 font-medium text-ink-900">
+            {t(`lamination.${options.lamination}.title`)}
           </dd>
         </div>
         <div className="flex flex-wrap gap-x-2 gap-y-0.5">
@@ -38,29 +43,26 @@ export function WeddingPrintOptionsSummary({
         </div>
         <div className="flex flex-wrap gap-x-2 gap-y-0.5">
           <dt className="shrink-0 text-ink-500">{t('quantityLabel')}:</dt>
-          <dd className="min-w-0 font-medium text-ink-900">
-            {options.quantity}
-          </dd>
+          <dd className="min-w-0 font-medium text-ink-900">{options.quantity}</dd>
         </div>
       </dl>
 
       <div className="rounded-xl border border-ink-200 bg-white px-4 py-3 text-sm text-ink-700">
+        <p>
+          {t('printTotal', {
+            quantity: price.quantity,
+            amount: formatPrice(price.tirageTotal, locale),
+          })}
+        </p>
         {price.designFee > 0 ? (
-          <p>
-            {t('priceDesignFee', {
+          <p className="mt-1">
+            {t('designFee', {
               amount: formatPrice(price.designFee, locale),
             })}
           </p>
         ) : null}
-        <p className={price.designFee > 0 ? 'mt-1' : undefined}>
-          {t('pricePerInvitation', {
-            count: options.quantity,
-            unit: formatPrice(price.pricePerInvitation, locale),
-            print: formatPrice(price.printTotal, locale),
-          })}
-        </p>
         <p className="mt-2 text-base font-semibold text-ink-900">
-          {t('priceTotal', { amount: formatPrice(price.total, locale) })}
+          {t('total', { amount: formatPrice(price.total, locale) })}
         </p>
       </div>
     </div>
