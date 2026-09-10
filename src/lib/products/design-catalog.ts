@@ -60,6 +60,38 @@ export async function getMergedProductDesignCatalogEntries(
   return buildProductDesignCatalogEntries(category, templates);
 }
 
+/**
+ * Ready designs for one product SKU. Patch / polo blanks use explicit `productIds`
+ * in code packs — those rows may be missing from DB-only catalog mode.
+ */
+export async function getProductPremadeDesignCatalogEntries(
+  product: Product,
+  category: ProductDesignCategory = 'image-designs',
+): Promise<ProductDesignCatalogEntry[]> {
+  const { getMergedProductDesignTemplates } = await import(
+    '@/lib/products/merged-product-designs'
+  );
+  const merged = await getMergedProductDesignTemplates();
+  const mergedById = new Map(merged.map((design) => [design.id, design]));
+
+  const sourceTemplates = productRequiresExplicitPremadeDesigns(product)
+    ? productDesignTemplates.filter(
+        (design) =>
+          design.category === category &&
+          premadeDesignAppliesToProduct(design, product),
+      )
+    : merged.filter(
+        (design) =>
+          design.category === category &&
+          premadeDesignAppliesToProduct(design, product),
+      );
+
+  return sourceTemplates.map((design) => ({
+    design: mergedById.get(design.id) ?? design,
+    products: [product],
+  }));
+}
+
 export function getCatalogColors(entries: ProductDesignCatalogEntry[]): string[] {
   const colors = new Set<string>();
   for (const entry of entries) {
@@ -70,6 +102,30 @@ export function getCatalogColors(entries: ProductDesignCatalogEntry[]): string[]
     }
   }
   return [...colors];
+}
+
+/** Color chips for a single product page — capped to that SKU's palette. */
+export function getCatalogColorsForProduct(
+  product: Product,
+  entries: ProductDesignCatalogEntry[],
+): string[] {
+  const designColors = new Set<string>();
+  for (const entry of entries) {
+    for (const color of getDesignApplicableColors(entry.design, product)) {
+      designColors.add(normalizeHex(color));
+    }
+  }
+
+  const productColors = product.colors ?? [];
+  if (productColors.length > 0) {
+    return productColors.filter((color) => {
+      const hex = normalizeHex(color);
+      if (designColors.size === 0) return true;
+      return designColors.has(hex);
+    });
+  }
+
+  return [...designColors];
 }
 
 export type DesignCatalogFilters = {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import { Shirt } from 'lucide-react';
 import {
@@ -163,12 +163,20 @@ export function ProductCatalogImage({
     () => pickProductCatalogPreviewDesign(product, mergedTemplates),
     [mergedTemplates, product],
   );
+  const [hoverPreviewActive, setHoverPreviewActive] = useState(false);
 
   if (designPreviewOnHover && previewDesign) {
     return (
-      <div className="relative w-full max-w-sm">
+      <div
+        className="relative w-full max-w-sm"
+        onMouseEnter={() => setHoverPreviewActive(true)}
+        onMouseLeave={() => setHoverPreviewActive(false)}
+      >
         <div
-          className="transition-opacity duration-300 [@media(hover:hover)]:group-hover:opacity-0"
+          className={cn(
+            'transition-opacity duration-300',
+            hoverPreviewActive && 'opacity-0',
+          )}
         >
           <ProductPlainCatalogImage
             product={product}
@@ -177,18 +185,18 @@ export function ProductCatalogImage({
             showAlternateOnHover={false}
           />
         </div>
-        <div
-          className="absolute inset-0 opacity-0 transition-opacity duration-300 [@media(hover:hover)]:group-hover:opacity-100"
-        >
-          <DesignTemplatePreview
-            product={product}
-            color={color}
-            design={previewDesign}
-            typeLabel={typeLabel}
-            side="front"
-            allowDrinkware3d={false}
-          />
-        </div>
+        {hoverPreviewActive ? (
+          <div className="absolute inset-0 opacity-100 transition-opacity duration-200">
+            <DesignTemplatePreview
+              product={product}
+              color={color}
+              design={previewDesign}
+              typeLabel={typeLabel}
+              side="front"
+              allowDrinkware3d={false}
+            />
+          </div>
+        ) : null}
       </div>
     );
   }

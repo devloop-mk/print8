@@ -1,7 +1,6 @@
 import { ProductDesignsPage } from '@/components/products/ProductDesignsPage';
 import { products } from '@/lib/data/catalog';
-import { getCachedReadyDesignEntriesForType } from '@/lib/cache/catalog-cache';
-import { filterDesignCatalogEntriesForProduct } from '@/lib/products/design-catalog';
+import { getProductPremadeDesignCatalogEntries } from '@/lib/products/design-catalog';
 import { slimProductDesignCatalogEntries } from '@/lib/products/slim-catalog-entry';
 import { resolveProductId } from '@/lib/products/product-id-aliases';
 import { buildProductPremadeDesignsMetadata } from '@/lib/seo/page-metadata';
@@ -40,12 +39,8 @@ export default async function ProductPremadeDesignsPage({
     notFound();
   }
 
-  const typeEntries = await getCachedReadyDesignEntriesForType(
-    product.type,
-    'image-designs',
-  );
   const entries = slimProductDesignCatalogEntries(
-    filterDesignCatalogEntriesForProduct(typeEntries, product),
+    await getProductPremadeDesignCatalogEntries(product, 'image-designs'),
   );
 
   return (

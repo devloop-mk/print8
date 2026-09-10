@@ -153,6 +153,10 @@ const productConfigs: Record<string, Drinkware3DConfig> = {
     ...MUG_CONFIG,
     handleGapFraction: 0.1,
   },
+  'mug-window-blue': {
+    ...MUG_CONFIG,
+    handleGapFraction: 0.1,
+  },
 };
 
 export function getDrinkware3DConfig(

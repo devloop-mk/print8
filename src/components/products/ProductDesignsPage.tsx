@@ -14,6 +14,7 @@ import { getProductDisplayPrice } from '@/lib/products/tshirt-print-pricing';
 import {
   filterDesignCatalogEntries,
   getCatalogColors,
+  getCatalogColorsForProduct,
   type ProductDesignCatalogEntry,
 } from '@/lib/products/design-catalog';
 import {
@@ -114,7 +115,10 @@ export function ProductDesignsPage({
     [pathname, router, searchParams],
   );
 
-  const availableColors = useMemo(() => getCatalogColors(entries), [entries]);
+  const availableColors = useMemo(
+    () => (product ? getCatalogColorsForProduct(product, entries) : []),
+    [entries, product],
+  );
 
   const entriesForCollectionOptions = useMemo(() => {
     if (!product) return [];
@@ -283,7 +287,7 @@ export function ProductDesignsPage({
       });
     }
 
-    if (availableColors.length > 0) {
+    if (availableColors.length > 1) {
       groups.push({
         kind: 'colors',
         id: 'color',

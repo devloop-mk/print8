@@ -27,6 +27,7 @@ export const DESIGN_COLLECTION_LABELS: Record<string, { en: string; mk: string }
   family: { en: 'Family', mk: 'Семејство' },
   'local-mk': { en: 'Local designs', mk: 'Локални дизајни' },
   'mk-folk': { en: 'MK Folk', mk: 'МК Фолклор' },
+  'patch-mug': { en: 'Patch mug', mk: 'Шолја со поле' },
   'caps-local': { en: 'Caps', mk: 'Капи' },
   'bags-local': { en: 'Bags', mk: 'Торби' },
   drinkware: { en: 'Drinkware', mk: 'Шолји' },

@@ -13,6 +13,22 @@ export type DrinkwareSublimationPatch = {
   scallopDepth: number;
 };
 
+/** Shared white patch field — red and blue window mugs use the same supplier shape. */
+const PATCH_MUG_SUBLIMATION_FIELD: Omit<
+  DrinkwareSublimationPatch,
+  'bodyColor' | 'patchColor'
+> = {
+  bounds: {
+    top: 12,
+    right: 29,
+    bottom: 16,
+    left: 29,
+  },
+  scallopedEdge: 'left',
+  scallopCount: 7,
+  scallopDepth: 0.065,
+};
+
 /** White sublimation patch on a coloured mug body — design prints only inside the patch. */
 export const DRINKWARE_SUBLIMATION_PATCH_BY_PRODUCT_ID: Record<
   string,
@@ -21,15 +37,12 @@ export const DRINKWARE_SUBLIMATION_PATCH_BY_PRODUCT_ID: Record<
   'mug-red-patch': {
     bodyColor: '#dc2626',
     patchColor: '#ffffff',
-    bounds: {
-      top: 12,
-      right: 29,
-      bottom: 16,
-      left: 29,
-    },
-    scallopedEdge: 'left',
-    scallopCount: 7,
-    scallopDepth: 0.065,
+    ...PATCH_MUG_SUBLIMATION_FIELD,
+  },
+  'mug-window-blue': {
+    bodyColor: '#2563eb',
+    patchColor: '#ffffff',
+    ...PATCH_MUG_SUBLIMATION_FIELD,
   },
 };
 

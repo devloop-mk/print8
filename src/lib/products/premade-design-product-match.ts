@@ -1,10 +1,11 @@
 import type { Product, ProductDesignTemplate } from '@/lib/data/catalog';
+import { getDrinkwareSublimationPatch } from '@/lib/products/drinkware-sublimation-patch';
 import { productIdsInclude } from '@/lib/products/product-id-aliases';
 import { isPoloProduct } from '@/lib/products/polo-mockup-paths';
 
 /** Products that only show premade designs explicitly linked via `productIds` in admin. */
 export function productRequiresExplicitPremadeDesigns(product: Product): boolean {
-  return isPoloProduct(product);
+  return isPoloProduct(product) || Boolean(getDrinkwareSublimationPatch(product.id));
 }
 
 export function premadeDesignAppliesToProduct(

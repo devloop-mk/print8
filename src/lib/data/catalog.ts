@@ -12,6 +12,7 @@ import { kidsBirthdayPackTemplates } from '@/lib/data/kids-birthday-pack';
 import { kidsGeneratedPackTemplates } from '@/lib/data/kids-generated-pack';
 import { dualSideGeneratedPackTemplates } from '@/lib/data/dual-side-generated-pack';
 import { localMkDrinkwarePackTemplates } from '@/lib/data/local-mk-drinkware-pack';
+import { patchMugPackTemplates } from '@/lib/data/patch-mug-pack';
 import { mkFolkPackTemplates } from '@/lib/data/mk-folk-pack';
 import { mkMugsPackTemplates } from '@/lib/data/mk-mugs-pack';
 import { capPackTemplates } from '@/lib/data/cap-pack';
@@ -1188,7 +1189,7 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
     kind: 'image',
     category: 'image-designs',
     productTypes: ['mug'],
-    productIds: ['mug-red-patch'],
+    productIds: ['mug-red-patch', 'mug-window-blue'],
     nameKey: 'mugPortraitRed',
     image: '/mugs/design-portrait-red.jpg',
     defaultSide: 'front',
@@ -1247,6 +1248,7 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
   ...drinkwarePackTemplates,
   ...transparentMugsPackTemplates,
   ...localMkDrinkwarePackTemplates,
+  ...patchMugPackTemplates,
   ...mkFolkPackTemplates,
   ...mkMugsPackTemplates,
   ...capPackTemplates,

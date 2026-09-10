@@ -159,13 +159,36 @@ export function DesignTemplatePreview({
   });
   const mockupLayout = getProductMockupLayout(product);
   const overlayPrintBounds = getOverlayPrintBounds(mockupLayout);
-  const useDrinkwareWrap3D =
-    allowDrinkware3d &&
+  const needsDrinkware3d =
     isOverlayDesignTemplate(design) &&
     shouldUseDrinkware3DDesignPreview(product, shirtMockup, placement);
+  const useDrinkwareWrap3D = allowDrinkware3d && needsDrinkware3d;
   const drinkwareSideDesign = useDrinkwareWrap3D
     ? sideDesignFromOverlayTemplate(design, product, previewColor, mockupSide)
     : null;
+
+  const sideHasRecolorableOverlay = Boolean(
+    sideConfig?.overlaySvg && sideConfig.overlayRecolor,
+  );
+  const sideHasColorVariants = Boolean(
+    sideConfig?.overlayColorVariants &&
+      Object.keys(sideConfig.overlayColorVariants).length > 0,
+  );
+  // Fall back to template-level recolor/variants only for the default side.
+  const useDynamicOverlay =
+    isOverlayDesignTemplate(design) &&
+    (sideHasRecolorableOverlay ||
+      sideHasColorVariants ||
+      (mockupSide === (design.defaultSide ?? 'front') &&
+        (isRecolorableOverlayTemplate(design) ||
+          Boolean(design.overlayColorVariants))));
+
+  // Hooks must run on every render — the 3D branch returns below after them.
+  const { src: stableMockup, loading: mockupLoading } =
+    useStableImageSrc(shirtMockup);
+  const { src: stableOverlay, loading: overlayLoading } = useStableImageSrc(
+    useDynamicOverlay ? null : compositeOverlay,
+  );
 
   if (useDrinkwareWrap3D && drinkwareSideDesign) {
     return (
@@ -189,27 +212,6 @@ export function DesignTemplatePreview({
     );
   }
 
-  const sideHasRecolorableOverlay = Boolean(
-    sideConfig?.overlaySvg && sideConfig.overlayRecolor,
-  );
-  const sideHasColorVariants = Boolean(
-    sideConfig?.overlayColorVariants &&
-      Object.keys(sideConfig.overlayColorVariants).length > 0,
-  );
-  // Fall back to template-level recolor/variants only for the default side.
-  const useDynamicOverlay =
-    isOverlayDesignTemplate(design) &&
-    (sideHasRecolorableOverlay ||
-      sideHasColorVariants ||
-      (mockupSide === (design.defaultSide ?? 'front') &&
-        (isRecolorableOverlayTemplate(design) ||
-          Boolean(design.overlayColorVariants))));
-
-  const { src: stableMockup, loading: mockupLoading } =
-    useStableImageSrc(shirtMockup);
-  const { src: stableOverlay, loading: overlayLoading } = useStableImageSrc(
-    useDynamicOverlay ? null : compositeOverlay,
-  );
   const imageLoading = mockupLoading || overlayLoading;
   // Keep zoom/crop aligned to the image currently on screen (not the pending one).
   const mockupStyle = getMockupImageDisplayStyle(
