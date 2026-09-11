@@ -121,6 +121,42 @@ function CaptureScene({
   );
 }
 
+function DrinkwareFrontCaptureRunner({
+  productType,
+  productId,
+  productColor,
+  textureCanvas,
+  onDone,
+}: {
+  productType: ProductType;
+  productId?: string;
+  productColor: string;
+  textureCanvas: HTMLCanvasElement;
+  onDone: (dataUrl: string) => void;
+}) {
+  const doneRef = useRef(false);
+
+  const handleCapture = useCallback(
+    (dataUrl: string) => {
+      if (doneRef.current) return;
+      doneRef.current = true;
+      onDone(dataUrl);
+    },
+    [onDone],
+  );
+
+  return (
+    <CaptureScene
+      productType={productType}
+      productId={productId}
+      productColor={productColor}
+      textureCanvas={textureCanvas}
+      rotationY={0}
+      onCapture={handleCapture}
+    />
+  );
+}
+
 function DrinkwareCaptureRunner({
   productType,
   productId,
@@ -258,13 +294,98 @@ function DrinkwareCaptureBootstrap({
   );
 }
 
-/**
- * Captures two 3D snapshots of a customized mug/cup/thermos design — left
- * (−90° Y) and right (+90° Y) profile views — for use as cart line-item
- * thumbnails. Returns `null` on failure/timeout so callers can fall back
- * to the existing flat-preview capture.
- */
-export async function captureDrinkware3DPreviews(options: {
+/** Same texture pipeline as cart capture, but a single front-facing still. */
+function DrinkwareFrontCaptureBootstrap({
+  productType,
+  productId,
+  productColor,
+  sideDesign,
+  designTemplate,
+  textLayers,
+  canvasHeightPx,
+  printBounds,
+  onDone,
+}: {
+  productType: ProductType;
+  productId?: string;
+  productColor: string;
+  sideDesign: SideDesign;
+  designTemplate: ProductDesignTemplate | null | undefined;
+  textLayers: PlacedTextLayer[];
+  canvasHeightPx?: number;
+  printBounds: PrintAreaInsets;
+  onDone: (result: string | null) => void;
+}) {
+  const { images, ready } = useDrinkwareDesignImageLayers({
+    shirtColor: productColor,
+    sideDesign,
+    designTemplate,
+  });
+  const [textureCanvas, setTextureCanvas] = useState<HTMLCanvasElement | null>(
+    null,
+  );
+  const failedRef = useRef(false);
+
+  const imageKey = images
+    .map((image) => `${image.src}|${image.scale}|${image.position.x}|${image.position.y}`)
+    .join(';');
+  const textKey = textLayers
+    .map(
+      (layer) =>
+        `${layer.instanceId}|${layer.text}|${layer.size}|${layer.color}|${layer.position.x}|${layer.position.y}|${layer.fontFamily}|${layer.fontWeight}`,
+    )
+    .join(';');
+  const stickerKey = sideDesign.stickers
+    .map(
+      (sticker) =>
+        `${sticker.instanceId}|${sticker.stickerId}|${sticker.scale}|${sticker.position.x}|${sticker.position.y}`,
+    )
+    .join(';');
+
+  useEffect(() => {
+    if (!ready) return;
+    let cancelled = false;
+
+    void buildDrinkwareWrapTexture({
+      productType,
+      productId,
+      productColor,
+      printBounds,
+      images,
+      textLayers,
+      stickers: sideDesign.stickers,
+      canvasHeightPx,
+    })
+      .then((canvas) => {
+        if (!cancelled) setTextureCanvas(canvas);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          failedRef.current = true;
+          onDone(null);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- imageKey/textKey/stickerKey capture the real deps
+  }, [ready, productType, productId, productColor, imageKey, textKey, stickerKey, canvasHeightPx, printBounds]);
+
+  if (!ready || !textureCanvas || failedRef.current) return null;
+
+  return (
+    <DrinkwareFrontCaptureRunner
+      productType={productType}
+      productId={productId}
+      productColor={productColor}
+      textureCanvas={textureCanvas}
+      onDone={onDone}
+    />
+  );
+}
+
+export type DrinkwareCaptureOptions = {
   productType: ProductType;
   productId?: string;
   productColor: string;
@@ -273,8 +394,12 @@ export async function captureDrinkware3DPreviews(options: {
   textLayers: PlacedTextLayer[];
   canvasHeightPx?: number;
   printBounds?: PrintAreaInsets;
-}): Promise<CaptureResult> {
-  if (typeof document === 'undefined') return null;
+};
+
+async function mountOffscreenCapture<T>(
+  render: (root: Root, finish: (value: T) => void) => void,
+): Promise<T> {
+  if (typeof document === 'undefined') return null as T;
 
   const container = document.createElement('div');
   container.style.position = 'fixed';
@@ -300,42 +425,82 @@ export async function captureDrinkware3DPreviews(options: {
   };
 
   try {
-    const result = await new Promise<CaptureResult>((resolve) => {
+    const result = await new Promise<T>((resolve) => {
       const timeout = setTimeout(() => {
         if (settled) return;
         settled = true;
-        resolve(null);
+        resolve(null as T);
       }, CAPTURE_TIMEOUT_MS);
 
-      const finish = (value: CaptureResult) => {
+      const finish = (value: T) => {
         if (settled) return;
         settled = true;
         clearTimeout(timeout);
         resolve(value);
       };
 
-      root = createRoot(container);
-      root.render(
-        <DrinkwareCaptureBootstrap
-          productType={options.productType}
-          productId={options.productId}
-          productColor={options.productColor}
-          sideDesign={options.sideDesign}
-          designTemplate={options.designTemplate}
-          textLayers={options.textLayers}
-          canvasHeightPx={options.canvasHeightPx}
-          printBounds={
-            options.printBounds ?? { top: 0, right: 0, bottom: 0, left: 0 }
-          }
-          onDone={finish}
-        />,
-      );
+      const captureRoot = createRoot(container);
+      root = captureRoot;
+      render(captureRoot, finish);
     });
 
     return result;
   } catch {
-    return null;
+    return null as T;
   } finally {
     cleanup();
   }
+}
+
+/**
+ * Single front-facing 3D snapshot for catalog cards (wrap designs).
+ */
+export async function captureDrinkware3DFrontPreview(
+  options: DrinkwareCaptureOptions,
+): Promise<string | null> {
+  return mountOffscreenCapture<string | null>((captureRoot, finish) => {
+    captureRoot.render(
+      <DrinkwareFrontCaptureBootstrap
+        productType={options.productType}
+        productId={options.productId}
+        productColor={options.productColor}
+        sideDesign={options.sideDesign}
+        designTemplate={options.designTemplate}
+        textLayers={options.textLayers}
+        canvasHeightPx={options.canvasHeightPx}
+        printBounds={
+          options.printBounds ?? { top: 0, right: 0, bottom: 0, left: 0 }
+        }
+        onDone={finish}
+      />,
+    );
+  });
+}
+
+/**
+ * Captures two 3D snapshots of a customized mug/cup/thermos design — left
+ * (−90° Y) and right (+90° Y) profile views — for use as cart line-item
+ * thumbnails. Returns `null` on failure/timeout so callers can fall back
+ * to the existing flat-preview capture.
+ */
+export async function captureDrinkware3DPreviews(
+  options: DrinkwareCaptureOptions,
+): Promise<CaptureResult> {
+  return mountOffscreenCapture<CaptureResult>((captureRoot, finish) => {
+    captureRoot.render(
+      <DrinkwareCaptureBootstrap
+        productType={options.productType}
+        productId={options.productId}
+        productColor={options.productColor}
+        sideDesign={options.sideDesign}
+        designTemplate={options.designTemplate}
+        textLayers={options.textLayers}
+        canvasHeightPx={options.canvasHeightPx}
+        printBounds={
+          options.printBounds ?? { top: 0, right: 0, bottom: 0, left: 0 }
+        }
+        onDone={finish}
+      />,
+    );
+  });
 }

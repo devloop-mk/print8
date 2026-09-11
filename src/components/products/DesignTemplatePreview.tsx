@@ -18,6 +18,7 @@ import {
   shouldUseDrinkware3DDesignPreview,
 } from '@/lib/products/product-mockup-layout';
 import { sideDesignFromOverlayTemplate } from '@/lib/products/design-state';
+import { DrinkwareCatalogCapturedPreview } from '@/components/products/DrinkwareCatalogCapturedPreview';
 import { DrinkwareDesignPreview3D } from '@/components/products/customizer/DrinkwareDesignPreview3D';
 import { resolveDesignPreviewColor } from '@/lib/products/design-applicable-colors';
 import {
@@ -129,6 +130,7 @@ export function DesignTemplatePreview({
   className,
   side,
   allowDrinkware3d = true,
+  drinkwareCatalogCapture3d,
 }: {
   product: Product;
   color: string;
@@ -141,6 +143,8 @@ export function DesignTemplatePreview({
   side?: ProductSide;
   /** Grid/catalog cards disable 3D — too many WebGL contexts break previews. */
   allowDrinkware3d?: boolean;
+  /** Wrap drinkware: static 3D still when live WebGL is off. Defaults to auto. */
+  drinkwareCatalogCapture3d?: boolean;
 }) {
   const textStyle = design.textStyle;
   const photoGuide = textStyle?.photoPosition;
@@ -163,7 +167,9 @@ export function DesignTemplatePreview({
     isOverlayDesignTemplate(design) &&
     shouldUseDrinkware3DDesignPreview(product, shirtMockup, placement);
   const useDrinkwareWrap3D = allowDrinkware3d && needsDrinkware3d;
-  const drinkwareSideDesign = useDrinkwareWrap3D
+  const useCatalogCapture =
+    drinkwareCatalogCapture3d ?? (!allowDrinkware3d && needsDrinkware3d);
+  const drinkwareSideDesign = needsDrinkware3d
     ? sideDesignFromOverlayTemplate(design, product, previewColor, mockupSide)
     : null;
 
@@ -220,7 +226,7 @@ export function DesignTemplatePreview({
     'catalog-design',
   );
 
-  return (
+  const flatCatalogPreview = (
     <ProductMockupFrame
       variant="catalog"
       layout={mockupLayout}
@@ -287,4 +293,19 @@ export function DesignTemplatePreview({
       <MockupLoadingOverlay show={imageLoading} />
     </ProductMockupFrame>
   );
+
+  if (useCatalogCapture && needsDrinkware3d && drinkwareSideDesign) {
+    return (
+      <DrinkwareCatalogCapturedPreview
+        product={product}
+        color={color}
+        design={design}
+        side={mockupSide}
+        className={className}
+        fallback={flatCatalogPreview}
+      />
+    );
+  }
+
+  return flatCatalogPreview;
 }
