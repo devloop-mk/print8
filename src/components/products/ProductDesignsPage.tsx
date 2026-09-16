@@ -81,7 +81,7 @@ export function ProductDesignsPage({
     const trimmed = fromUrl?.trim();
     return trimmed ? normalizeDesignCollectionId(trimmed) : 'all';
   });
-  const [sort, setSort] = useState<DesignCatalogSort>('featured');
+  const [sort, setSort] = useState<DesignCatalogSort>('date-desc');
   const [searchQuery, setSearchQuery] = useState(
     () => searchParams.get('q') ?? '',
   );

@@ -20,6 +20,8 @@ import { bagPackTemplates } from '@/lib/data/bag-pack';
 import { poloPackTemplates } from '@/lib/data/polo-pack';
 import { streetwearPackTemplates } from '@/lib/data/streetwear-pack';
 import { getCouplePackDesignTemplates } from '@/lib/data/couple-pack';
+import { dropTeePackTemplates } from '@/lib/data/drop-tees-pack';
+import { pastrmalijadaPackTemplates } from '@/lib/data/pastrmalijada-pack';
 import {
   buildUnisexTshirtColorImages,
   getUnisexTshirtMockupPath,
@@ -1268,6 +1270,8 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
   ...kidsBirthdayPackTemplates,
   ...kidsGeneratedPackTemplates,
   ...dualSideGeneratedPackTemplates,
+  ...dropTeePackTemplates,
+  ...pastrmalijadaPackTemplates,
   ...getCouplePackDesignTemplates(),
 ];
 

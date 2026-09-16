@@ -22,6 +22,75 @@ function isCatalogDesignAssetPath(normalizedPath: string) {
   );
 }
 
+/** Catalog keys served by `/api/catalog/*` (not print masters). */
+function isCatalogProxyStorageKey(key: string) {
+  const normalized = key.startsWith('/') ? key : `/${key}`;
+  return (
+    normalized.startsWith('/NEW_DESIGNS/') ||
+    normalized.startsWith('/product-designs/')
+  );
+}
+
+/**
+ * Normalize a stored path, CDN URL, or same-origin proxy URL back to a catalog
+ * storage key (`NEW_DESIGNS/...`, `product-designs/...`).
+ */
+function extractCatalogStorageKey(input: string): string | null {
+  const trimmed = input.trim();
+  if (!trimmed) return null;
+
+  if (trimmed.startsWith('/api/catalog/')) {
+    const key = trimmed.slice('/api/catalog/'.length);
+    return isCatalogProxyStorageKey(key) ? key : null;
+  }
+
+  if (!isRemoteAssetUrl(trimmed)) {
+    const key = trimmed.replace(/^\/+/, '');
+    return isCatalogProxyStorageKey(key) ? key : null;
+  }
+
+  if (trimmed.startsWith('data:') || trimmed.startsWith('blob:')) {
+    return null;
+  }
+
+  try {
+    const url = new URL(trimmed);
+    let pathname = url.pathname.replace(/^\/+/, '');
+
+    const cdn = getAssetsCdnBase();
+    if (cdn) {
+      try {
+        const cdnUrl = new URL(cdn);
+        if (url.hostname === cdnUrl.hostname) {
+          const cdnPrefix = cdnUrl.pathname.replace(/^\/+|\/+$/g, '');
+          if (cdnPrefix && pathname.startsWith(`${cdnPrefix}/`)) {
+            pathname = pathname.slice(cdnPrefix.length + 1);
+          }
+        }
+      } catch {
+        // ignore malformed CDN base URL
+      }
+    }
+
+    if (pathname.startsWith('catalog/')) {
+      pathname = pathname.slice('catalog/'.length);
+    }
+
+    if (isCatalogProxyStorageKey(pathname)) {
+      return pathname;
+    }
+
+    // Public `.r2.dev` URLs sometimes omit the `catalog/` prefix.
+    if (url.hostname.endsWith('.r2.dev') && isCatalogProxyStorageKey(pathname)) {
+      return pathname;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
 export function isRemoteAssetUrl(url: string) {
   return (
     url.startsWith('http://') ||
@@ -80,7 +149,21 @@ export function resolveAssetUrl(path: string): string {
  * unless configured on the bucket — this route proxies through the app origin.
  */
 export function resolveCanvasAssetUrl(path: string): string {
-  if (!path || isRemoteAssetUrl(path)) {
+  if (!path) return path;
+
+  if (path.startsWith('blob:') || path.startsWith('data:')) {
+    return path;
+  }
+
+  const catalogKey = extractCatalogStorageKey(path);
+  if (catalogKey) {
+    if (preferLocalPublicAssets()) {
+      return `/${catalogKey}`;
+    }
+    return `/api/catalog/${catalogKey}`;
+  }
+
+  if (isRemoteAssetUrl(path)) {
     return path;
   }
 
@@ -132,11 +215,13 @@ export function resolveMasterAssetUrl(path: string): string {
 
 export function toCatalogStoragePath(input: string) {
   if (!input) return input;
+
+  const catalogKey = extractCatalogStorageKey(input);
+  if (catalogKey) {
+    return `/${catalogKey}`;
+  }
+
   if (isRemoteAssetUrl(input)) {
-    const cdn = getAssetsCdnBase();
-    if (cdn && input.startsWith(`${cdn}/catalog/`)) {
-      return `/${input.slice(`${cdn}/catalog/`.length)}`;
-    }
     return input;
   }
 

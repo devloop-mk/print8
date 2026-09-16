@@ -48,7 +48,9 @@ export function mergeProductDesignTemplate(
     productTypes: override.productTypes?.length
       ? override.productTypes
       : base.productTypes,
-    productIds: override.productIds ?? base.productIds,
+    productIds: override.productIds?.length
+      ? override.productIds
+      : base.productIds,
     designSides: override.designSides ?? base.designSides,
   };
 }

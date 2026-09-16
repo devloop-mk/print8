@@ -207,6 +207,11 @@
       "next": "Следен банер",
       "goToSlide": "Прикажи: {title}",
       "slides": {
+        "pastrmalijada": {
+          "title": "Пастрмалијада 2026",
+          "subtitle": "Маици, детски и чаши за Штип — спреми се навреме.",
+          "cta": "Види ги дизајните"
+        },
         "apparel": {
           "title": "Печати го својот стил",
           "subtitle": "Маици, дуксери и капи — твојот дизајн, професионален печат.",
@@ -1308,7 +1313,7 @@
         "sidesUseTemplate": "Користи {side} (според дизајнот)",
         "quantityLabel": "Тираж",
         "quantityHint": "Колку визит карти ви требаат (мин. 50).",
-        "quantityTiers": "Цените се по тираж: {tiers} пар.",
+        "quantityTiers": "Цената е по парче. Поповолна е на поголем тираж ({tiers} пар.).",
         "printTotal": "Печатење ({quantity} пар.) — {amount}",
         "designFee": "Дизајн — {amount}",
         "total": "Вкупно: {amount}"
@@ -1586,7 +1591,6 @@
         "label": "Подреди",
         "featured": "Препорачани",
         "date-desc": "Најнови",
-        "date-asc": "Најстари",
         "name-asc": "Име А–Ш",
         "name-desc": "Име Ш–А",
         "price-asc": "Цена: ниска → висока",
@@ -1995,6 +1999,18 @@
       "couplePacman": "Pac-Man и дух",
       "coupleFoxMouse": "Лисица и глушец",
       "coupleSoulmates": "Сродници на душата",
+      "coupleHisHers": "His / Hers",
+      "tee-train-insane": "Train insane or remain the same",
+      "tee-im-a-programmer": "Не се секирај, јас сум програмер",
+      "tee-stip-flag-stack": "Штип",
+      "pastrmalijada-ne-sum-debel": "Не сум дебел",
+      "pastrmalijada-stip-2026": "Пастрмалијада Штип 2026",
+      "pastrmalijada-team": "Пастрмалија Team",
+      "pastrmalijada-dietata": "Диетата може да почека",
+      "pastrmalijada-spremen": "Официјално спремен",
+      "pastrmalijada-p-kako": "П како пастрмалија",
+      "pastrmalijada-mug": "Пастрмалијада",
+      "pastrmalijada-beer": "На здравје, Штип",
       "dualRogueEyes": "Отпадник — очи",
       "dualStormHero": "Бура — херои",
       "dualBladeWarrior": "Сечило — воин",

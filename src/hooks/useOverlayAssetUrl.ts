@@ -3,10 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   fetchRecoloredSvgBlobUrl,
-  normalizeHex,
-  getDesignCompositeOverlayUrl,
-  resolveComposableOverlayUrl,
-  resolveOverlayColorVariant,
+  resolveDisplayOverlayRasterUrl,
   type OverlaySvgColors,
 } from '@/lib/products/design-overlay';
 import type { ProductDesignTemplate } from '@/lib/data/catalog';
@@ -30,34 +27,10 @@ export function useOverlayAssetUrl({
 }): string | null {
   const [svgBlobUrl, setSvgBlobUrl] = useState<string | null>(null);
 
-  const variantUrl = useMemo(() => {
-    const raster =
-      resolveComposableOverlayUrl(design.overlayRaster) ??
-      (template ? getDesignCompositeOverlayUrl(template) : null);
-    if (raster) return raster;
-
-    if (design.overlayColorVariants) {
-      const normalizedVariants = Object.fromEntries(
-        Object.entries(design.overlayColorVariants).map(([key, value]) => [
-          normalizeHex(key),
-          value,
-        ]),
-      );
-      return resolveOverlayColorVariant(
-        {
-          overlayColorVariants: normalizedVariants,
-          overlayImage: design.overlayRaster ?? undefined,
-        },
-        shirtColor,
-      );
-    }
-
-    if (template?.overlayColorVariants) {
-      return resolveOverlayColorVariant(template, shirtColor);
-    }
-
-    return null;
-  }, [design.overlayColorVariants, design.overlayRaster, shirtColor, template]);
+  const variantUrl = useMemo(
+    () => resolveDisplayOverlayRasterUrl(design, template, shirtColor),
+    [design.overlayColorVariants, design.overlayRaster, shirtColor, template],
+  );
 
   useEffect(() => {
     if (!design.overlaySvg || !design.overlaySvgColors) {

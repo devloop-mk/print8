@@ -43,7 +43,7 @@ import {
   getAdminOverlayMaxScale,
   PRODUCT_PHOTO_MIN_SCALE,
 } from '@/lib/products/customizer-constants';
-import { resolveAssetUrl } from '@/lib/storage/asset-url';
+import { resolveCanvasAssetUrl } from '@/lib/storage/asset-url';
 import {
   useDraggableOverlayPosition,
   useOverlayScaleResize,
@@ -258,9 +258,9 @@ export function ProductDesignOverlayPlacementEditor({
       overlaySvg: sideOverlay.overlaySvg,
     }) ??
     (sideOverlay.overlayImage
-      ? resolveAssetUrl(sideOverlay.overlayImage)
+      ? resolveCanvasAssetUrl(sideOverlay.overlayImage)
       : sideOverlay.overlaySvg
-        ? resolveAssetUrl(sideOverlay.overlaySvg)
+        ? resolveCanvasAssetUrl(sideOverlay.overlaySvg)
         : null);
 
   const printAreaFitMaxScale = usePrintAreaMaxScale(

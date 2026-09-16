@@ -132,7 +132,7 @@ export function ProductDesignsCatalog({
   function handleSortChange(next: DesignCatalogSort) {
     setSort(next);
     const params = new URLSearchParams(searchParams.toString());
-    if (next === 'featured') params.delete('sort');
+    if (next === 'date-desc') params.delete('sort');
     else params.set('sort', next);
     const qs = params.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });

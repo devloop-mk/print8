@@ -14,8 +14,10 @@ export function isKidsDesignCollection(collection: string | undefined): boolean 
 export function filterKidsDesignCatalogEntries(
   entries: ProductDesignCatalogEntry[],
 ): ProductDesignCatalogEntry[] {
-  return entries.filter((entry) =>
-    isKidsDesignCollection(entry.design.collection),
+  return entries.filter(
+    (entry) =>
+      isKidsDesignCollection(entry.design.collection) ||
+      entry.design.applicableFits?.includes('kids'),
   );
 }
 

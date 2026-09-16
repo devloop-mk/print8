@@ -12,6 +12,7 @@ import {
   getPrintAreaMaxScale,
   type PrintAreaInsets,
 } from '@/lib/products/print-area';
+import { resolveCanvasAssetUrl } from '@/lib/storage/asset-url';
 
 function getMockupInnerElement(
   containerRef: RefObject<HTMLElement | null>,
@@ -79,7 +80,7 @@ export function usePrintAreaMaxScale(
       );
     };
     img.onerror = () => setMaxScale(getPrintAreaMaxScale(printBounds));
-    img.src = imageSrc;
+    img.src = resolveCanvasAssetUrl(imageSrc);
   }, [containerRef, printBounds, imageSrc, fallbackMax]);
 
   useLayoutEffect(() => {

@@ -73,7 +73,6 @@ import {
   getMockupImageDisplayStyle,
   getProductMockupLayout,
   isCylindricalDrinkwareType,
-  resolveMockupDisplayScale,
 } from '@/lib/products/product-mockup-layout';
 import {
   DRINKWARE_FLAT_CANVAS_HEIGHT_PX,
@@ -2184,7 +2183,10 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   ): Promise<string | undefined> {
     if (!previewRef.current || !product) return undefined;
 
-    const rect = previewRef.current.getBoundingClientRect();
+    const mockupInner =
+      previewRef.current.querySelector<HTMLElement>('[data-mockup-inner]') ??
+      previewRef.current;
+    const rect = mockupInner.getBoundingClientRect();
     const mockupPath = getProductMockup(product, color, side);
     if (!mockupPath) return undefined;
 
@@ -2202,12 +2204,6 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       side,
       widthPx: rect.width,
       heightPx: rect.height,
-      mockupDisplayScale: resolveMockupDisplayScale(
-        product,
-        mockupPath,
-        'customizer',
-        { largeCustomizerViewport: isLargeCustomizerViewport },
-      ),
     });
   }
 

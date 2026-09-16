@@ -144,6 +144,50 @@ export function getAdminKidsTshirtColorOptions(
   }));
 }
 
+/** Blank used for drinkware glaze swatches — not a union of every mug/cup SKU. */
+const DRINKWARE_COLOR_PREVIEW_PRODUCT_ID: Partial<Record<ProductType, string>> = {
+  mug: 'mug-classic',
+  cup: 'cup-glass-beer',
+  thermos: 'thermos-classic',
+};
+
+function isDrinkwareColorType(type: ProductType): boolean {
+  return type === 'mug' || type === 'cup' || type === 'thermos';
+}
+
+function getDrinkwareColorPreviewProduct(
+  template: ProductDesignTemplate,
+  type: ProductType,
+): Product | null {
+  if (template.productIds?.length) {
+    const locked = template.productIds
+      .map((id) =>
+        products.find((product) => product.id === resolveProductId(id)),
+      )
+      .find((product) => product?.type === type);
+    if (locked) return locked;
+  }
+
+  const preferredId = DRINKWARE_COLOR_PREVIEW_PRODUCT_ID[type];
+  if (preferredId) {
+    const preferred = products.find(
+      (product) => product.id === resolveProductId(preferredId),
+    );
+    if (preferred) return preferred;
+  }
+
+  return (
+    getLinkedProducts(template).find((product) => product.type === type) ?? null
+  );
+}
+
+function colorOptionsForProduct(product: Product): AdminDesignColorOption[] {
+  return (product.colors ?? []).map((hex) => ({
+    hex,
+    productIds: [product.id],
+  }));
+}
+
 /**
  * Color swatches for the admin matrix.
  * Uses the design's primary product type (productTypes[0]), or an explicit
@@ -173,6 +217,13 @@ export function getAdminDesignColorOptions(
       return getAdminKidsTshirtColorOptions('tshirt-kids');
     }
     return getAdminUnisexTshirtColorOptions('tshirt-unisex');
+  }
+
+  if (isDrinkwareColorType(type)) {
+    const preview = getDrinkwareColorPreviewProduct(template, type);
+    if (preview?.colors?.length) {
+      return colorOptionsForProduct(preview);
+    }
   }
 
   return getDesignColorOptions(template, type);

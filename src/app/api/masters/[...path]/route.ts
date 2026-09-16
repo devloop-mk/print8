@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { NextResponse } from 'next/server';
+import { isR2Configured, isR2NoSuchKeyError, r2GetObject } from '@/lib/storage/r2-client';
 
 export const runtime = 'nodejs';
 
@@ -45,6 +46,18 @@ function resolveLocalMasterPath(segments: string[]) {
   return null;
 }
 
+function contentTypeFromPath(filePath: string): string {
+  const ext = path.extname(filePath).toLowerCase();
+  const map: Record<string, string> = {
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.png': 'image/png',
+    '.webp': 'image/webp',
+    '.svg': 'image/svg+xml',
+  };
+  return map[ext] ?? 'image/png';
+}
+
 export async function GET(
   _request: Request,
   context: { params: Promise<{ path: string[] }> },
@@ -57,18 +70,40 @@ export async function GET(
   }
 
   const { path: segments } = await context.params;
-  const filePath = resolveLocalMasterPath(segments);
-
-  if (!filePath) {
-    return NextResponse.json({ error: 'Master asset not found' }, { status: 404 });
+  if (!segments?.length || !segments.every(isSafeSegment)) {
+    return NextResponse.json({ error: 'Invalid path' }, { status: 400 });
   }
 
-  const body = fs.readFileSync(filePath);
-  return new NextResponse(body, {
-    headers: {
-      'Content-Type': 'image/png',
-      'Cache-Control': 'public, max-age=3600',
-      'X-Content-Type-Options': 'nosniff',
-    },
-  });
+  const relative = segments.join('/');
+  const filePath = resolveLocalMasterPath(segments);
+
+  if (filePath) {
+    const body = fs.readFileSync(filePath);
+    return new NextResponse(body, {
+      headers: {
+        'Content-Type': contentTypeFromPath(filePath),
+        'Cache-Control': 'public, max-age=3600',
+        'X-Content-Type-Options': 'nosniff',
+      },
+    });
+  }
+
+  if (isR2Configured()) {
+    try {
+      const { body, contentType } = await r2GetObject(`masters/${relative}`);
+      return new NextResponse(new Uint8Array(body), {
+        headers: {
+          'Content-Type': contentType ?? contentTypeFromPath(relative),
+          'Cache-Control': 'public, max-age=3600',
+          'X-Content-Type-Options': 'nosniff',
+        },
+      });
+    } catch (error) {
+      if (!isR2NoSuchKeyError(error)) {
+        console.error('[masters] R2 fetch failed:', relative, error);
+      }
+    }
+  }
+
+  return NextResponse.json({ error: 'Master asset not found' }, { status: 404 });
 }

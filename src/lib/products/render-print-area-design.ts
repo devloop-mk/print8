@@ -11,6 +11,7 @@ import {
   getDesignCompositeOverlayUrl,
   normalizeHex,
   resolveComposableOverlayUrl,
+  resolveDisplayOverlayRasterUrl,
   resolveOverlayColorVariant,
 } from '@/lib/products/design-overlay';
 import { getPremadeMasterStoragePath } from '@/lib/products/premade-artwork-source';
@@ -133,6 +134,7 @@ async function resolveDesignImage(
   template: ProductDesignTemplate | null | undefined,
   shirtColor: string,
   side?: ProductSide,
+  mode: 'print' | 'preview' = 'print',
 ): Promise<HTMLImageElement | null> {
   if (design.overlaySvg && design.overlaySvgColors) {
     try {
@@ -148,7 +150,7 @@ async function resolveDesignImage(
     }
   }
 
-  if (template && design.premadeDesignId) {
+  if (mode === 'print' && template && design.premadeDesignId) {
     const masterPath = getPremadeMasterStoragePath(template, side);
     if (masterPath) {
       const masterUrl = resolveComposableOverlayUrl(masterPath);
@@ -162,7 +164,10 @@ async function resolveDesignImage(
     }
   }
 
-  const url = resolveOverlayAssetUrl(design, template, shirtColor);
+  const url =
+    mode === 'preview'
+      ? resolveDisplayOverlayRasterUrl(design, template, shirtColor)
+      : resolveOverlayAssetUrl(design, template, shirtColor);
   if (url) {
     try {
       return await loadImage(url);
@@ -525,8 +530,6 @@ export type RenderMockupPreviewInput = {
   widthPx: number;
   heightPx: number;
   side?: ProductSide;
-  /** Same zoom as `getMockupImageDisplayStyle` in the customizer. */
-  mockupDisplayScale?: number;
   backgroundColor?: string;
 };
 
@@ -534,6 +537,11 @@ export type RenderMockupPreviewInput = {
  * Cart / checkout mockup thumbnail — composites the garment photo and design
  * overlays in the same % coordinate space as the interactive customizer
  * (avoids html2canvas object-fit / clip-path drift).
+ *
+ * Do not apply CSS `getMockupImageDisplayStyle` zoom here. That transform is
+ * overflow-visible in the customizer (same framing, larger on screen). Scaling
+ * the canvas from center crops collar/hem and makes the design look lower and
+ * larger than the live preview.
  */
 export async function renderMockupPreview(
   input: RenderMockupPreviewInput,
@@ -547,7 +555,6 @@ export async function renderMockupPreview(
     widthPx,
     heightPx,
     side,
-    mockupDisplayScale = 1,
     backgroundColor = '#ffffff',
   } = input;
 
@@ -567,13 +574,6 @@ export async function renderMockupPreview(
   context.fillStyle = backgroundColor;
   context.fillRect(0, 0, widthPx, heightPx);
 
-  context.save();
-  if (mockupDisplayScale !== 1) {
-    context.translate(widthPx / 2, heightPx / 2);
-    context.scale(mockupDisplayScale, mockupDisplayScale);
-    context.translate(-widthPx / 2, -heightPx / 2);
-  }
-
   const mockupSrc =
     resolveCanvasAssetUrl(mockupUrl) ??
     resolveAssetUrl(mockupUrl) ??
@@ -583,7 +583,6 @@ export async function renderMockupPreview(
     const mockupImage = await loadImage(mockupSrc);
     drawObjectFitContain(context, mockupImage, 0, 0, widthPx, heightPx);
   } catch {
-    context.restore();
     return undefined;
   }
 
@@ -592,6 +591,7 @@ export async function renderMockupPreview(
     template,
     shirtColor,
     side,
+    'preview',
   );
 
   if (designImage) {
@@ -646,8 +646,6 @@ export async function renderMockupPreview(
       // skip broken sticker
     }
   }
-
-  context.restore();
 
   return canvas.toDataURL('image/png');
 }

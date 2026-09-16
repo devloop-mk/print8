@@ -11,9 +11,8 @@ import {
 import { getProductDisplayPrice } from '@/lib/products/tshirt-print-pricing';
 
 export const DESIGN_CATALOG_SORT_OPTIONS = [
-  'featured',
   'date-desc',
-  'date-asc',
+  'featured',
   'name-asc',
   'name-desc',
   'price-asc',
@@ -31,7 +30,7 @@ export function parseDesignCatalogSort(
   ) {
     return value as DesignCatalogSort;
   }
-  return 'featured';
+  return 'date-desc';
 }
 
 export type DesignCatalogListItem =
@@ -113,12 +112,8 @@ export function sortDesignCatalogItems(
   });
 
   decorated.sort((a, b) => {
-    if (sort === 'date-desc' || sort === 'date-asc') {
-      const dateCmp = compareAddedAt(
-        a.addedAt,
-        b.addedAt,
-        sort === 'date-desc',
-      );
+    if (sort === 'date-desc') {
+      const dateCmp = compareAddedAt(a.addedAt, b.addedAt, true);
       if (dateCmp !== 0) return dateCmp;
       return a.index - b.index;
     }

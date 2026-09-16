@@ -14,7 +14,7 @@ import {
   getStickerById,
   type PlacedSticker,
 } from '@/lib/products/sticker-library';
-import { resolveAssetUrl, resolveCanvasAssetUrl } from '@/lib/storage/asset-url';
+import { resolveCanvasAssetUrl } from '@/lib/storage/asset-url';
 import {
   getDrinkwareSublimationPatch,
   paintSublimationPatch,
@@ -214,7 +214,7 @@ export async function buildDrinkwareWrapTexture(
   const loadedImages = await Promise.all(
     (input.images ?? []).map(async (layer) => ({
       layer,
-      img: await loadImage(layer.src),
+      img: await loadImage(resolveCanvasAssetUrl(layer.src)),
     })),
   );
 
@@ -267,8 +267,7 @@ export async function buildDrinkwareWrapTexture(
       const definition = getStickerById(sticker.stickerId);
       if (!definition) return null;
       try {
-        const src =
-          resolveAssetUrl(definition.src) ?? definition.src;
+        const src = resolveCanvasAssetUrl(definition.src);
         const img = await rasterizeSvgSource(src, 3);
         return { sticker, img };
       } catch {

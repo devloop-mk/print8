@@ -317,7 +317,7 @@ export async function fetchRecoloredSvgBlobUrl(
   svgPath: string,
   colors: OverlaySvgColors,
 ): Promise<string> {
-  const response = await fetch(svgPath);
+  const response = await fetch(resolveCanvasAssetUrl(svgPath));
   const svgText = await response.text();
   const tinted = applySvgInkColors(svgText, colors);
   const blob = new Blob([tinted], { type: 'image/svg+xml' });
@@ -355,6 +355,47 @@ export function resolveOverlayColorVariant(
   return resolveComposableOverlayUrl(
     pickOverlayColorVariantRaw(template, shirtColor),
   );
+}
+
+/**
+ * Raster URL shown in the interactive customizer (`useOverlayAssetUrl`).
+ * Prefers the live overlay raster over a print master so cart captures match
+ * what the customer placed on the mockup.
+ */
+export function resolveDisplayOverlayRasterUrl(
+  design: {
+    overlayRaster?: string | null;
+    overlayColorVariants?: Record<string, string> | null;
+  },
+  template: ProductDesignTemplate | null | undefined,
+  shirtColor: string,
+): string | null {
+  const raster =
+    resolveComposableOverlayUrl(design.overlayRaster) ??
+    (template ? getDesignCompositeOverlayUrl(template) : null);
+  if (raster) return raster;
+
+  if (design.overlayColorVariants) {
+    const normalizedVariants = Object.fromEntries(
+      Object.entries(design.overlayColorVariants).map(([key, value]) => [
+        normalizeHex(key),
+        value,
+      ]),
+    );
+    return resolveOverlayColorVariant(
+      {
+        overlayColorVariants: normalizedVariants,
+        overlayImage: design.overlayRaster ?? undefined,
+      },
+      shirtColor,
+    );
+  }
+
+  if (template?.overlayColorVariants) {
+    return resolveOverlayColorVariant(template, shirtColor);
+  }
+
+  return null;
 }
 
 /** @deprecated Streetwear catalog webps are design artwork, not full-shirt mockups. */

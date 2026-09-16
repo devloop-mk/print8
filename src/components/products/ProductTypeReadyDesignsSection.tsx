@@ -69,7 +69,7 @@ export function ProductTypeReadyDesignsSection({
     const trimmed = fromUrl?.trim();
     return trimmed ? normalizeDesignCollectionId(trimmed) : 'all';
   });
-  const [sort, setSort] = useState<DesignCatalogSort>('featured');
+  const [sort, setSort] = useState<DesignCatalogSort>('date-desc');
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {

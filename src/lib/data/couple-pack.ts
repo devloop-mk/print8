@@ -17,6 +17,7 @@ export interface CouplePartnerDesign {
   overlayImage: string;
   overlayScale: number;
   overlayPosition: { x: number; y: number };
+  printMasterImage?: string;
 }
 
 export interface CouplePackTemplate {
@@ -261,6 +262,36 @@ export const couplePackTemplates: CouplePackTemplate[] = [
       },
     ],
   },
+  {
+    id: 'couple-his-hers',
+    nameKey: 'coupleHisHers',
+    titleEn: 'His / Hers',
+    titleMk: 'His / Hers',
+    productTypes: ['t-shirt'],
+    recommendedColor: '#1C1A1D',
+    applicableColors: ['#1C1A1D', '#c5ccd6', '#272D37', '#DB0213', '#0F287C'],
+    collection: 'couple-packs',
+    partnerDesigns: [
+      {
+        role: 'partner1',
+        designId: 'couple-his-hers-his',
+        labelEn: 'His',
+        labelMk: 'His',
+        overlayImage: '/NEW_DESIGNS/couple/his-matching.png',
+        printMasterImage: 'masters/couple/his-matching.png',
+        ...OVERLAY_DEFAULTS,
+      },
+      {
+        role: 'partner2',
+        designId: 'couple-his-hers-hers',
+        labelEn: 'Hers',
+        labelMk: 'Hers',
+        overlayImage: '/NEW_DESIGNS/couple/hers-matching.png',
+        printMasterImage: 'masters/couple/hers-matching.png',
+        ...OVERLAY_DEFAULTS,
+      },
+    ],
+  },
 ];
 
 export function getCouplePackTemplates(): CouplePackTemplate[] {
@@ -286,6 +317,7 @@ export function partnerDesignToTemplate(
     overlayImage: partner.overlayImage,
     overlayScale: partner.overlayScale,
     overlayPosition: partner.overlayPosition,
+    printMasterImage: partner.printMasterImage,
     recommendedColor: pack.recommendedColor,
     applicableColors: pack.applicableColors,
     defaultSide: 'front',

@@ -3,12 +3,12 @@ import type {
   BusinessCardPaper,
 } from '@/lib/designs/business-card-print-options';
 
-/** Print8 vizit-pokani v16 — standard 300 g tiers (total MKD per tirage). */
+/** Print8 vizit-pokani v16 — listed package sizes (total MKD). */
 export const BUSINESS_CARD_STANDARD_TIERS = [50, 100, 200, 500] as const;
 export type BusinessCardStandardTier =
   (typeof BUSINESS_CARD_STANDARD_TIERS)[number];
 
-/** Laminated cards are priced only at these tirages in the price list. */
+/** Laminated cards are listed only at these tirages in the price list. */
 export const BUSINESS_CARD_LAMINATED_TIERS = [50, 100, 200] as const;
 export type BusinessCardLaminatedTier =
   (typeof BUSINESS_CARD_LAMINATED_TIERS)[number];
@@ -41,6 +41,8 @@ export interface BusinessCardPrintPriceBreakdown {
   designFee: number;
   total: number;
 }
+
+type QuantityPricePoint = { quantity: number; total: number };
 
 const STANDARD_TOTALS: Record<
   BusinessCardStandardTier,
@@ -103,19 +105,48 @@ export function clampBusinessCardQuantity(value: number): number {
   );
 }
 
-function resolveStandardTier(quantity: number): BusinessCardStandardTier {
-  const q = clampBusinessCardQuantity(quantity);
-  if (q <= 50) return 50;
-  if (q <= 100) return 100;
-  if (q <= 200) return 200;
-  return 500;
+/**
+ * Convert listed package totals into a per-piece rate, then multiply by the
+ * actual quantity. Between listed tirages the unit price is interpolated so
+ * 150 pcs is cheaper than 200 pcs — we never charge a smaller run the next
+ * package total.
+ */
+function interpolatePackageTotal(
+  quantity: number,
+  points: readonly QuantityPricePoint[],
+): number {
+  if (points.length === 0 || quantity <= 0) return 0;
+
+  const first = points[0];
+  const last = points[points.length - 1];
+
+  if (quantity <= first.quantity) {
+    return Math.round((first.total / first.quantity) * quantity);
+  }
+  if (quantity >= last.quantity) {
+    return Math.round((last.total / last.quantity) * quantity);
+  }
+
+  for (let i = 0; i < points.length - 1; i += 1) {
+    const low = points[i];
+    const high = points[i + 1];
+    if (quantity <= high.quantity) {
+      const unitLow = low.total / low.quantity;
+      const unitHigh = high.total / high.quantity;
+      const ratio = (quantity - low.quantity) / (high.quantity - low.quantity);
+      const unit = unitLow + (unitHigh - unitLow) * ratio;
+      return Math.round(unit * quantity);
+    }
+  }
+
+  return Math.round((last.total / last.quantity) * quantity);
 }
 
-function resolveLaminatedTier(quantity: number): BusinessCardLaminatedTier {
-  const q = clampBusinessCardQuantity(quantity);
-  if (q <= 50) return 50;
-  if (q <= 100) return 100;
-  return 200;
+function packagePoints(
+  tiers: readonly number[],
+  totalAt: (tier: number) => number,
+): QuantityPricePoint[] {
+  return tiers.map((quantity) => ({ quantity, total: totalAt(quantity) }));
 }
 
 export function resolveBusinessCardLaminationFoil(
@@ -147,22 +178,38 @@ function applyPaperMultiplier(
 export function getBusinessCardTirageTotal(
   options: BusinessCardPrintJob,
 ): number {
+  const quantity = clampBusinessCardQuantity(options.quantity);
   const productLine = resolveBusinessCardProductLine(options);
   const sides = options.sides;
 
   if (productLine === 'premiumWriteOn') {
-    const tier = resolveStandardTier(options.quantity);
-    return PREMIUM_WRITE_ON_TOTALS[tier][sides];
+    return interpolatePackageTotal(
+      quantity,
+      packagePoints(BUSINESS_CARD_STANDARD_TIERS, (tier) =>
+        PREMIUM_WRITE_ON_TOTALS[tier as BusinessCardStandardTier][sides],
+      ),
+    );
   }
 
   if (productLine === 'laminated') {
-    const tier = resolveLaminatedTier(options.quantity);
     const foil = resolveBusinessCardLaminationFoil(options.lamination);
-    return LAMINATED_TOTALS[foil][tier][sides];
+    return interpolatePackageTotal(
+      quantity,
+      packagePoints(BUSINESS_CARD_LAMINATED_TIERS, (tier) =>
+        LAMINATED_TOTALS[foil][tier as BusinessCardLaminatedTier][sides],
+      ),
+    );
   }
 
-  const tier = resolveStandardTier(options.quantity);
-  return applyPaperMultiplier(STANDARD_TOTALS[tier][sides], options.paper);
+  return applyPaperMultiplier(
+    interpolatePackageTotal(
+      quantity,
+      packagePoints(BUSINESS_CARD_STANDARD_TIERS, (tier) =>
+        STANDARD_TOTALS[tier as BusinessCardStandardTier][sides],
+      ),
+    ),
+    options.paper,
+  );
 }
 
 export function calculateBusinessCardPrintPrice(

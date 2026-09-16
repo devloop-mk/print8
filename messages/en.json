@@ -207,6 +207,11 @@
       "next": "Next banner",
       "goToSlide": "Show: {title}",
       "slides": {
+        "pastrmalijada": {
+          "title": "Pastrmalijada 2026",
+          "subtitle": "Tees, kids shirts, and mugs for Štip — get ready before the festival.",
+          "cta": "See the designs"
+        },
         "apparel": {
           "title": "Print your style",
           "subtitle": "T-shirts, hoodies, and caps — your design, professional print.",
@@ -1308,7 +1313,7 @@
         "sidesUseTemplate": "Use {side} (from design)",
         "quantityLabel": "Tirage",
         "quantityHint": "How many business cards you need (min. 50).",
-        "quantityTiers": "Prices are per tirage: {tiers} pcs.",
+        "quantityTiers": "Price is per piece. Bulk rates apply at {tiers} pcs.",
         "printTotal": "Printing ({quantity} pcs) — {amount}",
         "designFee": "Design — {amount}",
         "total": "Total: {amount}"
@@ -1586,7 +1591,6 @@
         "label": "Sort",
         "featured": "Featured",
         "date-desc": "Newest first",
-        "date-asc": "Oldest first",
         "name-asc": "Name A–Z",
         "name-desc": "Name Z–A",
         "price-asc": "Price: low to high",
@@ -1997,6 +2001,18 @@
       "couplePacman": "Pac-Man & Ghost",
       "coupleFoxMouse": "Fox & Mouse",
       "coupleSoulmates": "Soulmates",
+      "coupleHisHers": "His / Hers",
+      "tee-train-insane": "Train insane or remain the same",
+      "tee-im-a-programmer": "Don't worry, I'm a programmer",
+      "tee-stip-flag-stack": "Shtip",
+      "pastrmalijada-ne-sum-debel": "I'm not fat — training for Pastrmalijada",
+      "pastrmalijada-stip-2026": "Pastrmalijada Shtip 2026",
+      "pastrmalijada-team": "Pastrmalija Team",
+      "pastrmalijada-dietata": "The diet can wait",
+      "pastrmalijada-spremen": "Officially ready",
+      "pastrmalijada-p-kako": "P as in pastrmalija",
+      "pastrmalijada-mug": "Pastrmalijada",
+      "pastrmalijada-beer": "Cheers, Shtip",
       "dualRogueEyes": "Rogue — Eyes",
       "dualStormHero": "Storm — Hero",
       "dualBladeWarrior": "Blade — Warrior",

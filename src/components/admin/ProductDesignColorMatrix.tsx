@@ -1,16 +1,20 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import type {
-  GarmentFit,
-  Product,
-  ProductDesignTemplate,
-  ProductType,
+import {
+  getProductMockup,
+  products,
+  type GarmentFit,
+  type Product,
+  type ProductDesignTemplate,
+  type ProductType,
 } from '@/lib/data/catalog';
 import {
   getAdminDesignColorOptions,
   PRODUCT_TYPE_LABELS_MK,
+  type AdminDesignColorOption,
 } from '@/lib/admin/product-designs-shared';
+import { resolveProductId } from '@/lib/products/product-id-aliases';
 import {
   AdminDesignColorPreview,
   resolveAdminPreviewProduct,
@@ -54,6 +58,27 @@ type ProductDesignColorMatrixProps = {
   onVariantsChange: (variants: Record<string, string>) => void;
   uploadFolder: string;
 };
+
+function resolveColorPreviewProduct(
+  option: AdminDesignColorOption,
+  fallback: Product,
+): Product {
+  const hex = normalizeHex(option.hex);
+  const linked = option.productIds
+    .map((id) => products.find((product) => product.id === resolveProductId(id)))
+    .filter((product): product is Product => Boolean(product));
+
+  const withColorPhoto = linked.find((product) => {
+    const mockup = getProductMockup(product, option.hex, 'front');
+    return Boolean(mockup && mockup !== product.image);
+  });
+  if (withColorPhoto) return withColorPhoto;
+
+  const listed = linked.find((product) =>
+    (product.colors ?? []).some((color) => normalizeHex(color) === hex),
+  );
+  return listed ?? linked[0] ?? fallback;
+}
 
 function getColorLabelMk(hex: string): string {
   const key =
@@ -485,7 +510,13 @@ export function ProductDesignColorMatrix({
           {previewProduct ? (
             <span className="ml-1 text-ink-400">
               (преглед: {PRODUCT_TYPE_LABELS_MK[previewType] ?? previewType}
-              {activeFit ? ` · ${FIT_LABELS[activeFit]}` : ''})
+              {activeFit ? ` · ${FIT_LABELS[activeFit]}` : ''}
+              {previewType === 'mug' ||
+              previewType === 'cup' ||
+              previewType === 'thermos'
+                ? ` · ${previewProduct.id}`
+                : ''}
+              )
             </span>
           ) : null}
         </p>
@@ -544,7 +575,7 @@ export function ProductDesignColorMatrix({
                 aria-pressed={enabled}
               >
                 <AdminDesignColorPreview
-                  product={previewProduct}
+                  product={resolveColorPreviewProduct(option, previewProduct)}
                   design={template}
                   color={option.hex}
                 />

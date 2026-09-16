@@ -62,7 +62,7 @@ export function ProductCategoryPremadeCatalog({
 
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
   const [colorFilter, setColorFilter] = useState<string | 'all'>('all');
-  const [sort, setSort] = useState<DesignCatalogSort>('featured');
+  const [sort, setSort] = useState<DesignCatalogSort>('date-desc');
   const [searchQuery, setSearchQuery] = useState('');
 
   const { allOption, options: typeOptions } = useMemo(() => {
