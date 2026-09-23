@@ -223,9 +223,11 @@ export function CartPageContent() {
               product &&
               isCylindricalDrinkwareType(product.type);
             const isDrinkwarePreview =
-              Boolean(product) &&
-              isCylindricalDrinkwareType(product.type) &&
-              previewImages.length > 0;
+              Boolean(
+                product &&
+                  isCylindricalDrinkwareType(product.type) &&
+                  previewImages.length > 0,
+              );
 
             return (
 
