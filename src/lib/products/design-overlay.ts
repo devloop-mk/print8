@@ -467,6 +467,8 @@ export function getStreetwearMarketingMockupUrl(
  * Design artwork layered on the selectable shirt mockup.
  * Prefers transparent print masters when available; otherwise uses the catalog
  * overlay image (including streetwear webps on Vercel without a masters CDN).
+ *
+ * Use {@link getDesignPreviewOverlayUrl} for catalog / PDP on-screen previews.
  */
 export function getDesignCompositeOverlayUrl(
   design: Pick<
@@ -483,6 +485,55 @@ export function getDesignCompositeOverlayUrl(
   }
 
   return null;
+}
+
+const CATALOG_PREVIEW_IMAGE_WIDTHS = [256, 384, 640, 750, 828, 1080] as const;
+
+export type CatalogPreviewImageWidth =
+  (typeof CATALOG_PREVIEW_IMAGE_WIDTHS)[number];
+
+/**
+ * Web overlay for cards and product views — never print masters, and not the
+ * `/api/catalog` CORS proxy (that streams the full PNG through Vercel origin).
+ */
+export function getDesignPreviewOverlayUrl(
+  design: Pick<
+    ProductDesignTemplate,
+    'overlayImage' | 'overlaySvg' | 'overlayColorVariants'
+  >,
+  shirtColor?: string,
+): string | null {
+  if (shirtColor) {
+    const variant = pickOverlayColorVariantRaw(design, shirtColor);
+    if (variant) return resolveAssetUrl(variant);
+  }
+  if (design.overlayImage) {
+    return resolveAssetUrl(design.overlayImage);
+  }
+  if (design.overlaySvg) {
+    return resolveAssetUrl(design.overlaySvg);
+  }
+  return null;
+}
+
+/** Next.js image optimizer URL so the browser never downloads a print-size PNG. */
+export function toOptimizedCatalogImageUrl(
+  src: string,
+  width: CatalogPreviewImageWidth = 640,
+): string {
+  if (
+    !src ||
+    src.startsWith('blob:') ||
+    src.startsWith('data:') ||
+    src.startsWith('/_next/image')
+  ) {
+    return src;
+  }
+
+  const pathOnly = src.split('?')[0] ?? src;
+  if (pathOnly.toLowerCase().endsWith('.svg')) return src;
+
+  return `/_next/image?url=${encodeURIComponent(src)}&w=${width}&q=70`;
 }
 
 export function isRecolorableOverlayTemplate(

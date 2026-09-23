@@ -20,12 +20,12 @@ type ArchiveBackLinkProps = {
  */
 function canUseHistoryBack(): boolean {
   if (typeof window === 'undefined') return false;
-  // New tabs / direct entry typically have length 1 — don't call back().
   if (window.history.length <= 1) return false;
 
   try {
     const referrer = document.referrer;
-    if (!referrer) return false;
+    // Empty referrer is normal after client-side Next.js navigations.
+    if (!referrer) return true;
     const refUrl = new URL(referrer);
     return refUrl.origin === window.location.origin;
   } catch {

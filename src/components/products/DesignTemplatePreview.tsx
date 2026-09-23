@@ -24,9 +24,10 @@ import { DrinkwareDesignPreview3D } from '@/components/products/customizer/Drink
 import { resolveDesignPreviewColor } from '@/lib/products/design-applicable-colors';
 import {
   DESIGN_OVERLAY_LAYER_CLASS,
-  getDesignCompositeOverlayUrl,
   getDesignOverlayLayerStyle,
+  getDesignPreviewOverlayUrl,
   resolveOverlayPlacementForSide,
+  toOptimizedCatalogImageUrl,
   type OverlayPlacement,
 } from '@/lib/products/design-overlay';
 import { resolveSideOverlayConfig } from '@/lib/products/design-sides';
@@ -66,16 +67,51 @@ export function StyledDesignText({
   );
 }
 
+function catalogOverlayPreviewWidth(
+  variant: MockupDisplayVariant,
+): 384 | 640 | 828 {
+  if (variant === 'catalog-card') return 384;
+  if (variant === 'customizer') return 828;
+  return 640;
+}
+
+function PreviewOverlayImg({
+  src,
+  placement,
+  imageWidth,
+  className,
+}: {
+  src: string;
+  placement: OverlayPlacement;
+  imageWidth: 384 | 640 | 828;
+  className?: string;
+}) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={toOptimizedCatalogImageUrl(src, imageWidth)}
+      alt=""
+      draggable={false}
+      loading="lazy"
+      decoding="async"
+      className={cn(DESIGN_OVERLAY_LAYER_CLASS, className)}
+      style={getDesignOverlayLayerStyle(placement)}
+    />
+  );
+}
+
 function CatalogOverlayPreview({
   design,
   shirtColor,
   placement,
   side,
+  imageWidth,
 }: {
   design: ProductDesignTemplate;
   shirtColor: string;
   placement: OverlayPlacement;
   side: ProductSide;
+  imageWidth: 384 | 640 | 828;
 }) {
   const sideConfig = resolveSideOverlayConfig(design, side);
   const overlaySvg = sideConfig?.overlaySvg ?? null;
@@ -89,35 +125,45 @@ function CatalogOverlayPreview({
         }
       : null,
     overlayColorVariants: sideConfig?.overlayColorVariants ?? null,
-    overlayRaster: getDesignCompositeOverlayUrl({
-      printMasterImage:
-        side === (design.defaultSide ?? 'front')
-          ? design.printMasterImage
-          : undefined,
-      overlayImage: sideConfig?.overlayImage,
-      overlaySvg: sideConfig?.overlaySvg,
-    }),
+    overlayRaster: getDesignPreviewOverlayUrl(
+      {
+        overlayImage: sideConfig?.overlayImage,
+        overlaySvg: sideConfig?.overlaySvg,
+        overlayColorVariants: sideConfig?.overlayColorVariants,
+      },
+      shirtColor,
+    ),
     premadeDesignId: design.id,
     uploadedImageScale: placement.scale,
     uploadedImagePosition: placement.position,
   };
-  const src = useOverlayAssetUrl({
+  const svgSrc = useOverlayAssetUrl({
     design: overlayDesign,
     // Avoid falling back to front-side template art when previewing another side.
     template: side === (design.defaultSide ?? 'front') ? design : null,
     shirtColor,
   });
 
+  const rasterSrc = getDesignPreviewOverlayUrl(
+    {
+      overlayImage: sideConfig?.overlayImage ?? design.overlayImage,
+      overlaySvg: sideConfig?.overlaySvg,
+      overlayColorVariants:
+        sideConfig?.overlayColorVariants ?? design.overlayColorVariants,
+    },
+    shirtColor,
+  );
+
+  const src =
+    overlaySvg && overlayRecolor ? svgSrc : rasterSrc;
+
   if (!src) return null;
 
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
+    <PreviewOverlayImg
       src={src}
-      alt=""
-      draggable={false}
-      className={DESIGN_OVERLAY_LAYER_CLASS}
-      style={getDesignOverlayLayerStyle(placement)}
+      placement={placement}
+      imageWidth={imageWidth}
     />
   );
 }
@@ -157,14 +203,15 @@ export function DesignTemplatePreview({
   const sideConfig = resolveSideOverlayConfig(design, mockupSide);
   const placement = resolveOverlayPlacementForSide(design, mockupSide, product);
   const shirtMockup = getProductMockup(product, previewColor, mockupSide);
-  const compositeOverlay = getDesignCompositeOverlayUrl({
-    printMasterImage:
-      mockupSide === (design.defaultSide ?? 'front')
-        ? design.printMasterImage
-        : undefined,
-    overlayImage: sideConfig?.overlayImage ?? design.overlayImage,
-    overlaySvg: sideConfig?.overlaySvg ?? design.overlaySvg,
-  });
+  const previewOverlay = getDesignPreviewOverlayUrl(
+    {
+      overlayImage: sideConfig?.overlayImage ?? design.overlayImage,
+      overlaySvg: sideConfig?.overlaySvg ?? design.overlaySvg,
+      overlayColorVariants:
+        sideConfig?.overlayColorVariants ?? design.overlayColorVariants,
+    },
+    previewColor,
+  );
   const mockupLayout = getProductMockupLayout(product);
   const overlayPrintBounds = getOverlayPrintBounds(mockupLayout);
   const needsDrinkware3d =
@@ -196,8 +243,11 @@ export function DesignTemplatePreview({
   // Hooks must run on every render — the 3D branch returns below after them.
   const { src: stableMockup, loading: mockupLoading } =
     useStableImageSrc(shirtMockup);
+  const overlayPreviewWidth = catalogOverlayPreviewWidth(mockupVariant);
   const { src: stableOverlay, loading: overlayLoading } = useStableImageSrc(
-    useDynamicOverlay ? null : compositeOverlay,
+    useDynamicOverlay || !previewOverlay
+      ? null
+      : toOptimizedCatalogImageUrl(previewOverlay, overlayPreviewWidth),
   );
 
   if (useDrinkwareWrap3D && drinkwareSideDesign) {
@@ -261,19 +311,17 @@ export function DesignTemplatePreview({
           shirtColor={previewColor}
           placement={placement}
           side={mockupSide}
+          imageWidth={overlayPreviewWidth}
         />
       ) : stableOverlay ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <PreviewOverlayImg
           src={stableOverlay}
-          alt=""
-          draggable={false}
+          placement={placement}
+          imageWidth={overlayPreviewWidth}
           className={cn(
-            DESIGN_OVERLAY_LAYER_CLASS,
             'transition-opacity duration-200',
             imageLoading ? 'opacity-80' : 'opacity-100',
           )}
-          style={getDesignOverlayLayerStyle(placement)}
         />
       ) : null}
 
