@@ -58,6 +58,9 @@ const nextConfig: NextConfig = {
     root: projectRoot,
   },
   images: {
+    // Next 16 defaults to qualities: [75]. Any other `q` on /_next/image 400s
+    // (catalog overlays were using q=70 and every design card broke in production).
+    qualities: [75],
     remotePatterns: getAssetRemotePatterns(),
     // Mockup URLs use ?v=N cache-bust; Next requires an explicit localPatterns entry
     // when src includes a query string (otherwise next/image throws).

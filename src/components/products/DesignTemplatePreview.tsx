@@ -92,7 +92,7 @@ function PreviewOverlayImg({
       src={toOptimizedCatalogImageUrl(src, imageWidth)}
       alt=""
       draggable={false}
-      loading="lazy"
+      loading={imageWidth >= 640 ? 'eager' : 'lazy'}
       decoding="async"
       className={cn(DESIGN_OVERLAY_LAYER_CLASS, className)}
       style={getDesignOverlayLayerStyle(placement)}

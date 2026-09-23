@@ -14,7 +14,7 @@ export async function waitForImages(root: HTMLElement): Promise<void> {
     images.map(
       (img) =>
         new Promise<void>((resolve) => {
-          if (img.complete && img.naturalWidth > 0) {
+          if (img.complete) {
             resolve();
             return;
           }
@@ -25,6 +25,60 @@ export async function waitForImages(root: HTMLElement): Promise<void> {
         }),
     ),
   );
+}
+
+function isSvgSrc(src: string): boolean {
+  const path = src.split('?')[0] ?? src;
+  return path.toLowerCase().endsWith('.svg');
+}
+
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error ?? new Error('FileReader failed'));
+    reader.readAsDataURL(blob);
+  });
+}
+
+/**
+ * `/_next/image` is same-origin, but html2canvas with useCORS still issues a
+ * CORS fetch. Next's optimizer does not send ACAO, so the clone taints and
+ * `toDataURL` throws — cart then stores a blank mockup with no design.
+ */
+function needsRasterSubstitution(src: string): boolean {
+  if (!src || src.startsWith('data:') || src.startsWith('blob:')) return false;
+  if (isSvgSrc(src)) return false;
+  if (src.includes('/_next/image')) return true;
+  return /^https?:\/\//i.test(src);
+}
+
+async function fetchImageAsDataUrl(src: string): Promise<string | null> {
+  try {
+    const absolute = new URL(src, window.location.origin).href;
+    const response = await fetch(absolute, { credentials: 'same-origin' });
+    if (!response.ok) return null;
+    const blob = await response.blob();
+    if (blob.size === 0) return null;
+    return await blobToDataUrl(blob);
+  } catch {
+    return null;
+  }
+}
+
+function tryDrawImageToDataUrl(img: HTMLImageElement): string | null {
+  if (!img.naturalWidth || !img.naturalHeight) return null;
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const context = canvas.getContext('2d');
+    if (!context) return null;
+    context.drawImage(img, 0, 0);
+    return canvas.toDataURL('image/png');
+  } catch {
+    return null;
+  }
 }
 
 async function rasterizeSvgFromUrl(src: string): Promise<string | null> {
@@ -67,24 +121,39 @@ async function rasterizeSvgFromUrl(src: string): Promise<string | null> {
   }
 }
 
-async function buildRasterizedSvgSubstitutions(
+function rememberSubstitution(
+  substitutions: Map<string, string>,
+  src: string,
+  currentSrc: string,
+  dataUrl: string,
+) {
+  substitutions.set(src, dataUrl);
+  if (currentSrc && currentSrc !== src) substitutions.set(currentSrc, dataUrl);
+}
+
+async function buildImageSubstitutions(
   root: HTMLElement,
 ): Promise<Map<string, string>> {
   const substitutions = new Map<string, string>();
-  const sources = new Set<string>();
-
-  root.querySelectorAll('img').forEach((img) => {
-    const src = img.getAttribute('src');
-    if (!src || src.startsWith('data:') || src.startsWith('blob:')) return;
-    if (src.endsWith('.svg') || src.includes('.svg?')) {
-      sources.add(src);
-    }
-  });
+  const images = Array.from(root.querySelectorAll('img'));
 
   await Promise.all(
-    [...sources].map(async (src) => {
-      const rasterized = await rasterizeSvgFromUrl(src);
-      if (rasterized) substitutions.set(src, rasterized);
+    images.map(async (img) => {
+      const src = img.getAttribute('src') || img.currentSrc;
+      if (!src || src.startsWith('data:') || src.startsWith('blob:')) return;
+      if (substitutions.has(src)) return;
+
+      if (isSvgSrc(src) || src.includes('.svg?')) {
+        const rasterized = await rasterizeSvgFromUrl(src);
+        if (rasterized) rememberSubstitution(substitutions, src, img.currentSrc, rasterized);
+        return;
+      }
+
+      if (!needsRasterSubstitution(src)) return;
+
+      const dataUrl =
+        (await fetchImageAsDataUrl(src)) ?? tryDrawImageToDataUrl(img);
+      if (dataUrl) rememberSubstitution(substitutions, src, img.currentSrc, dataUrl);
     }),
   );
 
@@ -97,10 +166,68 @@ function applyImageSubstitutions(
 ): void {
   root.querySelectorAll('img').forEach((img) => {
     const src = img.getAttribute('src');
-    if (!src) return;
-    const replacement = substitutions.get(src);
-    if (replacement) img.setAttribute('src', replacement);
+    const current =
+      img instanceof HTMLImageElement ? img.currentSrc : '';
+    const replacement =
+      (src ? substitutions.get(src) : undefined) ??
+      (current ? substitutions.get(current) : undefined);
+    if (!replacement) return;
+    img.removeAttribute('crossorigin');
+    img.setAttribute('loading', 'eager');
+    img.setAttribute('src', replacement);
   });
+}
+
+function prepareImagesForCapture(root: HTMLElement): StyleRestorer {
+  const restorers: StyleRestorer[] = [];
+
+  root.querySelectorAll('img').forEach((img) => {
+    const prevLoading = img.getAttribute('loading');
+    const prevDecoding = img.getAttribute('decoding');
+    img.setAttribute('loading', 'eager');
+    img.setAttribute('decoding', 'sync');
+    restorers.push(() => {
+      if (prevLoading) img.setAttribute('loading', prevLoading);
+      else img.removeAttribute('loading');
+      if (prevDecoding) img.setAttribute('decoding', prevDecoding);
+      else img.removeAttribute('decoding');
+    });
+  });
+
+  return () => {
+    for (let i = restorers.length - 1; i >= 0; i -= 1) restorers[i]();
+  };
+}
+
+function applyLiveImageSubstitutions(
+  root: HTMLElement,
+  substitutions: Map<string, string>,
+): StyleRestorer {
+  const restorers: StyleRestorer[] = [];
+
+  root.querySelectorAll('img').forEach((img) => {
+    const src = img.getAttribute('src');
+    const current =
+      img instanceof HTMLImageElement ? img.currentSrc : '';
+    const replacement =
+      (src ? substitutions.get(src) : undefined) ??
+      (current ? substitutions.get(current) : undefined);
+    if (!replacement) return;
+
+    const prevSrc = src;
+    const prevCross = img.getAttribute('crossorigin');
+    img.removeAttribute('crossorigin');
+    img.setAttribute('src', replacement);
+    restorers.push(() => {
+      if (prevSrc) img.setAttribute('src', prevSrc);
+      else img.removeAttribute('src');
+      if (prevCross) img.setAttribute('crossorigin', prevCross);
+    });
+  });
+
+  return () => {
+    for (let i = restorers.length - 1; i >= 0; i -= 1) restorers[i]();
+  };
 }
 
 /** Pure mockup zoom: inline `transform: scale(N)` (no translate). */
@@ -462,8 +589,10 @@ export async function capturePreviewElement(
   options?: { backgroundColor?: string; scale?: number },
 ): Promise<string | undefined> {
   const restoreZoom = prepareMockupZoomAndOverflow(element);
+  const restoreLoading = prepareImagesForCapture(element);
   let restoreFit: StyleRestorer = () => undefined;
   let restorePrintClip: StyleRestorer = () => undefined;
+  let restoreLiveImages: StyleRestorer = () => undefined;
 
   try {
     await waitForPaint();
@@ -483,19 +612,27 @@ export async function capturePreviewElement(
       await waitForPaint();
     }
 
-    const svgSubstitutions = await buildRasterizedSvgSubstitutions(element);
+    const imageSubstitutions = await buildImageSubstitutions(element);
+    if (imageSubstitutions.size > 0) {
+      restoreLiveImages = applyLiveImageSubstitutions(element, imageSubstitutions);
+      await waitForPaint();
+      await waitForImages(element);
+    }
+
     const html2canvas = await loadHtml2Canvas();
     if (typeof html2canvas !== 'function') return undefined;
 
     const canvas = await html2canvas(element, {
       backgroundColor: options?.backgroundColor ?? '#ffffff',
       scale: options?.scale ?? 2,
-      useCORS: true,
-      allowTaint: true,
+      // Data-URL overlays + same-origin mockups. useCORS:true taints
+      // `/_next/image` because the optimizer does not send ACAO headers.
+      useCORS: false,
+      allowTaint: false,
       logging: false,
       imageTimeout: 15000,
       onclone: (_document, cloneElement) => {
-        applyImageSubstitutions(cloneElement, svgSubstitutions);
+        applyImageSubstitutions(cloneElement, imageSubstitutions);
       },
     });
 
@@ -506,8 +643,10 @@ export async function capturePreviewElement(
     console.warn('[capture-preview] failed', error);
     return undefined;
   } finally {
+    restoreLiveImages();
     restorePrintClip();
     restoreFit();
+    restoreLoading();
     restoreZoom();
   }
 }

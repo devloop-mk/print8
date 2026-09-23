@@ -533,7 +533,7 @@ export function toOptimizedCatalogImageUrl(
   const pathOnly = src.split('?')[0] ?? src;
   if (pathOnly.toLowerCase().endsWith('.svg')) return src;
 
-  return `/_next/image?url=${encodeURIComponent(src)}&w=${width}&q=70`;
+  return `/_next/image?url=${encodeURIComponent(src)}&w=${width}&q=75`;
 }
 
 export function isRecolorableOverlayTemplate(
