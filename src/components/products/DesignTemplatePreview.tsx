@@ -16,6 +16,7 @@ import {
   getOverlayPrintBounds,
   getProductMockupLayout,
   shouldUseDrinkware3DDesignPreview,
+  type MockupDisplayVariant,
 } from '@/lib/products/product-mockup-layout';
 import { sideDesignFromOverlayTemplate } from '@/lib/products/design-state';
 import { DrinkwareCatalogCapturedPreview } from '@/components/products/DrinkwareCatalogCapturedPreview';
@@ -131,6 +132,7 @@ export function DesignTemplatePreview({
   side,
   allowDrinkware3d = true,
   drinkwareCatalogCapture3d,
+  mockupVariant = 'catalog-design',
 }: {
   product: Product;
   color: string;
@@ -145,6 +147,8 @@ export function DesignTemplatePreview({
   allowDrinkware3d?: boolean;
   /** Wrap drinkware: static 3D still when live WebGL is off. Defaults to auto. */
   drinkwareCatalogCapture3d?: boolean;
+  /** Catalog-card hover must match the plain product photo zoom. */
+  mockupVariant?: MockupDisplayVariant;
 }) {
   const textStyle = design.textStyle;
   const photoGuide = textStyle?.photoPosition;
@@ -223,7 +227,7 @@ export function DesignTemplatePreview({
   const mockupStyle = getMockupImageDisplayStyle(
     product,
     stableMockup ?? shirtMockup,
-    'catalog-design',
+    mockupVariant,
   );
 
   const flatCatalogPreview = (

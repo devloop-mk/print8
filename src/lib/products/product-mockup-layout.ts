@@ -32,6 +32,7 @@ import {
   getPrintAreaMaxScale,
   getUniformPrintAreaInsets,
   HOODIE_PRINT_AREA_INSETS,
+  POLO_PRINT_AREA_INSETS,
   TSHIRT_PRINT_AREA_INSETS,
   WOMEN_TSHIRT_PRINT_AREA_INSETS,
   BODYSUIT_PRINT_AREA_INSETS,
@@ -240,6 +241,7 @@ const layoutsByType: Partial<Record<ProductType, ProductMockupLayout>> = {
 const printAreaByProductId: Partial<Record<string, PrintAreaInsets>> = {
   /** Fitted women's tee — narrower chest zone for the tapered silhouette. */
   'tshirt-women-fitted': WOMEN_TSHIRT_PRINT_AREA_INSETS,
+  'polo-frut-original-white': POLO_PRINT_AREA_INSETS,
 };
 
 export type MockupDisplayVariant = 'catalog-card' | 'catalog-design' | 'customizer';

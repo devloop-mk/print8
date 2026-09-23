@@ -66,6 +66,7 @@ import { LoadingIndicator } from '@/components/ui/LoadingIndicator';
 import { cn, formatPrice } from '@/lib/utils';
 import {
   formatProductCartName,
+  getProductCatalogLabel,
   restoreSideDesignFromMetadata,
 } from '@/lib/cart/product-cart';
 import {
@@ -935,6 +936,7 @@ function ResizableStickerOverlay({
 export function ProductCustomizer({ type }: { type: ProductType }) {
   const t = useTranslations('products.customizer');
   const tp = useTranslations('products.types');
+  const ti = useTranslations('products.items');
   const locale = useLocale();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -2460,7 +2462,11 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
 
     const cartPayload = {
       type: 'product' as const,
-      name: formatProductCartName(tp(type), size, product),
+      name: formatProductCartName(
+        getProductCatalogLabel(product, tp(type), ti),
+        size,
+        product,
+      ),
       price: unitPrice,
       quantity,
       designPreview: captured.front,

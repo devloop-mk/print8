@@ -26,7 +26,6 @@ export const DESIGN_COLLECTION_LABELS: Record<string, { en: string; mk: string }
   'mk-mugs': { en: 'MK Mugs', mk: 'МК шолји' },
   family: { en: 'Family', mk: 'Семејство' },
   'local-mk': { en: 'Local designs', mk: 'Локални дизајни' },
-  pastrmalijada: { en: 'Pastrmalijada 2026', mk: 'Пастрмалијада 2026' },
   'mk-folk': { en: 'MK Folk', mk: 'МК Фолклор' },
   'patch-mug': { en: 'Patch mug', mk: 'Шолја со поле' },
   'caps-local': { en: 'Caps', mk: 'Капи' },

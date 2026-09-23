@@ -47,48 +47,46 @@ function ProductPlainCatalogImage({
       {stablePrimary ? (
         <div className={mockupLayout.catalogInnerClass}>
           <div
-            className={cn(
-              'absolute inset-0 transition-opacity duration-300',
-              alternateOnHover && '[@media(hover:hover)]:group-hover:opacity-0',
+            className="relative h-full w-full"
+            style={getMockupImageDisplayStyle(
+              product,
+              stablePrimary,
+              'catalog-card',
             )}
           >
-            <Image
-              src={stablePrimary}
-              alt={typeLabel}
-              fill
-              unoptimized
-              sizes="(max-width: 768px) 50vw, 320px"
-              className={cn(
-                mockupLayout.catalogImageClass,
-                'transition-opacity duration-200',
-                imageLoading ? 'opacity-80' : 'opacity-100',
-              )}
-              style={getMockupImageDisplayStyle(
-                product,
-                stablePrimary,
-                'catalog-card',
-              )}
-            />
-          </div>
-          {alternateOnHover ? (
             <div
-              className="absolute inset-0 opacity-0 transition-opacity duration-300 [@media(hover:hover)]:group-hover:opacity-100"
+              className={cn(
+                'absolute inset-0 transition-opacity duration-300',
+                alternateOnHover &&
+                  '[@media(hover:hover)]:group-hover:opacity-0',
+              )}
             >
               <Image
-                src={stableSecondary}
-                alt={`${typeLabel} — alternate`}
+                src={stablePrimary}
+                alt={typeLabel}
                 fill
                 unoptimized
                 sizes="(max-width: 768px) 50vw, 320px"
-                className={mockupLayout.catalogImageClass}
-                style={getMockupImageDisplayStyle(
-                  product,
-                  stableSecondary,
-                  'catalog-card',
+                className={cn(
+                  mockupLayout.catalogImageClass,
+                  'transition-opacity duration-200',
+                  imageLoading ? 'opacity-80' : 'opacity-100',
                 )}
               />
             </div>
-          ) : null}
+            {alternateOnHover ? (
+              <div className="absolute inset-0 opacity-0 transition-opacity duration-300 [@media(hover:hover)]:group-hover:opacity-100">
+                <Image
+                  src={stableSecondary}
+                  alt={`${typeLabel} — alternate`}
+                  fill
+                  unoptimized
+                  sizes="(max-width: 768px) 50vw, 320px"
+                  className={mockupLayout.catalogImageClass}
+                />
+              </div>
+            ) : null}
+          </div>
         </div>
       ) : (
         <Shirt className="h-32 w-32 text-ink-300" />
@@ -126,6 +124,7 @@ function ProductDesignCatalogPreview({
           typeLabel={typeLabel}
           side="front"
           allowDrinkware3d={false}
+          mockupVariant="catalog-card"
         />
       </div>
       {dualSided ? (
@@ -139,6 +138,7 @@ function ProductDesignCatalogPreview({
             typeLabel={typeLabel}
             side="back"
             allowDrinkware3d={false}
+            mockupVariant="catalog-card"
           />
         </div>
       ) : null}
@@ -194,6 +194,7 @@ export function ProductCatalogImage({
               typeLabel={typeLabel}
               side="front"
               allowDrinkware3d={false}
+              mockupVariant="catalog-card"
             />
           </div>
         ) : null}

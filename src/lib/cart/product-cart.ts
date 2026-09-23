@@ -32,6 +32,45 @@ export function formatProductCartName(
   return typeLabel;
 }
 
+/** Specific SKU title (beer glass, classic mug, …) when `nameKey` exists. */
+export function getProductCatalogLabel(
+  product: Product | undefined,
+  typeLabel: string,
+  itemLabel: (key: string) => string,
+): string {
+  if (!product?.nameKey) return typeLabel;
+  return itemLabel(product.nameKey);
+}
+
+/**
+ * Cart/checkout title. Replaces a generic type label ("Чаша") with the
+ * product name so existing lines like "Чаша — Скопје" still show the design.
+ */
+export function getCartItemDisplayName(
+  item: CartItem,
+  product: Product | undefined,
+  typeLabel: string,
+  itemLabel: (key: string) => string,
+): string {
+  const productLabel = getProductCatalogLabel(product, typeLabel, itemLabel);
+  if (!product || !typeLabel || productLabel === typeLabel) return item.name;
+
+  if (item.name === typeLabel) {
+    return formatProductCartName(productLabel, getCartItemSize(item), product);
+  }
+
+  const designSeparator = `${typeLabel} — `;
+  if (item.name.startsWith(designSeparator)) {
+    return `${productLabel} — ${item.name.slice(designSeparator.length)}`;
+  }
+
+  if (item.name.startsWith(`${typeLabel} (`)) {
+    return formatProductCartName(productLabel, getCartItemSize(item), product);
+  }
+
+  return item.name;
+}
+
 export function isCustomizedCartItem(item: CartItem): boolean {
   if (item.fileIds?.length) return true;
   const m = item.metadata;
@@ -104,7 +143,7 @@ export function getCartItemPreviewImages(
     if (images.length > 0) return images;
   }
 
-  // Drinkware 3D cart snapshots use left/right profile views (not front/back).
+  // Drinkware 3D cart snapshots use left/right 3/4 views (not front/back).
   if (product && isCylindricalDrinkwareType(product.type)) {
     const left = getSidePreviewFromCartItem(item, 'left');
     const right = getSidePreviewFromCartItem(item, 'right');
@@ -161,7 +200,9 @@ export function buildCustomizerEditUrl(item: CartItem): string | null {
 
 import {
   DEFAULT_TEXT_SHADOW,
+  sideDesignFromRestored,
   type RestoredSideDesign,
+  type SideDesign,
 } from "@/lib/products/design-state";
 import { parsePlacedStickers } from "@/lib/products/sticker-library";
 import { parsePlacedPhotos } from "@/lib/products/photo-layers";
@@ -250,6 +291,23 @@ export function restoreSideDesignFromMetadata(
     stickers,
     uploadedPhotos,
   };
+}
+
+export function getCartDrinkwareSideDesign(
+  item: CartItem,
+  product: Product,
+): SideDesign | null {
+  if (!item.metadata) return null;
+  const sides = getProductSides(product);
+  const ordered = [
+    'front' as const,
+    ...sides.filter((side) => side !== 'front'),
+  ];
+  for (const side of ordered) {
+    const restored = restoreSideDesignFromMetadata(item.metadata, side);
+    if (restored) return sideDesignFromRestored(restored);
+  }
+  return null;
 }
 
 export function getProductTypeFromItem(item: CartItem): ProductType | null {

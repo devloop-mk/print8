@@ -39,6 +39,7 @@ import {
   shouldUseDrinkwareWrapDesignPreviewForTemplate,
 } from '@/lib/products/product-mockup-layout';
 import { sideDesignFromOverlayTemplate } from '@/lib/products/design-state';
+import { getProductCatalogLabel } from '@/lib/cart/product-cart';
 import { buildCustomizerUrl, buildDesignDetailUrl } from '@/lib/products/paths';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -98,6 +99,7 @@ export function ProductDesignCatalogCard({
   const tp = useTranslations('products.types');
   const td = useTranslations('products.detail');
   const tCustomizer = useTranslations('products.customizer');
+  const ti = useTranslations('products.items');
   const { addItem } = useCart();
   const router = useRouter();
   const pathname = usePathname();
@@ -210,7 +212,7 @@ export function ProductDesignCatalogCard({
           product,
           design,
           color: previewColor,
-          name: `${tp(product.type)} — ${displayName}`,
+          name: `${getProductCatalogLabel(product, tp(product.type), ti)} — ${displayName}`,
           price: product.basePrice,
           capturedPreview,
           capturedSidePreviews,

@@ -18,8 +18,10 @@ export type DrinkwarePreviewMode = 'flat' | '3d';
 
 /** `floating` = fixed-size card used by the mobile/tablet flat↔3D toggle.
  *  `stacked` = full-width below the flat unwrap on mobile.
- *  `pane` = fills its parent (the desktop side-by-side preview column). */
-export type DrinkwarePreviewVariant = 'floating' | 'stacked' | 'pane';
+ *  `pane` = fills its parent (the desktop side-by-side preview column).
+ *  `catalog` = card thumbnail; idle-spins, no orbit (parent still stays visible until ready).
+ *  `cart` = compact cart preview; orbit rotate, no wheel-zoom. */
+export type DrinkwarePreviewVariant = 'floating' | 'stacked' | 'pane' | 'catalog' | 'cart';
 
 type Drinkware3DPreviewProps = {
   productType: ProductType;
@@ -50,7 +52,9 @@ export function Drinkware3DPreview({
   const t = useTranslations('products.customizer');
   const [rotateActive, setRotateActive] = useState(false);
   const isStacked = variant === 'stacked';
-  const interactive = !isStacked || rotateActive;
+  const isCatalog = variant === 'catalog';
+  const isCart = variant === 'cart';
+  const interactive = isCatalog ? false : isCart ? true : !isStacked || rotateActive;
 
   useEffect(() => {
     setRotateActive(false);
@@ -70,16 +74,25 @@ export function Drinkware3DPreview({
   return (
     <div
       className={cn(
-        'relative overflow-hidden bg-[#eef2f6]',
-        variant === 'pane'
+        'relative overflow-hidden',
+        isCatalog
+          ? 'pointer-events-none h-full w-full bg-transparent'
+          : isCart
+            ? 'h-full w-full bg-[#eef2f6]'
+            : 'bg-[#eef2f6]',
+        variant === 'pane' || isCart
           ? 'h-full w-full'
-          : variant === 'stacked'
-            ? 'aspect-[4/5] w-[min(85vw,20rem)] rounded-sm shadow-[0_8px_40px_rgba(15,23,42,0.12)]'
-            : 'aspect-[4/5] w-[min(18rem,78vw)] rounded-sm shadow-[0_8px_40px_rgba(15,23,42,0.12)] md:w-[min(28rem,46vh)] lg:w-[min(32rem,52vh)] xl:w-[min(36rem,58vh)]',
+          : isCatalog
+            ? 'h-full w-full'
+            : variant === 'stacked'
+              ? 'aspect-[4/5] w-[min(85vw,20rem)] rounded-sm shadow-[0_8px_40px_rgba(15,23,42,0.12)]'
+              : 'aspect-[4/5] w-[min(18rem,78vw)] rounded-sm shadow-[0_8px_40px_rgba(15,23,42,0.12)] md:w-[min(28rem,46vh)] lg:w-[min(32rem,52vh)] xl:w-[min(36rem,58vh)]',
+        isCatalog && loading && 'opacity-0',
+        isCatalog && !loading && 'bg-[#eef2f6] opacity-100 transition-opacity duration-200',
         className,
       )}
     >
-      {loading ? (
+      {loading && !isCatalog ? (
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#eef2f6]/80 backdrop-blur-sm">
           <LoadingIndicator label={t('preview3dLoading')} size="sm" />
         </div>
@@ -90,7 +103,13 @@ export function Drinkware3DPreview({
         productColor={productColor}
         textureCanvas={textureCanvas}
         interactive={interactive}
-        idleAutoRotate={isStacked && !rotateActive && Boolean(textureCanvas)}
+        idleAutoRotate={
+          isCatalog
+            ? Boolean(textureCanvas)
+            : isStacked && !rotateActive && Boolean(textureCanvas)
+        }
+        idleAutoRotateSpeed={isCatalog ? 0.7 : 0.4}
+        allowZoom={isCart ? false : undefined}
       />
       {isStacked ? (
         <>
@@ -118,7 +137,7 @@ export function Drinkware3DPreview({
             </button>
           )}
         </>
-      ) : variant !== 'pane' ? (
+      ) : variant === 'floating' ? (
         <p className="pointer-events-none absolute inset-x-0 bottom-2 z-10 text-center text-[10px] font-medium text-ink-500/90">
           {t('preview3dDragHint')}
         </p>

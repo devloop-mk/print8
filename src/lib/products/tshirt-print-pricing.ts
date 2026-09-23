@@ -8,6 +8,7 @@ import {
   isDrinkwareProduct,
 } from '@/lib/products/drinkware-print-pricing';
 import {
+  POLO_PRINT_AREA_INSETS,
   TSHIRT_PRINT_AREA_INSETS,
   WOMEN_TSHIRT_PRINT_AREA_INSETS,
   WOMEN_TSHIRT_SMALL_PRINT_AREA_INSETS,
@@ -15,6 +16,7 @@ import {
   getPrintAreaWidthPercent,
   type PrintAreaInsets,
 } from '@/lib/products/print-area';
+import { isPoloProduct } from '@/lib/products/polo-mockup-paths';
 
 export type PrintTier = 'small' | 'medium' | 'large';
 
@@ -52,7 +54,7 @@ export const TSHIRT_PRINT_PACKAGES = [
 
 export type TshirtPrintPackage = (typeof TSHIRT_PRINT_PACKAGES)[number];
 
-/** Garment-only (no print). */
+/** Garment-only (no print). Catalog “from” uses front-small, not this. */
 export const TSHIRT_BLANK_PRICE = 350;
 
 /** Front print tiers (MKD) — mal / sredno / golemo logo (cenovnik v24). */
@@ -217,8 +219,9 @@ export function getTshirtUnitPrice(
   return TSHIRT_PRINT_PACKAGE_PRICES[pkg] ?? blank;
 }
 
+/** Cheapest printed package — catalog “from” price, not the blank garment. */
 export function getTshirtStartingPrice(product?: Product | null): number {
-  return resolveBlankPrice(product);
+  return getTshirtUnitPrice('front-small', product);
 }
 
 export function getProductDisplayPrice(product: Product): number {
@@ -254,7 +257,12 @@ export function getTshirtPrintAreaInsets(
   product?: Product,
 ): PrintAreaInsets {
   const isWomen = product?.fit === 'women';
+  const isPolo = product ? isPoloProduct(product) : false;
   const tier = packageFrontTier(pkg);
+
+  if (isPolo) {
+    return POLO_PRINT_AREA_INSETS;
+  }
 
   if (side === 'front') {
     if (tier === 'small') {

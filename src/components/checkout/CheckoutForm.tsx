@@ -39,9 +39,15 @@ import {
   MAX_PRINT_FILE_SIZE,
 } from "@/lib/upload/constants";
 import { formatBytes } from "@/lib/students/student-print-config";
+import {
+  getCartItemDisplayName,
+  getCartItemProduct,
+} from "@/lib/cart/product-cart";
 
 export function CheckoutForm() {
   const t = useTranslations("checkout");
+  const tp = useTranslations("products.types");
+  const ti = useTranslations("products.items");
   const locale = useLocale();
   const router = useRouter();
   const { items, total, hydrated } = useCart();
@@ -321,6 +327,16 @@ export function CheckoutForm() {
     setErrors((prev) => ({ ...prev, [field]: "" }));
   }
 
+  function lineName(item: (typeof items)[number]) {
+    const product = getCartItemProduct(item);
+    return getCartItemDisplayName(
+      item,
+      product,
+      product ? tp(product.type) : "",
+      ti,
+    );
+  }
+
   function getValidationMessages() {
     return {
       required: t("required"),
@@ -442,7 +458,7 @@ export function CheckoutForm() {
       const payload = await prepareCheckoutPayload({
         ...form,
         locale: locale as CheckoutInput["locale"],
-        items,
+        items: items.map((item) => ({ ...item, name: lineName(item) })),
         fileIds,
         uploadToken,
         newsletterOptIn,
@@ -816,7 +832,7 @@ export function CheckoutForm() {
             {items.map((item) => (
               <div key={item.id} className="flex justify-between text-sm">
                 <span className="text-ink-600">
-                  {item.name} × {item.quantity}
+                  {lineName(item)} × {item.quantity}
                 </span>
                 <span>{formatPrice(item.price * item.quantity, locale)}</span>
               </div>

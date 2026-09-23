@@ -31,9 +31,11 @@ import {
   buildCustomizerEditUrl,
   formatProductCartName,
   getCartItemColor,
+  getCartItemDisplayName,
   getCartItemPreviewImages,
   getCartItemProduct,
   getCartItemSize,
+  getProductCatalogLabel,
   isCustomizedCartItem,
 } from "@/lib/cart/product-cart";
 import {
@@ -42,6 +44,7 @@ import {
   isBrandingPackCartItem,
 } from "@/lib/products/branding-pack-cart";
 import { buildDesignEditUrl } from "@/lib/cart/design-cart";
+import { CartDrinkwarePreview } from "@/components/cart/CartDrinkwarePreview";
 import { isCylindricalDrinkwareType } from "@/lib/products/product-mockup-layout";
 import { isStudentPrintCartItem } from "@/lib/students/student-print-cart";
 import { StudentPrintCartDetails } from "@/components/students/StudentPrintCartDetails";
@@ -61,6 +64,7 @@ export function CartPageContent() {
   const tc = useTranslations("products.customizer");
 
   const tp = useTranslations("products.types");
+  const ti = useTranslations("products.items");
 
   const locale = useLocale();
 
@@ -144,7 +148,9 @@ export function CartPageContent() {
   ) {
     const item = items.find((i) => i.id === itemId);
     if (!item) return;
-    const typeLabel = tp(productType as "t-shirt" | "mug" | "cup" | "bag" | "gift-set");
+    const typeLabel = product
+      ? getProductCatalogLabel(product, tp(product.type), ti)
+      : tp(productType as "t-shirt" | "mug" | "cup" | "bag" | "gift-set");
     updateItem(itemId, {
       name: formatProductCartName(typeLabel, newSize, product),
       metadata: {
@@ -216,6 +222,10 @@ export function CartPageContent() {
               dualPreviewLayout &&
               product &&
               isCylindricalDrinkwareType(product.type);
+            const isDrinkwarePreview =
+              Boolean(product) &&
+              isCylindricalDrinkwareType(product.type) &&
+              previewImages.length > 0;
 
             return (
 
@@ -225,21 +235,32 @@ export function CartPageContent() {
                   "min-w-0 max-w-full flex gap-3 overflow-x-clip p-4 sm:gap-4 sm:p-6",
                   multiSidePreviews
                     ? "flex-col lg:flex-row lg:items-start"
-                    : dualPreviewLayout
+                    : isDrinkwarePreview || dualPreviewLayout
                       ? "flex-col sm:flex-row sm:items-start"
                       : "flex-row items-start",
                 )}
               >
 
-                {previewImages.length > 0 && (
+                {isDrinkwarePreview && product ? (
+                  <CartDrinkwarePreview
+                    item={item}
+                    product={product}
+                    previewImages={previewImages}
+                    onOpenLightbox={(index) =>
+                      setLightbox({ images: previewImages, index })
+                    }
+                  />
+                ) : previewImages.length > 0 ? (
 
                   <div
                     className={cn(
                       multiSidePreviews
                         ? "grid w-full grid-cols-2 items-start gap-1.5 lg:flex lg:shrink-0 lg:gap-1"
-                        : dualPreviewLayout
-                          ? "grid w-full grid-cols-2 gap-2 sm:flex sm:shrink-0 sm:gap-1"
-                          : "flex shrink-0 gap-1",
+                        : isDualDrinkwarePreviews
+                          ? "flex shrink-0 gap-1.5"
+                          : dualPreviewLayout
+                            ? "grid w-full grid-cols-2 gap-2 sm:flex sm:shrink-0 sm:gap-1"
+                            : "flex shrink-0 gap-1",
                     )}
                   >
 
@@ -261,16 +282,13 @@ export function CartPageContent() {
                           "group relative flex items-center justify-center overflow-hidden rounded-lg border border-ink-200 bg-ink-50 transition hover:border-brand-400 hover:ring-2 hover:ring-brand-200",
                           multiSidePreviews
                             ? "aspect-square w-full lg:h-20 lg:w-20"
-                            : dualPreviewLayout
-                              ? cn(
-                                  "w-full sm:h-20 sm:w-20 sm:shrink-0 sm:aspect-auto",
-                                  isDualDrinkwarePreviews
-                                    ? "aspect-[4/3] max-h-36 sm:max-h-none"
-                                    : "aspect-square",
-                                )
-                              : isWideDesign
-                                ? "h-16 w-[6rem] shrink-0 sm:h-20 sm:w-[7.5rem]"
-                                : "h-16 w-16 shrink-0 sm:h-20 sm:w-20",
+                            : isDualDrinkwarePreviews
+                              ? "h-36 w-[6.75rem] shrink-0 aspect-[3/4]"
+                              : dualPreviewLayout
+                                ? "w-full aspect-square sm:h-20 sm:w-20 sm:shrink-0 sm:aspect-auto"
+                                : isWideDesign
+                                  ? "h-16 w-[6rem] shrink-0 sm:h-20 sm:w-[7.5rem]"
+                                  : "h-16 w-16 shrink-0 sm:h-20 sm:w-20",
                         )}
 
                         aria-label={t("zoomPreview")}
@@ -284,7 +302,7 @@ export function CartPageContent() {
 
                           alt={img.label ?? ""}
 
-                          className="max-h-full max-w-full object-contain transition group-hover:scale-105"
+                          className="h-full w-full object-contain transition group-hover:scale-105"
 
                         />
 
@@ -304,7 +322,7 @@ export function CartPageContent() {
 
                   </div>
 
-                )}
+                ) : null}
 
                 <div className="flex min-w-0 flex-1 flex-col">
 
@@ -318,7 +336,14 @@ export function CartPageContent() {
 
                       </span>
 
-                      <h3 className="font-semibold text-ink-900">{item.name}</h3>
+                      <h3 className="font-semibold text-ink-900">
+                        {getCartItemDisplayName(
+                          item,
+                          product,
+                          product ? tp(product.type) : "",
+                          ti,
+                        )}
+                      </h3>
 
                       <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-ink-500">
 

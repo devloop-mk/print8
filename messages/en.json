@@ -207,11 +207,6 @@
       "next": "Next banner",
       "goToSlide": "Show: {title}",
       "slides": {
-        "pastrmalijada": {
-          "title": "Pastrmalijada 2026",
-          "subtitle": "Tees, kids shirts, and mugs for Štip — get ready before the festival.",
-          "cta": "See the designs"
-        },
         "apparel": {
           "title": "Print your style",
           "subtitle": "T-shirts, hoodies, and caps — your design, professional print.",
@@ -2005,14 +2000,6 @@
       "tee-train-insane": "Train insane or remain the same",
       "tee-im-a-programmer": "Don't worry, I'm a programmer",
       "tee-stip-flag-stack": "Shtip",
-      "pastrmalijada-ne-sum-debel": "I'm not fat — training for Pastrmalijada",
-      "pastrmalijada-stip-2026": "Pastrmalijada Shtip 2026",
-      "pastrmalijada-team": "Pastrmalija Team",
-      "pastrmalijada-dietata": "The diet can wait",
-      "pastrmalijada-spremen": "Officially ready",
-      "pastrmalijada-p-kako": "P as in pastrmalija",
-      "pastrmalijada-mug": "Pastrmalijada",
-      "pastrmalijada-beer": "Cheers, Shtip",
       "dualRogueEyes": "Rogue — Eyes",
       "dualStormHero": "Storm — Hero",
       "dualBladeWarrior": "Blade — Warrior",
@@ -2588,6 +2575,9 @@
     "total": "Total",
     "checkout": "Checkout",
     "zoomPreview": "View design preview",
+    "previewStills": "Photos",
+    "preview3d": "3D",
+    "preview3dLabel": "Design preview",
     "color": "Color",
     "size": "Size",
     "changeSize": "Change size",

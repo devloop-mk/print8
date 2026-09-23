@@ -38,6 +38,17 @@ export const TSHIRT_PRINT_AREA_INSETS: PrintAreaInsets = {
 };
 
 /**
+ * Fruit of the Loom polo — landscape mockup with extra side padding and a
+ * taller collar/placket. Keep the guide on the chest panel, not the sleeves.
+ */
+export const POLO_PRINT_AREA_INSETS: PrintAreaInsets = {
+  top: 34,
+  right: 36,
+  bottom: 22,
+  left: 36,
+};
+
+/**
  * Fitted women's tee — narrower + shorter chest zone so the guide sits on
  * fabric through the tapered waist (not sleeve/armhole).
  */

@@ -207,11 +207,6 @@
       "next": "Следен банер",
       "goToSlide": "Прикажи: {title}",
       "slides": {
-        "pastrmalijada": {
-          "title": "Пастрмалијада 2026",
-          "subtitle": "Маици, детски и чаши за Штип — спреми се навреме.",
-          "cta": "Види ги дизајните"
-        },
         "apparel": {
           "title": "Печати го својот стил",
           "subtitle": "Маици, дуксери и капи — твојот дизајн, професионален печат.",
@@ -2003,14 +1998,6 @@
       "tee-train-insane": "Train insane or remain the same",
       "tee-im-a-programmer": "Не се секирај, јас сум програмер",
       "tee-stip-flag-stack": "Штип",
-      "pastrmalijada-ne-sum-debel": "Не сум дебел",
-      "pastrmalijada-stip-2026": "Пастрмалијада Штип 2026",
-      "pastrmalijada-team": "Пастрмалија Team",
-      "pastrmalijada-dietata": "Диетата може да почека",
-      "pastrmalijada-spremen": "Официјално спремен",
-      "pastrmalijada-p-kako": "П како пастрмалија",
-      "pastrmalijada-mug": "Пастрмалијада",
-      "pastrmalijada-beer": "На здравје, Штип",
       "dualRogueEyes": "Отпадник — очи",
       "dualStormHero": "Бура — херои",
       "dualBladeWarrior": "Сечило — воин",
@@ -2584,6 +2571,9 @@
     "total": "Вкупно",
     "checkout": "Заврши нарачка",
     "zoomPreview": "Погледни преглед на дизајнот",
+    "previewStills": "Фото",
+    "preview3d": "3D",
+    "preview3dLabel": "Преглед на дизајнот",
     "color": "Боја",
     "size": "Големина",
     "changeSize": "Промени големина",

@@ -48,7 +48,7 @@ function templateEntry(item) {
     id: '${item.id}',
     kind: 'overlay',
     category: 'image-designs',
-    productTypes: ['mug', 'cup', 'thermos'],
+    productTypes: ['mug'],
     nameKey: '${item.nameKey}',
     titleEn: ${JSON.stringify(item.titleEn)},
     titleMk: ${JSON.stringify(item.titleMk)},

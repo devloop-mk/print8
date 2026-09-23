@@ -20,7 +20,7 @@ const SPOT_BASE = {
 const WRAP_BASE = {
   kind: 'overlay' as const,
   category: 'image-designs' as const,
-  productTypes: ['mug', 'cup'] as const,
+  productTypes: ['mug'] as const,
   overlayScale: 96,
   overlayPosition: { x: 50, y: 48 },
   recommendedColor: '#ffffff',

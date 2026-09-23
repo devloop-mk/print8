@@ -50,6 +50,7 @@ import { DesignColorPicker } from '@/components/products/DesignColorPicker';
 import { GarmentFitSelector } from '@/components/products/GarmentFitSelector';
 import { useCart } from '@/components/cart/CartProvider';
 import { Reveal } from '@/components/motion/Reveal';
+import { getProductCatalogLabel } from '@/lib/cart/product-cart';
 import { Heart, Leaf, Palette, ShoppingCart, Sparkles } from 'lucide-react';
 
 export function ProductDesignDetail({
@@ -66,6 +67,7 @@ export function ProductDesignDetail({
   const tp = useTranslations('products.types');
   const tTypesPlural = useTranslations('products.typesPlural');
   const tCustomizer = useTranslations('products.customizer');
+  const ti = useTranslations('products.items');
   const locale = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -218,7 +220,7 @@ export function ProductDesignDetail({
           design,
           color: previewColor,
           size: size || undefined,
-          name: `${tp(product.type)} — ${displayName}`,
+          name: `${getProductCatalogLabel(product, tp(product.type), ti)} — ${displayName}`,
           price: product.basePrice,
           capturedPreview,
         }),

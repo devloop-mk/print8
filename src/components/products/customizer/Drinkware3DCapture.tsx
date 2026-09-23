@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { Canvas, useThree } from '@react-three/fiber';
 import type { ProductType, ProductDesignTemplate } from '@/lib/data/catalog';
 import type { SideDesign } from '@/lib/products/design-state';
 import type { PlacedTextLayer } from '@/lib/products/text-layers';
 import type { PrintAreaInsets } from '@/lib/products/print-area';
-import { getDrinkware3DConfig } from '@/lib/products/drinkware-3d-config';
+import { getDrinkwareCaptureCamera } from '@/lib/products/drinkware-3d-config';
 import { buildDrinkwareWrapTexture } from '@/lib/products/build-drinkware-wrap-texture';
 import { useDrinkwareDesignImageLayers } from '@/hooks/useDrinkwareDesignImageLayers';
 import { DrinkwareBody } from '@/components/products/customizer/Drinkware3DScene';
@@ -19,7 +19,8 @@ import { DrinkwareBody } from '@/components/products/customizer/Drinkware3DScene
  * with auto-rotate, so it can't be reused directly to grab two deterministic
  * left / right profile stills. This module mounts a small, non-interactive copy
  * of the same mesh into a detached (invisible) React root, renders it twice
- * — once rotated −90° and once +90° around Y from the default front — captures each frame via
+ * — once yawed ~40° left and once ~40° right from the design-facing front —
+ * captures each frame via
  * `gl.domElement.toDataURL()`, then unmounts and disposes the WebGL context.
  * Nothing here touches the visible customizer, so the live preview never
  * spins or flickers while a cart snapshot is taken.
@@ -32,10 +33,19 @@ const SETTLE_FRAMES = 2;
 
 type CaptureResult = { left: string; right: string } | null;
 
-/** Y rotation for the left profile (−90° from default front). */
-const LEFT_VIEW_ROTATION_Y = -Math.PI / 2;
-/** Y rotation for the right profile (+90° from default front). */
-const RIGHT_VIEW_ROTATION_Y = Math.PI / 2;
+/** 3/4 left — keeps wrap/spot art readable (true −90° profiles hide the text). */
+const LEFT_VIEW_ROTATION_Y = -Math.PI / 4.4;
+/** 3/4 right — opposite wrap half, still facing the camera enough to read. */
+const RIGHT_VIEW_ROTATION_Y = Math.PI / 4.4;
+
+function CaptureCameraAim() {
+  const { camera } = useThree();
+  useLayoutEffect(() => {
+    camera.lookAt(0, 0, 0);
+    camera.updateProjectionMatrix();
+  }, [camera]);
+  return null;
+}
 
 function CaptureRig({
   rotationY,
@@ -47,6 +57,7 @@ function CaptureRig({
   const { gl, scene, camera } = useThree();
 
   useEffect(() => {
+    camera.lookAt(0, 0, 0);
     let raf = 0;
     let remaining = SETTLE_FRAMES;
 
@@ -89,14 +100,14 @@ function CaptureScene({
   rotationY: number;
   onCapture: (dataUrl: string) => void;
 }) {
-  const config = getDrinkware3DConfig(productType, productId);
+  const captureCamera = getDrinkwareCaptureCamera(productType, productId);
 
   return (
     <Canvas
       gl={{ antialias: true, alpha: true, preserveDrawingBuffer: true }}
       camera={{
-        position: config.cameraPosition ?? [0.65, 0.14, config.cameraZ],
-        fov: 32,
+        position: captureCamera.position,
+        fov: captureCamera.fov,
       }}
       frameloop="demand"
       dpr={1}
@@ -108,6 +119,7 @@ function CaptureScene({
       <directionalLight position={[3.2, 4.5, 2.8]} intensity={1.2} />
       <directionalLight position={[-2.8, 1.8, -1.5]} intensity={0.38} />
       <directionalLight position={[0.2, 2.2, 4]} intensity={0.42} />
+      <CaptureCameraAim />
       <group rotation={[0, rotationY, 0]}>
         <DrinkwareBody
           productType={productType}
@@ -478,10 +490,10 @@ export async function captureDrinkware3DFrontPreview(
 }
 
 /**
- * Captures two 3D snapshots of a customized mug/cup/thermos design — left
- * (−90° Y) and right (+90° Y) profile views — for use as cart line-item
- * thumbnails. Returns `null` on failure/timeout so callers can fall back
- * to the existing flat-preview capture.
+ * Captures two 3D snapshots of a customized mug/cup/thermos design — 3/4
+ * left and 3/4 right — for use as cart line-item thumbnails. Returns `null`
+ * on failure/timeout so callers can fall back to the existing flat-preview
+ * capture.
  */
 export async function captureDrinkware3DPreviews(
   options: DrinkwareCaptureOptions,

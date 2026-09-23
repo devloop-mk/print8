@@ -21,7 +21,7 @@ export const PRODUCT_DESIGNS_CACHE_TAG = 'product-designs';
 const getCachedManagedProductDesignRecords = unstable_cache(
   async (): Promise<ManagedProductDesignRecord[]> =>
     managedProductDesignsDb.list(),
-  ['managed-product-design-records'],
+  ['managed-product-design-records', 'polo-overlay-2026-09-23'],
   {
     revalidate: 1800,
     tags: [PRODUCT_DESIGNS_CACHE_TAG],

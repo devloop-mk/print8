@@ -9,13 +9,6 @@ export type PromoBannerSlide = {
 
 export const promoBannerSlides: PromoBannerSlide[] = [
   {
-    id: 'pastrmalijada',
-    href: '/products/ready-designs?collection=pastrmalijada',
-    imageDesktop: '/banners/banner-desktop-pastrmalijada.png',
-    imageMobile: '/banners/banner-mobile-pastrmalijada.png',
-    mobileObjectPosition: 'center 32%',
-  },
-  {
     id: 'apparel',
     href: '/products/category/apparel',
     imageDesktop: '/banners/banner-desktop-apparel.png',

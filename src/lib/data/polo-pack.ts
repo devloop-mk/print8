@@ -4,8 +4,8 @@ const DIR = '/NEW_DESIGNS/polo';
 const POLO_PRODUCT_ID = 'polo-frut-original-white';
 
 const POLO_BACK_OVERLAY = {
-  overlayScale: 54,
-  overlayPosition: { x: 50, y: 48 },
+  overlayScale: 32,
+  overlayPosition: { x: 50, y: 50 },
 };
 
 const POLO_BASE = {
@@ -19,8 +19,8 @@ const POLO_BASE = {
   defaultSide: 'front' as const,
   designSides: ['front', 'back'] as const,
   collection: 'polo',
-  overlayScale: 18,
-  overlayPosition: { x: 36, y: 40 },
+  overlayScale: 12,
+  overlayPosition: { x: 43, y: 38 },
 };
 
 export const poloPackTemplates: ProductDesignTemplate[] = [

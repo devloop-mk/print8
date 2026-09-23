@@ -68,6 +68,13 @@ const MUGS: Array<{ id: string; file: string; titleMk: string; titleEn: string }
   },
 ];
 
+function productTypesFor(id: string): ProductDesignTemplate['productTypes'] {
+  if (id === 'kafe-od-stip') return ['mug'];
+  if (id === 'stip-pastrmajlija') return ['mug'];
+  // City / souvenir spots work on ceramic mugs and beer glasses.
+  return ['mug', 'cup'];
+}
+
 export const localMkDrinkwarePackTemplates: ProductDesignTemplate[] = MUGS.map((item) => ({
   id: `mug-local-${item.id}`,
   nameKey: `mugLocal${item.id.replace(/(^|-)([a-z])/g, (_, _h, c: string) => c.toUpperCase())}`,
@@ -75,5 +82,5 @@ export const localMkDrinkwarePackTemplates: ProductDesignTemplate[] = MUGS.map((
   titleMk: item.titleMk,
   overlayImage: `/NEW_DESIGNS/drinkware/${item.file}`,
   ...MUG_BASE,
-  productTypes: [...MUG_BASE.productTypes],
+  productTypes: productTypesFor(item.id),
 }));

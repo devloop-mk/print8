@@ -21,7 +21,6 @@ import { poloPackTemplates } from '@/lib/data/polo-pack';
 import { streetwearPackTemplates } from '@/lib/data/streetwear-pack';
 import { getCouplePackDesignTemplates } from '@/lib/data/couple-pack';
 import { dropTeePackTemplates } from '@/lib/data/drop-tees-pack';
-import { pastrmalijadaPackTemplates } from '@/lib/data/pastrmalijada-pack';
 import {
   buildUnisexTshirtColorImages,
   getUnisexTshirtMockupPath,
@@ -1271,7 +1270,6 @@ export const productDesignTemplates: ProductDesignTemplate[] = [
   ...kidsGeneratedPackTemplates,
   ...dualSideGeneratedPackTemplates,
   ...dropTeePackTemplates,
-  ...pastrmalijadaPackTemplates,
   ...getCouplePackDesignTemplates(),
 ];
 
@@ -1477,7 +1475,7 @@ export const products: Product[] = [
     nameKey: 'tshirtUnisex',
     image: getUnisexTshirtMockupPath('bela', 'front'),
     colorsImages: buildUnisexTshirtColorImages(),
-    /** Fallback when printPackage missing â€” matches front-small. Display uses blank (350). */
+    /** Fallback when printPackage missing â€” matches front-small. matches front-small catalog starting price. */
     basePrice: 500,
     colors: TSHIRT_UNISEX_COLOR_HEXES,
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],

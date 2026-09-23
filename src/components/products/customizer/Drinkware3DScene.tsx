@@ -549,9 +549,11 @@ export function DrinkwareBody({
 
 function IdleSpinGroup({
   spin,
+  speed = 0.4,
   children,
 }: {
   spin: boolean;
+  speed?: number;
   children: ReactNode;
 }) {
   const groupRef = useRef<THREE.Group>(null);
@@ -564,7 +566,7 @@ function IdleSpinGroup({
 
   useFrame((_, delta) => {
     if (!spin || !groupRef.current) return;
-    groupRef.current.rotation.y += delta * 0.4;
+    groupRef.current.rotation.y += delta * speed;
   });
 
   return <group ref={groupRef}>{children}</group>;
@@ -577,6 +579,8 @@ export function Drinkware3DScene({
   productId,
   interactive = true,
   idleAutoRotate = false,
+  idleAutoRotateSpeed = 0.4,
+  allowZoom,
 }: {
   productType: ProductType;
   productColor: string;
@@ -586,6 +590,8 @@ export function Drinkware3DScene({
   interactive?: boolean;
   /** Slow spin while non-interactive (stacked mobile default). */
   idleAutoRotate?: boolean;
+  idleAutoRotateSpeed?: number;
+  allowZoom?: boolean;
 }) {
   const config = getDrinkware3DConfig(productType, productId);
 
@@ -610,7 +616,7 @@ export function Drinkware3DScene({
       <directionalLight position={[3.2, 4.5, 2.8]} intensity={1.2} />
       <directionalLight position={[-2.8, 1.8, -1.5]} intensity={0.38} />
       <directionalLight position={[0.2, 2.2, 4]} intensity={0.42} />
-      <IdleSpinGroup spin={idleAutoRotate}>
+      <IdleSpinGroup spin={idleAutoRotate} speed={idleAutoRotateSpeed}>
         <DrinkwareBody
           productType={productType}
           productColor={productColor}
@@ -621,7 +627,7 @@ export function Drinkware3DScene({
       <OrbitControls
         enabled={interactive}
         enablePan={false}
-        enableZoom={interactive}
+        enableZoom={allowZoom ?? interactive}
         enableRotate={interactive}
         target={[0, 0, 0]}
         minDistance={1.85}

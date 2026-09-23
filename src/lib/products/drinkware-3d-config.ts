@@ -253,3 +253,29 @@ export function getHandleGapEdgeFraction(
 ): number {
   return getDrinkware3DConfig(type, productId).handleGapFraction / 2;
 }
+
+/**
+ * Centered still-camera for offscreen cart/catalog captures.
+ * Pulls back far enough that a tall beer glass + handle fits in a square frame.
+ */
+export function getDrinkwareCaptureCamera(
+  type: ProductType,
+  productId?: string,
+): { position: [number, number, number]; fov: number } {
+  const config = getDrinkware3DConfig(type, productId);
+  const fov = 30;
+  const bodyHeight =
+    config.height +
+    (config.baseHeight ?? 0) +
+    (config.hasLid ? config.lidHeight : 0);
+  const radius = Math.max(config.radiusTop, config.radiusBottom);
+  const handleReach = config.hasHandle ? radius * 0.95 : 0;
+  const halfW = radius + handleReach + 0.08;
+  const halfH = bodyHeight / 2 + 0.1;
+  const halfSpan = Math.max(halfW, halfH);
+  const distance = (halfSpan / Math.tan((fov * Math.PI) / 360)) * 1.22;
+  return {
+    position: [0, 0.02, distance],
+    fov,
+  };
+}
