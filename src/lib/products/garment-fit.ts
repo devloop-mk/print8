@@ -23,6 +23,26 @@ export function getTshirtProductForFit(fit: GarmentFit): Product | undefined {
   return products.find((p) => p.id === TSHIRT_PRODUCT_BY_FIT[fit]);
 }
 
+export function parseGarmentFitParam(
+  value: string | null | undefined,
+): GarmentFit | null {
+  if (value === 'unisex' || value === 'women' || value === 'kids') return value;
+  return null;
+}
+
+/** Kids/women catalog paths so design PDP can keep the blank you came from. */
+export function inferGarmentFitFromPath(
+  path: string | null | undefined,
+): GarmentFit | null {
+  if (!path) return null;
+  if (path.includes('tshirt-kids') || path.includes('/ready-designs/kids')) {
+    return 'kids';
+  }
+  if (path.includes('tshirt-women')) return 'women';
+  if (path.includes('tshirt-unisex')) return 'unisex';
+  return null;
+}
+
 export function getProductGarmentFit(product: Product): GarmentFit | null {
   if (product.type !== 't-shirt') return null;
   return product.fit ?? 'unisex';
@@ -34,16 +54,29 @@ export function isTshirtGarmentProduct(product: Product): boolean {
 
 export function getDesignApplicableFits(
   design: ProductDesignTemplate,
+  extraFit?: GarmentFit | null,
 ): GarmentFit[] {
   if (!design.productTypes.includes('t-shirt')) return [];
 
+  let fits: GarmentFit[];
   if (design.applicableFits?.length) {
-    return GARMENT_FIT_ORDER.filter((fit) =>
+    fits = GARMENT_FIT_ORDER.filter((fit) =>
       design.applicableFits!.includes(fit),
+    );
+  } else {
+    fits = GARMENT_FIT_ORDER.filter((fit) => {
+      const product = getTshirtProductForFit(fit);
+      return Boolean(product && premadeDesignAppliesToProduct(design, product));
+    });
+  }
+
+  if (extraFit && !fits.includes(extraFit)) {
+    fits = GARMENT_FIT_ORDER.filter(
+      (fit) => fit === extraFit || fits.includes(fit),
     );
   }
 
-  return ['unisex'];
+  return fits.length > 0 ? fits : ['unisex'];
 }
 
 export function designSupportsGarmentFit(
@@ -57,7 +90,7 @@ export function resolveTshirtProductForDesign(
   design: ProductDesignTemplate,
   fit: GarmentFit,
 ): Product {
-  const applicable = getDesignApplicableFits(design);
+  const applicable = getDesignApplicableFits(design, fit);
   const resolvedFit = applicable.includes(fit) ? fit : applicable[0] ?? 'unisex';
 
   const product = getTshirtProductForFit(resolvedFit);
@@ -98,7 +131,7 @@ export function resolveDesignProduct(
   // T-shirt fit variants only when the resolved product is a tee.
   // Baby/bodysuit designs list bodysuit first — do not force a kids tee.
   if (productType === 't-shirt') {
-    const applicable = getDesignApplicableFits(design);
+    const applicable = getDesignApplicableFits(design, fit);
     const initialFit =
       fit && applicable.includes(fit) ? fit : applicable[0] ?? 'unisex';
     return resolveTshirtProductForDesign(design, initialFit);

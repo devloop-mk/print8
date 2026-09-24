@@ -1614,17 +1614,6 @@ export const products: Product[] = [
     basePrice: 280,
   },
   {
-    id: 'mug-purple-interior',
-    type: 'mug',
-    nameKey: 'mugPurpleInterior',
-    image: '/mugs/mug-purple-interior.png',
-    colorsImages: {
-      '#ffffff': '/mugs/mug-purple-interior.png',
-    },
-    basePrice: 280,
-    colors: ['#ffffff'],
-  },
-  {
     id: 'mug-red-patch',
     type: 'mug',
     nameKey: 'mugRedPatch',

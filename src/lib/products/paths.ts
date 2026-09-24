@@ -88,10 +88,11 @@ export function buildCustomizerUrl(
 
 export function buildDesignDetailUrl(
   designId: string,
-  options?: { type?: string; returnTo?: string },
+  options?: { type?: string; fit?: string; returnTo?: string },
 ) {
   const params = new URLSearchParams();
   if (options?.type) params.set('type', options.type);
+  if (options?.fit) params.set('fit', options.fit);
   const returnTo = sanitizeReturnTo(options?.returnTo);
   if (returnTo) params.set('returnTo', returnTo);
   const queryString = params.toString();

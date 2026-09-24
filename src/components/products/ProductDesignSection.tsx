@@ -178,6 +178,7 @@ function DesignCard({
 
   const designDetailHref = buildDesignDetailUrl(design.id, {
     type: product.type,
+    ...(product.fit ? { fit: product.fit } : {}),
     returnTo,
   });
 

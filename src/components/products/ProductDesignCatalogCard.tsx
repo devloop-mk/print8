@@ -227,10 +227,12 @@ export function ProductDesignCatalogCard({
   const customizeHref = buildCustomizerUrl(product.id, product.type, {
     design: design.id,
     color: previewColor,
+    ...(product.fit ? { fit: product.fit } : {}),
     returnTo,
   });
   const detailHref = buildDesignDetailUrl(design.id, {
     type: product.type,
+    ...(product.fit ? { fit: product.fit } : {}),
     returnTo,
   });
 

@@ -267,6 +267,8 @@ export function KidsDesignsArchive({ initialEntries }: KidsDesignsArchiveProps) 
                     entry={entry}
                     colorFilter="all"
                     varyInitialColor
+                    preferredProductId="tshirt-kids"
+                    preferredProductType="t-shirt"
                   />
                 </div>
               </Reveal>

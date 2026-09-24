@@ -113,6 +113,26 @@ const nextConfig: NextConfig = {
         destination: "/:locale/products/tshirt-unisex/:path*",
         permanent: true,
       },
+      {
+        source: "/products/mug-purple-interior",
+        destination: "/products/mug-inner-violet",
+        permanent: true,
+      },
+      {
+        source: "/products/mug-purple-interior/:path*",
+        destination: "/products/mug-inner-violet/:path*",
+        permanent: true,
+      },
+      {
+        source: "/:locale(en)/products/mug-purple-interior",
+        destination: "/:locale/products/mug-inner-violet",
+        permanent: true,
+      },
+      {
+        source: "/:locale(en)/products/mug-purple-interior/:path*",
+        destination: "/:locale/products/mug-inner-violet/:path*",
+        permanent: true,
+      },
     ];
   },
   async headers() {

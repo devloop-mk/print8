@@ -9,6 +9,7 @@ export const PRODUCT_ID_ALIASES: Readonly<Record<string, string>> = {
   'mug-koni-inner-light-blue': 'mug-inner-light-blue',
   'mug-koni-inner-pink': 'mug-inner-pink',
   'mug-koni-inner-violet': 'mug-inner-violet',
+  'mug-purple-interior': 'mug-inner-violet',
   'mug-koni-inner-light-violet': 'mug-inner-light-violet',
   'mug-koni-football-handle': 'mug-football-handle',
   'mug-koni-magic-glossy': 'mug-magic-glossy',

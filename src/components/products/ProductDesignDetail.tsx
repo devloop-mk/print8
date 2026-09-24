@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
-import { Link, useRouter } from '@/i18n/navigation';
+import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import {
   isImageDesignTemplate,
   isOverlayDesignTemplate,
@@ -23,6 +23,8 @@ import {
 } from '@/lib/products/design-applicable-colors';
 import {
   getDesignApplicableFits,
+  inferGarmentFitFromPath,
+  parseGarmentFitParam,
   resolveDesignProduct,
   resolveDesignProductType,
   type GarmentFit,
@@ -70,6 +72,7 @@ export function ProductDesignDetail({
   const ti = useTranslations('products.items');
   const locale = useLocale();
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const { addItem } = useCart();
   const previewRef = useRef<HTMLDivElement>(null);
@@ -84,6 +87,12 @@ export function ProductDesignDetail({
     return raw as ProductType;
   }, [searchParams]);
 
+  const preferredFit = useMemo((): GarmentFit | undefined => {
+    const fromQuery = parseGarmentFitParam(searchParams.get('fit'));
+    if (fromQuery) return fromQuery;
+    return inferGarmentFitFromPath(searchParams.get('returnTo')) ?? undefined;
+  }, [searchParams]);
+
   const resolved = useMemo(() => {
     const coupleMatch = getCouplePackPartnerDesign(designId);
     // Prefer merged (admin) template; fall back to static couple partner design.
@@ -94,12 +103,14 @@ export function ProductDesignDetail({
       effectiveDesign,
       preferredProductType,
     );
-    // Fit variants only apply when the resolved product is a t-shirt.
     const applicableFits =
       productType === 't-shirt'
-        ? getDesignApplicableFits(effectiveDesign)
+        ? getDesignApplicableFits(effectiveDesign, preferredFit)
         : [];
-    const initialFit = applicableFits[0] ?? 'unisex';
+    const initialFit =
+      preferredFit && applicableFits.includes(preferredFit)
+        ? preferredFit
+        : (applicableFits[0] ?? 'unisex');
     const product = resolveDesignProduct(
       effectiveDesign,
       initialFit,
@@ -113,7 +124,7 @@ export function ProductDesignDetail({
       initialFit,
       preferredProductType,
     };
-  }, [designId, mergedDesign, preferredProductType]);
+  }, [designId, mergedDesign, preferredFit, preferredProductType]);
 
   const [garmentFit, setGarmentFit] = useState<GarmentFit>(
     () => resolved?.initialFit ?? 'unisex',
@@ -192,6 +203,10 @@ export function ProductDesignDetail({
       ),
     );
     setSize(nextProduct.sizes?.[0] ?? '');
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('fit', nextFit);
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }
 
   const returnTo = sanitizeReturnTo(searchParams.get('returnTo'));

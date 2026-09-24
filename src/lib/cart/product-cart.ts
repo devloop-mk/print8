@@ -121,6 +121,7 @@ export function getCartItemPreviewImages(
   item: CartItem,
   labels: Partial<Record<ProductSide, string>> & {
     magnet?: string;
+    product?: string;
     upload?: string;
   },
 ): { src: string; label?: string }[] {
@@ -138,15 +139,15 @@ export function getCartItemPreviewImages(
         : undefined;
 
     const images: { src: string; label?: string }[] = [];
-    // Magnets keep mockup + photo. Other upload-only products (puzzle, stone,
-    // plaque, …) must show the uploaded image, not the blank catalog mockup.
-    if (product.type === 'magnet' && mockup) {
-      images.push({ src: mockup, label: labels.magnet });
+    if (mockup) {
+      images.push({
+        src: mockup,
+        label:
+          product.type === 'magnet' ? labels.magnet : labels.product,
+      });
     }
-    if (upload) {
+    if (upload && upload !== mockup) {
       images.push({ src: upload, label: labels.upload });
-    } else if (mockup) {
-      images.push({ src: mockup });
     }
     if (images.length > 0) return images;
   }

@@ -182,6 +182,7 @@ export function CartPageContent() {
               left: tc('left'),
               right: tc('right'),
               magnet: t('magnetPreview'),
+              product: t('productPreview'),
               upload: t('uploadPreview'),
             });
 
