@@ -91,6 +91,92 @@ function extractCatalogStorageKey(input: string): string | null {
   return null;
 }
 
+function pathnameFromCdnUrl(url: URL): string {
+  let pathname = url.pathname.replace(/^\/+/, '');
+  const cdn = getAssetsCdnBase();
+  if (!cdn) return pathname;
+  try {
+    const cdnUrl = new URL(cdn);
+    if (url.hostname !== cdnUrl.hostname) return pathname;
+    const cdnPrefix = cdnUrl.pathname.replace(/^\/+|\/+$/g, '');
+    if (cdnPrefix && pathname.startsWith(`${cdnPrefix}/`)) {
+      pathname = pathname.slice(cdnPrefix.length + 1);
+    }
+  } catch {
+    // ignore malformed CDN base URL
+  }
+  return pathname;
+}
+
+/** Print masters live at `masters/...` on the bucket (and on `.r2.dev`). */
+function extractMasterStorageKey(input: string): string | null {
+  const trimmed = input.trim();
+  if (!trimmed || trimmed.startsWith('data:') || trimmed.startsWith('blob:')) {
+    return null;
+  }
+
+  if (trimmed.startsWith('/api/masters/')) {
+    return `masters/${trimmed.slice('/api/masters/'.length)}`;
+  }
+
+  if (trimmed.startsWith('/_next/image')) {
+    try {
+      const inner = new URL(trimmed, 'https://local.invalid').searchParams.get(
+        'url',
+      );
+      return inner ? extractMasterStorageKey(inner) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  if (!isRemoteAssetUrl(trimmed)) {
+    const key = trimmed.replace(/^\/+/, '');
+    return key.startsWith('masters/') ? key : null;
+  }
+
+  try {
+    const url = new URL(trimmed);
+    if (url.pathname.startsWith('/_next/image')) {
+      const inner = url.searchParams.get('url');
+      return inner ? extractMasterStorageKey(inner) : null;
+    }
+    const pathname = pathnameFromCdnUrl(url);
+    if (pathname.startsWith('masters/')) return pathname;
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
+function toSameOriginOptimizedUrl(remoteUrl: string): string {
+  if (
+    remoteUrl.startsWith('/_next/image') ||
+    remoteUrl.startsWith('data:') ||
+    remoteUrl.startsWith('blob:')
+  ) {
+    return remoteUrl;
+  }
+  return `/_next/image?url=${encodeURIComponent(remoteUrl)}&w=1080&q=75`;
+}
+
+function resolveCanvasMasterUrl(key: string): string {
+  const relative = key.startsWith('masters/')
+    ? key.slice('masters/'.length)
+    : key;
+  if (preferLocalPublicAssets()) {
+    return `/api/masters/${relative}`;
+  }
+  const cdn = getAssetsCdnBase();
+  if (cdn) {
+    // Public `.r2.dev` does not send CORS headers (custom domain required).
+    // The Next image optimizer fetches R2 server-side so the <img> is same-origin.
+    return toSameOriginOptimizedUrl(`${cdn}/${key}`);
+  }
+  return `/api/masters/${relative}`;
+}
+
 export function isRemoteAssetUrl(url: string) {
   return (
     url.startsWith('http://') ||
@@ -144,14 +230,21 @@ export function resolveAssetUrl(path: string): string {
 }
 
 /**
- * Same-origin URL for catalog art used with `crossOrigin="anonymous"` (canvas,
- * html2canvas, Fabric). The public R2 `.r2.dev` host does not send CORS headers
- * unless configured on the bucket — this route proxies through the app origin.
+ * Same-origin URL for catalog/master art used with `crossOrigin="anonymous"`
+ * (canvas, html2canvas, Fabric). Public R2 `.r2.dev` URLs do not send
+ * `Access-Control-Allow-Origin` — catalog keys go through `/api/catalog`,
+ * masters through `/api/masters` (dev) or `/_next/image` (production).
  */
 export function resolveCanvasAssetUrl(path: string): string {
   if (!path) return path;
 
-  if (path.startsWith('blob:') || path.startsWith('data:')) {
+  if (
+    path.startsWith('blob:') ||
+    path.startsWith('data:') ||
+    path.startsWith('/api/catalog/') ||
+    path.startsWith('/api/masters/') ||
+    path.startsWith('/_next/image')
+  ) {
     return path;
   }
 
@@ -161,6 +254,11 @@ export function resolveCanvasAssetUrl(path: string): string {
       return `/${catalogKey}`;
     }
     return `/api/catalog/${catalogKey}`;
+  }
+
+  const masterKey = extractMasterStorageKey(path);
+  if (masterKey) {
+    return resolveCanvasMasterUrl(masterKey);
   }
 
   if (isRemoteAssetUrl(path)) {

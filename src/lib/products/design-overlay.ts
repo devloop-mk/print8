@@ -12,7 +12,7 @@ import {
   HOODIE_PRINT_AREA_INSETS,
   TSHIRT_PRINT_AREA_INSETS,
 } from '@/lib/products/print-area';
-import { resolveAssetUrl, resolveCanvasAssetUrl, resolveMasterAssetUrl } from '@/lib/storage/asset-url';
+import { resolveAssetUrl, resolveCanvasAssetUrl } from '@/lib/storage/asset-url';
 import { sanitizeCssHexColor } from '@/lib/security/sanitize-svg';
 
 /**
@@ -422,7 +422,9 @@ export function isStreetwearMarketingOverlay(
 }
 
 /**
- * Raw overlay artwork URL. Prefers the original print master PNG.
+ * Raw overlay artwork URL for in-browser compositing (`crossOrigin="anonymous"`).
+ * Print masters on public `.r2.dev` have no CORS headers, so this always
+ * returns a same-origin URL (catalog proxy or optimized image).
  */
 export function resolveComposableOverlayUrl(
   path: string | null | undefined,
@@ -432,7 +434,6 @@ export function resolveComposableOverlayUrl(
   const normalized = path.replace(/^\//, '');
   if (normalized.startsWith('masters/')) {
     if (!arePrintMasterAssetsAvailable()) return null;
-    return resolveMasterAssetUrl(path);
   }
 
   return resolveCanvasAssetUrl(path);
@@ -464,9 +465,10 @@ export function getStreetwearMarketingMockupUrl(
 }
 
 /**
- * Design artwork layered on the selectable shirt mockup.
- * Prefers transparent print masters when available; otherwise uses the catalog
- * overlay image (including streetwear webps on Vercel without a masters CDN).
+ * Design artwork layered on the selectable shirt mockup in the browser.
+ * Prefers the catalog overlay (same-origin CORS proxy) over print masters —
+ * public `.r2.dev` master PNGs cannot be loaded with `crossOrigin="anonymous"`.
+ * Order production still reads `printMasterImage` server-side from R2.
  *
  * Use {@link getDesignPreviewOverlayUrl} for catalog / PDP on-screen previews.
  */
@@ -476,12 +478,12 @@ export function getDesignCompositeOverlayUrl(
     'printMasterImage' | 'overlayImage' | 'overlaySvg'
   >,
 ): string | null {
-  if (design.printMasterImage && arePrintMasterAssetsAvailable()) {
-    return resolveMasterAssetUrl(design.printMasterImage);
-  }
-
   if (design.overlayImage) {
     return resolveCanvasAssetUrl(design.overlayImage);
+  }
+
+  if (design.printMasterImage && arePrintMasterAssetsAvailable()) {
+    return resolveCanvasAssetUrl(design.printMasterImage);
   }
 
   return null;
