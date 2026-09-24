@@ -53,12 +53,19 @@ export function getDrinkwareSublimationPatch(
   return DRINKWARE_SUBLIMATION_PATCH_BY_PRODUCT_ID[productId] ?? null;
 }
 
+/** White body, coloured interior + handle (Koni inner-color mugs). */
+export function isInnerColorMug(productId?: string): boolean {
+  return Boolean(productId?.startsWith('mug-inner-'));
+}
+
 export function getDrinkwareBodyColor(
   productId: string | undefined,
   productColor: string,
 ): string {
   const patch = getDrinkwareSublimationPatch(productId);
-  return patch?.bodyColor ?? productColor;
+  if (patch) return patch.bodyColor;
+  if (isInnerColorMug(productId)) return '#ffffff';
+  return productColor;
 }
 
 function patchRect(

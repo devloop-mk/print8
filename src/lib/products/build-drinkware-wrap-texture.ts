@@ -16,6 +16,7 @@ import {
 } from '@/lib/products/sticker-library';
 import { resolveCanvasAssetUrl } from '@/lib/storage/asset-url';
 import {
+  getDrinkwareBodyColor,
   getDrinkwareSublimationPatch,
   paintSublimationPatch,
   traceSublimationPatchPath,
@@ -192,10 +193,11 @@ export async function buildDrinkwareWrapTexture(
     throw new Error('Could not create wrap texture canvas');
   }
 
-  paintBaseColor(ctx, input.productColor, textureSize.width, textureSize.height);
+  const bodyColor = getDrinkwareBodyColor(input.productId, input.productColor);
+  paintBaseColor(ctx, bodyColor, textureSize.width, textureSize.height);
 
   const sublimationPatch = getDrinkwareSublimationPatch(input.productId);
-  const seamColor = sublimationPatch?.bodyColor ?? input.productColor;
+  const seamColor = sublimationPatch?.bodyColor ?? bodyColor;
   if (sublimationPatch) {
     paintBaseColor(
       ctx,

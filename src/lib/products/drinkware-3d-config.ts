@@ -144,11 +144,6 @@ const productConfigs: Record<string, Drinkware3DConfig> = {
     baseHeight: 0.014,
     handleType: 'c',
   },
-  'mug-inner-violet': {
-    ...MUG_CONFIG,
-    interiorColor: '#5b21b6',
-    handleColor: '#5b21b6',
-  },
   'mug-red-patch': {
     ...MUG_CONFIG,
     handleGapFraction: 0.1,

@@ -9,7 +9,10 @@ import {
   getDrinkware3DConfig,
   type Drinkware3DConfig,
 } from '@/lib/products/drinkware-3d-config';
-import { getDrinkwareBodyColor } from '@/lib/products/drinkware-sublimation-patch';
+import {
+  getDrinkwareBodyColor,
+  isInnerColorMug,
+} from '@/lib/products/drinkware-sublimation-patch';
 
 /**
  * Remap cylinder UVs so:
@@ -374,11 +377,12 @@ export function DrinkwareBody({
 }) {
   const config = getDrinkware3DConfig(productType, productId);
   const bodyGlaze = getDrinkwareBodyColor(productId, productColor);
+  const innerAccent = isInnerColorMug(productId) ? productColor : null;
   const isGlass = config.material === 'glass';
   const isFrosted = Boolean(config.glassFrosted);
   const handleType =
     config.handleType ?? (isGlass && !isFrosted ? 'd' : 'c');
-  const handleGlaze = config.handleColor ?? bodyGlaze;
+  const handleGlaze = config.handleColor ?? innerAccent ?? bodyGlaze;
 
   const texture = useMemo(() => {
     if (!textureCanvas) return null;
@@ -417,11 +421,12 @@ export function DrinkwareBody({
 
   const interiorColor = useMemo(() => {
     if (config.interiorColor) return config.interiorColor;
+    if (innerAccent) return innerAccent;
     if (isFrosted) return '#e6eaee';
     const c = new THREE.Color(productColor);
     c.multiplyScalar(isGlass ? 0.98 : 0.92);
     return `#${c.getHexString()}`;
-  }, [config.interiorColor, isFrosted, isGlass, productColor]);
+  }, [config.interiorColor, innerAccent, isFrosted, isGlass, productColor]);
 
   return (
     <group
