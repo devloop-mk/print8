@@ -153,7 +153,7 @@ export function PhotoUploadOrderForm({ productType }: PhotoUploadOrderFormProps)
       name: productLabel,
       price: product.basePrice,
       quantity,
-      designPreview: mockupImage,
+      designPreview: uploadedPhoto.previewUrl,
       fileIds: [uploadedPhoto.fileId],
       metadata,
     };

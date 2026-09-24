@@ -15,6 +15,7 @@ import {
 } from "@/lib/products/product-sides";
 import { isCylindricalDrinkwareType } from "@/lib/products/product-mockup-layout";
 import { resolveProductId } from "@/lib/products/product-id-aliases";
+import { isUploadOnlyProduct } from "@/lib/products/upload-only-products";
 
 export function getProductById(id: string): Product | undefined {
   const canonicalId = resolveProductId(id);
@@ -125,20 +126,27 @@ export function getCartItemPreviewImages(
 ): { src: string; label?: string }[] {
   const product = getCartItemProduct(item);
 
-  if (product?.type === 'magnet') {
+  if (product && isUploadOnlyProduct(product)) {
     const color = getCartItemColor(item) ?? product.colors?.[0] ?? '#ffffff';
-    const mockup = getMagnetDisplayMockup(product, color);
+    const mockup =
+      product.type === 'magnet'
+        ? getMagnetDisplayMockup(product, color)
+        : getProductMockup(product, color, 'front');
     const upload =
       typeof item.metadata?.frontUploadedPreviewUrl === 'string'
         ? item.metadata.frontUploadedPreviewUrl
         : undefined;
 
     const images: { src: string; label?: string }[] = [];
-    if (mockup) {
+    // Magnets keep mockup + photo. Other upload-only products (puzzle, stone,
+    // plaque, …) must show the uploaded image, not the blank catalog mockup.
+    if (product.type === 'magnet' && mockup) {
       images.push({ src: mockup, label: labels.magnet });
     }
     if (upload) {
       images.push({ src: upload, label: labels.upload });
+    } else if (mockup) {
+      images.push({ src: mockup });
     }
     if (images.length > 0) return images;
   }
