@@ -258,12 +258,12 @@ export function CartPageContent() {
                   <div
                     className={cn(
                       multiSidePreviews
-                        ? "grid w-full grid-cols-2 items-start gap-1.5 lg:flex lg:shrink-0 lg:gap-1"
+                        ? "grid w-full grid-cols-2 items-start gap-1.5 lg:flex lg:w-auto lg:shrink-0 lg:gap-1"
                         : isDualDrinkwarePreviews
-                          ? "flex shrink-0 gap-1.5"
+                          ? "flex w-auto shrink-0 gap-1.5"
                           : dualPreviewLayout
-                            ? "grid w-full grid-cols-2 gap-2 sm:flex sm:shrink-0 sm:gap-1"
-                            : "flex shrink-0 gap-1",
+                            ? "grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:shrink-0 sm:gap-1"
+                            : "flex w-auto shrink-0 gap-1",
                     )}
                   >
 

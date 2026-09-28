@@ -6,7 +6,17 @@ import {
 import { signEmailPreviewUrl } from '@/lib/email/email-preview-sign';
 import type { OrderPreviewEmbed } from '@/lib/email/order-email-types';
 
+function isPrivateUploadPreviewSrc(src: string): boolean {
+  return (
+    src.startsWith('data:') ||
+    src.startsWith('blob:') ||
+    src.includes('/api/files/')
+  );
+}
+
 function resolveRemotePreviewSrc(src: string): string | null {
+  if (!src || isPrivateUploadPreviewSrc(src)) return null;
+
   if (src.startsWith('http://') || src.startsWith('https://')) {
     return src;
   }
@@ -36,9 +46,17 @@ export async function attachHostedPreviewUrls(
         continue;
       }
 
-      const remote = resolveRemotePreviewSrc(embed.sourceSrc ?? '');
+      const remote =
+        embed.content.length === 0
+          ? resolveRemotePreviewSrc(embed.sourceSrc ?? '')
+          : null;
       if (remote) {
         results.push({ ...embed, imageUrl: remote });
+        continue;
+      }
+
+      if (embed.content.length === 0) {
+        results.push(embed);
         continue;
       }
 

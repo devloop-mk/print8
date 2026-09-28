@@ -55,7 +55,7 @@ function templateEntry(item) {
     overlayImage: '/NEW_DESIGNS/drinkware/${item.out}',
     printMasterImage: 'masters/drinkware/${item.out}',
     overlayScale: 42,
-    overlayPosition: { x: 50, y: 45 },
+    overlayPosition: { x: 44, y: 53 },
     recommendedColor: '#ffffff',
     defaultSide: 'front',
     collection: '${item.collection}',

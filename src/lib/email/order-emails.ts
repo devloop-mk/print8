@@ -15,6 +15,8 @@ import { parsePlacedStickers } from "@/lib/products/sticker-library";
 import { parsePlacedTextLayers } from "@/lib/products/text-layers";
 import { resolveSvgPrintFilesFromMetadata } from "@/lib/designs/svg-order-assets";
 import {
+  collectOrderItemUploadFileIds,
+  extractUploadedFileIdFromPreviewSrc,
   getOrderItemPreviewImages,
   sanitizeOrderItemFilename,
   type OrderItem,
@@ -73,8 +75,48 @@ function mimeTypeFromFilename(filename: string, fallback: string) {
   if (lower.endsWith(".png")) return "image/png";
   if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
   if (lower.endsWith(".webp")) return "image/webp";
+  if (lower.endsWith(".gif")) return "image/gif";
   if (lower.endsWith(".pdf")) return "application/pdf";
   return fallback;
+}
+
+function isEmailPreviewImageMime(mimeType: string): boolean {
+  return /^(image\/(jpeg|jpg|png|webp|gif))$/i.test(mimeType);
+}
+
+function extensionFromMime(mimeType: string, fallback = "jpg"): string {
+  if (mimeType.includes("png")) return "png";
+  if (mimeType.includes("webp")) return "webp";
+  if (mimeType.includes("gif")) return "gif";
+  if (mimeType.includes("jpeg") || mimeType.includes("jpg")) return "jpg";
+  return fallback;
+}
+
+async function loadUploadedImageForEmail(fileId: string): Promise<{
+  buffer: Buffer;
+  contentType: string;
+  ext: string;
+  originalName: string;
+} | null> {
+  const file = await getUploadedFile(fileId);
+  if (!file) return null;
+
+  const storedName = file.originalStoredName ?? file.storedName;
+  const buffer = await downloadStoredFile(storedName);
+  if (!buffer) return null;
+
+  const contentType = mimeTypeFromFilename(
+    file.originalName,
+    file.mimeType || "image/jpeg",
+  );
+  if (!isEmailPreviewImageMime(contentType)) return null;
+
+  return {
+    buffer,
+    contentType,
+    ext: extensionFromMime(contentType),
+    originalName: file.originalName || `upload-${fileId}`,
+  };
 }
 
 function detailRow(label: string, valueHtml: string): string {
@@ -232,20 +274,21 @@ function buildCustomDesignDetailsInnerHtml(item: OrderItem): string {
   return "";
 }
 
-function buildOrderPreviewEmbeds(data: CheckoutInput): OrderPreviewEmbed[] {
+async function buildOrderPreviewEmbeds(data: CheckoutInput): Promise<OrderPreviewEmbed[]> {
   const embeds: OrderPreviewEmbed[] = [];
 
-  data.items.forEach((item, itemIndex) => {
+  for (const [itemIndex, item] of data.items.entries()) {
     const previews = getOrderItemPreviewImages(item);
     const safeName = sanitizeOrderItemFilename(item.name, `item-${itemIndex + 1}`);
+    const usedFileIds = new Set<string>();
 
-    previews.forEach(({ src, label }) => {
+    for (const { src, label } of previews) {
       const slug = label.toLowerCase().replace(/\s+/g, "-");
       const filename = `item-${itemIndex + 1}-${safeName}-${slug}`;
 
       if (src.startsWith("data:")) {
         const parsed = parseDataUrl(src);
-        if (!parsed) return;
+        if (!parsed) continue;
 
         embeds.push({
           contentId: `preview-${itemIndex}-${slug}`,
@@ -256,7 +299,24 @@ function buildOrderPreviewEmbeds(data: CheckoutInput): OrderPreviewEmbed[] {
           contentType: parsed.mimeType,
           sourceSrc: src,
         });
-        return;
+        continue;
+      }
+
+      const uploadFileId = extractUploadedFileIdFromPreviewSrc(src);
+      if (uploadFileId) {
+        const uploaded = await loadUploadedImageForEmail(uploadFileId);
+        if (!uploaded) continue;
+        usedFileIds.add(uploadFileId);
+        embeds.push({
+          contentId: `preview-${itemIndex}-${slug}`,
+          itemIndex,
+          label,
+          filename: `${filename}.${uploaded.ext}`,
+          content: uploaded.buffer,
+          contentType: uploaded.contentType,
+          sourceSrc: src,
+        });
+        continue;
       }
 
       if (src.startsWith("http") || src.startsWith("/")) {
@@ -275,8 +335,26 @@ function buildOrderPreviewEmbeds(data: CheckoutInput): OrderPreviewEmbed[] {
           sourceSrc: src,
         });
       }
-    });
-  });
+    }
+
+    const originalIds = collectOrderItemUploadFileIds(item).filter(
+      (fileId) => !usedFileIds.has(fileId),
+    );
+    for (const [photoIndex, fileId] of originalIds.entries()) {
+      const uploaded = await loadUploadedImageForEmail(fileId);
+      if (!uploaded) continue;
+      const slug = originalIds.length > 1 ? `your-photo-${photoIndex + 1}` : "your-photo";
+      embeds.push({
+        contentId: `preview-${itemIndex}-${slug}`,
+        itemIndex,
+        label: originalIds.length > 1 ? `Your photo ${photoIndex + 1}` : "Your photo",
+        filename: `item-${itemIndex + 1}-${safeName}-${slug}.${uploaded.ext}`,
+        content: uploaded.buffer,
+        contentType: uploaded.contentType,
+        sourceSrc: `/api/files/${fileId}`,
+      });
+    }
+  }
 
   return embeds;
 }
@@ -708,7 +786,7 @@ export async function sendOrderEmails(
 
   const fileIds = collectOrderFileIds(data);
   const stickerRefs = collectOrderStickers(data.items);
-  const rawPreviewEmbeds = buildOrderPreviewEmbeds(data);
+  const rawPreviewEmbeds = await buildOrderPreviewEmbeds(data);
   const previewEmbeds = await attachHostedPreviewUrls(orderNumber, rawPreviewEmbeds);
   const designAttachments = buildDesignPreviewAttachments(previewEmbeds);
   const svgPrintAttachments = await buildSvgPrintAttachments(data);

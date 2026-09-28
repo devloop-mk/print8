@@ -2317,6 +2317,8 @@
       "cropUploading": "Uploading photo…",
       "cropPleaseWait": "Please wait — this may take a few seconds.",
       "cropPhoto": "Crop photo",
+      "attachImage": "Upload image",
+      "uploadPleaseWait": "Please wait.",
       "replacePhoto": "Replace photo",
       "previewNotAvailable": "Preview is not available for this file.",
       "fileUploaded": "File uploaded successfully.",

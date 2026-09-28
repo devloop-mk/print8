@@ -34,6 +34,8 @@ const CATEGORY_ICONS: Record<
   text: MessageSquareText,
 };
 
+const CATEGORY_DRAG_THRESHOLD_PX = 10;
+
 type StickerPickerProps = {
   onSelect: (stickerId: string) => void;
   disabled?: boolean;
@@ -91,7 +93,7 @@ export function StickerPicker({
     };
   }, [category, stickers.length, compact]);
 
-  function handleCategoryPointerDown(event: React.PointerEvent<HTMLDivElement>) {
+  function handleCategoryPointerDown(event: PointerEvent<HTMLDivElement>) {
     if (disabled || event.button !== 0) return;
     const el = categoryScrollRef.current;
     if (!el) return;
@@ -102,27 +104,32 @@ export function StickerPicker({
       startScrollLeft: el.scrollLeft,
       dragged: false,
     };
-    el.setPointerCapture(event.pointerId);
   }
 
-  function handleCategoryPointerMove(event: React.PointerEvent<HTMLDivElement>) {
+  function handleCategoryPointerMove(event: PointerEvent<HTMLDivElement>) {
     const el = categoryScrollRef.current;
     const drag = categoryDragRef.current;
     if (!el || drag.pointerId !== event.pointerId) return;
 
     const deltaX = event.clientX - drag.startX;
-    if (Math.abs(deltaX) > 2) {
+    if (!drag.dragged) {
+      if (Math.abs(deltaX) < CATEGORY_DRAG_THRESHOLD_PX) return;
       drag.dragged = true;
+      try {
+        el.setPointerCapture(event.pointerId);
+      } catch {
+        /* ignore */
+      }
     }
     el.scrollLeft = drag.startScrollLeft - deltaX;
   }
 
-  function endCategoryDrag(event: React.PointerEvent<HTMLDivElement>) {
+  function endCategoryDrag(event: PointerEvent<HTMLDivElement>) {
     const el = categoryScrollRef.current;
     const drag = categoryDragRef.current;
     if (drag.pointerId !== event.pointerId) return;
 
-    if (el) {
+    if (el && drag.dragged) {
       try {
         el.releasePointerCapture(event.pointerId);
       } catch {
@@ -130,7 +137,11 @@ export function StickerPicker({
       }
     }
 
-    if (drag.dragged) {
+    const wasDrag = drag.dragged;
+    drag.pointerId = -1;
+    drag.dragged = false;
+
+    if (wasDrag) {
       const blockAccidentalClick = (clickEvent: MouseEvent) => {
         clickEvent.stopPropagation();
         clickEvent.preventDefault();
@@ -140,8 +151,11 @@ export function StickerPicker({
         once: true,
       });
     }
+  }
 
-    categoryDragRef.current.pointerId = -1;
+  function selectCategory(next: StickerCategory) {
+    if (disabled || categoryDragRef.current.dragged) return;
+    setCategory(next);
   }
 
   const selectedSticker = selectedId ? getStickerById(selectedId) : null;
@@ -207,7 +221,11 @@ export function StickerPicker({
               role="tab"
               aria-selected={active}
               disabled={disabled}
-              onClick={() => setCategory(cat)}
+              onClick={() => selectCategory(cat)}
+              onPointerUp={(event) => {
+                if (event.button !== 0) return;
+                selectCategory(cat);
+              }}
               className={cn(
                 'flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition',
                 active

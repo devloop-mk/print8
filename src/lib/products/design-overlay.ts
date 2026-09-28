@@ -39,6 +39,55 @@ const DEFAULT_OVERLAY_POSITION = { x: 50, y: 54 };
 const DEFAULT_OVERLAY_SCALE = 40;
 
 /**
+ * Classic mug catalog photos include the handle on the right, so unwrap-style
+ * centers (x≈50, y≈44–46) sit too far right and up on the ceramic wall.
+ * One admin-tuned design landed at ~44×53 — use that as the photo center.
+ * Wrap-sized art (3D) keeps unwrap coordinates.
+ */
+const MUG_PHOTO_PRODUCT_IDS = new Set(['mug-classic']);
+const MUG_WRAP_SCALE_THRESHOLD = 65;
+const MUG_PHOTO_UNWRAP_X = 50;
+const MUG_PHOTO_TARGET_X = 44;
+const MUG_PHOTO_UNWRAP_Y_MAX = 47;
+const MUG_PHOTO_Y_SHIFT = 8;
+
+function roundPlacementCoord(value: number): number {
+  return Math.round(value * 10) / 10;
+}
+
+function isClassicMugPhotoProduct(productId: string | undefined): boolean {
+  return !productId || MUG_PHOTO_PRODUCT_IDS.has(productId);
+}
+
+/** Shift spot overlays from unwrap coords onto the mug-classic photo wall. */
+export function adjustClassicMugPhotoPlacement(
+  placement: OverlayPlacement,
+  productType: ProductType,
+  productId?: string,
+): OverlayPlacement {
+  if (productType !== 'mug') return placement;
+  if (!isClassicMugPhotoProduct(productId)) return placement;
+  if (placement.scale >= MUG_WRAP_SCALE_THRESHOLD) return placement;
+
+  let { x, y } = placement.position;
+  if (x >= MUG_PHOTO_UNWRAP_X - 2) {
+    x = roundPlacementCoord(x - (MUG_PHOTO_UNWRAP_X - MUG_PHOTO_TARGET_X));
+  }
+  if (y <= MUG_PHOTO_UNWRAP_Y_MAX) {
+    y = roundPlacementCoord(y + MUG_PHOTO_Y_SHIFT);
+  }
+
+  if (x === placement.position.x && y === placement.position.y) {
+    return placement;
+  }
+
+  return {
+    scale: placement.scale,
+    position: { x, y },
+  };
+}
+
+/**
  * Shared overlay layer look — cards, PDP, customizer, admin, and captures
  * must use the same positioning model (width % of mockup, no max-size caps).
  */
@@ -117,34 +166,38 @@ function resolvePlacementWithProductType(
     | Partial<Record<string, { position?: { x: number; y: number }; scale?: number }>>
     | undefined,
 ): OverlayPlacement {
+  let resolved: OverlayPlacement;
+
   if (productId && overlayByProductId?.[productId]) {
     const productOverride = overlayByProductId[productId];
-    return {
+    resolved = {
       position: productOverride.position ?? base.position,
       scale: productOverride.scale ?? base.scale,
     };
-  }
-
-  if (productType === 'hoodie' && templateIncludesTeeAndHoodie(productTypes)) {
+  } else if (
+    productType === 'hoodie' &&
+    templateIncludesTeeAndHoodie(productTypes)
+  ) {
     const typeOverride = overlayByProductType?.hoodie;
     if (typeOverride && !isBadDefaultHoodieOverride(base, typeOverride)) {
-      return {
+      resolved = {
         position: typeOverride.position ?? base.position,
         scale: typeOverride.scale ?? base.scale,
       };
+    } else {
+      resolved = deriveHoodiePlacementFromTeeBase(base);
     }
-    return deriveHoodiePlacementFromTeeBase(base);
+  } else {
+    const typeOverride = overlayByProductType?.[productType];
+    resolved = typeOverride
+      ? {
+          position: typeOverride.position ?? base.position,
+          scale: typeOverride.scale ?? base.scale,
+        }
+      : base;
   }
 
-  const typeOverride = overlayByProductType?.[productType];
-  if (typeOverride) {
-    return {
-      position: typeOverride.position ?? base.position,
-      scale: typeOverride.scale ?? base.scale,
-    };
-  }
-
-  return base;
+  return adjustClassicMugPhotoPlacement(resolved, productType, productId);
 }
 
 export function resolveOverlayPlacement(

@@ -38,7 +38,6 @@ const CHECKOUT_STRIP_METADATA_KEYS = new Set(['svgState']);
 
 const SIDE_REDUNDANT_WHEN_PREVIEW_SUFFIXES = [
   'PremadeDesignImage',
-  'UploadedPreviewUrl',
   'OverlayRaster',
   'OverlaySvg',
   'OverlaySvgPrimary',

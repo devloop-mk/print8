@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { buildUploadedFileUrl } from '@/lib/upload/file-url';
 import { useTranslations } from 'next-intl';
 import { Crop, Upload } from 'lucide-react';
@@ -95,14 +95,41 @@ export function ProductPhotoUpload({
   } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [pendingTermsFile, setPendingTermsFile] = useState<File | null>(null);
+  const [waitToast, setWaitToast] = useState(false);
+  const waitToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   const sessionErrorMessage = resolveUploadUserMessage(uploadError, uploadMessages, {
     maxSizeLabel,
   });
 
   const isDisabled = uploadLoading || uploading || Boolean(cropSource) || !token;
 
+  useEffect(() => {
+    return () => {
+      if (waitToastTimeoutRef.current) {
+        clearTimeout(waitToastTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  function showWaitToast() {
+    setWaitToast(true);
+    if (waitToastTimeoutRef.current) {
+      clearTimeout(waitToastTimeoutRef.current);
+    }
+    waitToastTimeoutRef.current = setTimeout(() => setWaitToast(false), 3500);
+  }
+
+  function handleDisabledUploadClick() {
+    if (isDisabled) showWaitToast();
+  }
+
   function openFilePicker() {
-    if (!token || uploadLoading || uploading || cropSource) return;
+    if (!token || uploadLoading || uploading || cropSource) {
+      showWaitToast();
+      return;
+    }
     fileInputRef.current?.click();
   }
 
@@ -286,6 +313,18 @@ export function ProductPhotoUpload({
 
   return (
     <div className="space-y-3">
+      {waitToast ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className="pointer-events-none fixed inset-x-0 top-16 z-[70] flex justify-center px-3 md:top-[4.25rem]"
+        >
+          <div className="pointer-events-auto max-w-md rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm font-medium text-brand-950 shadow-lg">
+            {t('uploadPleaseWait')}
+          </div>
+        </div>
+      ) : null}
+
       {uploadLoading || uploading ? (
         <LoadingIndicator
           label={uploading ? t('cropUploading') : tc('uploadPreparing')}
@@ -325,15 +364,17 @@ export function ProductPhotoUpload({
           <p className="text-xs text-ink-500">
             {tc('uploadImageFormatsHint', { max: maxSizeLabel })}
           </p>
-          <button
-            type="button"
-            onClick={openFilePicker}
-            disabled={isDisabled}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-ink-300 px-4 py-3 text-sm font-medium text-ink-600 transition hover:border-brand-500 hover:text-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <Upload className="h-5 w-5" />
-            {tc('chooseFile')}
-          </button>
+          <div onClick={handleDisabledUploadClick}>
+            <button
+              type="button"
+              onClick={openFilePicker}
+              disabled={isDisabled}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-ink-300 px-4 py-3 text-sm font-medium text-ink-600 transition hover:border-brand-500 hover:text-brand-600 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Upload className="h-5 w-5" />
+              {t('attachImage')}
+            </button>
+          </div>
         </>
       ) : (
         <div className="flex flex-wrap gap-2">
@@ -347,14 +388,16 @@ export function ProductPhotoUpload({
             <Crop className="h-4 w-4" />
             {t('cropPhoto')}
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={openFilePicker}
-            disabled={isDisabled}
-          >
-            {t('replacePhoto')}
-          </Button>
+          <div onClick={handleDisabledUploadClick}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={openFilePicker}
+              disabled={isDisabled}
+            >
+              {t('replacePhoto')}
+            </Button>
+          </div>
         </div>
       )}
 
