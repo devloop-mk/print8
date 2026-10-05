@@ -25,7 +25,7 @@ export function ProductTypeSuggestions({
             {t('suggestionsSubtitle')}
           </p>
         </div>
-        <ProductCardGrid items={suggestions} designPreviewOnHover />
+        <ProductCardGrid items={suggestions} />
       </section>
     </Reveal>
   );

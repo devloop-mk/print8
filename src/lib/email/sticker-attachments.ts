@@ -23,8 +23,8 @@ async function loadStickerPng(stickerId: string): Promise<Buffer | null> {
     const response = await fetch(stickerAssetUrl(definition.src));
     if (!response.ok) return null;
 
-    const svg = Buffer.from(await response.arrayBuffer());
-    return await sharp(svg).png().toBuffer();
+    const buffer = Buffer.from(await response.arrayBuffer());
+    return await sharp(buffer).png().toBuffer();
   } catch {
     return null;
   }

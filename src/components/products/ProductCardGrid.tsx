@@ -1,13 +1,12 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { formatPrice } from '@/lib/utils';
 import { getProductOffering } from '@/lib/products/offering';
 import { Card } from '@/components/ui/Card';
 import { ProductCatalogImage } from '@/components/products/ProductCatalogImage';
-import { ProductCatalogDesignsProvider } from '@/components/products/ProductCatalogDesignsProvider';
 import { Reveal } from '@/components/motion/Reveal';
 import { cn } from '@/lib/utils';
 import type { Product } from '@/lib/data/catalog';
@@ -56,14 +55,12 @@ function ProductCardGridItem({
   linkTarget,
   cardColor,
   onPreviewColor,
-  designPreviewOnHover,
 }: {
   product: Product;
   index: number;
   linkTarget: ProductCardLinkTarget;
   cardColor: string;
   onPreviewColor: (color: string) => void;
-  designPreviewOnHover?: boolean;
 }) {
   const t = useTranslations('products');
   const tp = useTranslations('products.types');
@@ -109,7 +106,6 @@ function ProductCardGridItem({
               product={product}
               color={cardColor}
               typeLabel={productLabel}
-              designPreviewOnHover={designPreviewOnHover}
             />
           </div>
           <div className="flex flex-1 flex-col p-4">
@@ -187,7 +183,6 @@ export function ProductCardGrid({
   toggleClassName,
   gapClassName = 'gap-3 sm:gap-4',
   linkTarget = 'detail',
-  designPreviewOnHover = false,
 }: {
   items: Product[];
   gridClassName?: string;
@@ -197,14 +192,11 @@ export function ProductCardGrid({
   toggleClassName?: string;
   gapClassName?: string;
   linkTarget?: ProductCardLinkTarget;
-  designPreviewOnHover?: boolean;
 }) {
   const [previewColors, setPreviewColors] = useState<Record<string, string>>({});
-  const productIds = useMemo(() => items.map((product) => product.id), [items]);
 
   return (
-    <ProductCatalogDesignsProvider productIds={productIds}>
-      <CatalogGridLayout
+    <CatalogGridLayout
       defaultDesktopColumns={desktopColumns}
       desktopColumnToggle={desktopColumnToggle}
       mobileColumnToggle={mobileColumnToggle}
@@ -223,7 +215,6 @@ export function ProductCardGrid({
             index={index}
             linkTarget={linkTarget}
             cardColor={cardColor}
-            designPreviewOnHover={designPreviewOnHover}
             onPreviewColor={(color) =>
               setPreviewColors((prev) => ({
                 ...prev,
@@ -234,6 +225,5 @@ export function ProductCardGrid({
         );
       })}
     </CatalogGridLayout>
-    </ProductCatalogDesignsProvider>
   );
 }

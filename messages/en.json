@@ -1915,6 +1915,7 @@
       "badgeTemplate": "Add your photo"
     },
     "card": {
+      "yourDesignHere": "YOUR\nDESIGN\nHERE",
       "customOption": "Custom",
       "readyDesignOne": "1 ready",
       "readyDesignsMany": "{count} ready",
@@ -2545,7 +2546,7 @@
       },
       "delivery": {
         "q": "How long does delivery take?",
-        "a": "Standard cargo delivery is 2–3 business days. For urgent orders, contact us."
+        "a": "Standard cargo delivery is 2–3 business days. Delivery is 150 MKD for orders under 3000 MKD, and free from 3000 MKD. Store pickup in Shtip is free. For urgent orders, contact us."
       },
       "production": {
         "q": "Is there extra production time?",
@@ -2573,6 +2574,13 @@
     "quantity": "Qty",
     "remove": "Remove",
     "subtotal": "Subtotal",
+    "delivery": "Delivery",
+    "deliveryFree": "Free",
+    "freeDeliveryTitle": "Free cargo delivery",
+    "freeDeliveryBody": "This order is {threshold} or more — cargo delivery is free. Store pickup is always free.",
+    "addMoreForFreeDelivery": "Add {amount} more for free cargo delivery",
+    "deliveryFeeNote": "Cargo delivery is {fee} for orders under {threshold}.",
+    "pickupAlwaysFree": "Store pickup in Shtip is always free.",
     "total": "Total",
     "checkout": "Checkout",
     "zoomPreview": "View design preview",
@@ -2639,6 +2647,11 @@
     "fulfillmentPickup": "Store pickup",
     "fulfillmentPickupDesc": "Pick up your order at Print 8 in Shtip.",
     "fulfillmentPickupHint": "We will notify you when your order is ready for pickup at the store (Shtip).",
+    "delivery": "Delivery",
+    "deliveryFree": "Free",
+    "deliveryFreeThisOrder": "Free on this order",
+    "deliveryFeeThisOrder": "{fee} on this order",
+    "freeFromThreshold": "Free cargo delivery from {threshold}",
     "fullName": "Full name",
     "phone": "Phone",
     "email": "Email",
@@ -3044,13 +3057,13 @@
       },
       "receive": {
         "title": "Get your product",
-        "body": "We'll contact you to confirm. Cargo usually takes 2–3 business days. In Shtip you can pick up in store. Pay on delivery or pickup."
+        "body": "We'll contact you to confirm. Cargo usually takes 2–3 business days (150 MKD under 3000 MKD, free from 3000 MKD). In Shtip you can pick up in store for free. Pay on delivery or pickup."
       }
     },
     "tipsTitle": "Good to know",
     "tips": {
       "cod": "Payment is on delivery or pickup — no online card payment.",
-      "pickup": "For store pickup you don't need a delivery address.",
+      "pickup": "For store pickup you don't need a delivery address — and pickup is free.",
       "files": "For print services, upload PDF/JPG/PNG at checkout.",
       "help": "Stuck? Open Order status or contact us."
     },

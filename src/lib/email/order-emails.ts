@@ -632,6 +632,32 @@ function buildAdminMetaSection(
   </tr>`;
 }
 
+function buildShippingRow(
+  shippingAmount: number | undefined,
+  isMk: boolean,
+  locale: CheckoutInput["locale"],
+  isPickup: boolean,
+): string {
+  if (shippingAmount == null) return "";
+  const value =
+    shippingAmount > 0
+      ? formatPrice(shippingAmount, locale)
+      : isPickup
+        ? isMk
+          ? "Бесплатно (салон)"
+          : "Free (store pickup)"
+        : isMk
+          ? "Бесплатно"
+          : "Free";
+  return `<tr>
+    <td style="padding:8px 32px 0;">
+      ${detailTable([
+        detailRow(isMk ? "Испорака" : "Delivery", value),
+      ])}
+    </td>
+  </tr>`;
+}
+
 function buildTotalRow(total: string, isMk: boolean): string {
   const label = isMk ? "Вкупно за плаќање" : "Amount due";
   return `<tr>
@@ -760,6 +786,7 @@ async function buildOriginalUploadAttachments(
 export type OrderEmailExtras = {
   discountAmount?: number;
   subtotalAmount?: number;
+  shippingAmount?: number;
   couponCode?: string | null;
   rewardCoupon?: { code: string; amount: number; endsAt: string | null } | null;
   loyalty?: {
@@ -855,6 +882,12 @@ export async function sendOrderEmails(
       buildLoyaltySummaryHtml(extras.loyalty, data.locale),
       itemsHtml,
       ...discountRows,
+      buildShippingRow(
+        extras.shippingAmount,
+        isMk,
+        data.locale,
+        data.fulfillmentMethod === "pickup",
+      ),
       buildTotalRow(total, isMk),
     ].join(""),
     footerNote: isMk
@@ -906,6 +939,12 @@ export async function sendOrderEmails(
             designDetails: "Design preview",
           },
           previewEmbeds,
+        ),
+        buildShippingRow(
+          extras.shippingAmount,
+          false,
+          data.locale,
+          data.fulfillmentMethod === "pickup",
         ),
         buildTotalRow(total, false),
       ].join(""),

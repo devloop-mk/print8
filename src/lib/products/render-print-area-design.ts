@@ -49,6 +49,23 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
+function isSvgAssetSrc(src: string): boolean {
+  if (src.startsWith('data:image/svg')) return true;
+  const path = src.split('?')[0] ?? src;
+  return path.toLowerCase().endsWith('.svg');
+}
+
+/** SVG stays vector-rasterized; PNG stickers load as images. */
+export async function loadPrintOverlayImage(
+  src: string,
+  svgScale = 3,
+): Promise<HTMLImageElement> {
+  if (isSvgAssetSrc(src)) {
+    return rasterizeSvgSource(src, svgScale);
+  }
+  return loadImage(src);
+}
+
 export async function rasterizeSvgSource(
   src: string,
   scale: number,
@@ -408,8 +425,10 @@ export async function renderPrintAreaDesign(
     const definition = getStickerById(sticker.stickerId);
     if (!definition) continue;
     try {
-      const stickerImage = await rasterizeSvgSource(
-        resolveAssetUrl(definition.src) ?? definition.src,
+      const stickerImage = await loadPrintOverlayImage(
+        resolveCanvasAssetUrl(definition.src) ??
+          resolveAssetUrl(definition.src) ??
+          definition.src,
         3,
       );
       drawImageLayer(
@@ -630,8 +649,10 @@ export async function renderMockupPreview(
     const definition = getStickerById(sticker.stickerId);
     if (!definition) continue;
     try {
-      const stickerImage = await rasterizeSvgSource(
-        resolveAssetUrl(definition.src) ?? definition.src,
+      const stickerImage = await loadPrintOverlayImage(
+        resolveCanvasAssetUrl(definition.src) ??
+          resolveAssetUrl(definition.src) ??
+          definition.src,
         3,
       );
       drawImageLayerOnFullMockup(

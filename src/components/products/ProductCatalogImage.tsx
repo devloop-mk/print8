@@ -1,26 +1,67 @@
 'use client';
 
-import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import { Shirt } from 'lucide-react';
-import {
-  getProductGallerySlides,
-  type Product,
-  type ProductDesignTemplate,
-} from '@/lib/data/catalog';
+import { useTranslations } from 'next-intl';
+import { getProductGallerySlides, type Product } from '@/lib/data/catalog';
 import { MockupLoadingOverlay } from '@/components/products/MockupLoadingOverlay';
-import { DesignTemplatePreview } from '@/components/products/DesignTemplatePreview';
-import { useProductCatalogDesignTemplates } from '@/components/products/ProductCatalogDesignsProvider';
 import {
   getMockupImageDisplayStyle,
   getProductMockupLayout,
+  isCylindricalDrinkwareType,
 } from '@/lib/products/product-mockup-layout';
-import { isDualSidedDesign } from '@/lib/products/design-sides';
-import { pickProductCatalogPreviewDesign } from '@/lib/products/product-catalog-preview-design';
+import { isMugInsideProduct } from '@/lib/products/drinkware-product-options';
+import { isDarkShirtColor } from '@/lib/products/design-overlay';
+import { getPrintAreaCenter } from '@/lib/products/print-area';
 import { useStableImageSrc } from '@/hooks/useStableImageSrc';
 import { cn } from '@/lib/utils';
 
-function ProductPlainCatalogImage({
+function getYourDesignPlaceholderCenter(product: Product): {
+  x: number;
+  y: number;
+} {
+  if (isMugInsideProduct(product.id)) return { x: 50, y: 50 };
+  if (isCylindricalDrinkwareType(product.type)) return { x: 44, y: 48 };
+  return getPrintAreaCenter(getProductMockupLayout(product).printArea);
+}
+
+function YourDesignPlaceholderOverlay({
+  product,
+  color,
+}: {
+  product: Product;
+  color: string;
+}) {
+  const t = useTranslations('products.card');
+  const { x, y } = getYourDesignPlaceholderCenter(product);
+  const dark = isDarkShirtColor(color);
+
+  return (
+    <div
+      className="pointer-events-none absolute inset-0 z-[1]"
+      style={{ containerType: 'size' }}
+      aria-hidden
+    >
+      <span
+        className={cn(
+          'absolute max-w-[48%] whitespace-pre-line text-center font-extrabold uppercase leading-[1.08] tracking-[0.08em] [font-size:clamp(9px,4.6cqw,14px)]',
+          dark
+            ? 'text-white [text-shadow:0_1px_10px_rgba(0,0,0,0.7),0_0_3px_rgba(0,0,0,0.45)]'
+            : 'text-ink-900 [text-shadow:0_1px_10px_rgba(255,255,255,0.95),0_0_3px_rgba(255,255,255,0.8)]',
+        )}
+        style={{
+          left: `${x}%`,
+          top: `${y}%`,
+          transform: 'translate(-50%, -50%)',
+        }}
+      >
+        {t('yourDesignHere')}
+      </span>
+    </div>
+  );
+}
+
+export function ProductCatalogImage({
   product,
   color,
   typeLabel,
@@ -40,7 +81,7 @@ function ProductPlainCatalogImage({
     useStableImageSrc(secondary);
   const imageLoading = primaryLoading || secondaryLoading;
   const mockupLayout = getProductMockupLayout(product);
-  const alternateOnHover = showAlternateOnHover && stableSecondary;
+  const alternateOnHover = showAlternateOnHover && Boolean(stableSecondary);
 
   return (
     <div className="relative flex aspect-square w-full max-w-sm items-center justify-center rounded-2xl border border-ink-100 bg-white">
@@ -77,7 +118,7 @@ function ProductPlainCatalogImage({
             {alternateOnHover ? (
               <div className="absolute inset-0 opacity-0 transition-opacity duration-300 [@media(hover:hover)]:group-hover:opacity-100">
                 <Image
-                  src={stableSecondary}
+                  src={stableSecondary!}
                   alt={`${typeLabel} — alternate`}
                   fill
                   unoptimized
@@ -86,6 +127,7 @@ function ProductPlainCatalogImage({
                 />
               </div>
             ) : null}
+            <YourDesignPlaceholderOverlay product={product} color={color} />
           </div>
         </div>
       ) : (
@@ -93,131 +135,5 @@ function ProductPlainCatalogImage({
       )}
       <MockupLoadingOverlay show={imageLoading} />
     </div>
-  );
-}
-
-function ProductDesignCatalogPreview({
-  product,
-  color,
-  typeLabel,
-  previewDesign,
-}: {
-  product: Product;
-  color: string;
-  typeLabel: string;
-  previewDesign: ProductDesignTemplate;
-}) {
-  const dualSided = isDualSidedDesign(previewDesign);
-
-  return (
-    <div className="relative w-full max-w-sm">
-      <div
-        className={cn(
-          'transition-opacity duration-300',
-          dualSided && '[@media(hover:hover)]:group-hover:opacity-0',
-        )}
-      >
-        <DesignTemplatePreview
-          product={product}
-          color={color}
-          design={previewDesign}
-          typeLabel={typeLabel}
-          side="front"
-          allowDrinkware3d={false}
-          mockupVariant="catalog-card"
-        />
-      </div>
-      {dualSided ? (
-        <div
-          className="absolute inset-0 opacity-0 transition-opacity duration-300 [@media(hover:hover)]:group-hover:opacity-100"
-        >
-          <DesignTemplatePreview
-            product={product}
-            color={color}
-            design={previewDesign}
-            typeLabel={typeLabel}
-            side="back"
-            allowDrinkware3d={false}
-            mockupVariant="catalog-card"
-          />
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-export function ProductCatalogImage({
-  product,
-  color,
-  typeLabel,
-  designPreviewOnHover = false,
-}: {
-  product: Product;
-  color: string;
-  typeLabel: string;
-  /** Plain product photo by default; sample design only on hover (pointer devices). */
-  designPreviewOnHover?: boolean;
-}) {
-  const mergedTemplates = useProductCatalogDesignTemplates(product.id);
-  const previewDesign = useMemo(
-    () => pickProductCatalogPreviewDesign(product, mergedTemplates),
-    [mergedTemplates, product],
-  );
-  const [hoverPreviewActive, setHoverPreviewActive] = useState(false);
-
-  if (designPreviewOnHover && previewDesign) {
-    return (
-      <div
-        className="relative w-full max-w-sm"
-        onMouseEnter={() => setHoverPreviewActive(true)}
-        onMouseLeave={() => setHoverPreviewActive(false)}
-      >
-        <div
-          className={cn(
-            'transition-opacity duration-300',
-            hoverPreviewActive && 'opacity-0',
-          )}
-        >
-          <ProductPlainCatalogImage
-            product={product}
-            color={color}
-            typeLabel={typeLabel}
-            showAlternateOnHover={false}
-          />
-        </div>
-        {hoverPreviewActive ? (
-          <div className="absolute inset-0 opacity-100 transition-opacity duration-200">
-            <DesignTemplatePreview
-              product={product}
-              color={color}
-              design={previewDesign}
-              typeLabel={typeLabel}
-              side="front"
-              allowDrinkware3d={false}
-              mockupVariant="catalog-card"
-            />
-          </div>
-        ) : null}
-      </div>
-    );
-  }
-
-  if (previewDesign) {
-    return (
-      <ProductDesignCatalogPreview
-        product={product}
-        color={color}
-        typeLabel={typeLabel}
-        previewDesign={previewDesign}
-      />
-    );
-  }
-
-  return (
-    <ProductPlainCatalogImage
-      product={product}
-      color={color}
-      typeLabel={typeLabel}
-    />
   );
 }

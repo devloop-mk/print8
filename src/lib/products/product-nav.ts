@@ -35,6 +35,8 @@ export type ProductNavCategory = {
   types: ProductType[];
   /** Paths shown on the category landing chooser (defaults to all applicable). */
   chooserPaths?: Array<'custom' | 'photo' | 'template'>;
+  /** `products` skips the personalize/ready-designs chooser and lists SKUs. */
+  landing?: 'chooser' | 'products';
 };
 
 export type ProductNavQuickLink = {
@@ -50,7 +52,7 @@ export const productNavCategories: ProductNavCategory[] = [
     id: 'apparel',
     icon: Shirt,
     types: ['t-shirt', 'hoodie', 'bodysuit', 'cap'],
-    chooserPaths: ['custom', 'photo'],
+    landing: 'products',
   },
   {
     id: 'drinkware',
@@ -118,6 +120,12 @@ export function getProductNavCategory(
     throw new Error(`Unknown product category: ${categoryId}`);
   }
   return category;
+}
+
+export function categoryUsesProductGridLanding(
+  categoryId: ProductNavCategoryId,
+): boolean {
+  return getProductNavCategory(categoryId).landing === 'products';
 }
 
 export function getCategoryForProductType(

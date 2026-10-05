@@ -45,6 +45,8 @@ import {
 } from "@/lib/products/branding-pack-cart";
 import { buildDesignEditUrl } from "@/lib/cart/design-cart";
 import { CartDrinkwarePreview } from "@/components/cart/CartDrinkwarePreview";
+import { CartDeliveryNotice } from "@/components/cart/CartDeliveryNotice";
+import { getOrderDeliveryFeeMkd } from "@/lib/orders/delivery-pricing";
 import { isCylindricalDrinkwareType } from "@/lib/products/product-mockup-layout";
 import { isStudentPrintCartItem } from "@/lib/students/student-print-cart";
 import { StudentPrintCartDetails } from "@/components/students/StudentPrintCartDetails";
@@ -69,6 +71,10 @@ export function CartPageContent() {
   const locale = useLocale();
 
   const { items, removeItem, updateQuantity, updateItem, total, hydrated } = useCart();
+  const cargoDeliveryFee = getOrderDeliveryFeeMkd({
+    fulfillmentMethod: "cargo",
+    merchandiseSubtotalMkd: total,
+  });
 
   const assetLimits = validateOrderAssetLimits({
     items: items.map(
@@ -536,13 +542,30 @@ export function CartPageContent() {
 
           </div>
 
-          <div className="mt-2 flex justify-between border-t border-ink-200 pt-2">
+          <div className="mt-2 flex justify-between text-sm">
+            <span className="text-ink-500">{t("delivery")}</span>
+            <span
+              className={
+                cargoDeliveryFee === 0
+                  ? "font-semibold text-emerald-700"
+                  : "font-medium"
+              }
+            >
+              {cargoDeliveryFee === 0
+                ? t("deliveryFree")
+                : formatPrice(cargoDeliveryFee, locale)}
+            </span>
+          </div>
+
+          <CartDeliveryNotice subtotal={total} />
+
+          <div className="mt-3 flex justify-between border-t border-ink-200 pt-3">
 
             <span className="font-semibold text-ink-900">{t("total")}</span>
 
             <span className="text-lg font-bold text-brand-600">
 
-              {formatPrice(total, locale)}
+              {formatPrice(total + cargoDeliveryFee, locale)}
 
             </span>
 

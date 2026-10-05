@@ -9,7 +9,7 @@ import {
 import type { ProductType } from '@/lib/data/catalog';
 import type { PlacedTextLayer } from '@/lib/products/text-layers';
 import type { PrintAreaInsets } from '@/lib/products/print-area';
-import { rasterizeSvgSource } from '@/lib/products/render-print-area-design';
+import { loadPrintOverlayImage } from '@/lib/products/render-print-area-design';
 import {
   getStickerById,
   type PlacedSticker,
@@ -270,7 +270,7 @@ export async function buildDrinkwareWrapTexture(
       if (!definition) return null;
       try {
         const src = resolveCanvasAssetUrl(definition.src);
-        const img = await rasterizeSvgSource(src, 3);
+        const img = await loadPrintOverlayImage(src, 3);
         return { sticker, img };
       } catch {
         return null;

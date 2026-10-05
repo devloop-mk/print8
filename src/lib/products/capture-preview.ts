@@ -50,6 +50,7 @@ function needsRasterSubstitution(src: string): boolean {
   if (!src || src.startsWith('data:') || src.startsWith('blob:')) return false;
   if (isSvgSrc(src)) return false;
   if (src.includes('/_next/image')) return true;
+  if (src.includes('/stickers/')) return true;
   return /^https?:\/\//i.test(src);
 }
 

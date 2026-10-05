@@ -250,6 +250,8 @@ export const adminStrings = {
     details: 'Детали',
     payment: 'Плаќање',
     locale: 'Јазик',
+    delivery: 'Испорака',
+    deliveryFree: 'Бесплатно',
     total: 'Вкупно',
     advancedInfo: 'Напредни информации',
     printReadySvg: 'SVG за печатење',

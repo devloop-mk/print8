@@ -98,11 +98,29 @@ export default async function AdminOrderDetailPage({
               ))}
             </div>
 
-            <div className="mt-4 flex justify-between border-t border-ink-100 pt-4 text-sm">
-              <span className="font-medium text-ink-700">{t.total}</span>
-              <span className="text-lg font-semibold text-ink-900">
-                {formatPrice(order.totalAmount, order.locale)}
-              </span>
+            <div className="mt-4 space-y-2 border-t border-ink-100 pt-4 text-sm">
+              {order.shippingAmount != null ? (
+                <div className="flex justify-between gap-4">
+                  <span className="text-ink-600">{t.delivery}</span>
+                  <span
+                    className={
+                      order.shippingAmount > 0
+                        ? 'font-medium text-ink-900'
+                        : 'font-medium text-emerald-700'
+                    }
+                  >
+                    {order.shippingAmount > 0
+                      ? formatPrice(order.shippingAmount, order.locale)
+                      : t.deliveryFree}
+                  </span>
+                </div>
+              ) : null}
+              <div className="flex justify-between gap-4">
+                <span className="font-medium text-ink-700">{t.total}</span>
+                <span className="text-lg font-semibold text-ink-900">
+                  {formatPrice(order.totalAmount, order.locale)}
+                </span>
+              </div>
             </div>
           </Card>
 

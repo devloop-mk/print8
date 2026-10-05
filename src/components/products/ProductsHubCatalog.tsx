@@ -226,7 +226,6 @@ export function ProductsHubCatalog({
           <ProductCardGrid
             items={visibleProducts}
             linkTarget="detail"
-            designPreviewOnHover
           />
           <CatalogPagination
             page={page}

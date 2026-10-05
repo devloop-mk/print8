@@ -11,6 +11,7 @@ import {
 } from '@/lib/products/offering';
 import { getProductsForCategory } from '@/lib/products/product-nav-catalog';
 import {
+  categoryUsesProductGridLanding,
   isProductNavCategoryId,
   productNavCategoryIds,
 } from '@/lib/products/product-nav';
@@ -49,13 +50,14 @@ export default async function ProductCategoryPage({
     getProductDisplayOrderRecord(),
     getProductsForCategory(category),
   ]);
-  const showPremadeCatalog = categoryHasPremadeDesigns(offering);
-  const resolvedDisplayOrder = showPremadeCatalog ? undefined : displayOrder;
+  const showPathChooser =
+    !categoryUsesProductGridLanding(category) &&
+    categoryHasPremadeDesigns(offering);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <Suspense fallback={<SectionLoading />}>
-        {showPremadeCatalog ? (
+        {showPathChooser ? (
           <ProductCategoryPathChooser
             categoryId={category}
             offering={offering}
@@ -64,7 +66,7 @@ export default async function ProductCategoryPage({
           <ProductCategoryCatalog
             categoryId={category}
             variant="landing"
-            displayOrder={resolvedDisplayOrder}
+            displayOrder={displayOrder}
             categoryProducts={categoryProducts}
           />
         )}

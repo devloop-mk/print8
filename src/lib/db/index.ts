@@ -26,6 +26,7 @@ export interface OrderRecord {
   fileIdsJson: string | null;
   totalAmount: number;
   subtotalAmount?: number | null;
+  shippingAmount?: number | null;
   discountAmount?: number | null;
   couponCode?: string | null;
   customerId?: string | null;
@@ -121,6 +122,7 @@ type OrderRow = {
   file_ids: unknown;
   total_amount: number;
   subtotal_amount?: number | string | null;
+  shipping_amount?: number | string | null;
   discount_amount?: number | string | null;
   coupon_code?: string | null;
   customer_id?: string | null;
@@ -152,6 +154,8 @@ function mapOrderRow(row: OrderRow): OrderRecord {
     totalAmount: Number(row.total_amount),
     subtotalAmount:
       row.subtotal_amount == null ? null : Number(row.subtotal_amount),
+    shippingAmount:
+      row.shipping_amount == null ? null : Number(row.shipping_amount),
     discountAmount:
       row.discount_amount == null ? null : Number(row.discount_amount),
     couponCode: row.coupon_code ?? null,
@@ -264,6 +268,7 @@ export const db = {
       };
 
       if (value.subtotalAmount != null) payload.subtotal_amount = value.subtotalAmount;
+      if (value.shippingAmount != null) payload.shipping_amount = value.shippingAmount;
       if (value.discountAmount != null) payload.discount_amount = value.discountAmount;
       if (value.couponCode) payload.coupon_code = value.couponCode;
       if (value.customerId) payload.customer_id = value.customerId;
@@ -279,6 +284,15 @@ export const db = {
 
       const message = error.message.toLowerCase();
       // Migration not applied yet — strip newer columns and retry.
+      if (message.includes('shipping_amount')) {
+        const { shipping_amount: _ship, ...withoutShipping } = payload;
+        const retryShipping = await getSupabaseAdmin()
+          .from('orders')
+          .insert(withoutShipping);
+        if (!retryShipping.error) return;
+        throw new Error(retryShipping.error.message);
+      }
+
       if (
         message.includes('fulfillment_method') ||
         message.includes('coupon_code') ||
@@ -294,6 +308,7 @@ export const db = {
           coupon_code: _c,
           discount_amount: _d,
           subtotal_amount: _s,
+          shipping_amount: _ship,
           ...legacy
         } = payload;
         const retry = await getSupabaseAdmin().from('orders').insert(legacy);

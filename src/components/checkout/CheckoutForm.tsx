@@ -43,6 +43,10 @@ import {
   getCartItemDisplayName,
   getCartItemProduct,
 } from "@/lib/cart/product-cart";
+import {
+  FREE_DELIVERY_THRESHOLD_MKD,
+  getOrderDeliveryFeeMkd,
+} from "@/lib/orders/delivery-pricing";
 
 export function CheckoutForm() {
   const t = useTranslations("checkout");
@@ -92,7 +96,14 @@ export function CheckoutForm() {
     email: boolean;
   }>({ registered: false, google: false, email: false });
 
-  const payableTotal = Math.max(0, total - couponDiscount - pointsDiscount);
+  const payableMerchandise = Math.max(0, total - couponDiscount - pointsDiscount);
+  const cargoFee = getOrderDeliveryFeeMkd({
+    fulfillmentMethod: "cargo",
+    merchandiseSubtotalMkd: total,
+  });
+  const shippingAmount =
+    form.fulfillmentMethod === "pickup" ? 0 : cargoFee;
+  const payableTotal = payableMerchandise + shippingAmount;
   const isLoggedIn = Boolean(auth?.customer);
   const showReturningCustomerSignIn =
     !isLoggedIn && registeredEmailCheck.registered;
@@ -728,6 +739,31 @@ export function CheckoutForm() {
                 >
                   <p className="font-semibold text-ink-900">{option.title}</p>
                   <p className="mt-1 text-sm text-ink-600">{option.desc}</p>
+                  <p
+                    className={
+                      option.id === "cargo" && cargoFee === 0
+                        ? "mt-2 text-sm font-semibold text-emerald-700"
+                        : "mt-2 text-sm font-semibold text-ink-800"
+                    }
+                  >
+                    {option.id === "pickup"
+                      ? t("deliveryFree")
+                      : cargoFee === 0
+                        ? t("deliveryFreeThisOrder")
+                        : t("deliveryFeeThisOrder", {
+                            fee: formatPrice(cargoFee, locale),
+                          })}
+                  </p>
+                  {option.id === "cargo" ? (
+                    <p className="mt-0.5 text-xs text-ink-500">
+                      {t("freeFromThreshold", {
+                        threshold: formatPrice(
+                          FREE_DELIVERY_THRESHOLD_MKD,
+                          locale,
+                        ),
+                      })}
+                    </p>
+                  ) : null}
                 </button>
               );
             })}
@@ -897,6 +933,21 @@ export function CheckoutForm() {
               <span>−{formatPrice(pointsDiscount, locale)}</span>
             </div>
           ) : null}
+
+          <div className="mt-3 flex justify-between text-sm">
+            <span className="text-ink-600">{t("delivery")}</span>
+            <span
+              className={
+                shippingAmount === 0
+                  ? "font-semibold text-emerald-700"
+                  : "font-medium text-ink-800"
+              }
+            >
+              {shippingAmount === 0
+                ? t("deliveryFree")
+                : formatPrice(shippingAmount, locale)}
+            </span>
+          </div>
 
           <div className="mt-3 flex justify-between border-t border-ink-200 pt-3">
             <span className="font-semibold">{t("total")}</span>

@@ -32,6 +32,7 @@ import { customersDb } from '@/lib/db/customers';
 import { validatePointsRedemptionForCheckout } from '@/lib/loyalty/validate-redemption';
 import { redeemPointsForOrder, reservePendingPointsForOrder } from '@/lib/loyalty/order-loyalty';
 import { requireTurnstileOrReject } from '@/lib/security/turnstile';
+import { getOrderDeliveryFeeMkd } from '@/lib/orders/delivery-pricing';
 
 const MAX_ORDER_BODY_BYTES = 6_000_000;
 
@@ -200,7 +201,12 @@ export async function POST(request: NextRequest) {
     }
     pointsCharged = pointsValidation.redemption.pointsCharged;
     pointsDiscountAmount = pointsValidation.redemption.pointsDiscountAmount;
-    totalAmount = Math.max(0, subtotalAfterCoupon - pointsDiscountAmount);
+    const shippingAmount = getOrderDeliveryFeeMkd({
+      fulfillmentMethod: data.fulfillmentMethod,
+      merchandiseSubtotalMkd: subtotalAmount,
+    });
+    totalAmount =
+      Math.max(0, subtotalAfterCoupon - pointsDiscountAmount) + shippingAmount;
 
     const orderId = nanoid();
     const orderNumber = generateOrderNumber();
@@ -240,6 +246,7 @@ export async function POST(request: NextRequest) {
       fileIdsJson: data.fileIds ? JSON.stringify(data.fileIds) : null,
       totalAmount,
       subtotalAmount,
+      shippingAmount,
       discountAmount,
       couponCode: appliedCouponCode,
       customerId,
@@ -411,6 +418,7 @@ export async function POST(request: NextRequest) {
         await sendOrderEmails(orderNumber, orderPayload, totalAmount, {
           discountAmount,
           subtotalAmount,
+          shippingAmount,
           couponCode: appliedCouponCode,
           rewardCoupon,
           loyalty: loyaltyForEmail,
@@ -437,6 +445,7 @@ export async function POST(request: NextRequest) {
       totalAmount,
       discountAmount,
       subtotalAmount,
+      shippingAmount,
       pointsDiscountAmount,
       pointsRedeemed: pointsCharged,
       rewardCoupon,

@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "compress:images": "node scripts/compress-images.mjs",
     "build:flag-stickers": "node scripts/build-flag-stickers.mjs",
+    "build:print-stickers": "node scripts/build-print-stickers.mjs",
     "export:print-designs": "node scripts/export-print-designs.mjs",
     "export:print-variants": "node scripts/export-print-variants.mjs",
     "seed:catalog-designs": "node scripts/seed-catalog-designs.mjs",
