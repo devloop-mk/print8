@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Download, Rotate3d } from 'lucide-react';
 import {
   getCartDrinkwareSideDesign,
@@ -8,7 +8,6 @@ import {
   getCartItemProduct,
 } from '@/lib/cart/product-cart';
 import { DrinkwareDesignPreview3D } from '@/components/products/customizer/DrinkwareDesignPreview3D';
-import { LoadingIndicator } from '@/components/ui/LoadingIndicator';
 import { adminStrings } from '@/lib/admin/strings';
 import { isHeartHandleMug } from '@/lib/products/drinkware-product-options';
 import { getDrinkwareCaptureYaws } from '@/lib/products/drinkware-capture-yaws';
@@ -22,16 +21,72 @@ import { buildUploadedFileUrl } from '@/lib/upload/file-url';
 import type { OrderItem } from '@/lib/orders/order-item-previews';
 import type { Product } from '@/lib/data/catalog';
 import type { PrintAreaInsets } from '@/lib/products/print-area';
+import { SIDE_PREVIEW_CART_KEYS } from '@/lib/products/product-sides';
 
-function hydrateAdminSideDesignPhotos(sideDesign: SideDesign): SideDesign {
-  if (sideDesign.uploadedPhotos.length === 0) return sideDesign;
+function uploadTokenFromUrl(url?: string): string | undefined {
+  if (!url) return undefined;
+  try {
+    return (
+      new URL(url, 'http://local.invalid').searchParams.get('token') ?? undefined
+    );
+  } catch {
+    return undefined;
+  }
+}
+
+function isReusablePreviewUrl(url?: string): boolean {
+  if (!url) return false;
+  return !url.startsWith('blob:');
+}
+
+function tokenFromOrderMetadata(
+  metadata?: Record<string, string | number | boolean>,
+): string | undefined {
+  if (!metadata) return undefined;
+  for (const value of Object.values(metadata)) {
+    if (typeof value !== 'string') continue;
+    const token = uploadTokenFromUrl(value);
+    if (token) return token;
+  }
+  return undefined;
+}
+
+function hydrateAdminSideDesignPhotos(
+  sideDesign: SideDesign,
+  extraToken?: string,
+): SideDesign {
+  const token =
+    extraToken ||
+    uploadTokenFromUrl(sideDesign.uploadedFile?.previewUrl) ||
+    sideDesign.uploadedPhotos
+      .map((photo) => uploadTokenFromUrl(photo.previewUrl))
+      .find(Boolean);
+
   return {
     ...sideDesign,
     uploadedPhotos: sideDesign.uploadedPhotos.map((photo) => {
       const fileId = photo.fileId?.trim();
+      const existing = photo.previewUrl;
+      if (isReusablePreviewUrl(existing) && uploadTokenFromUrl(existing)) {
+        return photo;
+      }
+      if (fileId && token) {
+        return { ...photo, previewUrl: buildUploadedFileUrl(fileId, token) };
+      }
+      if (isReusablePreviewUrl(existing)) return photo;
       if (!fileId) return photo;
-      return { ...photo, previewUrl: buildUploadedFileUrl(fileId) };
+      return { ...photo, previewUrl: buildUploadedFileUrl(fileId, token) };
     }),
+    uploadedFile: sideDesign.uploadedFile
+      ? {
+          ...sideDesign.uploadedFile,
+          previewUrl: isReusablePreviewUrl(sideDesign.uploadedFile.previewUrl)
+            ? sideDesign.uploadedFile.previewUrl
+            : sideDesign.uploadedFile.fileId?.trim()
+              ? buildUploadedFileUrl(sideDesign.uploadedFile.fileId, token)
+              : sideDesign.uploadedFile.previewUrl,
+        }
+      : sideDesign.uploadedFile,
   };
 }
 
@@ -42,14 +97,17 @@ function downloadDataUrl(dataUrl: string, filename: string) {
   link.click();
 }
 
-function snapshotHostCanvas(host: HTMLElement | null): string {
-  const canvas = host?.querySelector('canvas');
-  if (!canvas) return '';
-  try {
-    return canvas.toDataURL('image/png');
-  } catch {
-    return '';
-  }
+function storedOrderStills(item: OrderItem): { src: string; label: string }[] {
+  return (
+    [
+      { src: item[SIDE_PREVIEW_CART_KEYS.front], label: 'Front' },
+      { src: item[SIDE_PREVIEW_CART_KEYS.left], label: 'Left' },
+      { src: item[SIDE_PREVIEW_CART_KEYS.right], label: 'Right' },
+    ] as { src: string | undefined; label: string }[]
+  ).filter(
+    (still): still is { src: string; label: string } =>
+      typeof still.src === 'string' && still.src.startsWith('data:'),
+  );
 }
 
 export type OrderDrinkwarePreviewModel = {
@@ -68,7 +126,10 @@ export function getOrderItemDrinkwarePreviewModel(
   if (!restored) return null;
   return {
     product,
-    sideDesign: hydrateAdminSideDesignPhotos(restored),
+    sideDesign: hydrateAdminSideDesignPhotos(
+      restored,
+      tokenFromOrderMetadata(item.metadata),
+    ),
     color: getCartItemColor(item) ?? product.colors?.[0] ?? '#ffffff',
     printBounds: getOverlayPrintBounds(getProductMockupLayout(product)),
   };
@@ -87,91 +148,22 @@ export function OrderItemDrinkware3DPreview({
 }) {
   const t = adminStrings.orderDetail;
   const model = useMemo(() => getOrderItemDrinkwarePreviewModel(item), [item]);
-  const yaws = useMemo(
-    () => (model ? getDrinkwareCaptureYaws(model.sideDesign) : null),
+  const previewYaw = useMemo(
+    () => (model ? getDrinkwareCaptureYaws(model.sideDesign).preview : 0),
     [model],
   );
-  const captureViews = useMemo(
-    () =>
-      yaws
-        ? [
-            { yaw: yaws.front, label: 'Front' },
-            { yaw: yaws.left, label: 'Left' },
-            { yaw: yaws.right, label: 'Right' },
-          ]
-        : [],
-    [yaws],
-  );
+  const stills = useMemo(() => storedOrderStills(item), [item]);
+  const [wrapSrc, setWrapSrc] = useState<string | null>(null);
 
-  const hostRef = useRef<HTMLDivElement>(null);
-  const startedRef = useRef(false);
-  const shotsRef = useRef<string[]>([]);
-  const [yawOffset, setYawOffset] = useState(0);
-  const [captureIndex, setCaptureIndex] = useState<number | null>(null);
-  const [stills, setStills] = useState<{ src: string; label: string }[] | null>(
-    null,
-  );
-
-  useEffect(() => {
-    if (yaws) setYawOffset(yaws.preview);
-  }, [yaws]);
-
-  useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      if (!startedRef.current) setStills([]);
-    }, 12000);
-    return () => window.clearTimeout(timeout);
+  const onWrapReady = useCallback((canvas: HTMLCanvasElement) => {
+    try {
+      setWrapSrc(canvas.toDataURL('image/png'));
+    } catch {
+      setWrapSrc(null);
+    }
   }, []);
 
-  const onReady = useCallback(() => {
-    if (startedRef.current || captureViews.length === 0) return;
-    startedRef.current = true;
-    shotsRef.current = [];
-    setYawOffset(captureViews[0]!.yaw);
-    setCaptureIndex(0);
-  }, [captureViews]);
-
-  useEffect(() => {
-    if (captureIndex === null || captureIndex < 0) return;
-    let cancelled = false;
-    let frames = 0;
-
-    const tick = () => {
-      if (cancelled) return;
-      frames += 1;
-      if (frames < 8) {
-        requestAnimationFrame(tick);
-        return;
-      }
-      shotsRef.current[captureIndex] = snapshotHostCanvas(hostRef.current);
-      const next = captureIndex + 1;
-      if (next < captureViews.length) {
-        setYawOffset(captureViews[next]!.yaw);
-        setCaptureIndex(next);
-        return;
-      }
-      setStills(
-        captureViews
-          .map((view, index) => ({
-            src: shotsRef.current[index] ?? '',
-            label: view.label,
-          }))
-          .filter((still) => still.src.startsWith('data:image')),
-      );
-      setYawOffset(yaws?.preview ?? 0);
-      setCaptureIndex(-1);
-    };
-
-    const raf = requestAnimationFrame(tick);
-    return () => {
-      cancelled = true;
-      cancelAnimationFrame(raf);
-    };
-  }, [captureIndex, captureViews, yaws?.preview]);
-
-  if (!model || !yaws) return null;
-
-  const capturing = captureIndex !== null && captureIndex >= 0;
+  if (!model) return null;
 
   return (
     <>
@@ -183,7 +175,6 @@ export function OrderItemDrinkware3DPreview({
           </p>
         </div>
         <div
-          ref={hostRef}
           className="relative mx-auto h-[20rem] w-full max-w-md overflow-hidden rounded-md border border-ink-100 bg-[#eef2f6] sm:h-[24rem]"
           data-admin-drinkware-3d="true"
         >
@@ -197,10 +188,9 @@ export function OrderItemDrinkware3DPreview({
             textLayers={model.sideDesign.textLayers}
             variant="pane"
             className="h-full w-full"
-            yawOffset={yawOffset}
-            preserveDrawingBuffer
+            yawOffset={previewYaw}
             orbitAutoRotate={false}
-            onReady={onReady}
+            onWrapReady={onWrapReady}
           />
         </div>
         <p className="mt-2 text-center text-[11px] font-medium text-ink-500">
@@ -213,11 +203,31 @@ export function OrderItemDrinkware3DPreview({
         ) : null}
       </div>
 
-      {capturing || stills === null ? (
-        <div className="mb-3 flex min-h-[8rem] items-center justify-center rounded-lg border border-white bg-white p-4 shadow-sm">
-          <LoadingIndicator label={t.preview3dStillsLoading} size="sm" />
+      {wrapSrc ? (
+        <div className="mb-3 rounded-lg border border-white bg-white p-2 shadow-sm">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <p className="text-xs font-medium uppercase tracking-wide text-ink-500">
+              {t.preview3dWrapTitle} — {t.previewMockupSuffix}
+            </p>
+            <button
+              type="button"
+              onClick={() => downloadDataUrl(wrapSrc, `${safeName}-wrap.png`)}
+              className="inline-flex items-center gap-1 rounded-md border border-ink-200 px-2 py-1 text-xs font-medium text-ink-700 transition hover:bg-ink-50"
+            >
+              <Download className="h-3.5 w-3.5" aria-hidden="true" />
+              {t.downloadPreview}
+            </button>
+          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={wrapSrc}
+            alt={t.preview3dWrapTitle}
+            className="max-h-40 w-full rounded border border-ink-100 bg-white object-contain"
+          />
         </div>
-      ) : stills.length > 0 ? (
+      ) : null}
+
+      {stills.length > 0 ? (
         <div className="grid gap-3 sm:grid-cols-2">
           {stills.map((still) => (
             <div
@@ -228,19 +238,21 @@ export function OrderItemDrinkware3DPreview({
                 <p className="text-xs font-medium uppercase tracking-wide text-ink-500">
                   {still.label} — {t.previewMockupSuffix}
                 </p>
-                <button
-                  type="button"
-                  onClick={() =>
-                    downloadDataUrl(
-                      still.src,
-                      `${safeName}-${still.label.toLowerCase()}.png`,
-                    )
-                  }
-                  className="inline-flex items-center gap-1 rounded-md border border-ink-200 px-2 py-1 text-xs font-medium text-ink-700 transition hover:bg-ink-50"
-                >
-                  <Download className="h-3.5 w-3.5" aria-hidden="true" />
-                  {t.downloadPreview}
-                </button>
+                {still.src.startsWith('data:') ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      downloadDataUrl(
+                        still.src,
+                        `${safeName}-${still.label.toLowerCase()}.png`,
+                      )
+                    }
+                    className="inline-flex items-center gap-1 rounded-md border border-ink-200 px-2 py-1 text-xs font-medium text-ink-700 transition hover:bg-ink-50"
+                  >
+                    <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                    {t.downloadPreview}
+                  </button>
+                ) : null}
               </div>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img

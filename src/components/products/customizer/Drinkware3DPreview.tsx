@@ -40,6 +40,8 @@ type Drinkware3DPreviewProps = {
   preserveDrawingBuffer?: boolean;
   orbitAutoRotate?: boolean;
   onReady?: () => void;
+  layersReady?: boolean;
+  onWrapReady?: (canvas: HTMLCanvasElement) => void;
 };
 
 export function Drinkware3DPreview({
@@ -58,6 +60,8 @@ export function Drinkware3DPreview({
   preserveDrawingBuffer,
   orbitAutoRotate,
   onReady,
+  layersReady = true,
+  onWrapReady,
 }: Drinkware3DPreviewProps) {
   const t = useTranslations('products.customizer');
   const [rotateActive, setRotateActive] = useState(false);
@@ -79,12 +83,14 @@ export function Drinkware3DPreview({
     textLayers,
     stickers,
     canvasHeightPx: canvasHeightPx ?? DRINKWARE_FLAT_CANVAS_HEIGHT_PX,
+    enabled: layersReady,
   });
 
   useEffect(() => {
-    if (loading || !textureCanvas) return;
+    if (!layersReady || loading || !textureCanvas) return;
     onReady?.();
-  }, [loading, textureCanvas, onReady]);
+    onWrapReady?.(textureCanvas);
+  }, [layersReady, loading, textureCanvas, onReady, onWrapReady]);
 
   return (
     <div

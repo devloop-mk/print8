@@ -19,6 +19,7 @@ export function useDrinkwareWrapTexture({
   textLayers,
   stickers,
   canvasHeightPx,
+  enabled = true,
 }: {
   productType: ProductType;
   productId?: string;
@@ -29,6 +30,8 @@ export function useDrinkwareWrapTexture({
   stickers?: PlacedSticker[];
   /** Measured flat-editor height so text px maps 1:1 into the wrap texture. */
   canvasHeightPx?: number;
+  /** When false, wait before baking the wrap (async overlay URL, etc.). */
+  enabled?: boolean;
 }) {
   const [textureCanvas, setTextureCanvas] = useState<HTMLCanvasElement | null>(
     null,
@@ -70,6 +73,12 @@ export function useDrinkwareWrapTexture({
 
   useEffect(() => {
     let cancelled = false;
+    if (!enabled) {
+      setLoading(true);
+      return () => {
+        cancelled = true;
+      };
+    }
     setLoading(true);
 
     void buildDrinkwareWrapTexture({
@@ -105,14 +114,15 @@ export function useDrinkwareWrapTexture({
     productType,
     productId,
     productColor,
-    printBounds,
+    printBounds.top,
+    printBounds.right,
+    printBounds.bottom,
+    printBounds.left,
     imageKey,
     textKey,
     stickerKey,
-    images,
-    textLayers,
-    stickers,
     canvasHeightPx,
+    enabled,
   ]);
 
   return { textureCanvas, loading };

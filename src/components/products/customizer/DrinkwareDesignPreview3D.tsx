@@ -30,6 +30,7 @@ export function DrinkwareDesignPreview3D({
   preserveDrawingBuffer,
   orbitAutoRotate,
   onReady,
+  onWrapReady,
 }: {
   productType: ProductType;
   productId?: string;
@@ -46,8 +47,9 @@ export function DrinkwareDesignPreview3D({
   preserveDrawingBuffer?: boolean;
   orbitAutoRotate?: boolean;
   onReady?: () => void;
+  onWrapReady?: (canvas: HTMLCanvasElement) => void;
 }) {
-  const { images } = useDrinkwareDesignImageLayers({
+  const { images, ready } = useDrinkwareDesignImageLayers({
     shirtColor,
     sideDesign,
     designTemplate,
@@ -70,6 +72,8 @@ export function DrinkwareDesignPreview3D({
       preserveDrawingBuffer={preserveDrawingBuffer}
       orbitAutoRotate={orbitAutoRotate}
       onReady={onReady}
+      layersReady={ready}
+      onWrapReady={onWrapReady}
     />
   );
 }

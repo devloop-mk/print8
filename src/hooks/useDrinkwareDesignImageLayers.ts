@@ -36,29 +36,56 @@ export function useDrinkwareDesignImageLayers({
   // settles the overlay layer would be missing from the captured texture.
   const ready = !sideDesign.overlaySvg || overlayAssetUrl !== null;
 
-  const placedPhotos = getPlacedPhotos(sideDesign);
-
   const images = useMemo((): DrinkwareImageLayer[] => {
     const layers: DrinkwareImageLayer[] = [];
+    const seen = new Set<string>();
+    const pushLayer = (
+      src: string | null | undefined,
+      scale: number,
+      position: { x: number; y: number },
+    ) => {
+      const trimmed = src?.trim();
+      if (!trimmed || seen.has(trimmed)) return;
+      seen.add(trimmed);
+      layers.push({ src: trimmed, scale, position });
+    };
+
     if (hasTemplateOverlay && overlayAssetUrl) {
-      layers.push({
-        src: overlayAssetUrl,
-        scale: sideDesign.uploadedImageScale,
-        position: sideDesign.uploadedImagePosition,
-      });
+      pushLayer(
+        overlayAssetUrl,
+        sideDesign.uploadedImageScale,
+        sideDesign.uploadedImagePosition,
+      );
+    } else if (sideDesign.premadeDesignImage) {
+      pushLayer(
+        sideDesign.premadeDesignImage,
+        sideDesign.uploadedImageScale,
+        sideDesign.uploadedImagePosition,
+      );
     }
+
+    const placedPhotos = getPlacedPhotos(sideDesign);
     for (const photo of placedPhotos) {
-      if (!photo.previewUrl) continue;
-      layers.push({
-        src: photo.previewUrl,
-        scale: photo.scale,
-        position: photo.position,
-      });
+      pushLayer(photo.previewUrl, photo.scale, photo.position);
     }
+
+    // Overlay-template composites (and some restored orders) stash art on
+    // uploadedFile with no fileId, so getPlacedPhotos skips them.
+    if (placedPhotos.length === 0) {
+      pushLayer(
+        sideDesign.uploadedFile?.previewUrl,
+        sideDesign.uploadedImageScale,
+        sideDesign.uploadedImagePosition,
+      );
+    }
+
     return layers;
   }, [
     hasTemplateOverlay,
     overlayAssetUrl,
+    sideDesign,
+    sideDesign.premadeDesignImage,
+    sideDesign.uploadedFile,
     sideDesign.uploadedPhotos,
     sideDesign.uploadedImageScale,
     sideDesign.uploadedImagePosition,

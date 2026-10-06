@@ -278,6 +278,7 @@ export const adminStrings = {
     preview3dHeartHandleNote:
       '3D прегледот ја покажува стандардна рачка; нарачката е шолја со срце-рачка.',
     preview3dStillsLoading: 'Се подготвуваат прегледи…',
+    preview3dWrapTitle: 'Печатен омот',
     itemPosition: 'Артикл {current} / {total}',
     downloadPreview: 'Преземи',
     downloadFrontSvg: 'Преземи предна страна (.svg)',
