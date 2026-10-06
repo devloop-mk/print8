@@ -101,7 +101,9 @@ export function isCustomizedCartItem(item: CartItem): boolean {
   );
 }
 
-export function getCartItemColor(item: CartItem): string | undefined {
+export type CartItemMetadataSource = Pick<CartItem, 'metadata'>;
+
+export function getCartItemColor(item: CartItemMetadataSource): string | undefined {
   const color = item.metadata?.color;
   return typeof color === "string" ? color : undefined;
 }
@@ -111,7 +113,7 @@ export function getCartItemSize(item: CartItem): string | undefined {
   return typeof size === "string" ? size : undefined;
 }
 
-export function getCartItemProduct(item: CartItem): Product | undefined {
+export function getCartItemProduct(item: CartItemMetadataSource): Product | undefined {
   const productId = item.metadata?.productId;
   if (typeof productId !== "string") return undefined;
   return getProductById(productId);
@@ -303,7 +305,7 @@ export function restoreSideDesignFromMetadata(
 }
 
 export function getCartDrinkwareSideDesign(
-  item: CartItem,
+  item: CartItemMetadataSource,
   product: Product,
 ): SideDesign | null {
   if (!item.metadata) return null;

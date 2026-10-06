@@ -289,6 +289,7 @@ export function buildPremadeDesignCartPayload({
       price: unitPrice,
       quantity,
       metadata,
+      designPreview: capturedPreview,
       leftDesignPreview: capturedSidePreviews.leftDesignPreview,
       rightDesignPreview: capturedSidePreviews.rightDesignPreview,
     };

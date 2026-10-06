@@ -586,6 +586,9 @@ export function Drinkware3DScene({
   idleAutoRotate = false,
   idleAutoRotateSpeed = 0.4,
   allowZoom,
+  yawOffset = 0,
+  preserveDrawingBuffer = false,
+  orbitAutoRotate,
 }: {
   productType: ProductType;
   productColor: string;
@@ -597,6 +600,10 @@ export function Drinkware3DScene({
   idleAutoRotate?: boolean;
   idleAutoRotateSpeed?: number;
   allowZoom?: boolean;
+  /** Extra Y rotation in radians so a wrap side can face the camera. */
+  yawOffset?: number;
+  preserveDrawingBuffer?: boolean;
+  orbitAutoRotate?: boolean;
 }) {
   const config = getDrinkware3DConfig(productType, productId);
 
@@ -607,7 +614,11 @@ export function Drinkware3DScene({
         position: config.cameraPosition ?? [0.65, 0.14, config.cameraZ],
         fov: 32,
       }}
-      gl={{ antialias: true, alpha: true }}
+      gl={{
+        antialias: true,
+        alpha: true,
+        preserveDrawingBuffer,
+      }}
       dpr={[1, 2]}
       style={{
         touchAction: interactive ? 'none' : 'pan-y',
@@ -621,14 +632,16 @@ export function Drinkware3DScene({
       <directionalLight position={[3.2, 4.5, 2.8]} intensity={1.2} />
       <directionalLight position={[-2.8, 1.8, -1.5]} intensity={0.38} />
       <directionalLight position={[0.2, 2.2, 4]} intensity={0.42} />
-      <IdleSpinGroup spin={idleAutoRotate} speed={idleAutoRotateSpeed}>
-        <DrinkwareBody
-          productType={productType}
-          productColor={productColor}
-          textureCanvas={textureCanvas}
-          productId={productId}
-        />
-      </IdleSpinGroup>
+      <group rotation={[0, yawOffset, 0]}>
+        <IdleSpinGroup spin={idleAutoRotate} speed={idleAutoRotateSpeed}>
+          <DrinkwareBody
+            productType={productType}
+            productId={productId}
+            productColor={productColor}
+            textureCanvas={textureCanvas}
+          />
+        </IdleSpinGroup>
+      </group>
       <OrbitControls
         enabled={interactive}
         enablePan={false}
@@ -639,7 +652,11 @@ export function Drinkware3DScene({
         maxDistance={4.2}
         minPolarAngle={Math.PI * 0.28}
         maxPolarAngle={Math.PI * 0.72}
-        autoRotate={interactive && Boolean(textureCanvas)}
+        autoRotate={
+          orbitAutoRotate !== undefined
+            ? orbitAutoRotate && Boolean(textureCanvas)
+            : interactive && Boolean(textureCanvas)
+        }
         autoRotateSpeed={0.65}
       />
     </Canvas>

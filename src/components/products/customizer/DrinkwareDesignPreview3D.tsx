@@ -25,6 +25,11 @@ export function DrinkwareDesignPreview3D({
   variant = 'floating',
   className,
   canvasHeightPx,
+  idleAutoRotate,
+  yawOffset,
+  preserveDrawingBuffer,
+  orbitAutoRotate,
+  onReady,
 }: {
   productType: ProductType;
   productId?: string;
@@ -36,6 +41,11 @@ export function DrinkwareDesignPreview3D({
   variant?: DrinkwarePreviewVariant;
   className?: string;
   canvasHeightPx?: number;
+  idleAutoRotate?: boolean;
+  yawOffset?: number;
+  preserveDrawingBuffer?: boolean;
+  orbitAutoRotate?: boolean;
+  onReady?: () => void;
 }) {
   const { images } = useDrinkwareDesignImageLayers({
     shirtColor,
@@ -55,6 +65,11 @@ export function DrinkwareDesignPreview3D({
       variant={variant}
       className={className}
       canvasHeightPx={canvasHeightPx}
+      idleAutoRotate={idleAutoRotate}
+      yawOffset={yawOffset}
+      preserveDrawingBuffer={preserveDrawingBuffer}
+      orbitAutoRotate={orbitAutoRotate}
+      onReady={onReady}
     />
   );
 }

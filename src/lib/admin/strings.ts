@@ -273,6 +273,11 @@ export const adminStrings = {
     textLayerSize: 'Големина',
     textLayerPosition: 'Позиција',
     designAssetsTitle: 'Дизајн за печатење',
+    preview3dTitle: '3D преглед',
+    preview3dHint: 'Повлечете за ротација · скрол за зум',
+    preview3dHeartHandleNote:
+      '3D прегледот ја покажува стандардна рачка; нарачката е шолја со срце-рачка.',
+    preview3dStillsLoading: 'Се подготвуваат прегледи…',
     itemPosition: 'Артикл {current} / {total}',
     downloadPreview: 'Преземи',
     downloadFrontSvg: 'Преземи предна страна (.svg)',

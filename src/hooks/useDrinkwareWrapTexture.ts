@@ -88,7 +88,10 @@ export function useDrinkwareWrapTexture({
           setLoading(false);
         }
       })
-      .catch(() => {
+      .catch((error) => {
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('Drinkware wrap texture failed', error);
+        }
         if (!cancelled) {
           setTextureCanvas(null);
           setLoading(false);

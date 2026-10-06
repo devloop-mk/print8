@@ -199,6 +199,9 @@ export function ProductDesignCatalogCard({
               leftDesignPreview: drinkware3D.left,
               rightDesignPreview: drinkware3D.right,
             };
+            if (drinkware3D.front) {
+              capturedPreview = drinkware3D.front;
+            }
           }
         }
       }

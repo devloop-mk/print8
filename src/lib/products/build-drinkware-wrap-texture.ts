@@ -41,14 +41,51 @@ export type BuildDrinkwareWrapTextureInput = {
   canvasHeightPx?: number;
 };
 
-function loadImage(src: string): Promise<HTMLImageElement> {
+function isUploadedFileUrl(src: string): boolean {
+  if (src.startsWith('/api/files/')) return true;
+  try {
+    return new URL(src, 'http://local.invalid').pathname.startsWith('/api/files/');
+  } catch {
+    return false;
+  }
+}
+
+function loadImageElement(
+  src: string,
+  useCors: boolean,
+): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    if (useCors) img.crossOrigin = 'anonymous';
     img.onload = () => resolve(img);
     img.onerror = () => reject(new Error(`Failed to load image: ${src}`));
     img.src = src;
   });
+}
+
+async function loadImage(src: string): Promise<HTMLImageElement> {
+  if (src.startsWith('blob:') || src.startsWith('data:')) {
+    return loadImageElement(src, false);
+  }
+
+  // Admin session (and upload-token query) files are same-origin and
+  // cookie/token gated. `crossOrigin="anonymous"` omits cookies and the
+  // files API has no CORS headers, so the wrap would come out blank.
+  if (isUploadedFileUrl(src)) {
+    const response = await fetch(src, { credentials: 'include' });
+    if (!response.ok) {
+      throw new Error(`Failed to load image: ${src}`);
+    }
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const img = await loadImageElement(objectUrl, false);
+    // Keep the object URL until after wrap drawImage; revoking in onload
+    // makes Chromium draw a blank image.
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+    return img;
+  }
+
+  return loadImageElement(src, true);
 }
 
 /**
@@ -213,11 +250,25 @@ export async function buildDrinkwareWrapTexture(
     );
   }
 
-  const loadedImages = await Promise.all(
-    (input.images ?? []).map(async (layer) => ({
-      layer,
-      img: await loadImage(resolveCanvasAssetUrl(layer.src)),
-    })),
+  const loadedImages = (
+    await Promise.all(
+      (input.images ?? []).map(async (layer) => {
+        try {
+          return {
+            layer,
+            img: await loadImage(resolveCanvasAssetUrl(layer.src)),
+          };
+        } catch (error) {
+          if (typeof window !== 'undefined') {
+            console.warn('Drinkware wrap image skipped', layer.src, error);
+          }
+          return null;
+        }
+      }),
+    )
+  ).filter(
+    (entry): entry is { layer: DrinkwareImageLayer; img: HTMLImageElement } =>
+      entry !== null,
   );
 
   for (const { layer, img } of loadedImages) {

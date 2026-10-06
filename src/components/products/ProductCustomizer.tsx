@@ -2328,9 +2328,8 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
 
     try {
       if (isDrinkware) {
-        // Drinkware cart thumbnails show two 3D profile snapshots (left +
-        // right, ±90° Y from front) instead of the flat unwrap — closer to
-        // what the buyer will actually receive.
+        // Drinkware cart thumbnails show 3D stills (front + left/right aimed
+        // at wrap art) instead of the flat unwrap or a blank product photo.
         const drinkware3D = await captureDrinkware3DPreviews({
           productType: type,
           productId: product?.id,
@@ -2342,6 +2341,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
           printBounds: overlayPrintBounds ?? effectivePrintAreaInsets,
         });
         if (drinkware3D) {
+          captured.front = drinkware3D.front;
           captured.left = drinkware3D.left;
           captured.right = drinkware3D.right;
         } else {
@@ -2363,11 +2363,17 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     }
 
     // If html2canvas fails, still show the garment mockup in the cart.
+    // Drinkware 3D stills must not fall back to the blank product photo —
+    // that made admin FRONT look like an empty mug.
     if (product) {
-      for (const side of cartSides) {
-        if (captured[side]) continue;
-        const mockup = getProductMockup(product, color, side);
-        if (mockup) captured[side] = mockup;
+      const skipMockupFallback =
+        isDrinkware && Boolean(captured.front || captured.left || captured.right);
+      if (!skipMockupFallback) {
+        for (const side of cartSides) {
+          if (captured[side]) continue;
+          const mockup = getProductMockup(product, color, side);
+          if (mockup) captured[side] = mockup;
+        }
       }
     }
 

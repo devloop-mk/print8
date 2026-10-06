@@ -35,6 +35,11 @@ type Drinkware3DPreviewProps = {
   className?: string;
   /** Flat editor canvas height — keeps text scale matched in the wrap texture. */
   canvasHeightPx?: number;
+  idleAutoRotate?: boolean;
+  yawOffset?: number;
+  preserveDrawingBuffer?: boolean;
+  orbitAutoRotate?: boolean;
+  onReady?: () => void;
 };
 
 export function Drinkware3DPreview({
@@ -48,6 +53,11 @@ export function Drinkware3DPreview({
   variant = 'floating',
   className,
   canvasHeightPx,
+  idleAutoRotate,
+  yawOffset,
+  preserveDrawingBuffer,
+  orbitAutoRotate,
+  onReady,
 }: Drinkware3DPreviewProps) {
   const t = useTranslations('products.customizer');
   const [rotateActive, setRotateActive] = useState(false);
@@ -70,6 +80,11 @@ export function Drinkware3DPreview({
     stickers,
     canvasHeightPx: canvasHeightPx ?? DRINKWARE_FLAT_CANVAS_HEIGHT_PX,
   });
+
+  useEffect(() => {
+    if (loading || !textureCanvas) return;
+    onReady?.();
+  }, [loading, textureCanvas, onReady]);
 
   return (
     <div
@@ -104,12 +119,16 @@ export function Drinkware3DPreview({
         textureCanvas={textureCanvas}
         interactive={interactive}
         idleAutoRotate={
-          isCatalog
+          idleAutoRotate ??
+          (isCatalog
             ? Boolean(textureCanvas)
-            : isStacked && !rotateActive && Boolean(textureCanvas)
+            : isStacked && !rotateActive && Boolean(textureCanvas))
         }
         idleAutoRotateSpeed={isCatalog ? 0.7 : 0.4}
         allowZoom={isCart ? false : undefined}
+        yawOffset={yawOffset}
+        preserveDrawingBuffer={preserveDrawingBuffer}
+        orbitAutoRotate={orbitAutoRotate}
       />
       {isStacked ? (
         <>

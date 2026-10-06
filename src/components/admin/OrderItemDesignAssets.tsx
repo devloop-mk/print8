@@ -10,6 +10,10 @@ import {
   type OrderItem,
 } from '@/lib/orders/order-item-previews';
 import { adminStrings } from '@/lib/admin/strings';
+import {
+  hasOrderItemDrinkware3DPreview,
+  OrderItemDrinkware3DPreview,
+} from '@/components/admin/OrderItemDrinkware3DPreview';
 
 function downloadDataUrl(dataUrl: string, filename: string) {
   const link = document.createElement('a');
@@ -32,7 +36,11 @@ export function OrderItemDesignAssets({
   premadeMasters?: PremadeMasterAssetRef[];
 }) {
   const t = adminStrings.orderDetail;
-  const previews = getOrderItemPreviewImages(item);
+  const showDrinkware3d = hasOrderItemDrinkware3DPreview(item);
+  const previews = getOrderItemPreviewImages(item).filter((preview) => {
+    if (!showDrinkware3d) return true;
+    return !['Front', 'Left', 'Right', 'Back'].includes(preview.label);
+  });
   const svgFiles = item.metadata
     ? listSvgPrintFileRefsFromMetadata(item.metadata, item.name)
     : [];
@@ -43,7 +51,8 @@ export function OrderItemDesignAssets({
     previews.length === 0 &&
     svgFiles.length === 0 &&
     pngFiles.length === 0 &&
-    premadeMasters.length === 0
+    premadeMasters.length === 0 &&
+    !showDrinkware3d
   ) {
     return null;
   }
@@ -61,8 +70,12 @@ export function OrderItemDesignAssets({
         ) : null}
       </div>
 
+      {showDrinkware3d ? (
+        <OrderItemDrinkware3DPreview item={item} safeName={safeName} />
+      ) : null}
+
       {previews.length > 0 ? (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className={showDrinkware3d ? 'mt-3 grid gap-3 sm:grid-cols-2' : 'grid gap-3 sm:grid-cols-2'}>
           {previews.map((preview) => (
             <div
               key={`${preview.label}-${preview.src.slice(0, 32)}`}
@@ -100,7 +113,7 @@ export function OrderItemDesignAssets({
       ) : null}
 
       {pngFiles.length > 0 ? (
-        <div className={previews.length > 0 ? 'mt-4 border-t border-brand-200/80 pt-4' : ''}>
+        <div className={previews.length > 0 || showDrinkware3d ? 'mt-4 border-t border-brand-200/80 pt-4' : ''}>
           <p className="text-xs font-medium text-brand-800">{t.printReadyPngHint}</p>
           <div className="mt-2 grid gap-3 sm:grid-cols-2">
             {pngFiles.map((file) => (
@@ -172,7 +185,7 @@ export function OrderItemDesignAssets({
       {premadeMasters.length > 0 ? (
         <div
           className={
-            previews.length > 0 || pngFiles.length > 0
+            previews.length > 0 || pngFiles.length > 0 || showDrinkware3d
               ? 'mt-4 border-t border-brand-200/80 pt-4'
               : ''
           }
@@ -224,7 +237,10 @@ export function OrderItemDesignAssets({
       {svgFiles.length > 0 ? (
         <div
           className={
-            previews.length > 0 || pngFiles.length > 0 || premadeMasters.length > 0
+            previews.length > 0 ||
+            pngFiles.length > 0 ||
+            premadeMasters.length > 0 ||
+            showDrinkware3d
               ? 'mt-4 border-t border-brand-200/80 pt-4'
               : ''
           }

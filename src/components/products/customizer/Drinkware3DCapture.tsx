@@ -8,6 +8,10 @@ import type { SideDesign } from '@/lib/products/design-state';
 import type { PlacedTextLayer } from '@/lib/products/text-layers';
 import type { PrintAreaInsets } from '@/lib/products/print-area';
 import { getDrinkwareCaptureCamera } from '@/lib/products/drinkware-3d-config';
+import {
+  getDrinkwareCaptureYaws,
+  type DrinkwareCaptureYaws,
+} from '@/lib/products/drinkware-capture-yaws';
 import { buildDrinkwareWrapTexture } from '@/lib/products/build-drinkware-wrap-texture';
 import { useDrinkwareDesignImageLayers } from '@/hooks/useDrinkwareDesignImageLayers';
 import { DrinkwareBody } from '@/components/products/customizer/Drinkware3DScene';
@@ -18,8 +22,8 @@ import { DrinkwareBody } from '@/components/products/customizer/Drinkware3DScene
  * The interactive customizer scene (`Drinkware3DScene`) uses OrbitControls
  * with auto-rotate, so it can't be reused directly to grab two deterministic
  * left / right profile stills. This module mounts a small, non-interactive copy
- * of the same mesh into a detached (invisible) React root, renders it twice
- * — once yawed ~40° left and once ~40° right from the design-facing front —
+ * of the same mesh into a detached (invisible) React root, renders front +
+ * left + right stills (yaws follow wrap art so side prints face the camera),
  * captures each frame via
  * `gl.domElement.toDataURL()`, then unmounts and disposes the WebGL context.
  * Nothing here touches the visible customizer, so the live preview never
@@ -27,16 +31,13 @@ import { DrinkwareBody } from '@/components/products/customizer/Drinkware3DScene
  */
 
 const CAPTURE_PX = 640;
-const CAPTURE_TIMEOUT_MS = 6000;
+const CAPTURE_TIMEOUT_MS = 12000;
 /** RAFs to wait after a rotation change before reading pixels back. */
 const SETTLE_FRAMES = 2;
 
-type CaptureResult = { left: string; right: string } | null;
+type CaptureResult = { front: string; left: string; right: string } | null;
 
-/** 3/4 left — keeps wrap/spot art readable (true −90° profiles hide the text). */
-const LEFT_VIEW_ROTATION_Y = -Math.PI / 4.4;
-/** 3/4 right — opposite wrap half, still facing the camera enough to read. */
-const RIGHT_VIEW_ROTATION_Y = Math.PI / 4.4;
+const VIEW_ORDER = ['left', 'front', 'right'] as const;
 
 function CaptureCameraAim() {
   const { camera } = useThree();
@@ -49,9 +50,11 @@ function CaptureCameraAim() {
 
 function CaptureRig({
   rotationY,
+  shotKey,
   onCapture,
 }: {
   rotationY: number;
+  shotKey: number;
   onCapture: (dataUrl: string) => void;
 }) {
   const { gl, scene, camera } = useThree();
@@ -79,8 +82,8 @@ function CaptureRig({
 
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-run only when the rotation stage changes
-  }, [rotationY]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-run when the staged still changes
+  }, [rotationY, shotKey]);
 
   return null;
 }
@@ -91,6 +94,7 @@ function CaptureScene({
   productColor,
   textureCanvas,
   rotationY,
+  shotKey,
   onCapture,
 }: {
   productType: ProductType;
@@ -98,6 +102,7 @@ function CaptureScene({
   productColor: string;
   textureCanvas: HTMLCanvasElement;
   rotationY: number;
+  shotKey: number;
   onCapture: (dataUrl: string) => void;
 }) {
   const captureCamera = getDrinkwareCaptureCamera(productType, productId);
@@ -128,7 +133,7 @@ function CaptureScene({
           textureCanvas={textureCanvas}
         />
       </group>
-      <CaptureRig rotationY={rotationY} onCapture={onCapture} />
+      <CaptureRig rotationY={rotationY} shotKey={shotKey} onCapture={onCapture} />
     </Canvas>
   );
 }
@@ -164,6 +169,7 @@ function DrinkwareFrontCaptureRunner({
       productColor={productColor}
       textureCanvas={textureCanvas}
       rotationY={0}
+      shotKey={0}
       onCapture={handleCapture}
     />
   );
@@ -174,28 +180,41 @@ function DrinkwareCaptureRunner({
   productId,
   productColor,
   textureCanvas,
+  yaws,
   onDone,
 }: {
   productType: ProductType;
   productId?: string;
   productColor: string;
   textureCanvas: HTMLCanvasElement;
+  yaws: DrinkwareCaptureYaws;
   onDone: (result: CaptureResult) => void;
 }) {
-  const [rotationY, setRotationY] = useState(LEFT_VIEW_ROTATION_Y);
-  const leftRef = useRef<string | null>(null);
+  const [shotIndex, setShotIndex] = useState(0);
+  const shotsRef = useRef<Partial<Record<(typeof VIEW_ORDER)[number], string>>>(
+    {},
+  );
+  const stageRef = useRef(0);
   const doneRef = useRef(false);
+  const rotationSequence = [yaws.left, yaws.front, yaws.right];
 
   const handleCapture = useCallback(
     (dataUrl: string) => {
       if (doneRef.current) return;
-      if (leftRef.current === null) {
-        leftRef.current = dataUrl;
-        setRotationY(RIGHT_VIEW_ROTATION_Y);
+      const stage = stageRef.current;
+      const view = VIEW_ORDER[stage];
+      if (view) shotsRef.current[view] = dataUrl;
+      if (stage < VIEW_ORDER.length - 1) {
+        stageRef.current = stage + 1;
+        setShotIndex(stage + 1);
         return;
       }
       doneRef.current = true;
-      onDone({ left: leftRef.current, right: dataUrl });
+      onDone({
+        front: shotsRef.current.front ?? '',
+        left: shotsRef.current.left ?? '',
+        right: shotsRef.current.right ?? dataUrl,
+      });
     },
     [onDone],
   );
@@ -206,7 +225,8 @@ function DrinkwareCaptureRunner({
       productId={productId}
       productColor={productColor}
       textureCanvas={textureCanvas}
-      rotationY={rotationY}
+      rotationY={rotationSequence[shotIndex] ?? 0}
+      shotKey={shotIndex}
       onCapture={handleCapture}
     />
   );
@@ -301,6 +321,7 @@ function DrinkwareCaptureBootstrap({
       productId={productId}
       productColor={productColor}
       textureCanvas={textureCanvas}
+      yaws={getDrinkwareCaptureYaws(sideDesign)}
       onDone={onDone}
     />
   );
@@ -490,8 +511,8 @@ export async function captureDrinkware3DFrontPreview(
 }
 
 /**
- * Captures two 3D snapshots of a customized mug/cup/thermos design — 3/4
- * left and 3/4 right — for use as cart line-item thumbnails. Returns `null`
+ * Captures three 3D snapshots of a customized mug/cup/thermos — front plus
+ * left/right aimed at wrap art — for cart and admin stills. Returns `null`
  * on failure/timeout so callers can fall back to the existing flat-preview
  * capture.
  */
