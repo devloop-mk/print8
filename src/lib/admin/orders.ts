@@ -5,7 +5,11 @@ import {
 } from '@/lib/db';
 import type { CheckoutInput } from '@/lib/validations/order';
 import { collectOrderFileIds } from '@/lib/orders/order-assets';
-import { syncExclusiveDesignsForOrderStatus } from '@/lib/designs/design-reservations';
+import { catalogDesignsDb } from '@/lib/db/catalog-designs';
+import {
+  getExclusiveDesignsInOrder,
+  syncExclusiveDesignsForOrderStatus,
+} from '@/lib/designs/design-reservations';
 import { handleOrderLoyaltyStatusChange } from '@/lib/loyalty/order-loyalty';
 
 export { collectOrderFileIds };
@@ -103,6 +107,45 @@ export async function updateAdminOrderStatus(id: string, status: OrderStatus) {
     existing.items,
   );
   return { updated, availabilityChanged };
+}
+
+export async function deleteAdminOrder(id: string) {
+  const existing = await getAdminOrder(id);
+  if (!existing) {
+    throw new Error('Order not found');
+  }
+
+  if (existing.status !== 'cancelled') {
+    await handleOrderLoyaltyStatusChange(existing.status, 'cancelled', {
+      id: existing.id,
+      status: existing.status,
+      customerId: existing.customerId ?? null,
+      totalAmount: existing.totalAmount,
+      pointsRedeemed: existing.pointsRedeemed ?? 0,
+      pointsDiscountAmount: existing.pointsDiscountAmount ?? 0,
+      pointsEarned: existing.pointsEarned ?? null,
+      pointsAwardedAt: existing.pointsAwardedAt ?? null,
+      pointsFirstOrderBonus: existing.pointsFirstOrderBonus ?? 0,
+    });
+  }
+
+  const { availabilityChanged: releasedReservation } =
+    await syncExclusiveDesignsForOrderStatus(id, 'cancelled', existing.items);
+
+  const exclusive = await getExclusiveDesignsInOrder(existing.items);
+  let releasedSold = false;
+  for (const record of exclusive) {
+    if (record.soldOrderId === id) {
+      const updated = await catalogDesignsDb.releaseSold(record.id, id);
+      if (updated) releasedSold = true;
+    }
+  }
+
+  await db.orders.delete(id);
+
+  return {
+    availabilityChanged: releasedReservation || releasedSold,
+  };
 }
 
 export async function getAdminMetrics(): Promise<AdminMetrics> {

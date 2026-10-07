@@ -10,7 +10,7 @@ import {
 import { DrinkwareDesignPreview3D } from '@/components/products/customizer/DrinkwareDesignPreview3D';
 import { adminStrings } from '@/lib/admin/strings';
 import { isHeartHandleMug } from '@/lib/products/drinkware-product-options';
-import { getDrinkwareCaptureYaws } from '@/lib/products/drinkware-capture-yaws';
+import { getDrinkwareArtFacingYaw } from '@/lib/products/drinkware-capture-yaws';
 import {
   getOverlayPrintBounds,
   getProductMockupLayout,
@@ -149,7 +149,7 @@ export function OrderItemDrinkware3DPreview({
   const t = adminStrings.orderDetail;
   const model = useMemo(() => getOrderItemDrinkwarePreviewModel(item), [item]);
   const previewYaw = useMemo(
-    () => (model ? getDrinkwareCaptureYaws(model.sideDesign).preview : 0),
+    () => (model ? getDrinkwareArtFacingYaw(model.sideDesign) : 0),
     [model],
   );
   const stills = useMemo(() => storedOrderStills(item), [item]);
@@ -189,7 +189,7 @@ export function OrderItemDrinkware3DPreview({
             variant="pane"
             className="h-full w-full"
             yawOffset={previewYaw}
-            orbitAutoRotate={false}
+            orbitAutoRotate
             onWrapReady={onWrapReady}
           />
         </div>

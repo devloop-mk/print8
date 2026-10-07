@@ -336,4 +336,22 @@ export const catalogDesignsDb = {
     if (error) throw new Error(error.message);
     return data ? mapCatalogDesign(data as CatalogDesignRow) : null;
   },
+
+  async releaseSold(designId: string, orderId: string) {
+    const { data, error } = await getSupabaseAdmin()
+      .from('catalog_designs')
+      .update({
+        availability: 'available',
+        sold_order_id: null,
+        reserved_order_id: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', designId)
+      .eq('sold_order_id', orderId)
+      .select('*')
+      .maybeSingle();
+
+    if (error) throw new Error(error.message);
+    return data ? mapCatalogDesign(data as CatalogDesignRow) : null;
+  },
 };

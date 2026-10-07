@@ -9,6 +9,7 @@ import { ORDER_STATUS_LABELS } from '@/lib/admin/orders';
 import { adminStrings, formatAdminDate } from '@/lib/admin/strings';
 import { formatPrice } from '@/lib/utils';
 import { OrderStatusBadge } from '@/components/admin/OrderStatusBadge';
+import { OrderDeleteButton } from '@/components/admin/OrderDeleteButton';
 import { Button } from '@/components/ui/Button';
 import { LoadingIndicator } from '@/components/ui/LoadingIndicator';
 
@@ -136,28 +137,37 @@ export function OrdersTable({ orders }: { orders: OrderListItem[] }) {
         <>
           <div className="space-y-3 md:hidden">
             {orders.map((order) => (
-              <Link
+              <div
                 key={order.id}
-                href={`/admin/orders/${order.id}`}
-                className="block rounded-xl border border-ink-200 bg-white p-4 active:bg-ink-50"
+                className="rounded-xl border border-ink-200 bg-white p-4"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
+                  <Link href={`/admin/orders/${order.id}`} className="min-w-0">
                     <p className="font-semibold text-brand-700">{order.orderNumber}</p>
                     <p className="mt-0.5 truncate text-sm text-ink-900">{order.customerName}</p>
                     <p className="text-xs text-ink-500">{order.customerPhone}</p>
+                  </Link>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <OrderStatusBadge status={order.status} />
+                    <OrderDeleteButton
+                      orderId={order.id}
+                      orderNumber={order.orderNumber}
+                      variant="icon"
+                    />
                   </div>
-                  <OrderStatusBadge status={order.status} />
                 </div>
-                <div className="mt-3 flex items-center justify-between border-t border-ink-100 pt-3 text-sm">
+                <Link
+                  href={`/admin/orders/${order.id}`}
+                  className="mt-3 flex items-center justify-between border-t border-ink-100 pt-3 text-sm"
+                >
                   <span className="text-ink-500">
                     {t.itemCount(order.items.length)} · {formatAdminDate(order.createdAt)}
                   </span>
                   <span className="font-semibold text-ink-900">
                     {formatPrice(order.totalAmount, 'mk')}
                   </span>
-                </div>
-              </Link>
+                </Link>
+              </div>
             ))}
           </div>
 
@@ -172,6 +182,7 @@ export function OrdersTable({ orders }: { orders: OrderListItem[] }) {
                     <th className="px-4 py-3 text-left font-medium text-ink-600">{t.total}</th>
                     <th className="px-4 py-3 text-left font-medium text-ink-600">{t.status}</th>
                     <th className="px-4 py-3 text-left font-medium text-ink-600">{t.date}</th>
+                    <th className="px-4 py-3 text-right font-medium text-ink-600">{t.actions}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-ink-100">
@@ -204,6 +215,13 @@ export function OrdersTable({ orders }: { orders: OrderListItem[] }) {
                       </td>
                       <td className="px-4 py-3 text-ink-600 whitespace-nowrap">
                         {formatAdminDate(order.createdAt)}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <OrderDeleteButton
+                          orderId={order.id}
+                          orderNumber={order.orderNumber}
+                          variant="icon"
+                        />
                       </td>
                     </tr>
                   ))}

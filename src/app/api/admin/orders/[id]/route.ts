@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAdminApi } from '@/lib/admin/api-auth';
-import { getAdminOrder, updateAdminOrderStatus } from '@/lib/admin/orders';
+import { getAdminOrder, updateAdminOrderStatus, deleteAdminOrder } from '@/lib/admin/orders';
 import { revalidateDesignCatalogCache } from '@/lib/catalog/revalidate-design-catalog';
 import type { OrderStatus } from '@/lib/db';
 
@@ -14,6 +14,15 @@ const statusSchema = z.object({
     'delivered',
     'cancelled',
   ]),
+});
+
+const deleteSchema = z.object({
+  confirm: z
+    .string()
+    .trim()
+    .refine((value) => value.toLowerCase() === 'delete', {
+      message: 'Type delete to confirm',
+    }),
 });
 
 export async function GET(
@@ -65,5 +74,40 @@ export async function PATCH(
     return NextResponse.json({ order });
   } catch {
     return NextResponse.json({ error: 'Failed to update order' }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { error } = await requireAdminApi(request);
+  if (error) return error;
+
+  const { id } = await params;
+
+  try {
+    const body = await request.json().catch(() => null);
+    const parsed = deleteSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Type delete to confirm' },
+        { status: 400 },
+      );
+    }
+
+    const existing = await getAdminOrder(id);
+    if (!existing) {
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    }
+
+    const { availabilityChanged } = await deleteAdminOrder(id);
+    if (availabilityChanged) {
+      revalidateDesignCatalogCache();
+    }
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error('[admin/orders] delete failed', err);
+    return NextResponse.json({ error: 'Failed to delete order' }, { status: 500 });
   }
 }

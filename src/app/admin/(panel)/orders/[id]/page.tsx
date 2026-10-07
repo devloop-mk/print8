@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { OrderStatusBadge } from '@/components/admin/OrderStatusBadge';
 import { OrderStatusUpdater } from '@/components/admin/OrderStatusUpdater';
+import { OrderDeleteButton } from '@/components/admin/OrderDeleteButton';
 import { OrderItemDesignAssets } from '@/components/admin/OrderItemDesignAssets';
 import { OrderItemMetadata } from '@/components/admin/OrderItemMetadata';
 import { OrderItemTextLayers } from '@/components/admin/OrderItemTextLayers';
@@ -205,6 +206,20 @@ export default async function AdminOrderDetailPage({
               orderId={order.id}
               currentStatus={order.status}
             />
+          </Card>
+
+          <Card className="p-4 sm:p-6">
+            <h2 className="text-sm font-semibold text-ink-900">{t.deleteOrder}</h2>
+            <p className="mt-2 text-sm text-ink-600">
+              {t.deleteWarning.replace('{number}', order.orderNumber)}
+            </p>
+            <div className="mt-3">
+              <OrderDeleteButton
+                orderId={order.id}
+                orderNumber={order.orderNumber}
+                redirectTo="/admin/orders"
+              />
+            </div>
           </Card>
 
           <Card className="p-4 sm:p-6">

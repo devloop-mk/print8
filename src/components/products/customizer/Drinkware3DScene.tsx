@@ -79,6 +79,7 @@ function CeramicMaterial({
 }) {
   return (
     <meshPhysicalMaterial
+      key={map ? 'mapped' : 'plain'}
       color={map ? '#ffffff' : color}
       map={map ?? undefined}
       roughness={roughness}
@@ -101,6 +102,7 @@ function GlassMaterial({
 }) {
   return (
     <meshPhysicalMaterial
+      key={map ? 'mapped' : 'plain'}
       color={map ? '#f8fcff' : color}
       map={map ?? undefined}
       transmission={map ? 0.62 : 0.9}
@@ -130,6 +132,7 @@ function FrostedGlassMaterial({
   const hasMap = Boolean(map);
   return (
     <meshPhysicalMaterial
+      key={hasMap ? 'mapped' : 'plain'}
       color={hasMap ? '#f6f7f8' : color}
       map={map ?? undefined}
       transmission={hasMap ? 0.58 : 0.94}
@@ -386,7 +389,12 @@ export function DrinkwareBody({
 
   const texture = useMemo(() => {
     if (!textureCanvas) return null;
-    const map = new THREE.CanvasTexture(textureCanvas);
+    // Copy pixels so later 2D reads (admin wrap preview) cannot stall the GPU map.
+    const copy = document.createElement('canvas');
+    copy.width = textureCanvas.width;
+    copy.height = textureCanvas.height;
+    copy.getContext('2d')?.drawImage(textureCanvas, 0, 0);
+    const map = new THREE.CanvasTexture(copy);
     map.colorSpace = THREE.SRGBColorSpace;
     // Repeat + no mipmaps: cylinder u=0/u=1 seam must not sample a cracked mip edge.
     map.wrapS = THREE.RepeatWrapping;

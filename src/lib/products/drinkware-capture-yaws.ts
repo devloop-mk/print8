@@ -87,3 +87,13 @@ export function getDrinkwareCaptureYaws(
     right: clamp(wrapUToCaptureYaw(rightAnchor.u), 0, SIDE_YAW_MAX),
   };
 }
+
+/** Admin/live 3D — turn far enough that side prints actually face the camera. */
+export function getDrinkwareArtFacingYaw(sideDesign: SideDesign): number {
+  const items = collectWrapContent(sideDesign);
+  if (items.length === 0) return 0;
+  const strongest = items.reduce((best, item) =>
+    item.weight > best.weight ? item : best,
+  );
+  return clamp(wrapUToCaptureYaw(strongest.u), -SIDE_YAW_MAX, SIDE_YAW_MAX);
+}

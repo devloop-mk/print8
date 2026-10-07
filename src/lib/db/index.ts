@@ -363,6 +363,14 @@ export const db = {
       return mapOrderRow(data as OrderRow);
     },
 
+    async delete(id: string) {
+      const { error } = await getSupabaseAdmin()
+        .from('orders')
+        .delete()
+        .eq('id', id);
+      if (error) throw new Error(error.message);
+    },
+
     async list(options?: {
       status?: OrderStatus | 'all';
       sort?: 'newest' | 'oldest' | 'amount_high' | 'amount_low';
