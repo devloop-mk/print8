@@ -134,9 +134,7 @@ export default async function AdminOrderDetailPage({
                   .map((file) => (
                     <li key={file.fileId} className="break-all">
                       <a
-                        href={`/api/files/${file.fileId}`}
-                        target="_blank"
-                        rel="noreferrer"
+                        href={`/api/admin/orders/${order.id}/files/${file.fileId}?download=1`}
                         className="text-sm text-brand-700 hover:underline"
                       >
                         {file.name}

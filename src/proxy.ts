@@ -106,16 +106,17 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
-  const canonicalRedirect = redirectToCanonicalHost(request);
-  if (canonicalRedirect) {
-    return canonicalRedirect;
-  }
-
-  // Auth callback and API routes live outside `[locale]` — skip locale redirects.
+  // Keep /api on the same host as the page so admin cookies are not dropped
+  // by a www → apex redirect (SameSite cookies are host-specific).
   if (pathname.startsWith('/auth/') || pathname.startsWith('/api/')) {
     const response = NextResponse.next({ request });
     await refreshSupabaseSession(request, response);
     return response;
+  }
+
+  const canonicalRedirect = redirectToCanonicalHost(request);
+  if (canonicalRedirect) {
+    return canonicalRedirect;
   }
 
   const authCallbackRedirect = redirectAuthTokensToCallback(request);

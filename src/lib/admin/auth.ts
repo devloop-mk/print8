@@ -115,7 +115,7 @@ export function getAdminSessionCookieOptions() {
   return {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict' as const,
+    sameSite: 'lax' as const,
     path: '/',
     maxAge: SESSION_TTL_MS / 1000,
   };

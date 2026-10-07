@@ -5,6 +5,7 @@ import { listSvgPrintFileRefsFromMetadata } from '@/lib/designs/svg-order-assets
 import { listProductPrintPngRefsFromItem } from '@/lib/orders/product-order-assets';
 import type { PremadeMasterAssetRef } from '@/lib/orders/premade-master-assets';
 import {
+  extractUploadedFileIdFromPreviewSrc,
   getOrderItemPreviewImages,
   sanitizeOrderItemFilename,
   type OrderItem,
@@ -76,7 +77,9 @@ export function OrderItemDesignAssets({
 
       {previews.length > 0 ? (
         <div className={showDrinkware3d ? 'mt-3 grid gap-3 sm:grid-cols-2' : 'grid gap-3 sm:grid-cols-2'}>
-          {previews.map((preview) => (
+          {previews.map((preview) => {
+            const uploadFileId = extractUploadedFileIdFromPreviewSrc(preview.src);
+            return (
             <div
               key={`${preview.label}-${preview.src.slice(0, 32)}`}
               className="rounded-lg border border-white bg-white p-2 shadow-sm"
@@ -99,16 +102,29 @@ export function OrderItemDesignAssets({
                     <Download className="h-3.5 w-3.5" aria-hidden="true" />
                     {t.downloadPreview}
                   </button>
+                ) : uploadFileId ? (
+                  <a
+                    href={`/api/admin/orders/${orderId}/files/${uploadFileId}?download=1`}
+                    className="inline-flex items-center gap-1 rounded-md border border-ink-200 px-2 py-1 text-xs font-medium text-ink-700 transition hover:bg-ink-50"
+                  >
+                    <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                    {t.downloadPreview}
+                  </a>
                 ) : null}
               </div>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={preview.src}
+                src={
+                  uploadFileId
+                    ? `/api/admin/orders/${orderId}/files/${uploadFileId}`
+                    : preview.src
+                }
                 alt={preview.label}
                 className="max-h-56 w-full rounded border border-ink-100 bg-white object-contain"
               />
             </div>
-          ))}
+            );
+          })}
         </div>
       ) : null}
 
