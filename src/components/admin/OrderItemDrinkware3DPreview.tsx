@@ -22,6 +22,7 @@ import type { OrderItem } from '@/lib/orders/order-item-previews';
 import type { Product } from '@/lib/data/catalog';
 import type { PrintAreaInsets } from '@/lib/products/print-area';
 import { SIDE_PREVIEW_CART_KEYS } from '@/lib/products/product-sides';
+import { downloadDataUrl } from '@/lib/download/data-url';
 
 function uploadTokenFromUrl(url?: string): string | undefined {
   if (!url) return undefined;
@@ -88,13 +89,6 @@ function hydrateAdminSideDesignPhotos(
         }
       : sideDesign.uploadedFile,
   };
-}
-
-function downloadDataUrl(dataUrl: string, filename: string) {
-  const link = document.createElement('a');
-  link.href = dataUrl;
-  link.download = filename;
-  link.click();
 }
 
 function storedOrderStills(item: OrderItem): { src: string; label: string }[] {

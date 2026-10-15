@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireAdminApi } from '@/lib/admin/api-auth';
 import { getAdminOrder, updateAdminOrderStatus, deleteAdminOrder } from '@/lib/admin/orders';
 import { revalidateDesignCatalogCache } from '@/lib/catalog/revalidate-design-catalog';
+import { sendOrderStatusEmail } from '@/lib/email/order-status-email';
 import type { OrderStatus } from '@/lib/db';
 
 const statusSchema = z.object({
@@ -14,6 +15,7 @@ const statusSchema = z.object({
     'delivered',
     'cancelled',
   ]),
+  notifyCustomer: z.boolean().optional().default(false),
 });
 
 const deleteSchema = z.object({
@@ -71,7 +73,35 @@ export async function PATCH(
       revalidateDesignCatalogCache();
     }
     const order = await getAdminOrder(updated.id);
-    return NextResponse.json({ order });
+    if (!order) {
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    }
+
+    let notified = false;
+    let notifyError: string | undefined;
+    if (parsed.data.notifyCustomer) {
+      const email = order.customerEmail?.trim();
+      if (!email) {
+        notifyError = 'missing_email';
+      } else {
+        const result = await sendOrderStatusEmail({
+          to: email,
+          locale: order.locale === 'en' ? 'en' : 'mk',
+          orderNumber: order.orderNumber,
+          status: order.status,
+          fulfillment: order.fulfillmentMethod,
+          totalAmount: order.totalAmount,
+          customerName: order.customerName,
+        });
+        notified = result.ok;
+        if (!result.ok) {
+          notifyError = result.error;
+          console.error('[admin/orders] status email failed', result.error);
+        }
+      }
+    }
+
+    return NextResponse.json({ order, notified, notifyError });
   } catch {
     return NextResponse.json({ error: 'Failed to update order' }, { status: 500 });
   }

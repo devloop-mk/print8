@@ -3,6 +3,7 @@ import type { ProductSide } from '@/lib/data/catalog';
 import { getUploadObject, putOrderPrintObject } from '@/lib/storage/object-storage';
 import { isDataUrl } from '@/lib/storage/cart-storage';
 import { getUploadedFile } from '@/lib/upload';
+import { ensurePngBuffer } from '@/lib/images/file-format';
 import {
   PRODUCT_SIDES,
   getSideMetadataPrefix,
@@ -61,8 +62,9 @@ export async function persistOrderPrintPngs(
               const sourceName =
                 uploaded.originalStoredName ?? uploaded.storedName;
               const { body } = await getUploadObject(sourceName);
+              const pngBody = await ensurePngBuffer(body);
               const storedName = `${folder}/item-${itemIndex + 1}-${side}-print.png`;
-              await putOrderPrintObject(storedName, body, 'image/png');
+              await putOrderPrintObject(storedName, pngBody, 'image/png');
 
               nextMeta = nextMeta ?? {};
               nextMeta[storedKey] = storedName;

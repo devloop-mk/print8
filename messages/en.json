@@ -1849,7 +1849,7 @@
         "subtitle": "Custom t-shirts with your design — pick color, size, and print options."
       },
       "hoodie": {
-        "subtitle": "Hoodies with your logo or artwork — comfortable and durable for daily wear."
+        "subtitle": "Hoodies and sweatshirts — kangaroo pocket, crewneck, or zip — with your logo or artwork."
       },
       "bodysuit": {
         "subtitle": "Baby bodysuits with fun family designs — a sweet gift for newborns and baby showers."
@@ -2178,6 +2178,10 @@
       "tshirtWomenFitted": "Personalized women's fitted t-shirt",
       "tshirtKids": "Personalized kids t-shirt",
       "poloFrutOriginalWhite": "Personalized FRUT ORIGINAL POLO shirt, white",
+      "hoodieHooded": "Personalized hoodie with kangaroo pocket",
+      "hoodieCrewneck": "Personalized crewneck sweatshirt",
+      "hoodieQuarterZip": "Personalized quarter-zip sweatshirt",
+      "hoodieFullZip": "Personalized full-zip sweatshirt",
       "mugClassic": "Classic mug",
       "mugHeartHandle": "Personalized heart handle mug",
       "mugChromeHandle": "Chrome handle mug",

@@ -157,8 +157,12 @@ export function DrinkwarePrintAreaGuide({
           />
 
           <div
-            className="absolute flex -translate-x-1/2 flex-col items-center gap-0.5 text-ink-500"
-            style={{ left: `${leftGuideX}%`, bottom: '1.5%' }}
+            className="absolute flex flex-col items-center gap-0.5 text-ink-500"
+            style={{
+              left: `${leftGuideX}%`,
+              top: '100%',
+              transform: 'translate(-50%, 0.4rem)',
+            }}
           >
             <MugIconHandleLeft className="h-5 w-6" />
             {handleHintLabel ? (
@@ -169,8 +173,12 @@ export function DrinkwarePrintAreaGuide({
           </div>
 
           <div
-            className="absolute flex -translate-x-1/2 flex-col items-center gap-0.5 text-ink-500"
-            style={{ left: `${centerX}%`, bottom: '1.5%' }}
+            className="absolute flex flex-col items-center gap-0.5 text-ink-500"
+            style={{
+              left: `${centerX}%`,
+              top: '100%',
+              transform: 'translate(-50%, 0.4rem)',
+            }}
           >
             <span className="whitespace-nowrap rounded bg-white/90 px-1.5 py-0.5 text-[9px] font-semibold tracking-wide text-ink-600 shadow-sm">
               {centerLabel ?? 'Center of mug'}
@@ -178,8 +186,12 @@ export function DrinkwarePrintAreaGuide({
           </div>
 
           <div
-            className="absolute flex -translate-x-1/2 flex-col items-center gap-0.5 text-ink-500"
-            style={{ left: `${rightGuideX}%`, bottom: '1.5%' }}
+            className="absolute flex flex-col items-center gap-0.5 text-ink-500"
+            style={{
+              left: `${rightGuideX}%`,
+              top: '100%',
+              transform: 'translate(-50%, 0.4rem)',
+            }}
           >
             <MugIconHandleRight className="h-5 w-6" />
             {handleHintLabel ? (
@@ -200,8 +212,12 @@ export function DrinkwarePrintAreaGuide({
             }}
           />
           <div
-            className="absolute flex -translate-x-1/2 flex-col items-center gap-0.5 text-ink-500"
-            style={{ left: `${centerX}%`, bottom: '1.5%' }}
+            className="absolute flex flex-col items-center gap-0.5 text-ink-500"
+            style={{
+              left: `${centerX}%`,
+              top: '100%',
+              transform: 'translate(-50%, 0.4rem)',
+            }}
           >
             <span className="whitespace-nowrap rounded bg-white/90 px-1.5 py-0.5 text-[9px] font-semibold tracking-wide text-ink-600 shadow-sm">
               {centerLabel ?? 'Center'}

@@ -74,6 +74,30 @@ export const HOODIE_PRINT_AREA_INSETS: PrintAreaInsets = {
   left: 24,
 };
 
+/** Crewneck sweatshirt — no hood, so the chest zone sits higher. */
+export const CREWNECK_PRINT_AREA_INSETS: PrintAreaInsets = {
+  top: 24,
+  right: 28,
+  bottom: 18,
+  left: 28,
+};
+
+/** Quarter-zip — keep the guide below the neck zipper. */
+export const QUARTER_ZIP_PRINT_AREA_INSETS: PrintAreaInsets = {
+  top: 34,
+  right: 28,
+  bottom: 16,
+  left: 28,
+};
+
+/** Full-zip — left chest, clear of the center zipper and hip pockets. */
+export const FULL_ZIP_PRINT_AREA_INSETS: PrintAreaInsets = {
+  top: 26,
+  right: 50,
+  bottom: 42,
+  left: 16,
+};
+
 /** Bodysuit front print zone. */
 export const BODYSUIT_PRINT_AREA_INSETS: PrintAreaInsets = {
   top: 17,
@@ -87,10 +111,14 @@ export const BODYSUIT_PRINT_AREA_INSETS: PrintAreaInsets = {
  * Each shape has its own band; product-specific overrides in
  * DRINKWARE_UNWRAP_PRINT_INSETS_BY_PRODUCT_ID.
  */
+/**
+ * Ceramic mug — full-wall sublimation from rim to foot.
+ * Tiny vertical margins only (bleed/rim), handle clearance stays on the sides.
+ */
 export const MUG_UNWRAP_PRINT_AREA_INSETS: PrintAreaInsets = {
-  top: 2,
+  top: 1.5,
   right: 4,
-  bottom: 10,
+  bottom: 2,
   left: 4,
 };
 

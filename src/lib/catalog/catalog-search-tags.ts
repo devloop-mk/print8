@@ -108,7 +108,20 @@ export const DESIGN_CATEGORY_KEYWORDS: Record<DesignCategory, string[]> = {
 
 export const PRODUCT_TYPE_KEYWORDS: Record<ProductType, string[]> = {
   't-shirt': ['t-shirt', 'tshirt', 'tee', 'shirt', 'маица', 'маици', 'облека', 'apparel'],
-  hoodie: ['hoodie', 'hooded', 'sweatshirt', 'дуксер', 'худи'],
+  hoodie: [
+    'hoodie',
+    'hooded',
+    'sweatshirt',
+    'crewneck',
+    'quarter zip',
+    'full zip',
+    'дуксер',
+    'дуксери',
+    'худи',
+    'капа',
+    'патент',
+    'џеб',
+  ],
   bodysuit: ['bodysuit', 'baby bodysuit', 'боди', 'бебешко'],
   cap: ['cap', 'hat', 'baseball cap', 'капа', 'капи', 'шапка'],
   mug: ['mug', 'cup', 'coffee mug', 'шолја', 'шолји', 'чаја', 'чаи', 'чаши', 'кафе'],

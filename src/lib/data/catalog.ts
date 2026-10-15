@@ -40,6 +40,11 @@ import { getProductColorImagesEntry } from '@/lib/products/product-color-images'
 import type { TshirtPricingOverride } from '@/lib/products/tshirt-print-pricing';
 import type { DrinkwarePricingOverride } from '@/lib/products/drinkware-print-pricing';
 import { getPoloMockupPath } from '@/lib/products/polo-mockup-paths';
+import {
+  buildSweatshirtColorImages,
+  getSweatshirtMockupPath,
+  SWEATSHIRT_COLOR_HEXES,
+} from '@/lib/products/sweatshirt-mockup-paths';
 import { premadeDesignAppliesToProduct } from '@/lib/products/premade-design-product-match';
 import { supplierCatalogProducts } from '@/lib/data/supplier-catalog-products';
 
@@ -1784,6 +1789,7 @@ export const products: Product[] = [
   {
     id: 'hoodie-basic',
     type: 'hoodie',
+    nameKey: 'hoodieHooded',
     image: '/hoodies/hoodie-charcoal.jpg',
     colorsImages: {
       '#1f2937': {
@@ -1801,6 +1807,39 @@ export const products: Product[] = [
     },
     basePrice: 1200,
     colors: ['#1f2937', '#ffffff', '#1e40af'],
+    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    sides: ['front', 'back'],
+  },
+  {
+    id: 'hoodie-crewneck',
+    type: 'hoodie',
+    nameKey: 'hoodieCrewneck',
+    image: getSweatshirtMockupPath('crewneck', 'bela', 'front'),
+    colorsImages: buildSweatshirtColorImages('crewneck'),
+    basePrice: 1200,
+    colors: [...SWEATSHIRT_COLOR_HEXES],
+    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    sides: ['front', 'back'],
+  },
+  {
+    id: 'hoodie-quarter-zip',
+    type: 'hoodie',
+    nameKey: 'hoodieQuarterZip',
+    image: getSweatshirtMockupPath('quarter-zip', 'bela', 'front'),
+    colorsImages: buildSweatshirtColorImages('quarter-zip'),
+    basePrice: 1200,
+    colors: [...SWEATSHIRT_COLOR_HEXES],
+    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    sides: ['front', 'back'],
+  },
+  {
+    id: 'hoodie-full-zip',
+    type: 'hoodie',
+    nameKey: 'hoodieFullZip',
+    image: getSweatshirtMockupPath('full-zip', 'bela', 'front'),
+    colorsImages: buildSweatshirtColorImages('full-zip'),
+    basePrice: 1200,
+    colors: [...SWEATSHIRT_COLOR_HEXES],
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
     sides: ['front', 'back'],
   },

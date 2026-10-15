@@ -3610,7 +3610,10 @@ function InteractivePreview({
             )
           : cn(
               isDrinkware
-                ? 'max-w-[min(48rem,94vw)] shadow-[0_8px_40px_rgba(15,23,42,0.08)]'
+                ? cn(
+                    'max-w-[min(48rem,94vw)] shadow-[0_8px_40px_rgba(15,23,42,0.08)]',
+                    !isCapturing && 'mb-11',
+                  )
                 : productType === 'hoodie'
                   ? 'w-[min(18rem,78vw)] bg-white shadow-[0_8px_40px_rgba(15,23,42,0.12)] md:w-[min(28rem,46vh)] lg:w-[min(34rem,54vh)] xl:w-[min(38rem,60vh)]'
                   : 'w-[min(18rem,78vw)] bg-white shadow-[0_8px_40px_rgba(15,23,42,0.12)] md:w-[min(28rem,46vh)] lg:w-[min(32rem,52vh)] xl:w-[min(36rem,58vh)]',

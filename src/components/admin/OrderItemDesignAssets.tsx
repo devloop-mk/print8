@@ -15,13 +15,7 @@ import {
   hasOrderItemDrinkware3DPreview,
   OrderItemDrinkware3DPreview,
 } from '@/components/admin/OrderItemDrinkware3DPreview';
-
-function downloadDataUrl(dataUrl: string, filename: string) {
-  const link = document.createElement('a');
-  link.href = dataUrl;
-  link.download = filename;
-  link.click();
-}
+import { downloadDataUrl } from '@/lib/download/data-url';
 
 export function OrderItemDesignAssets({
   orderId,

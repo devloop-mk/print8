@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminSessionFromRequest } from '@/lib/admin/api-auth';
 import { getUploadedFile, validateUploadToken } from '@/lib/upload';
-import { getUploadObject } from '@/lib/storage/object-storage';
+import { serveUploadedFile } from '@/lib/upload/serve-uploaded-file';
 import { contentDispositionInline } from '@/lib/security/sanitize';
 
 export async function GET(
@@ -32,13 +32,13 @@ export async function GET(
       }
     }
 
-    const { body, contentType } = await getUploadObject(file.storedName);
+    const served = await serveUploadedFile(file, { preferOriginal: false });
 
-    return new NextResponse(new Uint8Array(body), {
+    return new NextResponse(new Uint8Array(served.body), {
       headers: {
-        'Content-Type': contentType ?? file.mimeType,
+        'Content-Type': served.contentType,
         'Cache-Control': 'private, no-store',
-        'Content-Disposition': contentDispositionInline(file.originalName),
+        'Content-Disposition': contentDispositionInline(served.filename),
         'X-Content-Type-Options': 'nosniff',
       },
     });

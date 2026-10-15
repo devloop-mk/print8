@@ -200,9 +200,9 @@ export default async function AdminOrderDetailPage({
 
           <Card className="p-4 sm:p-6">
             <OrderStatusUpdater
-              key={`${order.id}-${order.status}`}
               orderId={order.id}
               currentStatus={order.status}
+              canNotify={Boolean(order.customerEmail?.trim())}
             />
           </Card>
 

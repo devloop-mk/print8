@@ -72,6 +72,9 @@ const nextConfig: NextConfig = {
         pathname: '/polo/**',
       },
       {
+        pathname: '/hoodies/**',
+      },
+      {
         pathname: '/**',
         search: '',
       },

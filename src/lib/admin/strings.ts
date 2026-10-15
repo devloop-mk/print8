@@ -286,6 +286,9 @@ export const adminStrings = {
     downloadFrontSvg: 'Преземи предна страна (.svg)',
     downloadBackSvg: 'Преземи задна страна (.svg)',
     statusTitle: 'Статус на нарачка',
+    notifyCustomer: 'Извести клиент по е-пошта',
+    notifyCustomerHint: 'Испрати е-маил за новиот статус',
+    notifyNoEmail: 'Нема е-пошта на нарачката.',
     saveStatus: 'Зачувај статус',
     saving: 'Се зачувува…',
     markDelivered: 'Означи испорачана',
@@ -302,6 +305,11 @@ export const adminStrings = {
     deleteFailed: 'Неуспешно бришење на нарачката.',
     deleteError: 'Не може да се избрише нарачката.',
     statusUpdated: 'Статусот е ажуриран.',
+    statusUpdatedNotified: 'Статусот е ажуриран и клиентот е известен.',
+    statusUpdatedNotifyFailed:
+      'Статусот е ажуриран, но е-поштата не се испрати.',
+    statusUpdatedNoEmail:
+      'Статусот е ажуриран. Известувањето е прескокнато — нема е-пошта.',
     statusFailed: 'Неуспешно ажурирање на статусот.',
     statusError: 'Не може да се ажурира статусот.',
   },

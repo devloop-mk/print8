@@ -160,13 +160,13 @@ export function CustomizerShell({
         className={cn(
           'min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain p-2 [-webkit-overflow-scrolling:touch] md:p-3',
           mobileStackedPreview && 'touch-pan-y',
-          !sidePreview && 'md:flex md:items-center md:justify-center',
+          'md:flex md:items-center md:justify-center',
         )}
       >
         <div
           className={cn(
             'mx-auto w-full min-h-min shrink-0 origin-center transition-transform duration-150',
-            !sidePreview && 'md:flex md:min-h-full md:items-center md:justify-center',
+            'md:flex md:min-h-full md:items-center md:justify-center',
           )}
           style={{ transform: `scale(${canvasZoom / 100})` }}
         >

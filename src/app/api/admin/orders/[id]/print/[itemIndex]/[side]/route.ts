@@ -14,6 +14,7 @@ import { contentDispositionAttachment } from '@/lib/security/sanitize';
 import type { ProductSide } from '@/lib/data/catalog';
 import { getSideMetadataPrefix } from '@/lib/products/product-sides';
 import { getUploadedFile } from '@/lib/upload';
+import { ensurePngBuffer, sniffImageMime } from '@/lib/images/file-format';
 
 export const runtime = 'nodejs';
 
@@ -181,7 +182,10 @@ export async function GET(
         );
       }
 
-      return new NextResponse(new Uint8Array(body), {
+      const pngBody =
+        sniffImageMime(body) === 'image/png' ? body : await ensurePngBuffer(body);
+
+      return new NextResponse(new Uint8Array(pngBody), {
         headers: {
           'Content-Type': 'image/png',
           'Cache-Control': 'private, no-store',

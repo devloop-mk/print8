@@ -7,7 +7,7 @@ import {
   getOrderItemPreviewImages,
 } from '@/lib/orders/order-item-previews';
 import { getUploadedFile } from '@/lib/upload';
-import { getUploadObject } from '@/lib/storage/object-storage';
+import { serveUploadedFile } from '@/lib/upload/serve-uploaded-file';
 import {
   contentDispositionAttachment,
   contentDispositionInline,
@@ -53,16 +53,16 @@ export async function GET(
       return NextResponse.json({ error: 'File not found' }, { status: 404 });
     }
 
-    const { body, contentType } = await getUploadObject(file.storedName);
     const asDownload = request.nextUrl.searchParams.get('download') === '1';
+    const served = await serveUploadedFile(file, { preferOriginal: asDownload });
 
-    return new NextResponse(new Uint8Array(body), {
+    return new NextResponse(new Uint8Array(served.body), {
       headers: {
-        'Content-Type': contentType ?? file.mimeType,
+        'Content-Type': served.contentType,
         'Cache-Control': 'private, no-store',
         'Content-Disposition': asDownload
-          ? contentDispositionAttachment(file.originalName)
-          : contentDispositionInline(file.originalName),
+          ? contentDispositionAttachment(served.filename)
+          : contentDispositionInline(served.filename),
         'X-Content-Type-Options': 'nosniff',
       },
     });
