@@ -10,7 +10,7 @@ import {
   type ProductDesignCategory,
 } from '@/lib/data/catalog';
 import { getProductPaths, PRODUCT_OFFERING_PATHS, COUPLES_DESIGN_COLLECTION } from '@/lib/products/paths';
-import { getProductDisplayPrice } from '@/lib/products/tshirt-print-pricing';
+import { ProductSalePrice } from '@/components/products/ProductSalePrice';
 import {
   filterDesignCatalogEntries,
   getCatalogColors,
@@ -28,7 +28,6 @@ import {
 } from '@/lib/products/design-catalog-sort';
 import { getCouplePackTemplates } from '@/lib/data/couple-pack';
 import { resolveProductId } from '@/lib/products/product-id-aliases';
-import { formatPrice } from '@/lib/utils';
 import {
   CatalogFilterLayout,
   type CatalogFilterGroup,
@@ -343,8 +342,11 @@ export function ProductDesignsPage({
           <h1 className="mt-1 text-3xl font-bold text-ink-900">{sectionTitle}</h1>
           <p className="mt-2 text-ink-600">{sectionHint}</p>
           <p className="mt-2 text-brand-600">
-            {t('startingFrom')}{' '}
-            {formatPrice(getProductDisplayPrice(product), locale)}
+            <ProductSalePrice
+              product={product}
+              locale={locale}
+              showFromPrefix
+            />
           </p>
         </div>
       </Reveal>

@@ -1889,6 +1889,9 @@
       },
       "microfiber-cloth": {
         "subtitle": "Microfiber cloths with your photo or logo — practical promo gifts with optional gift sleeve."
+      },
+      "coaster": {
+        "subtitle": "Cork drink coasters with your photo in the centre — 9×9 cm, 5×5 cm print."
       }
     },
     "paths": {
@@ -1930,6 +1933,7 @@
     "viewProduct": "View product",
     "orderAsIs": "Order as shown",
     "startingFrom": "from",
+    "saleBadge": "Sale",
     "designs": {
       "mugDesign1": "Mug design 1",
       "mugCoffeeBear": "Start your day with coffee",
@@ -2038,6 +2042,7 @@
       "specs": {
         "cotton100": "100% cotton",
         "cottonBlend": "Cotton blend fleece",
+        "tripleYarnFleece320": "Triple-yarn combed fleece, 320 g/m²",
         "organicCotton": "Organic cotton",
         "cottonTwil": "Cotton twill",
         "cottonCanvas": "Cotton canvas",
@@ -2100,8 +2105,14 @@
       "magnetUploadCta": "Upload image & order",
       "uploadDescription": "Upload your photo — we print it on this product. You can crop the image before ordering.",
       "uploadCta": "Upload image & order",
+      "productDescriptions": {
+        "hoodieFleece": "Triple-yarn combed fleece, 320 g/m². Print is included in the price."
+      },
       "productNotes": {
-        "mugInside": "The interior is always the same (pre-printed). Only the exterior is customizable."
+        "mugInside": "The interior is always the same (pre-printed). Only the exterior is customizable.",
+        "mugCorkLid": "The lid and cork base are not printed. The design goes on the white ceramic body only.",
+        "coasterCork9": "The print is 5×5 cm in the centre of the 9×9 cm cork coaster.",
+        "hoodieWhiteCord": "On the white hoodie with kangaroo pocket, the hood drawstring is black."
       }
     },
     "uploadOrder": {
@@ -2153,7 +2164,8 @@
       "plaque": "Plaque",
       "gift-box": "Gift box",
       "gift-set": "Gift set",
-      "microfiber-cloth": "Microfiber cloth"
+      "microfiber-cloth": "Microfiber cloth",
+      "coaster": "Coaster"
     },
     "typesPlural": {
       "t-shirt": "T-shirts",
@@ -2170,7 +2182,8 @@
       "plaque": "Plaques",
       "gift-box": "Gift boxes",
       "gift-set": "Gift sets",
-      "microfiber-cloth": "Microfiber cloths"
+      "microfiber-cloth": "Microfiber cloths",
+      "coaster": "Coasters"
     },
     "items": {
       "tshirtUnisex": "Personalized unisex t-shirt",
@@ -2181,7 +2194,8 @@
       "hoodieHooded": "Personalized hoodie with kangaroo pocket",
       "hoodieCrewneck": "Personalized crewneck sweatshirt",
       "hoodieQuarterZip": "Personalized quarter-zip sweatshirt",
-      "hoodieFullZip": "Personalized full-zip sweatshirt",
+      "hoodieFullZip": "Personalized full-zip sweatshirt without hood",
+      "hoodieZipHood": "Personalized full-zip hoodie",
       "mugClassic": "Classic mug",
       "mugHeartHandle": "Personalized heart handle mug",
       "mugChromeHandle": "Chrome handle mug",
@@ -2189,6 +2203,7 @@
       "mugB5kfWhite": "Personalized white ceramic mug",
       "mugRedPatch": "Personalized red mug with print area",
       "mugFrosted": "Personalized frosted glass mug",
+      "mugCorkLid": "Personalized mug with cork base and lid",
       "cupGlassBeer": "Personalized glass beer mug",
       "mugInsideDaddy": "Personalized mug — World's best daddy (inside)",
       "mugInsideLove": "Personalized mug — I love you (inside)",
@@ -2231,7 +2246,8 @@
       "giftBoxMugBasicBlue": "Mug box — blue",
       "bagNaturellaNatural": "Personalized cotton bag",
       "giftCasePurePackSubli": "PURE PACK sleeve for sublimation cloth",
-      "clothPureMicrofiberWhite": "Personalized PURE microfiber cloth with sleeve"
+      "clothPureMicrofiberWhite": "Personalized PURE microfiber cloth with sleeve",
+      "coasterCork9": "Cork coaster 9×9 cm"
     },
     "customizer": {
       "editText": "Edit text",
@@ -2243,6 +2259,8 @@
       "tabColor": "Color",
       "selectDrinkware": "Select cup",
       "selectSize": "Select size",
+      "hoodieSizeSurchargeNote": "Base price applies through 3XL. 4XL is +100 MKD; 5XL and 6XL are +300 MKD.",
+      "hoodieWhiteCordNote": "On the white hoodie with kangaroo pocket, the hood drawstring is black.",
       "printPackage": "Print package",
       "printPackageAutoNote": "Calculated automatically from your design",
       "printPackageBlank": "No print",
@@ -2298,6 +2316,7 @@
       "preview3dPaneTitle": "3D preview",
       "drinkwarePreviewApproximateNote": "Approximate preview — the finished product may look slightly different.",
       "mugHeartHandlePreviewNote": "This mug has a heart-shaped handle. The 3D preview shows a standard handle so you can judge the print on the mug body — the real handle will be heart-shaped.",
+      "mugCorkLidPreviewNote": "The lid and cork base are not printed — place the design on the white ceramic wall only.",
       "drinkwareHandleHint": "Handle",
       "drinkwareCenterOfMug": "Center of mug",
       "splitResizeHandle": "Resize design and 3D preview",

@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { formatPrice } from '@/lib/utils';
 import { getProductOffering } from '@/lib/products/offering';
+import { ProductSalePrice } from '@/components/products/ProductSalePrice';
 import { Card } from '@/components/ui/Card';
 import { ProductCatalogImage } from '@/components/products/ProductCatalogImage';
 import { Reveal } from '@/components/motion/Reveal';
@@ -17,7 +17,6 @@ import {
 } from '@/components/catalog/CatalogGrid';
 import { buildCustomizerUrl } from '@/lib/products/paths';
 import { getColorSwatchDisplayHex } from '@/lib/products/product-color-labels';
-import { getProductDisplayPrice } from '@/lib/products/tshirt-print-pricing';
 import { isUploadOnlyProduct } from '@/lib/products/upload-only-products';
 
 export type ProductCardLinkTarget = 'detail' | 'customizer';
@@ -115,8 +114,11 @@ function ProductCardGridItem({
               {productLabel}
             </p>
             <p className="mt-1 text-sm text-brand-600">
-              {t('startingFrom')}{' '}
-              {formatPrice(getProductDisplayPrice(product), locale)}
+              <ProductSalePrice
+                product={product}
+                locale={locale}
+                showFromPrefix
+              />
             </p>
 
             <div

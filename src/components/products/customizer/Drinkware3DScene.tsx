@@ -255,6 +255,49 @@ function BeerGlassHandle({
   );
 }
 
+function MugSipLid({
+  radius,
+  bodyHeight,
+  lidHeight,
+}: {
+  radius: number;
+  bodyHeight: number;
+  lidHeight: number;
+}) {
+  const capY = bodyHeight / 2;
+  const lidColor = '#f4f4f2';
+
+  return (
+    <group position={[0, capY, 0]}>
+      <mesh position={[0, lidHeight * 0.22, 0]}>
+        <cylinderGeometry args={[radius * 0.9, radius * 0.92, lidHeight * 0.45, 48]} />
+        <meshPhysicalMaterial
+          color={lidColor}
+          roughness={0.28}
+          metalness={0.02}
+          clearcoat={0.55}
+          clearcoatRoughness={0.2}
+        />
+      </mesh>
+      <mesh position={[0, lidHeight * 0.55, 0]} rotation={[-0.18, 0, 0]}>
+        <cylinderGeometry
+          args={[radius * 0.72, radius * 0.78, lidHeight * 0.28, 48]}
+        />
+        <meshPhysicalMaterial
+          color="#ecece8"
+          roughness={0.32}
+          metalness={0.02}
+          clearcoat={0.4}
+        />
+      </mesh>
+      <mesh position={[0, lidHeight * 0.38, radius * 0.42]} rotation={[0.55, 0, 0]}>
+        <boxGeometry args={[radius * 0.55, lidHeight * 0.12, radius * 0.28]} />
+        <meshPhysicalMaterial color="#e8e8e4" roughness={0.3} metalness={0.02} />
+      </mesh>
+    </group>
+  );
+}
+
 function ThermosLid({
   radius,
   bodyHeight,
@@ -510,8 +553,12 @@ export function DrinkwareBody({
       <mesh position={[0, -config.height / 2 - baseHeight / 2, 0]}>
         <cylinderGeometry
           args={[
-            config.radiusBottom * 0.95,
-            config.radiusBottom * 0.99,
+            config.baseColor
+              ? config.radiusBottom * 0.98
+              : config.radiusBottom * 0.95,
+            config.baseColor
+              ? config.radiusBottom * 1.04
+              : config.radiusBottom * 0.99,
             baseHeight,
             48,
           ]}
@@ -523,7 +570,11 @@ export function DrinkwareBody({
             <GlassMaterial color={bodyGlaze} />
           )
         ) : (
-          <CeramicMaterial color={bodyGlaze} roughness={0.4} clearcoat={0.3} />
+          <CeramicMaterial
+            color={config.baseColor ?? bodyGlaze}
+            roughness={config.baseColor ? 0.92 : 0.4}
+            clearcoat={config.baseColor ? 0.04 : 0.3}
+          />
         )}
       </mesh>
 
@@ -549,12 +600,20 @@ export function DrinkwareBody({
       ) : null}
 
       {config.hasLid ? (
-        <ThermosLid
-          radius={config.radiusTop}
-          bodyHeight={config.height}
-          lidHeight={config.lidHeight}
-          color={productColor}
-        />
+        config.lidStyle === 'sip' ? (
+          <MugSipLid
+            radius={config.radiusTop}
+            bodyHeight={config.height}
+            lidHeight={config.lidHeight}
+          />
+        ) : (
+          <ThermosLid
+            radius={config.radiusTop}
+            bodyHeight={config.height}
+            lidHeight={config.lidHeight}
+            color={productColor}
+          />
+        )
       ) : null}
     </group>
   );

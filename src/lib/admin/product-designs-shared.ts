@@ -271,6 +271,7 @@ export const PRODUCT_TYPE_LABELS_MK: Record<ProductType, string> = {
   'gift-box': 'Поклон кутија',
   'gift-set': 'Поклон сет',
   'microfiber-cloth': 'Микрофибер крпа',
+  coaster: 'Подметач',
 };
 
 export function createEmptyProductDesignTemplate(

@@ -15,7 +15,7 @@ const PRODUCT_SPECS: Partial<Record<ProductType, ProductSpec>> = {
     careKey: 'machineWash30',
   },
   hoodie: {
-    materialKey: 'cottonBlend',
+    materialKey: 'tripleYarnFleece320',
     ecoFriendlyKey: 'ecoFriendlyInk',
     fitKey: 'relaxedFit',
     careKey: 'machineWash30',

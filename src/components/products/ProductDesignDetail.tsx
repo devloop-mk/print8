@@ -34,6 +34,8 @@ import {
   getPremadeDesignUnitPrice,
 } from '@/lib/products/premade-design-order';
 import { isTshirtProduct } from '@/lib/products/tshirt-print-pricing';
+import { isHoodieProduct } from '@/lib/products/hoodie-catalog';
+import { ProductSalePrice } from '@/components/products/ProductSalePrice';
 import { capturePreviewElement } from '@/lib/products/capture-preview';
 import {
   buildCouplePackDetailUrl,
@@ -331,11 +333,19 @@ export function ProductDesignDetail({
               </div>
               <h1 className="mt-3 text-3xl font-bold text-ink-900">{displayName}</h1>
               <p className="mt-2 text-2xl font-semibold text-brand-600">
-                {formatPrice(
-                  isTshirtProduct(product)
-                    ? getPremadeDesignUnitPrice(product, design)
-                    : product.basePrice,
-                  locale,
+                {isHoodieProduct(product) ? (
+                  <ProductSalePrice
+                    product={product}
+                    size={size}
+                    locale={locale}
+                  />
+                ) : (
+                  formatPrice(
+                    isTshirtProduct(product)
+                      ? getPremadeDesignUnitPrice(product, design)
+                      : product.basePrice,
+                    locale,
+                  )
                 )}
               </p>
               {couplePack && couplePackTitle ? (

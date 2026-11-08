@@ -45,6 +45,11 @@ import {
   getSweatshirtMockupPath,
   SWEATSHIRT_COLOR_HEXES,
 } from '@/lib/products/sweatshirt-mockup-paths';
+import {
+  buildHoodieBasicColorImages,
+  HOODIE_COLOR_HEXES,
+  HOODIE_SIZES,
+} from '@/lib/products/hoodie-catalog';
 import { premadeDesignAppliesToProduct } from '@/lib/products/premade-design-product-match';
 import { supplierCatalogProducts } from '@/lib/data/supplier-catalog-products';
 
@@ -113,7 +118,7 @@ export const services: Service[] = [
     id: 'hoodie-printing',
     icon: 'Shirt',
     category: 'merch',
-    startingPrice: 1200,
+    startingPrice: 1000,
     customization: 'products',
     productTypes: ['hoodie'],
   },
@@ -734,7 +739,8 @@ export type ProductType =
   | 'plaque'
   | 'gift-box'
   | 'gift-set'
-  | 'microfiber-cloth';
+  | 'microfiber-cloth'
+  | 'coaster';
 
 /** T-shirt garment cut (unisex, women's fitted, kids). */
 export type GarmentFit = 'unisex' | 'women' | 'kids';
@@ -797,6 +803,10 @@ export interface Product {
   nameKey?: string;
   image: string;
   basePrice: number;
+  /** Original catalog price before a sale (MKD). */
+  compareAtPrice?: number;
+  /** Extra lifestyle photos on the PDP gallery (not used as customizer mockups). */
+  galleryImages?: string[];
   colors?: string[];
   colorsImages?: ProductColorImages;
   sizes?: string[];
@@ -1374,23 +1384,33 @@ export function getProductGallerySlides(
     return slides;
   }
 
+  const lifestyleSlides: ProductGallerySlide[] = (product.galleryImages ?? []).map(
+    (image) => ({ image, kind: 'photo' as const }),
+  );
+
   if (productSupportsSides(product) && (product.sides?.length ?? 0) > 1) {
-    return getProductSides(product).map((side) => ({
-      image: getProductMockup(product, color, side),
-      kind: 'side' as const,
-      labelKey:
-        side === 'front'
-          ? 'front'
-          : side === 'back'
-            ? 'back'
-            : side === 'left'
-              ? 'left'
-              : 'right',
-    }));
+    return [
+      ...getProductSides(product).map((side) => ({
+        image: getProductMockup(product, color, side),
+        kind: 'side' as const,
+        labelKey:
+          side === 'front'
+            ? 'front'
+            : side === 'back'
+              ? 'back'
+              : side === 'left'
+                ? 'left'
+                : 'right',
+      })),
+      ...lifestyleSlides,
+    ];
   }
 
   const image = getProductMockup(product, color, 'front');
-  return image ? [{ image, kind: 'photo' as const }] : [];
+  const slides: ProductGallerySlide[] = image
+    ? [{ image, kind: 'photo' as const }]
+    : [];
+  return [...slides, ...lifestyleSlides];
 }
 
 export function getProductSecondaryImage(
@@ -1647,6 +1667,18 @@ export const products: Product[] = [
     basePrice: 400,
   },
   {
+    id: 'mug-cork-lid',
+    type: 'mug',
+    nameKey: 'mugCorkLid',
+    detailNoteKey: 'mugCorkLid',
+    image: '/mugs/mug-cork-lid.jpg',
+    colorsImages: {
+      '#ffffff': '/mugs/mug-cork-lid.jpg',
+    },
+    colors: ['#ffffff'],
+    basePrice: 450,
+  },
+  {
     id: 'cup-glass-beer',
     type: 'cup',
     nameKey: 'cupGlassBeer',
@@ -1787,60 +1819,93 @@ export const products: Product[] = [
     uploadAspect: 18 / 15,
   },
   {
+    id: 'coaster-cork-9',
+    type: 'coaster',
+    nameKey: 'coasterCork9',
+    detailNoteKey: 'coasterCork9',
+    image: '/coasters/coaster-cork-9.png',
+    colorsImages: {
+      '#c4a06a': {
+        primary: '/coasters/coaster-cork-9.png',
+        secondary: '/coasters/coaster-cork-9-print.png',
+      },
+    },
+    colors: ['#c4a06a'],
+    basePrice: 30,
+    uploadAspect: 1,
+  },
+  {
     id: 'hoodie-basic',
     type: 'hoodie',
     nameKey: 'hoodieHooded',
+    detailDescriptionKey: 'hoodieFleece',
+    detailNoteKey: 'hoodieWhiteCord',
     image: '/hoodies/hoodie-charcoal.jpg',
-    colorsImages: {
-      '#1f2937': {
-        front: '/hoodies/hoodie-charcoal.jpg',
-        back: '/hoodies/hoodie-charcoal-back.jpg',
-      },
-      '#ffffff': {
-        front: '/hoodies/hoodie-white.jpg',
-        back: '/hoodies/hoodie-white-back.jpg',
-      },
-      '#1e40af': {
-        front: '/hoodies/hoodie-blue.jpg',
-        back: '/hoodies/hoodie-blue-back.jpg',
-      },
-    },
-    basePrice: 1200,
-    colors: ['#1f2937', '#ffffff', '#1e40af'],
-    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    galleryImages: ['/hoodies/lifestyle/hooded-black.jpg'],
+    colorsImages: buildHoodieBasicColorImages(),
+    basePrice: 1100,
+    compareAtPrice: 1300,
+    colors: [...HOODIE_COLOR_HEXES],
+    sizes: [...HOODIE_SIZES],
     sides: ['front', 'back'],
   },
   {
     id: 'hoodie-crewneck',
     type: 'hoodie',
     nameKey: 'hoodieCrewneck',
+    detailDescriptionKey: 'hoodieFleece',
     image: getSweatshirtMockupPath('crewneck', 'bela', 'front'),
+    galleryImages: ['/hoodies/lifestyle/crewneck-grey.jpg'],
     colorsImages: buildSweatshirtColorImages('crewneck'),
-    basePrice: 1200,
+    basePrice: 1000,
+    compareAtPrice: 1200,
     colors: [...SWEATSHIRT_COLOR_HEXES],
-    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    sizes: [...HOODIE_SIZES],
     sides: ['front', 'back'],
   },
   {
     id: 'hoodie-quarter-zip',
     type: 'hoodie',
     nameKey: 'hoodieQuarterZip',
+    detailDescriptionKey: 'hoodieFleece',
     image: getSweatshirtMockupPath('quarter-zip', 'bela', 'front'),
+    galleryImages: ['/hoodies/lifestyle/quarter-zip-ink.jpg'],
     colorsImages: buildSweatshirtColorImages('quarter-zip'),
-    basePrice: 1200,
+    basePrice: 1250,
+    compareAtPrice: 1500,
     colors: [...SWEATSHIRT_COLOR_HEXES],
-    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    sizes: [...HOODIE_SIZES],
     sides: ['front', 'back'],
   },
   {
     id: 'hoodie-full-zip',
     type: 'hoodie',
     nameKey: 'hoodieFullZip',
+    detailDescriptionKey: 'hoodieFleece',
     image: getSweatshirtMockupPath('full-zip', 'bela', 'front'),
+    galleryImages: ['/hoodies/lifestyle/full-zip-black.jpg'],
     colorsImages: buildSweatshirtColorImages('full-zip'),
-    basePrice: 1200,
+    basePrice: 1250,
+    compareAtPrice: 1500,
     colors: [...SWEATSHIRT_COLOR_HEXES],
-    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    sizes: [...HOODIE_SIZES],
+    sides: ['front', 'back'],
+  },
+  {
+    id: 'hoodie-zip-hood',
+    type: 'hoodie',
+    nameKey: 'hoodieZipHood',
+    detailDescriptionKey: 'hoodieFleece',
+    image: '/hoodies/hoodie-white.jpg',
+    galleryImages: [
+      '/hoodies/lifestyle/zip-hood-white.jpg',
+      '/hoodies/lifestyle/zip-hood-grey.jpg',
+    ],
+    colorsImages: buildHoodieBasicColorImages(),
+    basePrice: 1250,
+    compareAtPrice: 1500,
+    colors: [...HOODIE_COLOR_HEXES],
+    sizes: [...HOODIE_SIZES],
     sides: ['front', 'back'],
   },
   {
@@ -2000,6 +2065,7 @@ export const productTypes: ProductType[] = [
   'gift-box',
   'gift-set',
   'microfiber-cloth',
+  'coaster',
 ];
 
 export const designCategories: DesignCategory[] = [

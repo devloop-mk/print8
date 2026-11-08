@@ -48,6 +48,7 @@ const categoryMeta: Record<
       '/magnets/magnet-ceramic-heart.jpg',
       '/magnets/magnet-glass-5x7.jpg',
       '/magnets/magnet-hardboard-round.jpg',
+      '/coasters/coaster-cork-9.png',
     ],
     accent: 'from-rose-900/80',
   },

@@ -163,6 +163,13 @@ export const DRINKWARE_UNWRAP_PRINT_INSETS_BY_PRODUCT_ID: Record<
     bottom: 16,
     left: 29,
   },
+  /** Cork-base mug — print the white ceramic wall only, above the cork sleeve. */
+  'mug-cork-lid': {
+    top: 4,
+    right: 4,
+    bottom: 24,
+    left: 4,
+  },
 };
 
 const DRINKWARE_UNWRAP_BY_TYPE: Partial<Record<ProductType, PrintAreaInsets>> =

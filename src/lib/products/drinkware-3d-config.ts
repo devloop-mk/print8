@@ -13,6 +13,8 @@ export type Drinkware3DConfig = {
   hasHandle: boolean;
   /** Show a thermos screw lid */
   hasLid: boolean;
+  /** Sliding sip lid (cork mug) vs thermos screw cap. */
+  lidStyle?: 'thermos' | 'sip';
   /** Lid height relative to body height */
   lidHeight: number;
   /** Default camera distance */
@@ -29,6 +31,8 @@ export type Drinkware3DConfig = {
   material: Drinkware3DMaterial;
   /** Thicker glass foot at the base (glass beer mug). */
   baseHeight?: number;
+  /** Override foot/base glaze (cork sleeve). */
+  baseColor?: string;
   /**
    * Remap cylinder UVs so the bottom of the wrap texture maps above the
    * physical base — keeps art centered on the visible glass wall.
@@ -143,6 +147,20 @@ const productConfigs: Record<string, Drinkware3DConfig> = {
     wallThickness: 0.022,
     baseHeight: 0.014,
     handleType: 'c',
+  },
+  /** White ceramic with cork sleeve and sliding sip lid — print the wall only. */
+  'mug-cork-lid': {
+    ...MUG_CONFIG,
+    radiusTop: 0.45,
+    radiusBottom: 0.45,
+    height: 1.02,
+    hasLid: true,
+    lidStyle: 'sip',
+    lidHeight: 0.055,
+    baseHeight: 0.26,
+    baseColor: '#c4a06a',
+    wrapUvBottomInset: 0.2,
+    wrapUvTopInset: 0.04,
   },
   'mug-red-patch': {
     ...MUG_CONFIG,

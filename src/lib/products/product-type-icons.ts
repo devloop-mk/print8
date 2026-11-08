@@ -13,6 +13,7 @@ import {
   Sparkles,
   Shirt,
   ShoppingBag,
+  Square,
   type LucideIcon,
 } from 'lucide-react';
 import { type ProductType } from '@/lib/data/catalog';
@@ -38,6 +39,7 @@ export const productTypeIconMap: Record<ProductTypeFilterValue, LucideIcon> = {
   'gift-box': Gift,
   'gift-set': Gift,
   'microfiber-cloth': Sparkles,
+  coaster: Square,
 };
 
 export function getProductTypeIcon(type: ProductTypeFilterValue): LucideIcon {

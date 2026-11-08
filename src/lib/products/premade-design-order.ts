@@ -36,6 +36,8 @@ import {
   type TshirtContentFootprint,
   type TshirtPrintPackage,
 } from '@/lib/products/tshirt-print-pricing';
+import { isHoodieProduct } from '@/lib/products/hoodie-catalog';
+import { getHoodieUnitPrice } from '@/lib/products/hoodie-pricing';
 
 export function writeSideDesignMetadata(
   metadata: Record<string, string | number | boolean>,
@@ -152,6 +154,7 @@ export function getPremadeTshirtPrintPackage(
 export function getPremadeDesignUnitPrice(
   product: Product,
   design: ProductDesignTemplate,
+  size?: string,
 ): number {
   if (isTshirtProduct(product)) {
     return getTshirtUnitPrice(getPremadeTshirtPrintPackage(design), product);
@@ -162,6 +165,9 @@ export function getPremadeDesignUnitPrice(
   if (isDrinkwareProduct(product)) {
     const tier = classifyDrinkwarePrintTierFromTemplate(product, design);
     return getDrinkwareUnitPrice(product, tier);
+  }
+  if (isHoodieProduct(product)) {
+    return getHoodieUnitPrice(product, size);
   }
   return product.basePrice;
 }
@@ -280,7 +286,7 @@ export function buildPremadeDesignCartPayload({
   });
   const activeSide = getInitialCustomizerSide(design);
   const sides = getDesignSides(design);
-  const unitPrice = getPremadeDesignUnitPrice(product, design);
+  const unitPrice = getPremadeDesignUnitPrice(product, design, size);
 
   if (capturedSidePreviews?.leftDesignPreview && capturedSidePreviews?.rightDesignPreview) {
     return {

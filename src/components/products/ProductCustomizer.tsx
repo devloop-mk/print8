@@ -47,6 +47,7 @@ import {
 import {
   getCompatibleDrinkwareProducts,
   getDrinkwareBodyColorOptions,
+  isCorkLidMug,
   isHeartHandleMug,
   isMugInsideProduct,
 } from '@/lib/products/drinkware-product-options';
@@ -54,6 +55,7 @@ import { withVendorSkuMetadata } from '@/lib/products/vendor-sku';
 import { GarmentFitSelector } from '@/components/products/GarmentFitSelector';
 import { DrinkwareProductSelector } from '@/components/products/DrinkwareProductSelector';
 import { DesignColorPicker } from '@/components/products/DesignColorPicker';
+import { ProductSalePrice } from '@/components/products/ProductSalePrice';
 import {
   evaluateCartAssetLimits,
   MAX_PHOTOS_PER_ORDER,
@@ -227,6 +229,14 @@ import {
   isTshirtProduct,
   type TshirtPrintPackage,
 } from '@/lib/products/tshirt-print-pricing';
+import {
+  isHoodieProduct,
+  isWhiteHoodedKangaroo,
+} from '@/lib/products/hoodie-catalog';
+import {
+  getHoodieSizeSurcharge,
+  getHoodieUnitPrice,
+} from '@/lib/products/hoodie-pricing';
 import { usePrintAreaMaxScale } from '@/lib/products/use-print-area-max-scale';
 
 /**
@@ -1568,6 +1578,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       });
       return getDrinkwareUnitPrice(product, tier);
     }
+    if (isHoodieProduct(product)) return getHoodieUnitPrice(product, size);
     return product.basePrice;
   }, [
     product,
@@ -1577,6 +1588,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     backHasContent,
     sideDesigns,
     activeSide,
+    size,
   ]);
 
   // Editing always uses the generous chest zone — the tighter "small
@@ -2695,6 +2707,14 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
               {t('mugHeartHandlePreviewNote')}
             </p>
           ) : null}
+          {isCorkLidMug(product.id) ? (
+            <p
+              role="note"
+              className="rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-2 text-xs font-medium leading-snug text-brand-950"
+            >
+              {t('mugCorkLidPreviewNote')}
+            </p>
+          ) : null}
         </div>
         <div className="flex min-h-0 flex-1 items-center justify-center bg-[#f4f6f8] p-4 md:p-6">
           <DrinkwareDesignPreview3D
@@ -2807,7 +2827,16 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
                 {tp(type)}
               </p>
               <p className="text-xs text-brand-600">
-                {formatPrice(unitPrice, locale)}
+                {product && isHoodieProduct(product) ? (
+                  <ProductSalePrice
+                    product={product}
+                    size={size}
+                    locale={locale}
+                    className="text-xs"
+                  />
+                ) : (
+                  formatPrice(unitPrice, locale)
+                )}
               </p>
             </div>
           </div>
@@ -3580,6 +3609,7 @@ function InteractivePreview({
     isDrinkware && !isCapturing && !desktopSplitPreview;
   const showMugInsideNote = isMugInsideProduct(product.id);
   const showHeartHandleNote = isHeartHandleMug(product.id);
+  const showCorkLidNote = isCorkLidMug(product.id);
   const placedPhotos = getPlacedPhotos(sideDesign);
 
   // Drinkware 2D editor is a flat unwrap template — never show the mug photo.
@@ -3884,6 +3914,14 @@ function InteractivePreview({
             {t('mugHeartHandlePreviewNote')}
           </p>
         ) : null}
+        {showCorkLidNote ? (
+          <p
+            role="note"
+            className="w-full rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-center text-xs font-medium leading-snug text-brand-950"
+          >
+            {t('mugCorkLidPreviewNote')}
+          </p>
+        ) : null}
         <p
           role="note"
           className="w-full rounded-lg border border-amber-300/80 bg-amber-50 px-3 py-2 text-center text-xs font-medium leading-snug text-amber-950"
@@ -3913,6 +3951,14 @@ function InteractivePreview({
             {t('mugHeartHandlePreviewNote')}
           </p>
         ) : null}
+        {showCorkLidNote && !showStacked3dPreview ? (
+          <p
+            role="note"
+            className="w-full rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-center text-xs font-medium leading-snug text-brand-950"
+          >
+            {t('mugCorkLidPreviewNote')}
+          </p>
+        ) : null}
         <DrinkwareWrapHint>{t('drinkwareWrapHint')}</DrinkwareWrapHint>
       </div>
     ) : null}
@@ -3920,7 +3966,7 @@ function InteractivePreview({
     {!isCapturing &&
     mockupLayout.wrapPrintArea &&
     desktopSplitPreview &&
-    (showMugInsideNote || showHeartHandleNote) ? (
+    (showMugInsideNote || showHeartHandleNote || showCorkLidNote) ? (
       <>
         {showMugInsideNote ? (
           <p
@@ -3936,6 +3982,14 @@ function InteractivePreview({
             className="w-full max-w-[min(36rem,92vw)] rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-center text-xs font-medium leading-snug text-brand-950"
           >
             {t('mugHeartHandlePreviewNote')}
+          </p>
+        ) : null}
+        {showCorkLidNote ? (
+          <p
+            role="note"
+            className="w-full max-w-[min(36rem,92vw)] rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-center text-xs font-medium leading-snug text-brand-950"
+          >
+            {t('mugCorkLidPreviewNote')}
           </p>
         ) : null}
       </>
@@ -4607,21 +4661,37 @@ function ProductOptions({
             {t('selectSize')}
           </label>
           <div className="flex flex-wrap gap-2">
-            {product.sizes.map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => setSize(s)}
-                className={`min-h-11 min-w-11 rounded-lg px-4 py-2 text-sm font-medium ${
-                  size === s
-                    ? 'bg-brand-600 text-white'
-                    : 'bg-ink-100 text-ink-600'
-                }`}
-              >
-                {s}
-              </button>
-            ))}
+            {product.sizes.map((s) => {
+              const surcharge = isHoodieProduct(product)
+                ? getHoodieSizeSurcharge(s)
+                : 0;
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setSize(s)}
+                  className={`min-h-11 min-w-11 rounded-lg px-4 py-2 text-sm font-medium ${
+                    size === s
+                      ? 'bg-brand-600 text-white'
+                      : 'bg-ink-100 text-ink-600'
+                  }`}
+                >
+                  {s}
+                  {surcharge > 0 ? (
+                    <span className="mt-0.5 block text-[10px] font-semibold opacity-80">
+                      +{surcharge}
+                    </span>
+                  ) : null}
+                </button>
+              );
+            })}
           </div>
+          {isHoodieProduct(product) ? (
+            <p className="mt-2 text-xs text-ink-500">{t('hoodieSizeSurchargeNote')}</p>
+          ) : null}
+          {isWhiteHoodedKangaroo(product, color) ? (
+            <p className="mt-2 text-xs text-ink-500">{t('hoodieWhiteCordNote')}</p>
+          ) : null}
         </div>
       )}
       <div>

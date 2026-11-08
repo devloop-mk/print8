@@ -1,4 +1,9 @@
 import type { Product, ProductColorImages } from '@/lib/data/catalog';
+import {
+  HOODIE_COLOR_GRAY,
+  HOODIE_COLOR_HEXES,
+  HOODIE_COLOR_WHITE,
+} from '@/lib/products/hoodie-catalog';
 
 export const SWEATSHIRT_STYLES = [
   'crewneck',
@@ -10,10 +15,7 @@ export type SweatshirtStyle = (typeof SWEATSHIRT_STYLES)[number];
 
 export const SWEATSHIRT_MOCKUP_ASSET_VERSION = 1;
 
-const WHITE = '#ffffff';
-const BLACK = '#1c1a1d';
-
-export const SWEATSHIRT_COLOR_HEXES: string[] = [WHITE, BLACK];
+export const SWEATSHIRT_COLOR_HEXES: string[] = [...HOODIE_COLOR_HEXES];
 
 /** Bump when JPG mockups are regenerated. */
 export function getSweatshirtMockupPath(
@@ -24,19 +26,26 @@ export function getSweatshirtMockupPath(
   return `/hoodies/${style}/${slug}-${side}.jpg?v=${SWEATSHIRT_MOCKUP_ASSET_VERSION}`;
 }
 
+function sweatshirtSlugForColor(hex: string): 'bela' | 'crna' {
+  const normalized = hex.trim().toLowerCase();
+  if (normalized === HOODIE_COLOR_WHITE || normalized === HOODIE_COLOR_GRAY) {
+    return 'bela';
+  }
+  return 'crna';
+}
+
 export function buildSweatshirtColorImages(
   style: SweatshirtStyle,
 ): ProductColorImages {
-  return {
-    [WHITE]: {
-      front: getSweatshirtMockupPath(style, 'bela', 'front'),
-      back: getSweatshirtMockupPath(style, 'bela', 'back'),
-    },
-    [BLACK]: {
-      front: getSweatshirtMockupPath(style, 'crna', 'front'),
-      back: getSweatshirtMockupPath(style, 'crna', 'back'),
-    },
-  };
+  const images: ProductColorImages = {};
+  for (const hex of HOODIE_COLOR_HEXES) {
+    const slug = sweatshirtSlugForColor(hex);
+    images[hex] = {
+      front: getSweatshirtMockupPath(style, slug, 'front'),
+      back: getSweatshirtMockupPath(style, slug, 'back'),
+    };
+  }
+  return images;
 }
 
 export function isSweatshirtStyleProduct(product: Product): boolean {

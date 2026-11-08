@@ -248,6 +248,7 @@ const printAreaByProductId: Partial<Record<string, PrintAreaInsets>> = {
   'hoodie-crewneck': CREWNECK_PRINT_AREA_INSETS,
   'hoodie-quarter-zip': QUARTER_ZIP_PRINT_AREA_INSETS,
   'hoodie-full-zip': FULL_ZIP_PRINT_AREA_INSETS,
+  'hoodie-zip-hood': HOODIE_PRINT_AREA_INSETS,
 };
 
 export type MockupDisplayVariant = 'catalog-card' | 'catalog-design' | 'customizer';

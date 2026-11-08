@@ -11,6 +11,8 @@ import { Link } from "@/i18n/navigation";
 import { useCart } from "@/components/cart/CartProvider";
 
 import { formatPrice, cn } from "@/lib/utils";
+import { isHoodieProduct } from "@/lib/products/hoodie-catalog";
+import { getHoodieUnitPrice } from "@/lib/products/hoodie-pricing";
 import { getColorSwatchDisplayHex } from "@/lib/products/product-color-labels";
 import {
   MAX_PHOTOS_PER_ORDER,
@@ -159,6 +161,9 @@ export function CartPageContent() {
       : tp(productType as "t-shirt" | "mug" | "cup" | "bag" | "gift-set");
     updateItem(itemId, {
       name: formatProductCartName(typeLabel, newSize, product),
+      ...(product && isHoodieProduct(product)
+        ? { price: getHoodieUnitPrice(product, newSize) }
+        : {}),
       metadata: {
         ...item.metadata,
         size: newSize,

@@ -6,22 +6,26 @@ import { Link } from '@/i18n/navigation';
 import { products } from '@/lib/data/catalog';
 import { isUploadOnlyProduct } from '@/lib/products/upload-only-products';
 import { getProductOffering } from '@/lib/products/offering';
-import { getProductDisplayPrice } from '@/lib/products/tshirt-print-pricing';
+import { isHoodieProduct } from '@/lib/products/hoodie-catalog';
+import { getHoodieSizeSurcharge } from '@/lib/products/hoodie-pricing';
+import { getProductSpecs } from '@/lib/products/product-specs';
+import { ProductSalePrice } from '@/components/products/ProductSalePrice';
 import { getColorSwatchDisplayHex } from '@/lib/products/product-color-labels';
 import {
   getProductPaths,
 } from '@/lib/products/paths';
 import { resolveProductId } from '@/lib/products/product-id-aliases';
-import { formatPrice } from '@/lib/utils';
 import { Card } from '@/components/ui/Card';
 import { ProductImageCarousel } from '@/components/products/ProductImageCarousel';
 import { ProductPathChooser } from '@/components/products/ProductPathChooser';
 import { Reveal } from '@/components/motion/Reveal';
-import { ArrowLeft, Palette, Sparkles, Upload } from 'lucide-react';
+import { ArrowLeft, Leaf, Palette, Sparkles, Upload } from 'lucide-react';
 
 export function ProductDetail({ productId }: { productId: string }) {
   const t = useTranslations('products');
   const td = useTranslations('products.detail');
+  const tdp = useTranslations('products.designPdp');
+  const tc = useTranslations('products.customizer');
   const tp = useTranslations('products.types');
   const ti = useTranslations('products.items');
   const locale = useLocale();
@@ -49,6 +53,7 @@ export function ProductDetail({ productId }: { productId: string }) {
     ? ti(product.nameKey)
     : tp(product.type);
   const isUpload = isUploadOnlyProduct(product);
+  const specs = getProductSpecs(product.type);
   const detailDescription = isUpload
     ? td('uploadDescription')
     : product.detailDescriptionKey
@@ -110,20 +115,30 @@ export function ProductDetail({ productId }: { productId: string }) {
                   {t('customizer.selectSize')}
                 </label>
                 <div className="flex flex-wrap justify-center gap-2">
-                  {product.sizes.map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => setSize(s)}
-                      className={`min-h-10 min-w-10 rounded-lg px-3 py-1.5 text-sm font-medium ${
-                        size === s
-                          ? 'bg-brand-600 text-white'
-                          : 'bg-ink-100 text-ink-600'
-                      }`}
-                    >
-                      {s}
-                    </button>
-                  ))}
+                  {product.sizes.map((s) => {
+                    const surcharge = isHoodieProduct(product)
+                      ? getHoodieSizeSurcharge(s)
+                      : 0;
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setSize(s)}
+                        className={`min-h-10 min-w-10 rounded-lg px-3 py-1.5 text-sm font-medium ${
+                          size === s
+                            ? 'bg-brand-600 text-white'
+                            : 'bg-ink-100 text-ink-600'
+                        }`}
+                      >
+                        {s}
+                        {surcharge > 0 ? (
+                          <span className="mt-0.5 block text-[10px] font-semibold opacity-80">
+                            +{surcharge}
+                          </span>
+                        ) : null}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -136,14 +151,60 @@ export function ProductDetail({ productId }: { productId: string }) {
               <h1 className="text-3xl font-bold text-ink-900">
                 {productLabel}
               </h1>
-              <p className="mt-2 text-xl text-brand-600">
-                {t('startingFrom')} {formatPrice(getProductDisplayPrice(product), locale)}
+              <p className="mt-2 text-xl">
+                <ProductSalePrice
+                  product={product}
+                  size={size}
+                  locale={locale}
+                  showFromPrefix={!size}
+                />
               </p>
               <p className="mt-4 text-ink-600">{detailDescription}</p>
               {detailNote ? (
                 <p className="mt-2 text-sm text-ink-500">{detailNote}</p>
               ) : null}
+              {isHoodieProduct(product) ? (
+                <p className="mt-2 text-sm text-ink-500">
+                  {tc('hoodieSizeSurchargeNote')}
+                </p>
+              ) : null}
             </div>
+
+            {specs && isHoodieProduct(product) ? (
+              <Card className="space-y-4 p-5">
+                <h2 className="text-lg font-semibold text-ink-900">
+                  {tdp('productSpecs')}
+                </h2>
+                <dl className="space-y-3 text-sm">
+                  <div className="flex justify-between gap-4 border-b border-ink-100 pb-3">
+                    <dt className="text-ink-500">{tdp('material')}</dt>
+                    <dd className="font-medium text-ink-900">
+                      {tdp(`specs.${specs.materialKey}`)}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between gap-4 border-b border-ink-100 pb-3">
+                    <dt className="text-ink-500">{tdp('fit')}</dt>
+                    <dd className="font-medium text-ink-900">
+                      {tdp(`specs.${specs.fitKey}`)}
+                    </dd>
+                  </div>
+                  {specs.careKey ? (
+                    <div className="flex justify-between gap-4 pb-1">
+                      <dt className="text-ink-500">{tdp('care')}</dt>
+                      <dd className="font-medium text-ink-900">
+                        {tdp(`specs.${specs.careKey}`)}
+                      </dd>
+                    </div>
+                  ) : null}
+                  <div className="flex items-center gap-2 pt-1 text-emerald-700">
+                    <Leaf className="h-4 w-4 shrink-0" aria-hidden />
+                    <span className="text-sm font-medium">
+                      {tdp(`specs.${specs.ecoFriendlyKey}`)}
+                    </span>
+                  </div>
+                </dl>
+              </Card>
+            ) : null}
 
             {isUpload ? (
               <Link

@@ -35,6 +35,8 @@ import {
   isBagProduct,
 } from '@/lib/products/bag-print-pricing';
 import { getPremadeDesignUnitPrice } from '@/lib/products/premade-design-order';
+import { isHoodieProduct } from '@/lib/products/hoodie-catalog';
+import { getHoodieUnitPrice } from '@/lib/products/hoodie-pricing';
 import { getStaticProductDesignTemplates } from '@/lib/products/merged-product-designs';
 import {
   getStudentPrintUnitPrice,
@@ -154,6 +156,8 @@ function getProductUnitPrice(
   const product = getProductById(productId);
   if (!product) return null;
 
+  const size = typeof metadata.size === 'string' ? metadata.size : undefined;
+
   if (isTshirtProduct(product)) {
     const packaged = getTshirtPriceFromMetadata(metadata, product);
     if (packaged !== null) return packaged;
@@ -164,7 +168,7 @@ function getProductUnitPrice(
       const design = getStaticProductDesignTemplates().find(
         (template) => template.id === metadata.designTemplateId,
       );
-      if (design) return getPremadeDesignUnitPrice(product, design);
+      if (design) return getPremadeDesignUnitPrice(product, design, size);
       return product.basePrice;
     }
 
@@ -179,7 +183,7 @@ function getProductUnitPrice(
       const design = getStaticProductDesignTemplates().find(
         (template) => template.id === metadata.designTemplateId,
       );
-      if (design) return getPremadeDesignUnitPrice(product, design);
+      if (design) return getPremadeDesignUnitPrice(product, design, size);
     }
 
     return product.basePrice;
@@ -189,7 +193,11 @@ function getProductUnitPrice(
     const design = getStaticProductDesignTemplates().find(
       (template) => template.id === metadata.designTemplateId,
     );
-    if (design) return getPremadeDesignUnitPrice(product, design);
+    if (design) return getPremadeDesignUnitPrice(product, design, size);
+  }
+
+  if (isHoodieProduct(product)) {
+    return getHoodieUnitPrice(product, size);
   }
 
   return product.basePrice;

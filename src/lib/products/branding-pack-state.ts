@@ -15,6 +15,8 @@ import {
   getTshirtUnitPrice,
   isTshirtProduct,
 } from '@/lib/products/tshirt-print-pricing';
+import { isHoodieProduct } from '@/lib/products/hoodie-catalog';
+import { getHoodieUnitPrice } from '@/lib/products/hoodie-pricing';
 
 export const BRANDING_PACK_STATE_VERSION = 1;
 
@@ -275,8 +277,18 @@ export function getBrandingPackLineItems(state: BrandingPackState): Array<{
 }
 
 export function calculateBrandingPackTotal(state: BrandingPackState): number {
-  return getBrandingPackLineItems(state).reduce((sum, line) => {
-    return sum + resolveBrandingPackUnitPrice(line.product) * line.quantity;
+  return getSelectedBrandingPackProducts(state).reduce((sum, product) => {
+    const catalogId = BRANDING_PACK_DEFAULT_PRODUCT_ID[product.productType];
+    const catalogProduct = catalogId ? getProductById(catalogId) : undefined;
+    if (catalogProduct && isHoodieProduct(catalogProduct)) {
+      const sized = product.sizeSelections.reduce(
+        (lineSum, entry) =>
+          lineSum + getHoodieUnitPrice(catalogProduct, entry.size) * entry.quantity,
+        0,
+      );
+      if (sized > 0) return sum + sized;
+    }
+    return sum + resolveBrandingPackUnitPrice(product) * getProductColorQuantity(product);
   }, 0);
 }
 
@@ -302,6 +314,10 @@ export function resolveBrandingPackUnitPrice(
     // (dual → front-large-back-large @ 600).
     const pkg = sideCount >= 2 ? 'front-large-back-large' : 'front-large';
     return getTshirtUnitPrice(pkg);
+  }
+
+  if (isHoodieProduct(catalogProduct)) {
+    return getHoodieUnitPrice(catalogProduct);
   }
 
   return catalogProduct.basePrice;

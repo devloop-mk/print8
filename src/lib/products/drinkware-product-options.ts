@@ -26,6 +26,11 @@ export function isHeartHandleMug(productId: string): boolean {
   return productId === 'mug-heart-handle';
 }
 
+/** Cork-base mug with lid — print the ceramic wall only. */
+export function isCorkLidMug(productId: string): boolean {
+  return productId === 'mug-cork-lid';
+}
+
 /** Drinkware blanks compatible with the active design (type + optional productIds lock). */
 export function getCompatibleDrinkwareProducts(
   design: ProductDesignTemplate | null | undefined,
