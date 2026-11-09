@@ -1390,18 +1390,13 @@ export function getProductGallerySlides(
 
   if (productSupportsSides(product) && (product.sides?.length ?? 0) > 1) {
     return [
-      ...getProductSides(product).map((side) => ({
-        image: getProductMockup(product, color, side),
-        kind: 'side' as const,
-        labelKey:
-          side === 'front'
-            ? 'front'
-            : side === 'back'
-              ? 'back'
-              : side === 'left'
-                ? 'left'
-                : 'right',
-      })),
+      ...getProductSides(product).map(
+        (side): ProductGallerySlide => ({
+          image: getProductMockup(product, color, side),
+          kind: 'side',
+          labelKey: side,
+        }),
+      ),
       ...lifestyleSlides,
     ];
   }

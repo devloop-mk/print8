@@ -16,8 +16,12 @@ function assert(name: string, pass: boolean, detail?: string) {
   console.log(`${mark} ${name}${detail ? ` — ${detail}` : ''}`);
 }
 
+function setNodeEnv(value: 'development' | 'production' | 'test') {
+  Object.assign(process.env, { NODE_ENV: value });
+}
+
 async function testOgAllowlist() {
-  process.env.NODE_ENV = 'production';
+  setNodeEnv('production');
   process.env.VERCEL_ENV = 'production';
   process.env.NEXT_PUBLIC_SITE_URL = 'https://print8.mk';
 
@@ -128,7 +132,7 @@ async function testTurnstileSkipWhenUnset() {
 }
 
 async function testSecretsDevFallback() {
-  process.env.NODE_ENV = 'development';
+  setNodeEnv('development');
   delete process.env.VERCEL_ENV;
   delete process.env.EMAIL_PREVIEW_SECRET;
 

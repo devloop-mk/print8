@@ -13,6 +13,7 @@ import {
 import { isMugInsideProduct } from '@/lib/products/drinkware-product-options';
 import { isDarkShirtColor } from '@/lib/products/design-overlay';
 import { getPrintAreaCenter } from '@/lib/products/print-area';
+import { getCatalogYourDesignPlaceholder } from '@/lib/products/product-catalog-preview-design';
 import { useStableImageSrc } from '@/hooks/useStableImageSrc';
 import { cn } from '@/lib/utils';
 
@@ -20,7 +21,8 @@ function getYourDesignPlaceholderCenter(product: Product): {
   x: number;
   y: number;
 } {
-  if (isMugInsideProduct(product.id)) return { x: 50, y: 50 };
+  const override = getCatalogYourDesignPlaceholder(product);
+  if (override) return { x: override.x, y: override.y };
   if (isCylindricalDrinkwareType(product.type)) return { x: 44, y: 48 };
   return getPrintAreaCenter(getProductMockupLayout(product).printArea);
 }
@@ -33,8 +35,11 @@ function YourDesignPlaceholderOverlay({
   color: string;
 }) {
   const t = useTranslations('products.card');
+  const placement = getCatalogYourDesignPlaceholder(product);
+  if (isMugInsideProduct(product.id)) return null;
+
   const { x, y } = getYourDesignPlaceholderCenter(product);
-  const dark = isDarkShirtColor(color);
+  const dark = placement?.onLightSurface ? false : isDarkShirtColor(color);
 
   return (
     <div
@@ -44,7 +49,10 @@ function YourDesignPlaceholderOverlay({
     >
       <span
         className={cn(
-          'absolute max-w-[48%] whitespace-pre-line text-center font-extrabold uppercase leading-[1.08] tracking-[0.08em] [font-size:clamp(9px,4.6cqw,14px)]',
+          'absolute whitespace-pre-line text-center font-extrabold uppercase leading-[1.08] tracking-[0.08em]',
+          placement?.compact
+            ? 'max-w-[22%] [font-size:clamp(7px,3.1cqw,11px)]'
+            : 'max-w-[48%] [font-size:clamp(9px,4.6cqw,14px)]',
           dark
             ? 'text-white [text-shadow:0_1px_10px_rgba(0,0,0,0.7),0_0_3px_rgba(0,0,0,0.45)]'
             : 'text-ink-900 [text-shadow:0_1px_10px_rgba(255,255,255,0.95),0_0_3px_rgba(255,255,255,0.8)]',
