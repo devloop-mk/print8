@@ -138,8 +138,8 @@ function ProductsPage({
 
   return (
     <PromoCatalogSheet pageNumber={pageNumber}>
-      <div className="flex h-full flex-col px-[5%] pb-[1.8%] pt-[3.5%]">
-        <div className="grid min-h-0 flex-1 grid-cols-2 grid-rows-2 gap-x-[4%] gap-y-[3.2%]">
+      <div className="flex h-full flex-col px-[5%] pb-[1.8%] pt-[3.2%]">
+        <div className="promo-products-grid">
           {productIds.map((id) => {
             const product = getPromoCatalogProduct(id);
             if (!product) return null;
@@ -149,8 +149,6 @@ function ProductsPage({
                 product={product}
                 name={t(`items.${id}.name`)}
                 specs={t.raw(`items.${id}.specs`) as string[]}
-                qtyLabel={t('qty')}
-                priceLabel={t('unitPrice')}
                 qty100Label={t('qty100')}
               />
             );

@@ -8,6 +8,7 @@ import { Link } from '@/i18n/navigation';
 import { Logo } from '@/components/brand/Logo';
 import { PROMO_CATALOG_PAGES } from '@/lib/catalog/promo-catalog';
 import { PromoCatalogPageView } from '@/components/catalog/promo-flipbook/PromoCatalogPages';
+import { fitPromoProductText } from '@/components/catalog/promo-flipbook/fitPromoProductText';
 import '@/components/catalog/promo-flipbook/promo-flipbook.css';
 
 type FlipPoint = { x: number; y: number };
@@ -52,6 +53,7 @@ export function PromoFlipbook() {
   const [ready, setReady] = useState(false);
   const [pageIndex, setPageIndex] = useState(0);
   const [pageCount, setPageCount] = useState(pages.length);
+  const [portrait, setPortrait] = useState(false);
 
   useEffect(() => {
     const source = sourceRef.current;
@@ -67,7 +69,8 @@ export function PromoFlipbook() {
     ).map((node) => node.cloneNode(true) as HTMLElement);
     host.replaceChildren(...leaves);
 
-    const portrait = window.matchMedia('(max-width: 860px)').matches;
+    const portraitMode = window.matchMedia('(max-width: 860px)').matches;
+    setPortrait(portraitMode);
     let pageFlip: PageFlip;
     try {
       pageFlip = new PageFlip(host, {
@@ -88,10 +91,14 @@ export function PromoFlipbook() {
         mobileScrollSupport: false,
         swipeDistance: 24,
         clickEventForward: true,
-        usePortrait: portrait,
+        usePortrait: portraitMode,
       });
+      const refit = () => fitPromoProductText(host);
+      pageFlip.on('init', refit);
       pageFlip.loadFromHTML(leaves);
       restrictPageFlipCornerHit(pageFlip);
+      requestAnimationFrame(refit);
+      setTimeout(refit, 200);
     } catch {
       stage.replaceChildren();
       return undefined;
@@ -99,6 +106,7 @@ export function PromoFlipbook() {
 
     pageFlip.on('flip', (event) => {
       setPageIndex(Number(event.data) || 0);
+      requestAnimationFrame(() => fitPromoProductText(host));
     });
 
     flipRef.current = pageFlip;
@@ -108,13 +116,17 @@ export function PromoFlipbook() {
 
     const observer =
       typeof ResizeObserver !== 'undefined'
-        ? new ResizeObserver(() => pageFlip.update())
+        ? new ResizeObserver(() => {
+            pageFlip.update();
+            fitPromoProductText(host);
+          })
         : null;
     observer?.observe(stage);
 
     return () => {
       observer?.disconnect();
       pageFlip.off('flip');
+      pageFlip.off('init');
       try {
         pageFlip.destroy();
       } catch {
@@ -145,7 +157,7 @@ export function PromoFlipbook() {
   const canPrev = pageIndex > 0;
   const canNext = pageIndex < last;
   const pageLabel =
-    pageIndex === 0 || pageIndex >= last
+    portrait || pageIndex === 0 || pageIndex >= last
       ? `${pageIndex + 1}`
       : `${pageIndex + 1}–${Math.min(pageIndex + 2, pageCount)}`;
 
@@ -155,9 +167,9 @@ export function PromoFlipbook() {
         <Link href="/" className="flex items-center gap-2">
           <Logo className="h-7 w-auto" />
         </Link>
-        <p className="hidden text-center text-sm font-medium text-ink-700 sm:block">
-          {t('title')}
-          <span className="ml-3 font-normal tabular-nums text-ink-400">
+        <p className="text-center text-sm font-medium text-ink-700">
+          <span className="hidden sm:inline">{t('title')}</span>
+          <span className="font-normal tabular-nums text-ink-400 sm:ml-3">
             {pageLabel}/{pageCount}
           </span>
         </p>
@@ -193,28 +205,51 @@ export function PromoFlipbook() {
         ))}
       </div>
 
-      <div className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center overflow-visible px-3 py-3 sm:px-8">
-        <button
-          type="button"
-          onClick={() => go(-1)}
-          disabled={!ready || !canPrev}
-          className="absolute left-2 z-20 rounded-full bg-white/90 p-2 text-ink-800 shadow-md disabled:opacity-30 sm:left-4"
-          aria-label={t('prev')}
-        >
-          <ChevronLeft className="h-6 w-6" />
-        </button>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <div className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center overflow-visible px-3 py-2 sm:px-8 sm:py-3">
+          <button
+            type="button"
+            onClick={() => go(-1)}
+            disabled={!ready || !canPrev}
+            className="absolute left-2 z-20 hidden rounded-full bg-white/90 p-2 text-ink-800 shadow-md disabled:opacity-30 sm:inline-flex sm:left-4"
+            aria-label={t('prev')}
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </button>
 
-        <div ref={stageRef} className="promo-flipbook-stage" />
+          <div ref={stageRef} className="promo-flipbook-stage" />
 
-        <button
-          type="button"
-          onClick={() => go(1)}
-          disabled={!ready || !canNext}
-          className="absolute right-2 z-20 rounded-full bg-white/90 p-2 text-ink-800 shadow-md disabled:opacity-30 sm:right-4"
-          aria-label={t('next')}
-        >
-          <ChevronRight className="h-6 w-6" />
-        </button>
+          <button
+            type="button"
+            onClick={() => go(1)}
+            disabled={!ready || !canNext}
+            className="absolute right-2 z-20 hidden rounded-full bg-white/90 p-2 text-ink-800 shadow-md disabled:opacity-30 sm:inline-flex sm:right-4"
+            aria-label={t('next')}
+          >
+            <ChevronRight className="h-6 w-6" />
+          </button>
+        </div>
+
+        <div className="flex items-center justify-center gap-8 pb-[max(0.65rem,env(safe-area-inset-bottom))] pt-1 sm:hidden">
+          <button
+            type="button"
+            onClick={() => go(-1)}
+            disabled={!ready || !canPrev}
+            className="rounded-full bg-white p-2 text-ink-800 shadow-md disabled:opacity-30"
+            aria-label={t('prev')}
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => go(1)}
+            disabled={!ready || !canNext}
+            className="rounded-full bg-white p-2 text-ink-800 shadow-md disabled:opacity-30"
+            aria-label={t('next')}
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
     </div>
