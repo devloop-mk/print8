@@ -8,7 +8,10 @@ export function FooterGate() {
   const pathname = usePathname();
   const navPending = useNavigationPending();
   const hideFooter =
-    navPending || pathname.includes('/products/customize/');
+    navPending ||
+    pathname.includes('/products/customize/') ||
+    pathname === '/catalog' ||
+    pathname.startsWith('/catalog/');
 
   if (hideFooter) return null;
 

@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import { routing, type Locale } from "@/i18n/routing";
-import { Header } from "@/components/layout/Header";
+import { HeaderGate } from "@/components/layout/HeaderGate";
 import { FooterGate } from "@/components/layout/FooterGate";
 import { ProductVisibilityProvider } from "@/components/layout/ProductVisibilityProvider";
 import { getVisibleProductTypes } from "@/lib/cms/product-visibility";
@@ -86,7 +86,7 @@ export default async function LocaleLayout({
             <SiteAnalytics />
             <CookieConsent />
             <SpinWheelPromoPopupLazy />
-            <Header />
+            <HeaderGate />
             <main className="flex min-h-0 min-w-0 flex-1 flex-col">
               <PageTransition>{children}</PageTransition>
             </main>

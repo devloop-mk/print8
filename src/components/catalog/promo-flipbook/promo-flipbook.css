@@ -1,0 +1,79 @@
+/* Clip at the viewport so the 3D corner fold cannot grow document
+   scrollWidth and spawn a bottom scrollbar (that jump is a layout resize). */
+html:has(.promo-flipbook-stage),
+html:has(.promo-flipbook-stage) body {
+  overflow: hidden;
+}
+
+.promo-flipbook-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(96vw, calc((100dvh - 5.5rem) * 1.415));
+  height: min(calc(100dvh - 5.5rem), 90vh);
+  overflow: visible;
+}
+
+/* Let PageFlip size the book from padding-bottom. Forcing height: 100%
+   vertically centers pages (top ~90px) while hard-cover drawing uses top: 0,
+   which makes the book jump up on the cover turn. */
+.promo-flipbook-book.stf__parent {
+  width: 100%;
+  max-height: 100%;
+  overflow: visible !important;
+}
+
+.promo-flipbook-book .stf__wrapper,
+.promo-flipbook-book .sft__wrapper,
+.promo-flipbook-book .stf__block {
+  overflow: visible !important;
+}
+
+.stf__parent {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+}
+
+.stf__wrapper,
+.sft__wrapper {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.stf__parent canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.stf__block {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  perspective: 2000px;
+}
+
+.stf__item {
+  display: none;
+  position: absolute;
+  transform-style: preserve-3d;
+}
+
+.stf__outerShadow,
+.stf__innerShadow,
+.stf__hardShadow,
+.stf__hardInnerShadow {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.promo-flipbook-page {
+  background: #fff;
+  box-shadow: 0 12px 40px rgba(18, 43, 61, 0.18);
+}

@@ -21,6 +21,7 @@ const STATIC_PATHS = [
   '/search',
   '/contact',
   '/about',
+  '/catalog',
   '/faq',
   '/how-to-order',
   '/loyalty-points',

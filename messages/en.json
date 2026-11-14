@@ -20,7 +20,131 @@
       "howToOrder": "How to order",
       "loyaltyPoints": "Loyalty points",
       "newsletter": "Newsletter",
-      "legal": "Legal"
+      "legal": "Legal",
+      "catalog": "Catalog"
+    }
+  },
+  "promoCatalog": {
+    "title": "Holiday offer for promotional material",
+    "subtitle": "A clean catalog with quantity prices — starting with mugs.",
+    "kicker": "Catalog",
+    "headline": "Holiday offer for promotional material",
+    "tagline": "Printing on promotional products with your artwork or ours.",
+    "contents": "Contents",
+    "sectionMugs": "Mugs",
+    "contentsNote": "This first issue is mugs. More categories will follow in the same clean layout.",
+    "contentsLines": {
+      "mugs-1": "Classic, inner-color, magic mugs",
+      "mugs-2": "Window patch, heart handle, cork base",
+      "mugs-3": "Frosted glass, football handle, sparkle"
+    },
+    "qty": "Quantity",
+    "unitPrice": "Price per item",
+    "qty100": "100+",
+    "vat": "Prices include 18% VAT",
+    "deliveryLabel": "Delivery",
+    "delivery": "Delivery across North Macedonia",
+    "contactLabel": "Contact",
+    "webLabel": "Web",
+    "prev": "Previous page",
+    "next": "Next page",
+    "close": "Back to site",
+    "backTitle": "Order at print8.mk",
+    "backBody": "Send a logo or artwork — we print it on the mug. Prices are per piece, by quantity.",
+    "backCta": "See the mugs",
+    "items": {
+      "classic": {
+        "name": "Classic ceramic mug",
+        "specs": [
+          "Material: Ceramic, ~330 ml",
+          "Printed with your artwork or ours"
+        ]
+      },
+      "inner": {
+        "name": "Mug with coloured interior",
+        "specs": [
+          "Material: Ceramic",
+          "Coloured interior and handle",
+          "Printed with your artwork or ours"
+        ]
+      },
+      "magicGlossy": {
+        "name": "Magic mug — gloss",
+        "specs": [
+          "Material: Ceramic",
+          "Print appears with a hot drink",
+          "Printed with your artwork or ours"
+        ]
+      },
+      "magicMatte": {
+        "name": "Magic mug — matte",
+        "specs": [
+          "Material: Ceramic, matte finish",
+          "Print appears with a hot drink",
+          "Printed with your artwork or ours"
+        ]
+      },
+      "windowBlue": {
+        "name": "Window mug — blue",
+        "specs": [
+          "Material: Ceramic",
+          "Print in the white window only",
+          "Printed with your artwork or ours"
+        ]
+      },
+      "redPatch": {
+        "name": "Red mug with print patch",
+        "specs": [
+          "Material: Ceramic",
+          "Print in the white window only",
+          "Printed with your artwork or ours"
+        ]
+      },
+      "heart": {
+        "name": "Mug with heart handle",
+        "specs": [
+          "Material: Ceramic",
+          "Heart-shaped handle",
+          "Printed with your artwork or ours"
+        ]
+      },
+      "cork": {
+        "name": "Mug with cork base and lid",
+        "specs": [
+          "Material: Ceramic, cork, lid",
+          "Print on the white body only",
+          "Printed with your artwork or ours"
+        ]
+      },
+      "frosted": {
+        "name": "Frosted glass mug",
+        "specs": [
+          "Material: Frosted glass",
+          "Printed with your artwork or ours"
+        ]
+      },
+      "football": {
+        "name": "Mug with football handle",
+        "specs": [
+          "Material: Ceramic",
+          "Football-shaped handle",
+          "Printed with your artwork or ours"
+        ]
+      },
+      "roseSparkle": {
+        "name": "Rose sparkle mug",
+        "specs": [
+          "Material: Ceramic with sparkle glaze",
+          "Printed with your artwork or ours"
+        ]
+      },
+      "redSparkle": {
+        "name": "Red sparkle mug",
+        "specs": [
+          "Material: Ceramic with sparkle glaze",
+          "Printed with your artwork or ours"
+        ]
+      }
     }
   },
   "catalogGrid": {
@@ -62,6 +186,7 @@
     "services": "Services",
     "designs": "Print designs",
     "products": "Products",
+    "catalog": "Catalog",
     "about": "About",
     "contact": "Contact",
     "faq": "FAQ",

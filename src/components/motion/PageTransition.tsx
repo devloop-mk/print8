@@ -13,6 +13,7 @@ export function PageTransition({ children }: PageTransitionProps) {
   const pathname = usePathname();
   const reducedMotion = useReducedMotion();
   const isCustomizerRoute = pathname.includes('/products/customize/');
+  const isCatalogRoute = pathname === '/catalog' || pathname.startsWith('/catalog/');
   const isFirstRender = useRef(true);
   const [visible, setVisible] = useState(true);
 
@@ -38,7 +39,9 @@ export function PageTransition({ children }: PageTransitionProps) {
 
   const shellClass = isCustomizerRoute
     ? 'flex min-h-[calc(100dvh-var(--site-header-height,4.5rem))] flex-1 flex-col'
-    : 'flex min-h-[calc(100dvh-4.5rem)] min-w-0 flex-1 flex-col';
+    : isCatalogRoute
+      ? 'flex h-dvh min-h-0 min-w-0 flex-1 flex-col overflow-hidden'
+      : 'flex min-h-[calc(100dvh-4.5rem)] min-w-0 flex-1 flex-col';
 
   if (reducedMotion) {
     return (

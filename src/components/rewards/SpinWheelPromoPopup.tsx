@@ -26,8 +26,17 @@ function isCustomizerPath(pathname: string | null): boolean {
   );
 }
 
+function isCatalogPath(pathname: string | null): boolean {
+  if (!pathname) return false;
+  return /\/catalog(?:\/|$)/.test(pathname);
+}
+
 function isSpinPromoExcludedPath(pathname: string | null): boolean {
-  return isRewardsPath(pathname) || isCustomizerPath(pathname);
+  return (
+    isRewardsPath(pathname) ||
+    isCustomizerPath(pathname) ||
+    isCatalogPath(pathname)
+  );
 }
 
 function wasDismissedRecently(): boolean {
