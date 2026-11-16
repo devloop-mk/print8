@@ -10,12 +10,10 @@ export function PromoProductCard({
   product,
   name,
   specs,
-  qty100Label,
 }: {
   product: PromoCatalogProduct;
   name: string;
   specs: string[];
-  qty100Label: string;
 }) {
   const cardRef = useRef<HTMLElement>(null);
 
@@ -29,7 +27,7 @@ export function PromoProductCard({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={product.image} alt={name} />
       </Link>
-      <PromoPriceTable prices={product.prices} qty100Label={qty100Label} />
+      <PromoPriceTable prices={product.prices} />
       <div className="promo-product-meta">
         <Link href={product.href} className="promo-product-title-link">
           <h3 className="promo-product-title font-display">{name}</h3>

@@ -19,6 +19,27 @@ type FlipController = {
   render: { convertToBook: (pos: FlipPoint) => FlipPoint };
 };
 
+function readPromoCatalogPageIndex(pageCount: number) {
+  const raw = new URLSearchParams(window.location.search).get('page');
+  const parsed = Number.parseInt(raw ?? '1', 10);
+  const page = Number.isFinite(parsed) && parsed >= 1 ? parsed : 1;
+  return Math.min(page, Math.max(1, pageCount)) - 1;
+}
+
+function writePromoCatalogPageIndex(index: number) {
+  const params = new URLSearchParams(window.location.search);
+  const page = index + 1;
+  if (page <= 1) params.delete('page');
+  else params.set('page', String(page));
+  const query = params.toString();
+  const next = query
+    ? `${window.location.pathname}?${query}${window.location.hash}`
+    : `${window.location.pathname}${window.location.hash}`;
+  const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  if (current === next) return;
+  window.history.replaceState(window.history.state, '', next);
+}
+
 /** StPageFlip uses ~20% of the page diagonal as the corner hover zone. */
 function restrictPageFlipCornerHit(pageFlip: PageFlip) {
   const flip = (pageFlip as unknown as { flipController?: FlipController })
@@ -71,6 +92,7 @@ export function PromoFlipbook() {
 
     const portraitMode = window.matchMedia('(max-width: 860px)').matches;
     setPortrait(portraitMode);
+    const startPage = readPromoCatalogPageIndex(leaves.length);
     let pageFlip: PageFlip;
     try {
       pageFlip = new PageFlip(host, {
@@ -92,11 +114,15 @@ export function PromoFlipbook() {
         swipeDistance: 24,
         clickEventForward: true,
         usePortrait: portraitMode,
+        startPage,
       });
       const refit = () => fitPromoProductText(host);
       pageFlip.on('init', refit);
       pageFlip.loadFromHTML(leaves);
       restrictPageFlipCornerHit(pageFlip);
+      if (pageFlip.getCurrentPageIndex() !== startPage) {
+        pageFlip.turnToPage(startPage);
+      }
       requestAnimationFrame(refit);
       setTimeout(refit, 200);
     } catch {
@@ -105,7 +131,9 @@ export function PromoFlipbook() {
     }
 
     pageFlip.on('flip', (event) => {
-      setPageIndex(Number(event.data) || 0);
+      const index = Number(event.data) || 0;
+      setPageIndex(index);
+      writePromoCatalogPageIndex(index);
       requestAnimationFrame(() => fitPromoProductText(host));
     });
 
@@ -149,8 +177,18 @@ export function PromoFlipbook() {
       if (event.key === 'ArrowRight') go(1);
       if (event.key === 'ArrowLeft') go(-1);
     };
+    const onPopState = () => {
+      const book = flipRef.current;
+      if (!book) return;
+      const index = readPromoCatalogPageIndex(book.getPageCount());
+      if (book.getCurrentPageIndex() !== index) book.turnToPage(index);
+    };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener('popstate', onPopState);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('popstate', onPopState);
+    };
   }, [go]);
 
   const last = pageCount - 1;

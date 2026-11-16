@@ -7,9 +7,11 @@ import {
   PROMO_CATALOG_COVER_IMAGES,
   PROMO_CATALOG_PAGES,
   getPromoCatalogProduct,
+  isCalendarProductId,
   type PromoCatalogPageId,
 } from '@/lib/catalog/promo-catalog';
 import { PromoCatalogSheet } from '@/components/catalog/promo-flipbook/PromoCatalogSheet';
+import { PromoCalendarCard } from '@/components/catalog/promo-flipbook/PromoCalendarCard';
 import { PromoProductCard } from '@/components/catalog/promo-flipbook/PromoProductCard';
 
 function CoverPage({ pageNumber }: { pageNumber: number }) {
@@ -81,45 +83,87 @@ function CoverPage({ pageNumber }: { pageNumber: number }) {
   );
 }
 
+function ContentsLine({
+  label,
+  pageNumber,
+}: {
+  label: string;
+  pageNumber: number;
+}) {
+  return (
+    <li className="flex items-baseline gap-2 text-[clamp(0.68rem,1.08cqw,0.86rem)] text-ink-700">
+      <span className="min-w-0">{label}</span>
+      <span
+        aria-hidden
+        className="min-w-[1.25rem] flex-1 border-b border-dotted border-ink-400 translate-y-[-0.28em]"
+      />
+      <span className="shrink-0 tabular-nums text-ink-800">{pageNumber}</span>
+    </li>
+  );
+}
+
 function ContentsPage({ pageNumber }: { pageNumber: number }) {
   const t = useTranslations('promoCatalog');
-  const productLines = PROMO_CATALOG_PAGES.flatMap((page) =>
-    (page.productIds ?? []).map((id) => ({
-      id,
-      pageNumber: page.number,
-    })),
+  const mugPages = PROMO_CATALOG_PAGES.filter((page) => page.section === 'mugs');
+  const merchPages = PROMO_CATALOG_PAGES.filter((page) => page.section === 'merch');
+  const calendarPages = PROMO_CATALOG_PAGES.filter(
+    (page) => page.section === 'calendars',
   );
 
   return (
     <PromoCatalogSheet pageNumber={pageNumber}>
-      <div className="relative flex h-full flex-col px-[9%] pb-[5%] pt-[6%]">
+      <div className="relative flex h-full flex-col px-[7%] pb-[4%] pt-[5%]">
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.03]">
           <Logo className="h-[58%] w-auto" />
         </div>
         <h2 className="relative w-full text-center font-display text-[clamp(1.7rem,3.5cqw,2.6rem)] font-bold text-ink-900">
           {t('contents')}
         </h2>
-        <p className="relative mt-8 font-display text-[clamp(0.92rem,1.55cqw,1.12rem)] font-bold uppercase tracking-[0.06em] text-ink-900">
-          {t('sectionMugs')}
-        </p>
-        <ol className="relative mt-3 space-y-[0.55em]">
-          {productLines.map((line) => (
-            <li
-              key={line.id}
-              className="flex items-baseline gap-2 text-[clamp(0.82rem,1.3cqw,0.98rem)] text-ink-700"
-            >
-              <span className="shrink-0">{t(`items.${line.id}.name`)}</span>
-              <span
-                aria-hidden
-                className="min-w-[1.25rem] flex-1 border-b border-dotted border-ink-400 translate-y-[-0.28em]"
+        <div className="relative mt-3">
+          <p className="font-display text-[clamp(0.88rem,1.45cqw,1.08rem)] font-bold uppercase tracking-[0.06em] text-ink-900">
+            {t('sectionMugs')}
+          </p>
+          <ol className="mt-1.5 space-y-[0.28em]">
+            {mugPages.map((page) => (
+              <ContentsLine
+                key={page.id}
+                label={t(`contentsLines.${page.id}`)}
+                pageNumber={page.number}
               />
-              <span className="shrink-0 tabular-nums text-ink-800">
-                {line.pageNumber}
-              </span>
-            </li>
-          ))}
-        </ol>
-        <p className="relative mt-auto pt-6 text-[clamp(0.7rem,1.1cqw,0.82rem)] leading-relaxed text-ink-400">
+            ))}
+          </ol>
+        </div>
+        <div className="relative mt-3">
+          <p className="font-display text-[clamp(0.88rem,1.45cqw,1.08rem)] font-bold uppercase tracking-[0.06em] text-ink-900">
+            {t('sectionMerch')}
+          </p>
+          <ol className="promo-merch-toc mt-1.5">
+            {merchPages.map((page) => (
+              <ContentsLine
+                key={page.id}
+                label={t(`contentsLines.${page.id}`)}
+                pageNumber={page.number}
+              />
+            ))}
+          </ol>
+        </div>
+        <div className="relative mt-3 min-h-0 flex-1">
+          <p className="font-display text-[clamp(0.88rem,1.45cqw,1.08rem)] font-bold uppercase tracking-[0.06em] text-ink-900">
+            {t('sectionCalendars')}
+          </p>
+          <ol className="promo-cal-toc mt-1.5">
+            {calendarPages.flatMap((page) =>
+              (page.productIds ?? []).map((id) => (
+                <ContentsLine
+                  key={id}
+                  label={t(`items.${id}.name`)}
+                  pageNumber={page.number}
+                />
+              )),
+            )}
+          </ol>
+        </div>
+        <p className="relative mt-auto pt-3 text-[clamp(0.7rem,1.1cqw,0.82rem)] leading-relaxed text-ink-400">
           {t('contentsNote')}
         </p>
       </div>
@@ -135,27 +179,46 @@ function ProductsPage({
   productIds: string[];
 }) {
   const t = useTranslations('promoCatalog');
+  const calendars = productIds.some(isCalendarProductId);
+  const calendarLayout = productIds.length === 1 ? 'one' : 'two';
 
   return (
     <PromoCatalogSheet pageNumber={pageNumber}>
       <div className="flex h-full flex-col px-[5%] pb-[1.8%] pt-[3.2%]">
-        <div className="promo-products-grid">
-          {productIds.map((id) => {
-            const product = getPromoCatalogProduct(id);
-            if (!product) return null;
-            return (
-              <PromoProductCard
-                key={id}
-                product={product}
-                name={t(`items.${id}.name`)}
-                specs={t.raw(`items.${id}.specs`) as string[]}
-                qty100Label={t('qty100')}
-              />
-            );
-          })}
-        </div>
+        {calendars ? (
+          <div className={`promo-cal-page promo-cal-page--${calendarLayout}`}>
+            {productIds.map((id) => {
+              const product = getPromoCatalogProduct(id);
+              if (!product) return null;
+              return (
+                <PromoCalendarCard
+                  key={id}
+                  product={product}
+                  name={t(`items.${id}.name`)}
+                  specs={t.raw(`items.${id}.specs`) as string[]}
+                  layout={calendarLayout}
+                />
+              );
+            })}
+          </div>
+        ) : (
+          <div className="promo-products-grid">
+            {productIds.map((id) => {
+              const product = getPromoCatalogProduct(id);
+              if (!product) return null;
+              return (
+                <PromoProductCard
+                  key={id}
+                  product={product}
+                  name={t(`items.${id}.name`)}
+                  specs={t.raw(`items.${id}.specs`) as string[]}
+                />
+              );
+            })}
+          </div>
+        )}
         <p className="pt-1.5 text-center text-[clamp(0.58rem,0.9cqw,0.72rem)] text-ink-500">
-          {t('vat')}
+          {calendars ? t('vatCalendars') : t('vat')}
         </p>
       </div>
     </PromoCatalogSheet>
@@ -178,7 +241,7 @@ function BackPage({ pageNumber }: { pageNumber: number }) {
           {t('backBody')}
         </p>
         <Link
-          href="/products/type/mug"
+          href="/contact"
           className="mt-8 inline-flex rounded-none bg-brand-600 px-6 py-3 text-sm font-semibold uppercase tracking-[0.12em] text-white hover:bg-brand-700"
         >
           {t('backCta')}

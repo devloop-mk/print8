@@ -1,25 +1,19 @@
-import { PROMO_QTY_BREAKS, type PromoCatalogPrices } from '@/lib/catalog/promo-catalog';
+import type { PromoPriceBreak } from '@/lib/catalog/promo-catalog';
 
-export function PromoPriceTable({
-  prices,
-  qty100Label,
-}: {
-  prices: PromoCatalogPrices;
-  qty100Label: string;
-}) {
+export function PromoPriceTable({ prices }: { prices: PromoPriceBreak[] }) {
   return (
     <table className="promo-price-table">
       <thead>
         <tr>
-          {PROMO_QTY_BREAKS.map((qty) => (
-            <th key={qty}>{qty === 100 ? qty100Label : qty}</th>
+          {prices.map((row) => (
+            <th key={row.label}>{row.label}</th>
           ))}
         </tr>
       </thead>
       <tbody>
         <tr>
-          {PROMO_QTY_BREAKS.map((qty) => (
-            <td key={qty}>{prices[qty]}</td>
+          {prices.map((row) => (
+            <td key={row.label}>{row.price}</td>
           ))}
         </tr>
       </tbody>

@@ -6,6 +6,7 @@ declare module 'page-flip' {
     update(): void;
     flipNext(): void;
     flipPrev(): void;
+    turnToPage(pageIndex: number): void;
     getCurrentPageIndex(): number;
     getPageCount(): number;
     on(event: string, callback: (e: { data: number }) => void): this;

@@ -26,22 +26,31 @@
   },
   "promoCatalog": {
     "title": "Holiday offer for promotional material",
-    "subtitle": "A clean catalog with quantity prices — starting with mugs.",
+    "subtitle": "A clean catalog with quantity prices — mugs, promo products and 2027 calendars.",
     "kicker": "Catalog",
     "headline": "Holiday offer for promotional material",
     "tagline": "Printing on promotional products with your artwork or ours.",
     "contents": "Contents",
     "sectionMugs": "Mugs",
-    "contentsNote": "This first issue is mugs. More categories will follow in the same clean layout.",
+    "sectionMerch": "Promo products",
+    "sectionCalendars": "Calendars 2027",
+    "contentsNote": "Minimum order: 30 calendars, 100 pens or lighters. Prices are per piece, by quantity.",
     "contentsLines": {
       "mugs-1": "Classic, inner-color, magic mugs",
       "mugs-2": "Window patch, heart handle, cork base",
-      "mugs-3": "Frosted glass, football handle, sparkle"
+      "mugs-3": "Frosted glass, football handle, sparkle",
+      "merch-1": "MIA, Bianca, bottles",
+      "merch-2": "PVC keychains",
+      "merch-3": "PVC and hardboard keychains",
+      "merch-4": "Coasters, oval HB, pouch",
+      "merch-5": "Pens and lighters",
+      "merch-6": "Lighters and aluminium bottle"
     },
     "qty": "Quantity",
     "unitPrice": "Price per item",
     "qty100": "100+",
     "vat": "Prices include 18% VAT",
+    "vatCalendars": "Prices include 18% VAT. Minimum order: 30 calendars.",
     "deliveryLabel": "Delivery",
     "delivery": "Delivery across North Macedonia",
     "contactLabel": "Contact",
@@ -50,8 +59,8 @@
     "next": "Next page",
     "close": "Back to site",
     "backTitle": "Order at print8.mk",
-    "backBody": "Send a logo or artwork — we print it on the mug. Prices are per piece, by quantity.",
-    "backCta": "See the mugs",
+    "backBody": "Send a logo or artwork — we print mugs, keychains, pens, lighters, bottles and 2027 calendars. Prices are per piece, by quantity.",
+    "backCta": "Contact to order",
     "items": {
       "classic": {
         "name": "Classic ceramic mug",
@@ -143,6 +152,396 @@
         "specs": [
           "Material: Ceramic with sparkle glaze",
           "Printed with your artwork or ours"
+        ]
+      },
+      "mia": {
+        "name": "MIA mug",
+        "specs": [
+          "Ceramic, 325 ml · 82 × 95 mm",
+          "Coloured interior and handle",
+          "Sublimation · not dishwasher-safe"
+        ]
+      },
+      "bianca": {
+        "name": "Bianca mug",
+        "specs": [
+          "Ceramic, 325 ml · 81 × 95 mm",
+          "Two-tone base and handle",
+          "Sublimation · not dishwasher-safe"
+        ]
+      },
+      "armada": {
+        "name": "Armada Gold metal pen",
+        "specs": [
+          "Metal body with stylus tip",
+          "Laser / UV print · several colours",
+          "Minimum order 100 pieces"
+        ]
+      },
+      "amiga": {
+        "name": "Amiga plastic pen",
+        "specs": [
+          "Plastic pen, 13.8 cm · UV print",
+          "Several colours",
+          "Minimum order 100 pieces"
+        ]
+      },
+      "keyCr18": {
+        "name": "PVC rectangle keychain CR-18",
+        "specs": [
+          "PVC, double-sided print",
+          "Print area 18 × 50 mm"
+        ]
+      },
+      "keyHouse": {
+        "name": "PVC house keychain CR-Y",
+        "specs": [
+          "PVC, double-sided print",
+          "Print area 30 × 36 mm"
+        ]
+      },
+      "keyCircle": {
+        "name": "PVC circle keychain CR-33",
+        "specs": [
+          "PVC, double-sided print",
+          "Print area Ø 33 mm"
+        ]
+      },
+      "keyCk40": {
+        "name": "PVC rectangle keychain CK-40",
+        "specs": [
+          "PVC, double-sided print",
+          "Print area 25 × 40 mm"
+        ]
+      },
+      "keyHeart": {
+        "name": "PVC heart keychain CR-COR",
+        "specs": [
+          "PVC, double-sided print",
+          "Print area 40 × 40 mm"
+        ]
+      },
+      "keyCf40": {
+        "name": "PVC rectangle keychain CF-40",
+        "specs": [
+          "PVC with rounded top",
+          "Print area 25 × 40 mm"
+        ]
+      },
+      "keyHbRound": {
+        "name": "Hardboard round keychain",
+        "specs": [
+          "Hardboard, sublimation",
+          "Ø 50 mm · price per piece"
+        ]
+      },
+      "keyHbSquare": {
+        "name": "Hardboard square keychain",
+        "specs": [
+          "Hardboard, sublimation",
+          "50 × 50 mm · price per piece"
+        ]
+      },
+      "keyHbOval": {
+        "name": "Hardboard oval keychain",
+        "specs": [
+          "Hardboard, sublimation",
+          "Oval shape · price per piece"
+        ]
+      },
+      "lighterKrickMini": {
+        "name": "Krick Mini lighter",
+        "specs": [
+          "Plastic lighter, 69 × 20 × 10 mm",
+          "UV print 13 × 45 mm",
+          "Minimum order 100 pieces"
+        ]
+      },
+      "lighterVulkan": {
+        "name": "Vulkan II lighter",
+        "specs": [
+          "Plastic lighter, 82 × 24 × 11 mm",
+          "UV print 50 × 14 mm",
+          "Minimum order 100 pieces"
+        ]
+      },
+      "lighterKrick": {
+        "name": "Krick lighter",
+        "specs": [
+          "Plastic lighter, 22 × 78 × 10 mm",
+          "UV print 13 × 55 mm",
+          "Minimum order 100 pieces"
+        ]
+      },
+      "lighterLuss": {
+        "name": "Luss HD white lighter",
+        "specs": [
+          "Plastic lighter, 63 × 35 × 14 mm",
+          "Digital print 40 × 20 mm",
+          "Minimum order 100 pieces"
+        ]
+      },
+      "bottleRaise": {
+        "name": "Raise 2 glass bottle",
+        "specs": [
+          "Glass 500 ml + metal cap",
+          "Soft sleeve and gift box",
+          "Sublimation · Ø 67 × 220 mm"
+        ]
+      },
+      "coasterSquare": {
+        "name": "Sublimation coaster",
+        "specs": [
+          "Square 9.5 × 9.5 cm",
+          "4 mm thick · sublimation"
+        ]
+      },
+      "pouchPure": {
+        "name": "Sublimation cloth pouch",
+        "specs": [
+          "Clear pouch for a sublimated cloth",
+          "Print on the cloth to order"
+        ]
+      },
+      "coasterHb": {
+        "name": "Cardboard / cork coaster",
+        "specs": [
+          "Square 9.5 × 9.5 cm",
+          "Cardboard and cork, 2.5 mm"
+        ]
+      },
+      "bottleAlu600": {
+        "name": "Aluminium bottle 600 ml",
+        "specs": [
+          "Aluminium, white",
+          "Screw top + sports cap",
+          "Sublimation · Ø 72 × 210 mm"
+        ]
+      },
+      "bottleAlu500": {
+        "name": "Aluminium bottle 500 ml",
+        "specs": [
+          "Aluminium, white",
+          "Cap with carabiner",
+          "Sublimation · Ø 72 × 160 mm"
+        ]
+      },
+      "calTrodelen": {
+        "name": "Tri-fold calendar",
+        "specs": [
+          "(3×12) sheets, offset 80 g/m²",
+          "Backing: chrome board 300 g/m² · format 670 × 320 mm",
+          "Glued with rivet · ad space 150 × 320 mm"
+        ]
+      },
+      "calWild": {
+        "name": "Wildlife",
+        "specs": [
+          "6 sheets · art paper 90 g/m² · chrome board 250 g/m²",
+          "Format 500 × 300 mm · metal rail",
+          "Ad space 80 × 300 mm"
+        ]
+      },
+      "calOrthodox6": {
+        "name": "Orthodox 1/6",
+        "specs": [
+          "6 sheets · art paper 90 g/m² · chrome board 250 g/m²",
+          "Format 500 × 300 mm · metal rail",
+          "Ad space 80 × 300 mm"
+        ]
+      },
+      "calLandscape6": {
+        "name": "Landscapes 1/6",
+        "specs": [
+          "6 sheets · art paper 90 g/m² · chrome board 250 g/m²",
+          "Format 500 × 300 mm · metal rail",
+          "Ad space 80 × 300 mm"
+        ]
+      },
+      "calCars": {
+        "name": "Cars",
+        "specs": [
+          "4 sheets · art paper 90 g/m² · chrome board 250 g/m²",
+          "Format 500 × 300 mm · metal rail",
+          "Ad space 80 × 300 mm"
+        ]
+      },
+      "calLandscape4": {
+        "name": "Landscapes 1/4",
+        "specs": [
+          "4 sheets · art paper 90 g/m² · chrome board 250 g/m²",
+          "Format 500 × 300 mm · metal rail",
+          "Ad space 80 × 300 mm"
+        ]
+      },
+      "calDomestic": {
+        "name": "Farm animals",
+        "specs": [
+          "4 sheets · art paper 90 g/m² · chrome board 250 g/m²",
+          "Format 500 × 300 mm · metal rail",
+          "Ad space 80 × 300 mm"
+        ]
+      },
+      "calMosques": {
+        "name": "Mosques",
+        "specs": [
+          "4 sheets · art paper 90 g/m² · chrome board 250 g/m²",
+          "Format 500 × 300 mm · metal rail",
+          "Ad space 80 × 300 mm"
+        ]
+      },
+      "calTrucks": {
+        "name": "Trucks",
+        "specs": [
+          "4 sheets · art paper 90 g/m² · chrome board 250 g/m²",
+          "Format 500 × 300 mm · metal rail",
+          "Ad space 80 × 300 mm"
+        ]
+      },
+      "calSpiralOrthodox": {
+        "name": "Spiral Orthodox",
+        "specs": [
+          "Desk calendar with spiral binding",
+          "12 months · Orthodox icons",
+          "Ad space on the stand"
+        ]
+      },
+      "calSpiralLandscape": {
+        "name": "Spiral landscapes",
+        "specs": [
+          "Desk calendar with spiral binding",
+          "12 months · landscapes",
+          "Ad space on the stand"
+        ]
+      },
+      "calNarrowOrthodox": {
+        "name": "Slim Orthodox",
+        "specs": [
+          "Art paper 90 g/m² · chrome board 250 g/m²",
+          "Format 500 × 150 mm · metal rail",
+          "Ad space 80 × 150 mm"
+        ]
+      },
+      "calOrthodox4": {
+        "name": "Orthodox 1/4",
+        "specs": [
+          "4 sheets · art paper 90 g/m² · chrome board 250 g/m²",
+          "Format 500 × 300 mm · metal rail",
+          "Ad space 80 × 300 mm"
+        ]
+      },
+      "calKids": {
+        "name": "Kids 1/4",
+        "specs": [
+          "4 sheets · art paper 90 g/m² · chrome board 250 g/m²",
+          "Format 500 × 300 mm · metal rail",
+          "Ad space 80 × 300 mm"
+        ]
+      },
+      "calPets": {
+        "name": "Pets 1/4",
+        "specs": [
+          "4 sheets · art paper 90 g/m² · chrome board 250 g/m²",
+          "Format 500 × 300 mm · metal rail",
+          "Ad space 80 × 300 mm"
+        ]
+      },
+      "calRedOrthodox": {
+        "name": "Red Orthodox 1/4",
+        "specs": [
+          "4 sheets",
+          "Format 500 × 300 mm"
+        ]
+      },
+      "calKidsPets": {
+        "name": "Children and pets 1/4",
+        "specs": [
+          "4 sheets",
+          "Format 500 × 300 mm"
+        ]
+      },
+      "calPocketOrthodox": {
+        "name": "Pocket calendar 9×6 — Orthodox",
+        "specs": [
+          "Format 9 × 6 cm",
+          "Picture on one side, calendar on the other"
+        ]
+      },
+      "calPocketPinup": {
+        "name": "Pocket calendar 9×6 — pin-up",
+        "specs": [
+          "Format 9 × 6 cm",
+          "Picture on one side, calendar on the other"
+        ]
+      },
+      "calPocketLandscape": {
+        "name": "Pocket calendar 9×6 — landscape",
+        "specs": [
+          "Format 9 × 6 cm",
+          "Picture on one side, calendar on the other"
+        ]
+      },
+      "calPocketCar": {
+        "name": "Pocket calendar 9×6 — car",
+        "specs": [
+          "Format 9 × 6 cm",
+          "Picture on one side, calendar on the other"
+        ]
+      },
+      "calWildGreen": {
+        "name": "Wildlife 1/4",
+        "specs": [
+          "4 sheets",
+          "Format 500 × 300 mm"
+        ]
+      },
+      "calLandscapeCollage": {
+        "name": "Landscape collage",
+        "specs": [
+          "12 monthly sheets",
+          "Format 500 × 300 mm"
+        ]
+      },
+      "calLandscapeWave": {
+        "name": "Landscapes 1/4 — wave",
+        "specs": [
+          "4 sheets",
+          "Format 500 × 300 mm"
+        ]
+      },
+      "calCarsWave": {
+        "name": "Cars 1/4 — wave",
+        "specs": [
+          "4 sheets",
+          "Format 500 × 300 mm"
+        ]
+      },
+      "calChurchesWave": {
+        "name": "Churches and mosques 1/4",
+        "specs": [
+          "4 sheets",
+          "Format 500 × 300 mm"
+        ]
+      },
+      "calSmallOrthodox": {
+        "name": "Orthodox 1/4 — icons",
+        "specs": [
+          "4 sheets",
+          "Format 500 × 300 mm"
+        ]
+      },
+      "calDeskSpiral": {
+        "name": "Desk spiral Orthodox",
+        "specs": [
+          "Desk calendar with spiral binding",
+          "12 months"
+        ]
+      },
+      "calDeskTrodelen": {
+        "name": "Desk tri-fold",
+        "specs": [
+          "Desk calendar, three months in view",
+          "Ad space above the months"
         ]
       }
     }
