@@ -5,12 +5,17 @@ export type PromoPriceBreak = {
 
 export type PromoCatalogProduct = {
   id: string;
-  href: string;
+  /** Storefront product URL. Omit when the item is catalog-only. */
+  href?: string;
   image: string;
   images?: string[];
   prices: PromoPriceBreak[];
   swatches?: string[];
 };
+
+export function isPromoShopHref(href?: string): href is string {
+  return Boolean(href?.startsWith('/products'));
+}
 
 export type PromoCatalogPageId =
   | 'cover'
@@ -22,10 +27,19 @@ export type PromoCatalogPageId =
   | `merch-${number}`
   | `calendars-${number}`;
 
-const CALENDAR_HREF = '/contact';
-const MERCH_HREF = '/contact';
 const CAL_IMG = '/catalog/calendars/2027';
 const MERCH_IMG = '/catalog/merch';
+
+/** Circled fabric card 01, 04, 07, 13, 14 plus C.K. 03 red and C.K. 12 olive. */
+const BLUZON_SWATCHES = [
+  '#e6e6e4',
+  '#b8b8b8',
+  '#1a1a1a',
+  '#2b43a6',
+  '#17283d',
+  '#7e0e18',
+  '#3a3c1f',
+];
 
 /** Quantity breaks from the shop unit price (rounded to 10 MKD). Easy to edit. */
 function qtyPrices(unit: number): PromoPriceBreak[] {
@@ -67,7 +81,6 @@ function merchProduct(
 ): PromoCatalogProduct {
   return {
     id,
-    href: MERCH_HREF,
     image: `${MERCH_IMG}/${file}`,
     prices: qtyPrices(unit),
     swatches,
@@ -83,7 +96,6 @@ function calendarProduct(
   const base = `${CAL_IMG}/${folder}`;
   return {
     id,
-    href: CALENDAR_HREF,
     image: `${base}/hero.jpg`,
     images:
       sheets > 1
@@ -233,6 +245,37 @@ export const PROMO_CATALOG_PRODUCTS: PromoCatalogProduct[] = [
   merchProduct('coasterHb', 'coaster-hb.jpg', 90),
   merchProduct('bottleAlu600', 'bottle-alu-600.jpg', 390),
   merchProduct('bottleAlu500', 'bottle-alu-500.jpg', 290),
+  merchProduct('polarZip', 'polar-zip.jpg?v=2', 990, [
+    '#ffffff',
+    '#1e3a8a',
+    '#111111',
+  ]),
+  merchProduct('polarQuarterZip', 'polar-quarter-zip.jpg?v=2', 990, [
+    '#ffffff',
+    '#1e3a8a',
+    '#111111',
+  ]),
+  merchProduct('polarVest', 'polar-vest.jpg?v=2', 890, [
+    '#ffffff',
+    '#1e3a8a',
+    '#111111',
+  ]),
+  {
+    ...merchProduct('bluzonHood', 'bluzon-hood.jpg', 1100, BLUZON_SWATCHES),
+    href: '/products/hoodie-basic',
+  },
+  {
+    ...merchProduct('bluzonZip', 'bluzon-zip.jpg', 1250, BLUZON_SWATCHES),
+    href: '/products/hoodie-full-zip',
+  },
+  {
+    ...merchProduct('bluzonZipHood', 'bluzon-zip-hood.jpg', 1250, BLUZON_SWATCHES),
+    href: '/products/hoodie-zip-hood',
+  },
+  {
+    ...merchProduct('bluzonQuarterZip', 'bluzon-quarter-zip.jpg', 1250, BLUZON_SWATCHES),
+    href: '/products/hoodie-quarter-zip',
+  },
   {
     ...calendarProduct('calTrodelen', 'trodelen', 1, 280),
     image: `${CAL_IMG}/trodelen/hero.png`,
@@ -364,15 +407,6 @@ export const PROMO_CATALOG_PRODUCTS: PromoCatalogProduct[] = [
     ],
   },
   {
-    ...calendarProduct('calKids', 'kids', 4, 180),
-    image: `${CAL_IMG}/kids/hero.png`,
-    images: [
-      `${CAL_IMG}/kids/2.png`,
-      `${CAL_IMG}/kids/3.png`,
-      `${CAL_IMG}/kids/4.png`,
-    ],
-  },
-  {
     ...calendarProduct('calPets', 'pets', 4, 180),
     image: `${CAL_IMG}/pets/hero.png`,
     images: [
@@ -383,18 +417,43 @@ export const PROMO_CATALOG_PRODUCTS: PromoCatalogProduct[] = [
   },
   calendarProduct('calRedOrthodox', 'red-orthodox', 4, 180),
   calendarProduct('calKidsPets', 'kids-pets', 4, 180),
-  calendarProduct('calPocketOrthodox', 'pocket-orthodox', 1, 45),
-  calendarProduct('calPocketPinup', 'pocket-pinup', 1, 45),
-  calendarProduct('calPocketLandscape', 'pocket-landscape', 1, 45),
-  calendarProduct('calPocketCar', 'pocket-car', 1, 45),
+  {
+    ...calendarProduct('calPocketOrthodox', 'pocket-orthodox', 1, 45),
+    image: `${CAL_IMG}/pocket-orthodox/hero.png`,
+  },
+  {
+    ...calendarProduct('calPocketPinup', 'pocket-pinup', 1, 45),
+    image: `${CAL_IMG}/pocket-pinup/hero.png`,
+  },
+  {
+    ...calendarProduct('calPocketLandscape', 'pocket-landscape', 1, 45),
+    image: `${CAL_IMG}/pocket-landscape/hero.png`,
+  },
+  {
+    ...calendarProduct('calPocketCar', 'pocket-car', 1, 45),
+    image: `${CAL_IMG}/pocket-car/hero.png`,
+  },
   calendarProduct('calWildGreen', 'wild-green', 4, 180),
-  calendarProduct('calLandscapeCollage', 'landscape-collage', 1, 230),
   calendarProduct('calLandscapeWave', 'landscape-wave', 4, 180),
   calendarProduct('calCarsWave', 'cars-wave', 4, 180),
   calendarProduct('calChurchesWave', 'churches-wave', 4, 180),
   calendarProduct('calSmallOrthodox', 'small-orthodox', 4, 180),
-  calendarProduct('calDeskSpiral', 'desk-spiral', 12, 180),
-  calendarProduct('calDeskTrodelen', 'desk-trodelen', 1, 220),
+  {
+    ...calendarProduct('calDeskLandscape', 'desk-landscape', 11, 180),
+    image: `${CAL_IMG}/desk-landscape/hero.png`,
+    images: [
+      `${CAL_IMG}/desk-landscape/2.png`,
+      `${CAL_IMG}/desk-landscape/3.png`,
+      `${CAL_IMG}/desk-landscape/4.png`,
+      `${CAL_IMG}/desk-landscape/5.png`,
+      `${CAL_IMG}/desk-landscape/6.png`,
+      `${CAL_IMG}/desk-landscape/7.png`,
+      `${CAL_IMG}/desk-landscape/8.png`,
+      `${CAL_IMG}/desk-landscape/9.png`,
+      `${CAL_IMG}/desk-landscape/10.png`,
+      `${CAL_IMG}/desk-landscape/11.png`,
+    ],
+  },
 ];
 
 export const PROMO_CATALOG_COVER_IMAGES = [
@@ -403,7 +462,7 @@ export const PROMO_CATALOG_COVER_IMAGES = [
   `${MERCH_IMG}/armada.jpg`,
   `${CAL_IMG}/landscape-4/hero.png`,
   `${MERCH_IMG}/key-heart.jpg`,
-  `${CAL_IMG}/desk-trodelen/hero.jpg`,
+  `${CAL_IMG}/desk-landscape/hero.png`,
 ] as const;
 
 const MERCH_PAGE_GROUPS: string[][] = [
@@ -413,6 +472,8 @@ const MERCH_PAGE_GROUPS: string[][] = [
   ['keyHbOval', 'coasterSquare', 'coasterHb', 'pouchPure'],
   ['armada', 'amiga', 'lighterKrickMini', 'lighterKrick'],
   ['lighterVulkan', 'lighterLuss', 'bottleAlu500'],
+  ['polarZip', 'polarQuarterZip', 'polarVest'],
+  ['bluzonHood', 'bluzonZip', 'bluzonZipHood', 'bluzonQuarterZip'],
 ];
 
 const CALENDAR_PAGE_GROUPS: string[][] = [
@@ -426,15 +487,13 @@ const CALENDAR_PAGE_GROUPS: string[][] = [
   ['calSpiralOrthodox'],
   ['calSpiralLandscape'],
   ['calNarrowOrthodox', 'calOrthodox4'],
-  ['calKids'],
   ['calPets', 'calRedOrthodox'],
   ['calKidsPets', 'calWildGreen'],
-  ['calPocketOrthodox', 'calPocketPinup'],
-  ['calPocketLandscape', 'calPocketCar'],
+  ['calPocketOrthodox', 'calPocketLandscape'],
   ['calLandscapeWave', 'calCarsWave'],
+  ['calPocketPinup', 'calPocketCar'],
+  ['calDeskLandscape'],
   ['calChurchesWave', 'calSmallOrthodox'],
-  ['calLandscapeCollage', 'calDeskTrodelen'],
-  ['calDeskSpiral'],
 ];
 
 export const PROMO_CATALOG_PAGES: {

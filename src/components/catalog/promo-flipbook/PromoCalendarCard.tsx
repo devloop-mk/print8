@@ -1,9 +1,9 @@
 'use client';
 
 import { useLayoutEffect, useRef } from 'react';
-import { Link } from '@/i18n/navigation';
 import type { PromoCatalogProduct } from '@/lib/catalog/promo-catalog';
 import { PromoPriceTable } from '@/components/catalog/promo-flipbook/PromoPriceTable';
+import { PromoProductTitle } from '@/components/catalog/promo-flipbook/PromoProductCard';
 import { fitPromoProductText } from '@/components/catalog/promo-flipbook/fitPromoProductText';
 
 export function PromoCalendarCard({
@@ -29,10 +29,10 @@ export function PromoCalendarCard({
       ref={cardRef}
       className={`promo-cal promo-cal--${layout}${extras.length ? '' : ' promo-cal--solo'}`}
     >
-      <Link href={product.href} className="promo-cal-hero">
+      <div className="promo-cal-hero">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={product.image} alt={name} />
-      </Link>
+      </div>
       {extras.length > 0 ? (
         <div className={`promo-cal-thumbs promo-cal-thumbs--${extras.length}`}>
           {extras.map((src) => (
@@ -46,9 +46,7 @@ export function PromoCalendarCard({
       <div className="promo-cal-meta">
         <PromoPriceTable prices={product.prices} />
         <div className="promo-product-meta">
-          <Link href={product.href} className="promo-product-title-link">
-            <h3 className="promo-product-title font-display">{name}</h3>
-          </Link>
+          <PromoProductTitle name={name} href={product.href} />
           <div className="promo-product-specs">
             {specs.map((line) => (
               <p key={line}>{line}</p>

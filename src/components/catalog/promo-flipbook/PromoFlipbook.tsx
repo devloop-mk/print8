@@ -41,6 +41,41 @@ function writePromoCatalogPageIndex(index: number) {
 }
 
 /** StPageFlip uses ~20% of the page diagonal as the corner hover zone. */
+function isFlipbookInteractiveTarget(target: EventTarget | null) {
+  if (!(target instanceof Element)) return false;
+  return Boolean(target.closest('a, button, [data-catalog-goto]'));
+}
+
+function bindFlipbookPageShortcuts(host: HTMLElement, pageFlip: PageFlip) {
+  const stopFlip = (event: Event) => {
+    if (isFlipbookInteractiveTarget(event.target)) event.stopPropagation();
+  };
+  const goToListedPage = (event: Event) => {
+    const link =
+      event.target instanceof Element
+        ? event.target.closest('[data-catalog-goto]')
+        : null;
+    if (!link) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const page = Number.parseInt(link.getAttribute('data-catalog-goto') ?? '', 10);
+    if (!Number.isFinite(page)) return;
+    const index = Math.max(0, page - 1);
+    pageFlip.turnToPage(index);
+    writePromoCatalogPageIndex(index);
+  };
+
+  host.addEventListener('mousedown', stopFlip, true);
+  host.addEventListener('touchstart', stopFlip, true);
+  host.addEventListener('click', goToListedPage, true);
+
+  return () => {
+    host.removeEventListener('mousedown', stopFlip, true);
+    host.removeEventListener('touchstart', stopFlip, true);
+    host.removeEventListener('click', goToListedPage, true);
+  };
+}
+
 function restrictPageFlipCornerHit(pageFlip: PageFlip) {
   const flip = (pageFlip as unknown as { flipController?: FlipController })
     .flipController;
@@ -94,6 +129,7 @@ export function PromoFlipbook() {
     setPortrait(portraitMode);
     const startPage = readPromoCatalogPageIndex(leaves.length);
     let pageFlip: PageFlip;
+    let unbindShortcuts: (() => void) | undefined;
     try {
       pageFlip = new PageFlip(host, {
         width: 460,
@@ -120,12 +156,14 @@ export function PromoFlipbook() {
       pageFlip.on('init', refit);
       pageFlip.loadFromHTML(leaves);
       restrictPageFlipCornerHit(pageFlip);
+      unbindShortcuts = bindFlipbookPageShortcuts(host, pageFlip);
       if (pageFlip.getCurrentPageIndex() !== startPage) {
         pageFlip.turnToPage(startPage);
       }
       requestAnimationFrame(refit);
       setTimeout(refit, 200);
     } catch {
+      unbindShortcuts?.();
       stage.replaceChildren();
       return undefined;
     }
@@ -152,6 +190,7 @@ export function PromoFlipbook() {
     observer?.observe(stage);
 
     return () => {
+      unbindShortcuts?.();
       observer?.disconnect();
       pageFlip.off('flip');
       pageFlip.off('init');
@@ -238,6 +277,7 @@ export function PromoFlipbook() {
               pageId={page.id}
               pageNumber={page.number}
               productIds={page.productIds}
+              section={page.section}
             />
           </div>
         ))}

@@ -44,7 +44,9 @@
       "merch-3": "PVC and hardboard keychains",
       "merch-4": "Coasters, oval HB, pouch",
       "merch-5": "Pens and lighters",
-      "merch-6": "Lighters and aluminium bottle"
+      "merch-6": "Lighters and aluminium bottle",
+      "merch-7": "Polar fleece jackets and vest",
+      "merch-8": "Sweatshirts"
     },
     "qty": "Quantity",
     "unitPrice": "Price per item",
@@ -253,7 +255,7 @@
         "name": "Krick Mini lighter",
         "specs": [
           "Plastic lighter, 69 × 20 × 10 mm",
-          "UV print 13 × 45 mm",
+          "Print in one or two colours",
           "Minimum order 100 pieces"
         ]
       },
@@ -261,7 +263,7 @@
         "name": "Vulkan II lighter",
         "specs": [
           "Plastic lighter, 82 × 24 × 11 mm",
-          "UV print 50 × 14 mm",
+          "Print in one or two colours",
           "Minimum order 100 pieces"
         ]
       },
@@ -269,7 +271,7 @@
         "name": "Krick lighter",
         "specs": [
           "Plastic lighter, 22 × 78 × 10 mm",
-          "UV print 13 × 55 mm",
+          "Print in one or two colours",
           "Minimum order 100 pieces"
         ]
       },
@@ -277,7 +279,7 @@
         "name": "Luss HD white lighter",
         "specs": [
           "Plastic lighter, 63 × 35 × 14 mm",
-          "Digital print 40 × 20 mm",
+          "Print in one or two colours",
           "Minimum order 100 pieces"
         ]
       },
@@ -324,6 +326,62 @@
           "Aluminium, white",
           "Cap with carabiner",
           "Sublimation · Ø 72 × 160 mm"
+        ]
+      },
+      "polarZip": {
+        "name": "Polar fleece full-zip",
+        "specs": [
+          "Thick triple-yarn fleece · embroidery on request",
+          "Sizes S–4XL · white, navy and black",
+          "Print on front and back"
+        ]
+      },
+      "polarQuarterZip": {
+        "name": "Polar fleece quarter-zip",
+        "specs": [
+          "Thick triple-yarn fleece · embroidery on request",
+          "Sizes S–4XL · white, navy and black",
+          "Print on front and back"
+        ]
+      },
+      "polarVest": {
+        "name": "Polar fleece vest",
+        "specs": [
+          "Thick triple-yarn fleece · embroidery on request",
+          "Sizes S–4XL · white, navy and black",
+          "Print on front and back"
+        ]
+      },
+      "bluzonHood": {
+        "name": "Hooded kangaroo-pocket sweatshirt",
+        "specs": [
+          "Triple-yarn fleece 320 g/m² · 70/30",
+          "S 66×54 · M 67×56 · L 69×58 · XL 71×59",
+          "2XL 73×62 · 3XL 75×64 · 4XL 77×66 cm"
+        ]
+      },
+      "bluzonZip": {
+        "name": "Full-zip collar sweatshirt",
+        "specs": [
+          "Triple-yarn fleece 320 g/m² · 70/30",
+          "S 66×54 · M 67×56 · L 69×58 · XL 71×59",
+          "2XL 73×62 · 3XL 75×64 · 4XL 77×66 cm"
+        ]
+      },
+      "bluzonZipHood": {
+        "name": "Full-zip hooded sweatshirt",
+        "specs": [
+          "Triple-yarn fleece 320 g/m² · 70/30",
+          "S 66×54 · M 67×56 · L 69×58 · XL 71×59",
+          "2XL 73×62 · 3XL 75×64 · 4XL 77×66 cm"
+        ]
+      },
+      "bluzonQuarterZip": {
+        "name": "Quarter-zip sweatshirt",
+        "specs": [
+          "Triple-yarn fleece 320 g/m² · 70/30",
+          "S 66×54 · M 67×56 · L 69×58 · XL 71×59",
+          "2XL 73×62 · 3XL 75×64 · 4XL 77×66 cm"
         ]
       },
       "calTrodelen": {
@@ -430,14 +488,6 @@
           "Ad space 80 × 300 mm"
         ]
       },
-      "calKids": {
-        "name": "Kids 1/4",
-        "specs": [
-          "4 sheets · art paper 90 g/m² · chrome board 250 g/m²",
-          "Format 500 × 300 mm · metal rail",
-          "Ad space 80 × 300 mm"
-        ]
-      },
       "calPets": {
         "name": "Pets 1/4",
         "specs": [
@@ -495,13 +545,6 @@
           "Format 500 × 300 mm"
         ]
       },
-      "calLandscapeCollage": {
-        "name": "Landscape collage",
-        "specs": [
-          "12 monthly sheets",
-          "Format 500 × 300 mm"
-        ]
-      },
       "calLandscapeWave": {
         "name": "Landscapes 1/4 — wave",
         "specs": [
@@ -530,18 +573,11 @@
           "Format 500 × 300 mm"
         ]
       },
-      "calDeskSpiral": {
-        "name": "Desk spiral Orthodox",
+      "calDeskLandscape": {
+        "name": "Desk landscapes",
         "specs": [
-          "Desk calendar with spiral binding",
-          "12 months"
-        ]
-      },
-      "calDeskTrodelen": {
-        "name": "Desk tri-fold",
-        "specs": [
-          "Desk calendar, three months in view",
-          "Ad space above the months"
+          "Desk calendar",
+          "12 months · landscapes"
         ]
       }
     }

@@ -5,11 +5,13 @@ import { cn } from '@/lib/utils';
 export function PromoCatalogSheet({
   children,
   pageNumber,
+  category,
   variant = 'inner',
   className,
 }: {
   children: ReactNode;
   pageNumber?: number;
+  category?: string;
   variant?: 'cover' | 'inner' | 'back';
   className?: string;
 }) {
@@ -21,8 +23,15 @@ export function PromoCatalogSheet({
       )}
     >
       {variant !== 'cover' ? (
-        <div className="flex h-[2.55%] items-center justify-end bg-brand-600 px-[4%]">
-          <Logo className="h-[62%] w-auto brightness-0 invert" />
+        <div className="flex h-[2.55%] items-center justify-between gap-[3%] bg-brand-600 px-[4%]">
+          {category ? (
+            <span className="min-w-0 truncate font-display text-[0.92cqw] font-semibold uppercase tracking-[0.16em] text-white/92">
+              {category}
+            </span>
+          ) : (
+            <span />
+          )}
+          <Logo className="h-[62%] w-auto shrink-0 brightness-0 invert" />
         </div>
       ) : null}
 

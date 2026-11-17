@@ -169,6 +169,12 @@ html:has(.promo-flipbook-stage) body {
   display: block;
   height: 2.55em;
   overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+}
+
+.promo-product-title-link > * {
+  pointer-events: none;
 }
 
 .promo-product-title {
@@ -182,7 +188,7 @@ html:has(.promo-flipbook-stage) body {
   overflow-wrap: break-word;
 }
 
-.promo-product-title:hover {
+a.promo-product-title-link:hover .promo-product-title {
   color: #286694;
 }
 
@@ -224,6 +230,57 @@ html:has(.promo-flipbook-stage) body {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   column-gap: 6%;
   row-gap: 0.22em;
+}
+
+.promo-toc-section {
+  display: block;
+  font-family: inherit;
+  font-size: clamp(0.88rem, 1.45cqw, 1.08rem);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #122b3d;
+  text-decoration: none;
+}
+
+.promo-toc-section:hover,
+.promo-toc-link:hover {
+  color: #286694;
+}
+
+.promo-toc-link {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  color: #3d5563;
+  text-decoration: none;
+  font-size: clamp(0.68rem, 1.08cqw, 0.86rem);
+}
+
+.promo-toc-section > *,
+.promo-toc-link > * {
+  pointer-events: none;
+}
+
+.promo-toc-label {
+  min-width: 0;
+}
+
+.promo-toc-dots {
+  min-width: 1.25rem;
+  flex: 1;
+  border-bottom: 1px dotted #94a3b0;
+  transform: translateY(-0.28em);
+}
+
+.promo-toc-page {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  color: #1e3344;
+}
+
+.promo-toc-link:hover .promo-toc-page {
+  color: #286694;
 }
 
 .promo-cal-page {

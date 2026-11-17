@@ -83,6 +83,10 @@ function CoverPage({ pageNumber }: { pageNumber: number }) {
   );
 }
 
+function catalogPageHref(pageNumber: number) {
+  return pageNumber <= 1 ? '?' : `?page=${pageNumber}`;
+}
+
 function ContentsLine({
   label,
   pageNumber,
@@ -91,14 +95,35 @@ function ContentsLine({
   pageNumber: number;
 }) {
   return (
-    <li className="flex items-baseline gap-2 text-[clamp(0.68rem,1.08cqw,0.86rem)] text-ink-700">
-      <span className="min-w-0">{label}</span>
-      <span
-        aria-hidden
-        className="min-w-[1.25rem] flex-1 border-b border-dotted border-ink-400 translate-y-[-0.28em]"
-      />
-      <span className="shrink-0 tabular-nums text-ink-800">{pageNumber}</span>
+    <li>
+      <a
+        href={catalogPageHref(pageNumber)}
+        data-catalog-goto={String(pageNumber)}
+        className="promo-toc-link"
+      >
+        <span className="promo-toc-label">{label}</span>
+        <span aria-hidden className="promo-toc-dots" />
+        <span className="promo-toc-page">{pageNumber}</span>
+      </a>
     </li>
+  );
+}
+
+function ContentsSectionHeading({
+  label,
+  pageNumber,
+}: {
+  label: string;
+  pageNumber: number;
+}) {
+  return (
+    <a
+      href={catalogPageHref(pageNumber)}
+      data-catalog-goto={String(pageNumber)}
+      className="promo-toc-section font-display"
+    >
+      {label}
+    </a>
   );
 }
 
@@ -111,7 +136,7 @@ function ContentsPage({ pageNumber }: { pageNumber: number }) {
   );
 
   return (
-    <PromoCatalogSheet pageNumber={pageNumber}>
+    <PromoCatalogSheet pageNumber={pageNumber} category={t('contents')}>
       <div className="relative flex h-full flex-col px-[7%] pb-[4%] pt-[5%]">
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.03]">
           <Logo className="h-[58%] w-auto" />
@@ -120,9 +145,10 @@ function ContentsPage({ pageNumber }: { pageNumber: number }) {
           {t('contents')}
         </h2>
         <div className="relative mt-3">
-          <p className="font-display text-[clamp(0.88rem,1.45cqw,1.08rem)] font-bold uppercase tracking-[0.06em] text-ink-900">
-            {t('sectionMugs')}
-          </p>
+          <ContentsSectionHeading
+            label={t('sectionMugs')}
+            pageNumber={mugPages[0]?.number ?? 3}
+          />
           <ol className="mt-1.5 space-y-[0.28em]">
             {mugPages.map((page) => (
               <ContentsLine
@@ -134,9 +160,10 @@ function ContentsPage({ pageNumber }: { pageNumber: number }) {
           </ol>
         </div>
         <div className="relative mt-3">
-          <p className="font-display text-[clamp(0.88rem,1.45cqw,1.08rem)] font-bold uppercase tracking-[0.06em] text-ink-900">
-            {t('sectionMerch')}
-          </p>
+          <ContentsSectionHeading
+            label={t('sectionMerch')}
+            pageNumber={merchPages[0]?.number ?? 6}
+          />
           <ol className="promo-merch-toc mt-1.5">
             {merchPages.map((page) => (
               <ContentsLine
@@ -148,9 +175,10 @@ function ContentsPage({ pageNumber }: { pageNumber: number }) {
           </ol>
         </div>
         <div className="relative mt-3 min-h-0 flex-1">
-          <p className="font-display text-[clamp(0.88rem,1.45cqw,1.08rem)] font-bold uppercase tracking-[0.06em] text-ink-900">
-            {t('sectionCalendars')}
-          </p>
+          <ContentsSectionHeading
+            label={t('sectionCalendars')}
+            pageNumber={calendarPages[0]?.number ?? 12}
+          />
           <ol className="promo-cal-toc mt-1.5">
             {calendarPages.flatMap((page) =>
               (page.productIds ?? []).map((id) => (
@@ -171,19 +199,31 @@ function ContentsPage({ pageNumber }: { pageNumber: number }) {
   );
 }
 
+function sectionLabel(
+  t: (key: 'sectionMugs' | 'sectionMerch' | 'sectionCalendars') => string,
+  section?: 'mugs' | 'merch' | 'calendars',
+) {
+  if (section === 'mugs') return t('sectionMugs');
+  if (section === 'merch') return t('sectionMerch');
+  if (section === 'calendars') return t('sectionCalendars');
+  return undefined;
+}
+
 function ProductsPage({
   pageNumber,
   productIds,
+  section,
 }: {
   pageNumber: number;
   productIds: string[];
+  section?: 'mugs' | 'merch' | 'calendars';
 }) {
   const t = useTranslations('promoCatalog');
   const calendars = productIds.some(isCalendarProductId);
   const calendarLayout = productIds.length === 1 ? 'one' : 'two';
 
   return (
-    <PromoCatalogSheet pageNumber={pageNumber}>
+    <PromoCatalogSheet pageNumber={pageNumber} category={sectionLabel(t, section)}>
       <div className="flex h-full flex-col px-[5%] pb-[1.8%] pt-[3.2%]">
         {calendars ? (
           <div className={`promo-cal-page promo-cal-page--${calendarLayout}`}>
@@ -261,13 +301,21 @@ export function PromoCatalogPageView({
   pageId,
   pageNumber,
   productIds,
+  section,
 }: {
   pageId: PromoCatalogPageId;
   pageNumber: number;
   productIds?: string[];
+  section?: 'mugs' | 'merch' | 'calendars';
 }) {
   if (pageId === 'cover') return <CoverPage pageNumber={pageNumber} />;
   if (pageId === 'contents') return <ContentsPage pageNumber={pageNumber} />;
   if (pageId === 'back') return <BackPage pageNumber={pageNumber} />;
-  return <ProductsPage pageNumber={pageNumber} productIds={productIds ?? []} />;
+  return (
+    <ProductsPage
+      pageNumber={pageNumber}
+      productIds={productIds ?? []}
+      section={section}
+    />
+  );
 }
