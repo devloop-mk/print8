@@ -36,17 +36,15 @@
     "sectionCalendars": "Calendars 2027",
     "contentsNote": "Minimum order: 30 calendars, 100 pens or lighters. Prices are per piece, by quantity.",
     "contentsLines": {
-      "mugs-1": "Classic, inner-color, magic mugs",
-      "mugs-2": "Window patch, heart handle, cork base",
-      "mugs-3": "Frosted glass, football handle, sparkle",
-      "merch-1": "MIA, Bianca, bottles",
-      "merch-2": "PVC keychains",
-      "merch-3": "PVC and hardboard keychains",
-      "merch-4": "Coasters, oval HB, pouch",
-      "merch-5": "Pens and lighters",
-      "merch-6": "Lighters and aluminium bottle",
-      "merch-7": "Polar fleece jackets and vest",
-      "merch-8": "Sweatshirts"
+      "mugs-1": "White, inner-color, Bianca, Happy New Year",
+      "mugs-2": "Stackable mint mug",
+      "merch-1": "T-shirts and sweatshirts",
+      "merch-2": "Zip sweatshirts and bottles",
+      "merch-3": "400 ml bottle, cloth and metal pens",
+      "merch-4": "Plastic pens and lighters",
+      "merch-5": "Fresh lighter and PVC keychains",
+      "merch-6": "PVC and hardboard keychains",
+      "merch-7": "Hardboard oval keychain"
     },
     "qty": "Quantity",
     "unitPrice": "Price per item",
@@ -156,6 +154,22 @@
           "Printed with your artwork or ours"
         ]
       },
+      "stackableMint": {
+        "name": "Stackable mug — mint",
+        "specs": [
+          "Ceramic, ~300 ml · φ 8.4 × 9.8 cm",
+          "Coloured interior and handle",
+          "Sublimation · stackable"
+        ]
+      },
+      "happyNewYear": {
+        "name": "Mug with Happy New Year interior",
+        "specs": [
+          "Ceramic, ~330 ml · φ 8.2 × 9.5 cm",
+          "Happy New Year interior",
+          "Sublimation on the outside"
+        ]
+      },
       "mia": {
         "name": "MIA mug",
         "specs": [
@@ -176,7 +190,15 @@
         "name": "Armada Gold metal pen",
         "specs": [
           "Metal body with stylus tip",
-          "Laser / UV print · several colours",
+          "Engraving",
+          "Minimum order 100 pieces"
+        ]
+      },
+      "oggi": {
+        "name": "Oggi metal pen",
+        "specs": [
+          "Metal pen 137 × 10 mm",
+          "Engraving",
           "Minimum order 100 pieces"
         ]
       },
@@ -185,6 +207,22 @@
         "specs": [
           "Plastic pen, 13.8 cm · UV print",
           "Several colours",
+          "Minimum order 100 pieces"
+        ]
+      },
+      "alfa": {
+        "name": "Alfa plastic pen",
+        "specs": [
+          "Plastic pen 138 × 10.5 mm",
+          "Screen print",
+          "Minimum order 100 pieces"
+        ]
+      },
+      "twister": {
+        "name": "Twister plastic pen",
+        "specs": [
+          "Ritter Twister · Jogger refill 2000 m",
+          "Screen print",
           "Minimum order 100 pieces"
         ]
       },
@@ -199,56 +237,64 @@
         "name": "PVC house keychain CR-Y",
         "specs": [
           "PVC, double-sided print",
-          "Print area 30 × 36 mm"
+          "Print area 30 × 36 mm",
+          "Minimum order 50 pieces"
         ]
       },
       "keyCircle": {
         "name": "PVC circle keychain CR-33",
         "specs": [
           "PVC, double-sided print",
-          "Print area Ø 33 mm"
+          "Print area Ø 33 mm",
+          "Minimum order 50 pieces"
         ]
       },
       "keyCk40": {
         "name": "PVC rectangle keychain CK-40",
         "specs": [
           "PVC, double-sided print",
-          "Print area 25 × 40 mm"
+          "Print area 25 × 40 mm",
+          "Minimum order 50 pieces"
         ]
       },
       "keyHeart": {
         "name": "PVC heart keychain CR-COR",
         "specs": [
           "PVC, double-sided print",
-          "Print area 40 × 40 mm"
+          "Print area 40 × 40 mm",
+          "Minimum order 50 pieces"
         ]
       },
       "keyCf40": {
         "name": "PVC rectangle keychain CF-40",
         "specs": [
           "PVC with rounded top",
-          "Print area 25 × 40 mm"
+          "Print area 25 × 40 mm",
+          "Minimum order 50 pieces"
         ]
       },
       "keyHbRound": {
         "name": "Hardboard round keychain",
         "specs": [
           "Hardboard, sublimation",
-          "Ø 50 mm · price per piece"
+          "Ø 50 mm",
+          "Minimum order 10 pieces"
         ]
       },
       "keyHbSquare": {
         "name": "Hardboard square keychain",
         "specs": [
           "Hardboard, sublimation",
-          "50 × 50 mm · price per piece"
+          "50 × 50 mm",
+          "Minimum order 10 pieces"
         ]
       },
       "keyHbOval": {
         "name": "Hardboard oval keychain",
         "specs": [
           "Hardboard, sublimation",
-          "Oval shape · price per piece"
+          "Oval shape",
+          "Minimum order 10 pieces"
         ]
       },
       "lighterKrickMini": {
@@ -279,7 +325,23 @@
         "name": "Luss HD white lighter",
         "specs": [
           "Plastic lighter, 63 × 35 × 14 mm",
-          "Print in one or two colours",
+          "Screen print",
+          "Minimum order 100 pieces"
+        ]
+      },
+      "lighterMavrovo": {
+        "name": "Mavrovo lighter",
+        "specs": [
+          "Plastic lighter, 82.3 × 24.1 × 11.4 mm",
+          "Screen print",
+          "Minimum order 100 pieces"
+        ]
+      },
+      "lighterFresh": {
+        "name": "Fresh lighter",
+        "specs": [
+          "Electronic plastic lighter, 8 × 2.5 × 1 cm",
+          "Screen print",
           "Minimum order 100 pieces"
         ]
       },
@@ -298,11 +360,12 @@
           "4 mm thick · sublimation"
         ]
       },
-      "pouchPure": {
-        "name": "Sublimation cloth pouch",
+      "towelPure": {
+        "name": "PURE sublimation cloth",
         "specs": [
-          "Clear pouch for a sublimated cloth",
-          "Print on the cloth to order"
+          "Microfibre, white · 15 × 18 cm",
+          "Sublimation",
+          "Minimum order 10 pieces"
         ]
       },
       "coasterHb": {
@@ -316,16 +379,16 @@
         "name": "Aluminium bottle 600 ml",
         "specs": [
           "Aluminium, white",
-          "Screw top + sports cap",
-          "Sublimation · Ø 72 × 210 mm"
+          "Cap with carabiner",
+          "Sublimation · Ø 73 × 209 mm"
         ]
       },
-      "bottleAlu500": {
-        "name": "Aluminium bottle 500 ml",
+      "bottleAlu400": {
+        "name": "Aluminium bottle 400 ml",
         "specs": [
           "Aluminium, white",
           "Cap with carabiner",
-          "Sublimation · Ø 72 × 160 mm"
+          "Sublimation · Ø 72 × 140 mm"
         ]
       },
       "polarZip": {
@@ -350,6 +413,22 @@
           "Thick triple-yarn fleece · embroidery on request",
           "Sizes S–4XL · white, navy and black",
           "Print on front and back"
+        ]
+      },
+      "tshirt": {
+        "name": "T-shirt",
+        "specs": [
+          "Cotton · unisex",
+          "Sizes S–4XL · several colours",
+          "Print on front and back"
+        ]
+      },
+      "bluzonCrew": {
+        "name": "Sweatshirt",
+        "specs": [
+          "Triple-yarn fleece 320 g/m² · 70/30",
+          "S 66×54 · M 67×56 · L 69×58 · XL 71×59",
+          "2XL 73×62 · 3XL 75×64 · 4XL 77×66 cm"
         ]
       },
       "bluzonHood": {
@@ -514,28 +593,32 @@
         "name": "Pocket calendar 9×6 — Orthodox",
         "specs": [
           "Format 9 × 6 cm",
-          "Picture on one side, calendar on the other"
+          "Picture on one side, calendar on the other",
+          "100 pieces = 1,200 MKD"
         ]
       },
       "calPocketPinup": {
         "name": "Pocket calendar 9×6 — pin-up",
         "specs": [
           "Format 9 × 6 cm",
-          "Picture on one side, calendar on the other"
+          "Picture on one side, calendar on the other",
+          "100 pieces = 1,200 MKD"
         ]
       },
       "calPocketLandscape": {
         "name": "Pocket calendar 9×6 — landscape",
         "specs": [
           "Format 9 × 6 cm",
-          "Picture on one side, calendar on the other"
+          "Picture on one side, calendar on the other",
+          "100 pieces = 1,200 MKD"
         ]
       },
       "calPocketCar": {
         "name": "Pocket calendar 9×6 — car",
         "specs": [
           "Format 9 × 6 cm",
-          "Picture on one side, calendar on the other"
+          "Picture on one side, calendar on the other",
+          "100 pieces = 1,200 MKD"
         ]
       },
       "calWildGreen": {

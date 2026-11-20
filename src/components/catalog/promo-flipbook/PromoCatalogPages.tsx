@@ -162,7 +162,7 @@ function ContentsPage({ pageNumber }: { pageNumber: number }) {
         <div className="relative mt-3">
           <ContentsSectionHeading
             label={t('sectionMerch')}
-            pageNumber={merchPages[0]?.number ?? 6}
+            pageNumber={merchPages[0]?.number ?? 7}
           />
           <ol className="promo-merch-toc mt-1.5">
             {merchPages.map((page) => (

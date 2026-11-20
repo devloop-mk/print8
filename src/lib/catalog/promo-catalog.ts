@@ -20,10 +20,8 @@ export function isPromoShopHref(href?: string): href is string {
 export type PromoCatalogPageId =
   | 'cover'
   | 'contents'
-  | 'mugs-1'
-  | 'mugs-2'
-  | 'mugs-3'
   | 'back'
+  | `mugs-${number}`
   | `merch-${number}`
   | `calendars-${number}`;
 
@@ -41,48 +39,103 @@ const BLUZON_SWATCHES = [
   '#3a3c1f',
 ];
 
-/** Quantity breaks from the shop unit price (rounded to 10 MKD). Easy to edit. */
-function qtyPrices(unit: number): PromoPriceBreak[] {
-  const round = (value: number) => Math.max(10, Math.round(value / 10) * 10);
-  return [
-    { label: '1', price: unit },
-    { label: '10', price: round(unit * 0.85) },
-    { label: '20', price: round(unit * 0.78) },
-    { label: '50', price: round(unit * 0.68) },
-    { label: '100+', price: round(unit * 0.58) },
-  ];
+function breaks(
+  rows: [label: string, price: number][],
+): PromoPriceBreak[] {
+  return rows.map(([label, price]) => ({ label, price }));
 }
 
-/** Calendar breaks: minimum 30. Easy to edit the unit price. */
-function calendarPrices(unit: number): PromoPriceBreak[] {
-  const round = (value: number) => Math.max(10, Math.round(value / 5) * 5);
-  return [
-    { label: '30–50', price: unit },
-    { label: '50–100', price: round(unit * 0.86) },
-    { label: '100+', price: round(unit * 0.74) },
-  ];
-}
+const PRICE_TEE = breaks([
+  ['1', 550],
+  ['10', 450],
+  ['20', 380],
+  ['50', 350],
+  ['100+', 320],
+]);
+const PRICE_SWEAT = breaks([
+  ['1', 1100],
+  ['10', 1000],
+  ['20', 900],
+  ['50', 800],
+  ['100+', 750],
+]);
+const PRICE_HOOD = breaks([
+  ['1', 1200],
+  ['10', 1100],
+  ['20', 1000],
+  ['50', 900],
+  ['100+', 800],
+]);
+const PRICE_ZIP = breaks([
+  ['1', 1300],
+  ['10', 1200],
+  ['20', 1100],
+  ['50', 950],
+  ['100+', 850],
+]);
+const PRICE_MUG_WHITE = breaks([
+  ['1', 280],
+  ['10–20', 230],
+  ['20–50', 200],
+  ['50–100', 170],
+  ['100+', 150],
+]);
+const PRICE_MUG_INNER = breaks([
+  ['1', 330],
+  ['10–20', 280],
+  ['20–50', 250],
+  ['50–100', 230],
+  ['100+', 200],
+]);
+const CAL_QUARTER = breaks([
+  ['30–50', 75],
+  ['50–100', 60],
+  ['100+', 50],
+]);
+const CAL_SIXTH = breaks([
+  ['30–50', 95],
+  ['50–100', 80],
+  ['100+', 70],
+]);
+const CAL_NARROW = breaks([
+  ['30–50', 70],
+  ['50–100', 60],
+  ['100+', 45],
+]);
+const CAL_SPIRAL = breaks([
+  ['30–50', 80],
+  ['50–100', 65],
+  ['100+', 55],
+]);
+const CAL_TRODELEN = breaks([
+  ['30–50', 160],
+  ['50–100', 140],
+  ['100+', 120],
+]);
+const CAL_POCKET = breaks([['100+', 12]]);
 
-/** Pens and lighters: minimum 100. */
-function min100Prices(unit: number): PromoPriceBreak[] {
-  return [{ label: '100+', price: unit }];
-}
-
-function withMin100(product: PromoCatalogProduct): PromoCatalogProduct {
-  const unit = product.prices[0]?.price ?? 10;
-  return { ...product, prices: min100Prices(unit) };
-}
+const TSHIRT_SWATCHES = [
+  '#c5ccd6',
+  '#1C1A1D',
+  '#DB0213',
+  '#272D37',
+  '#00806A',
+  '#A09FA4',
+  '#0F287C',
+  '#79804C',
+  '#CEB499',
+];
 
 function merchProduct(
   id: string,
   file: string,
-  unit: number,
+  prices: PromoPriceBreak[],
   swatches?: string[],
 ): PromoCatalogProduct {
   return {
     id,
     image: `${MERCH_IMG}/${file}`,
-    prices: qtyPrices(unit),
+    prices,
     swatches,
   };
 }
@@ -91,7 +144,7 @@ function calendarProduct(
   id: string,
   folder: string,
   sheets: number,
-  unit: number,
+  prices: PromoPriceBreak[],
 ): PromoCatalogProduct {
   const base = `${CAL_IMG}/${folder}`;
   return {
@@ -101,187 +154,296 @@ function calendarProduct(
       sheets > 1
         ? Array.from({ length: sheets - 1 }, (_, i) => `${base}/${i + 2}.jpg`)
         : undefined,
-    prices: calendarPrices(unit),
+    prices,
   };
 }
 
 export const PROMO_CATALOG_PRODUCTS: PromoCatalogProduct[] = [
   {
     id: 'classic',
-    href: '/products/mug-b5kf-white',
-    image: '/mugs/mug-b5kf-white.jpg',
-    prices: qtyPrices(280),
+    href: '/products/mug-classic',
+    image: '/mugs/mug-white-classic-v2.jpg',
+    prices: PRICE_MUG_WHITE,
   },
   {
     id: 'inner',
     href: '/products/mug-inner-red',
     image: '/supplier/koni/B11T-01.jpg',
-    prices: qtyPrices(330),
+    prices: PRICE_MUG_INNER,
     swatches: ['#dc2626', '#93c5fd', '#f9a8d4', '#7c3aed', '#c4b5fd'],
   },
   {
-    id: 'magicGlossy',
-    href: '/products/mug-magic-glossy',
-    image: '/supplier/koni/B2CB-01.jpg',
-    prices: qtyPrices(400),
-  },
-  {
-    id: 'magicMatte',
-    href: '/products/mug-magic-matte',
-    image: '/supplier/koni/B2CB-07.jpg',
-    prices: qtyPrices(350),
-  },
-  {
-    id: 'windowBlue',
-    href: '/products/mug-window-blue',
-    image: '/supplier/koni/CB11T-BL.jpg',
-    prices: qtyPrices(470),
-  },
-  {
-    id: 'redPatch',
-    href: '/products/mug-red-patch',
-    image: '/mugs/mug-red-patch.jpg',
-    prices: qtyPrices(470),
-  },
-  {
-    id: 'heart',
-    href: '/products/mug-heart-handle',
-    image: '/mugs/mug-heart-handle.jpg',
-    prices: qtyPrices(300),
-  },
-  {
-    id: 'cork',
-    href: '/products/mug-cork-lid',
-    image: '/mugs/mug-cork-lid.jpg',
-    prices: qtyPrices(450),
-  },
-  {
-    id: 'frosted',
-    href: '/products/mug-frosted',
-    image: '/mugs/mug-frosted.jpg',
-    prices: qtyPrices(400),
-  },
-  {
-    id: 'football',
-    href: '/products/mug-football-handle',
-    image: '/supplier/koni/B11ZQ.jpg',
-    prices: qtyPrices(400),
-  },
-  {
-    id: 'roseSparkle',
-    href: '/products/mug-rose-sparkle',
-    image: '/supplier/koni/B17PZ.jpg',
-    prices: qtyPrices(370),
-  },
-  {
-    id: 'redSparkle',
-    href: '/products/mug-red-sparkle',
-    image: '/supplier/koni/B17MZ.jpg',
-    prices: qtyPrices(370),
-  },
-  merchProduct('mia', 'mia.jpg', 280, [
-    '#facc15',
-    '#86efac',
-    '#7dd3fc',
-    '#1d4ed8',
-    '#fb923c',
-    '#dc2626',
-  ]),
-  merchProduct('bianca', 'mug-bianca.jpg', 300, [
-    '#1e3a8a',
-    '#86efac',
-    '#dc2626',
-    '#111111',
-  ]),
-  withMin100(
-    merchProduct('armada', 'armada.jpg', 80, [
-      '#7f1d1d',
-      '#c0c0c0',
-      '#4b5563',
-      '#e8b4b8',
-      '#27272a',
-      '#111111',
-    ]),
-  ),
-  withMin100(
-    merchProduct('amiga', 'pen-amiga.jpg', 20, [
-      '#1e3a8a',
-      '#e5e7eb',
+    id: 'stackableMint',
+    image: '/supplier/koni/BKD6T-MG.jpg',
+    prices: [
+      { label: '1', price: 350 },
+      { label: '10', price: 320 },
+      { label: '20', price: 290 },
+      { label: '50', price: 260 },
+      { label: '100+', price: 220 },
+    ],
+    swatches: [
+      '#9acdca',
+      '#93c5fd',
+      '#f9a8d4',
+      '#c4b5fd',
       '#fb923c',
-      '#dc2626',
       '#111111',
-    ]),
-  ),
-  merchProduct('keyCr18', 'key-cr18.jpg', 70),
-  merchProduct('keyHouse', 'key-house.jpg', 70),
-  merchProduct('keyCircle', 'key-circle.jpg', 70),
-  merchProduct('keyCk40', 'key-ck40.jpg', 85),
-  merchProduct('keyHeart', 'key-heart.jpg', 85),
-  merchProduct('keyCf40', 'key-cf40.jpg', 70),
-  merchProduct('keyHbRound', 'key-hb-round.jpg', 90),
-  merchProduct('keyHbSquare', 'key-hb-square.jpg', 90),
-  merchProduct('keyHbOval', 'key-hb-oval.jpg', 90),
-  withMin100(
-    merchProduct('lighterKrickMini', 'lighter-krick-mini.jpg', 30, [
-      '#1e3a8a',
-      '#e5e7eb',
-      '#1e293b',
-      '#dc2626',
-      '#111111',
-    ]),
-  ),
-  withMin100(merchProduct('lighterVulkan', 'lighter-vulkan.jpg', 70)),
-  withMin100(
-    merchProduct('lighterKrick', 'lighter-krick.jpg', 30, [
-      '#1e3a8a',
-      '#e5e7eb',
-      '#111111',
-    ]),
-  ),
-  withMin100(merchProduct('lighterLuss', 'lighter-luss.jpg', 55)),
-  merchProduct('bottleRaise', 'bottle-raise.jpg', 310),
-  merchProduct('coasterSquare', 'coaster-square.jpg', 150),
-  merchProduct('pouchPure', 'pouch-pure.jpg', 25),
-  merchProduct('coasterHb', 'coaster-hb.jpg', 90),
-  merchProduct('bottleAlu600', 'bottle-alu-600.jpg', 390),
-  merchProduct('bottleAlu500', 'bottle-alu-500.jpg', 290),
-  merchProduct('polarZip', 'polar-zip.jpg?v=2', 990, [
-    '#ffffff',
-    '#1e3a8a',
-    '#111111',
-  ]),
-  merchProduct('polarQuarterZip', 'polar-quarter-zip.jpg?v=2', 990, [
-    '#ffffff',
-    '#1e3a8a',
-    '#111111',
-  ]),
-  merchProduct('polarVest', 'polar-vest.jpg?v=2', 890, [
-    '#ffffff',
-    '#1e3a8a',
-    '#111111',
-  ]),
+      '#ffffff',
+    ],
+  },
   {
-    ...merchProduct('bluzonHood', 'bluzon-hood.jpg', 1100, BLUZON_SWATCHES),
+    id: 'happyNewYear',
+    image: '/supplier/koni/BD101-HN.jpg',
+    prices: [
+      { label: '1', price: 360 },
+      { label: '10', price: 320 },
+      { label: '20', price: 290 },
+      { label: '50', price: 270 },
+      { label: '100+', price: 240 },
+    ],
+  },
+  merchProduct(
+    'bianca',
+    'mug-bianca.jpg?v=2',
+    breaks([
+      ['1', 300],
+      ['10', 280],
+      ['20', 260],
+      ['50', 230],
+      ['100+', 200],
+    ]),
+    ['#86efac', '#dc2626', '#111111'],
+  ),
+  merchProduct(
+    'armada',
+    'armada.jpg',
+    breaks([
+      ['100', 45],
+      ['200', 42],
+      ['300+', 39],
+    ]),
+    ['#7f1d1d', '#c0c0c0', '#4b5563', '#e8b4b8', '#27272a', '#111111'],
+  ),
+  merchProduct(
+    'oggi',
+    'pen-oggi.jpg',
+    breaks([
+      ['100', 40],
+      ['200', 37],
+      ['300+', 33],
+    ]),
+    ['#a855f7', '#3b82f6', '#c0c0c0', '#1e3a8a', '#f4f4f5', '#dc2626', '#111111'],
+  ),
+  merchProduct(
+    'alfa',
+    'pen-alfa.jpg',
+    breaks([
+      ['100', 18],
+      ['200', 16.5],
+      ['300+', 15],
+    ]),
+    [
+      '#111111',
+      '#c026d3',
+      '#f4f4f5',
+      '#ec4899',
+      '#fb923c',
+      '#7c3aed',
+      '#facc15',
+      '#dc2626',
+      '#22c55e',
+      '#38bdf8',
+      '#1d4ed8',
+    ],
+  ),
+  merchProduct(
+    'twister',
+    'pen-twister.jpg',
+    breaks([
+      ['100', 20],
+      ['200', 18],
+      ['300+', 16],
+    ]),
+    ['#a855f7', '#9ca3af', '#f4f4f5', '#1e3a8a', '#111111'],
+  ),
+  merchProduct(
+    'keyHouse',
+    'key-house.jpg',
+    breaks([
+      ['50', 40],
+      ['100+', 30],
+    ]),
+  ),
+  merchProduct(
+    'keyCircle',
+    'key-circle.jpg',
+    breaks([
+      ['50', 40],
+      ['100+', 30],
+    ]),
+  ),
+  merchProduct(
+    'keyCk40',
+    'key-ck40.jpg',
+    breaks([
+      ['50', 50],
+      ['100+', 40],
+    ]),
+  ),
+  merchProduct(
+    'keyHeart',
+    'key-heart.jpg',
+    breaks([
+      ['50', 50],
+      ['100+', 40],
+    ]),
+  ),
+  merchProduct(
+    'keyCf40',
+    'key-cf40.jpg',
+    breaks([
+      ['50', 40],
+      ['100+', 30],
+    ]),
+  ),
+  merchProduct(
+    'keyHbRound',
+    'key-hb-round.jpg',
+    breaks([
+      ['10', 130],
+      ['20', 120],
+      ['50', 100],
+      ['100+', 90],
+    ]),
+  ),
+  merchProduct(
+    'keyHbSquare',
+    'key-hb-square.jpg',
+    breaks([
+      ['10', 130],
+      ['20', 120],
+      ['50', 100],
+      ['100+', 90],
+    ]),
+  ),
+  merchProduct(
+    'keyHbOval',
+    'key-hb-oval.jpg',
+    breaks([
+      ['10', 130],
+      ['20', 120],
+      ['50', 100],
+      ['100+', 90],
+    ]),
+  ),
+  merchProduct(
+    'lighterLuss',
+    'lighter-luss.jpg',
+    breaks([
+      ['100', 39],
+      ['200', 28],
+      ['300+', 26],
+    ]),
+  ),
+  merchProduct(
+    'lighterMavrovo',
+    'lighter-mavrovo.jpg',
+    breaks([
+      ['100', 19],
+      ['200', 17],
+      ['300+', 15.5],
+    ]),
+    ['#22c55e', '#2563eb', '#dc2626', '#111111'],
+  ),
+  merchProduct(
+    'lighterFresh',
+    'lighter-fresh.jpg',
+    breaks([
+      ['100', 25],
+      ['200', 23],
+      ['300+', 21],
+    ]),
+    ['#22c55e', '#2563eb', '#dc2626', '#111111'],
+  ),
+  merchProduct(
+    'bottleRaise',
+    'bottle-raise.jpg',
+    breaks([
+      ['1', 350],
+      ['10', 310],
+      ['20', 280],
+      ['50', 240],
+      ['100+', 200],
+    ]),
+  ),
+  merchProduct(
+    'towelPure',
+    'towel-pure.jpg',
+    breaks([
+      ['10', 50],
+      ['50', 40],
+      ['100+', 30],
+    ]),
+  ),
+  merchProduct(
+    'bottleAlu600',
+    'bottle-alu-600.jpg?v=2',
+    breaks([
+      ['1', 400],
+      ['10', 380],
+      ['20', 340],
+      ['50', 310],
+      ['100+', 280],
+    ]),
+  ),
+  merchProduct(
+    'bottleAlu400',
+    'bottle-alu-400.jpg',
+    breaks([
+      ['1', 350],
+      ['10', 330],
+      ['20', 300],
+      ['50', 280],
+      ['100+', 250],
+    ]),
+  ),
+  {
+    id: 'tshirt',
+    href: '/products/tshirt-unisex',
+    image: '/t-shirts/unisex/bela-front.jpg?v=3',
+    prices: PRICE_TEE,
+    swatches: TSHIRT_SWATCHES,
+  },
+  {
+    id: 'bluzonCrew',
+    href: '/products/hoodie-crewneck',
+    image: '/hoodies/crewneck/bela-front.jpg?v=1',
+    prices: PRICE_SWEAT,
+    swatches: BLUZON_SWATCHES,
+  },
+  {
+    ...merchProduct('bluzonHood', 'bluzon-hood.jpg', PRICE_HOOD, BLUZON_SWATCHES),
     href: '/products/hoodie-basic',
   },
   {
-    ...merchProduct('bluzonZip', 'bluzon-zip.jpg', 1250, BLUZON_SWATCHES),
+    ...merchProduct('bluzonZip', 'bluzon-zip.jpg', PRICE_ZIP, BLUZON_SWATCHES),
     href: '/products/hoodie-full-zip',
   },
   {
-    ...merchProduct('bluzonZipHood', 'bluzon-zip-hood.jpg', 1250, BLUZON_SWATCHES),
+    ...merchProduct('bluzonZipHood', 'bluzon-zip-hood.jpg', PRICE_ZIP, BLUZON_SWATCHES),
     href: '/products/hoodie-zip-hood',
   },
   {
-    ...merchProduct('bluzonQuarterZip', 'bluzon-quarter-zip.jpg', 1250, BLUZON_SWATCHES),
+    ...merchProduct('bluzonQuarterZip', 'bluzon-quarter-zip.jpg', PRICE_ZIP, BLUZON_SWATCHES),
     href: '/products/hoodie-quarter-zip',
   },
   {
-    ...calendarProduct('calTrodelen', 'trodelen', 1, 280),
+    ...calendarProduct('calTrodelen', 'trodelen', 1, CAL_TRODELEN),
     image: `${CAL_IMG}/trodelen/hero.png`,
   },
   {
-    ...calendarProduct('calWild', 'wild', 6, 210),
+    ...calendarProduct('calWild', 'wild', 6, CAL_SIXTH),
     image: `${CAL_IMG}/wild/hero.png`,
     images: [
       `${CAL_IMG}/wild/2.jpg`,
@@ -292,7 +454,7 @@ export const PROMO_CATALOG_PRODUCTS: PromoCatalogProduct[] = [
     ],
   },
   {
-    ...calendarProduct('calOrthodox6', 'orthodox-6', 6, 210),
+    ...calendarProduct('calOrthodox6', 'orthodox-6', 6, CAL_SIXTH),
     image: `${CAL_IMG}/orthodox-6/hero.png`,
     images: [
       `${CAL_IMG}/orthodox-6/2.jpg`,
@@ -303,7 +465,7 @@ export const PROMO_CATALOG_PRODUCTS: PromoCatalogProduct[] = [
     ],
   },
   {
-    ...calendarProduct('calLandscape6', 'landscape-6', 6, 210),
+    ...calendarProduct('calLandscape6', 'landscape-6', 6, CAL_SIXTH),
     image: `${CAL_IMG}/landscape-6/hero.png`,
     images: [
       `${CAL_IMG}/landscape-6/2.jpg`,
@@ -314,7 +476,7 @@ export const PROMO_CATALOG_PRODUCTS: PromoCatalogProduct[] = [
     ],
   },
   {
-    ...calendarProduct('calCars', 'cars', 4, 210),
+    ...calendarProduct('calCars', 'cars', 4, CAL_QUARTER),
     image: `${CAL_IMG}/cars/hero.png`,
     images: [
       `${CAL_IMG}/cars/2.png`,
@@ -323,7 +485,7 @@ export const PROMO_CATALOG_PRODUCTS: PromoCatalogProduct[] = [
     ],
   },
   {
-    ...calendarProduct('calLandscape4', 'landscape-4', 4, 180),
+    ...calendarProduct('calLandscape4', 'landscape-4', 4, CAL_QUARTER),
     image: `${CAL_IMG}/landscape-4/hero.png`,
     images: [
       `${CAL_IMG}/landscape-4/2.png`,
@@ -332,7 +494,7 @@ export const PROMO_CATALOG_PRODUCTS: PromoCatalogProduct[] = [
     ],
   },
   {
-    ...calendarProduct('calDomestic', 'domestic', 4, 180),
+    ...calendarProduct('calDomestic', 'domestic', 4, CAL_QUARTER),
     image: `${CAL_IMG}/domestic/hero.png`,
     images: [
       `${CAL_IMG}/domestic/2.png`,
@@ -341,7 +503,7 @@ export const PROMO_CATALOG_PRODUCTS: PromoCatalogProduct[] = [
     ],
   },
   {
-    ...calendarProduct('calMosques', 'mosques', 4, 180),
+    ...calendarProduct('calMosques', 'mosques', 4, CAL_QUARTER),
     image: `${CAL_IMG}/mosques/hero.png`,
     images: [
       `${CAL_IMG}/mosques/2.png`,
@@ -350,7 +512,7 @@ export const PROMO_CATALOG_PRODUCTS: PromoCatalogProduct[] = [
     ],
   },
   {
-    ...calendarProduct('calTrucks', 'trucks', 4, 180),
+    ...calendarProduct('calTrucks', 'trucks', 4, CAL_QUARTER),
     image: `${CAL_IMG}/trucks/hero.png`,
     images: [
       `${CAL_IMG}/trucks/2.png`,
@@ -359,7 +521,7 @@ export const PROMO_CATALOG_PRODUCTS: PromoCatalogProduct[] = [
     ],
   },
   {
-    ...calendarProduct('calSpiralOrthodox', 'spiral-orthodox', 8, 180),
+    ...calendarProduct('calSpiralOrthodox', 'spiral-orthodox', 8, CAL_SPIRAL),
     image: `${CAL_IMG}/spiral-orthodox/hero.png`,
     images: [
       `${CAL_IMG}/spiral-orthodox/2.png`,
@@ -372,7 +534,7 @@ export const PROMO_CATALOG_PRODUCTS: PromoCatalogProduct[] = [
     ],
   },
   {
-    ...calendarProduct('calSpiralLandscape', 'spiral-landscape', 12, 180),
+    ...calendarProduct('calSpiralLandscape', 'spiral-landscape', 12, CAL_SPIRAL),
     image: `${CAL_IMG}/spiral-landscape/hero.png`,
     images: [
       `${CAL_IMG}/spiral-landscape/2.png`,
@@ -389,7 +551,7 @@ export const PROMO_CATALOG_PRODUCTS: PromoCatalogProduct[] = [
     ],
   },
   {
-    ...calendarProduct('calNarrowOrthodox', 'narrow-orthodox', 4, 170),
+    ...calendarProduct('calNarrowOrthodox', 'narrow-orthodox', 4, CAL_NARROW),
     image: `${CAL_IMG}/narrow-orthodox/hero.png`,
     images: [
       `${CAL_IMG}/narrow-orthodox/2.png`,
@@ -398,7 +560,7 @@ export const PROMO_CATALOG_PRODUCTS: PromoCatalogProduct[] = [
     ],
   },
   {
-    ...calendarProduct('calOrthodox4', 'orthodox-4', 4, 180),
+    ...calendarProduct('calOrthodox4', 'orthodox-4', 4, CAL_QUARTER),
     image: `${CAL_IMG}/orthodox-4/hero.png`,
     images: [
       `${CAL_IMG}/orthodox-4/2.png`,
@@ -407,7 +569,7 @@ export const PROMO_CATALOG_PRODUCTS: PromoCatalogProduct[] = [
     ],
   },
   {
-    ...calendarProduct('calPets', 'pets', 4, 180),
+    ...calendarProduct('calPets', 'pets', 4, CAL_QUARTER),
     image: `${CAL_IMG}/pets/hero.png`,
     images: [
       `${CAL_IMG}/pets/2.png`,
@@ -415,31 +577,31 @@ export const PROMO_CATALOG_PRODUCTS: PromoCatalogProduct[] = [
       `${CAL_IMG}/pets/4.png`,
     ],
   },
-  calendarProduct('calRedOrthodox', 'red-orthodox', 4, 180),
-  calendarProduct('calKidsPets', 'kids-pets', 4, 180),
+  calendarProduct('calRedOrthodox', 'red-orthodox', 4, CAL_QUARTER),
+  calendarProduct('calKidsPets', 'kids-pets', 4, CAL_QUARTER),
   {
-    ...calendarProduct('calPocketOrthodox', 'pocket-orthodox', 1, 45),
+    ...calendarProduct('calPocketOrthodox', 'pocket-orthodox', 1, CAL_POCKET),
     image: `${CAL_IMG}/pocket-orthodox/hero.png`,
   },
   {
-    ...calendarProduct('calPocketPinup', 'pocket-pinup', 1, 45),
+    ...calendarProduct('calPocketPinup', 'pocket-pinup', 1, CAL_POCKET),
     image: `${CAL_IMG}/pocket-pinup/hero.png`,
   },
   {
-    ...calendarProduct('calPocketLandscape', 'pocket-landscape', 1, 45),
+    ...calendarProduct('calPocketLandscape', 'pocket-landscape', 1, CAL_POCKET),
     image: `${CAL_IMG}/pocket-landscape/hero.png`,
   },
   {
-    ...calendarProduct('calPocketCar', 'pocket-car', 1, 45),
+    ...calendarProduct('calPocketCar', 'pocket-car', 1, CAL_POCKET),
     image: `${CAL_IMG}/pocket-car/hero.png`,
   },
-  calendarProduct('calWildGreen', 'wild-green', 4, 180),
-  calendarProduct('calLandscapeWave', 'landscape-wave', 4, 180),
-  calendarProduct('calCarsWave', 'cars-wave', 4, 180),
-  calendarProduct('calChurchesWave', 'churches-wave', 4, 180),
-  calendarProduct('calSmallOrthodox', 'small-orthodox', 4, 180),
+  calendarProduct('calWildGreen', 'wild-green', 4, CAL_QUARTER),
+  calendarProduct('calLandscapeWave', 'landscape-wave', 4, CAL_QUARTER),
+  calendarProduct('calCarsWave', 'cars-wave', 4, CAL_QUARTER),
+  calendarProduct('calChurchesWave', 'churches-wave', 4, CAL_QUARTER),
+  calendarProduct('calSmallOrthodox', 'small-orthodox', 4, CAL_QUARTER),
   {
-    ...calendarProduct('calDeskLandscape', 'desk-landscape', 11, 180),
+    ...calendarProduct('calDeskLandscape', 'desk-landscape', 11, CAL_SPIRAL),
     image: `${CAL_IMG}/desk-landscape/hero.png`,
     images: [
       `${CAL_IMG}/desk-landscape/2.png`,
@@ -457,7 +619,7 @@ export const PROMO_CATALOG_PRODUCTS: PromoCatalogProduct[] = [
 ];
 
 export const PROMO_CATALOG_COVER_IMAGES = [
-  '/mugs/mug-b5kf-white.jpg',
+  '/mugs/mug-white-classic-v2.jpg',
   `${CAL_IMG}/pets/hero.png`,
   `${MERCH_IMG}/armada.jpg`,
   `${CAL_IMG}/landscape-4/hero.png`,
@@ -465,16 +627,21 @@ export const PROMO_CATALOG_COVER_IMAGES = [
   `${CAL_IMG}/desk-landscape/hero.png`,
 ] as const;
 
-const MERCH_PAGE_GROUPS: string[][] = [
-  ['mia', 'bianca', 'bottleRaise', 'bottleAlu600'],
-  ['keyCr18', 'keyHouse', 'keyCircle', 'keyCk40'],
-  ['keyHeart', 'keyCf40', 'keyHbRound', 'keyHbSquare'],
-  ['keyHbOval', 'coasterSquare', 'coasterHb', 'pouchPure'],
-  ['armada', 'amiga', 'lighterKrickMini', 'lighterKrick'],
-  ['lighterVulkan', 'lighterLuss', 'bottleAlu500'],
-  ['polarZip', 'polarQuarterZip', 'polarVest'],
-  ['bluzonHood', 'bluzonZip', 'bluzonZipHood', 'bluzonQuarterZip'],
+const MUG_PAGE_GROUPS: string[][] = [
+  ['classic', 'inner', 'bianca', 'happyNewYear'],
+  ['stackableMint'],
 ];
+
+const MERCH_PAGE_GROUPS: string[][] = [
+  ['tshirt', 'bluzonCrew', 'bluzonHood', 'bluzonZip'],
+  ['bluzonZipHood', 'bluzonQuarterZip', 'bottleRaise', 'bottleAlu600'],
+  ['bottleAlu400', 'towelPure', 'armada', 'oggi'],
+  ['alfa', 'twister', 'lighterLuss', 'lighterMavrovo'],
+  ['lighterFresh', 'keyHouse', 'keyCircle', 'keyCk40'],
+  ['keyHeart', 'keyCf40', 'keyHbRound', 'keyHbSquare'],
+  ['keyHbOval'],
+];
+
 
 const CALENDAR_PAGE_GROUPS: string[][] = [
   ['calTrodelen'],
@@ -496,6 +663,9 @@ const CALENDAR_PAGE_GROUPS: string[][] = [
   ['calChurchesWave', 'calSmallOrthodox'],
 ];
 
+const MERCH_START = 3 + MUG_PAGE_GROUPS.length;
+const CALENDAR_START = MERCH_START + MERCH_PAGE_GROUPS.length;
+
 export const PROMO_CATALOG_PAGES: {
   id: PromoCatalogPageId;
   number: number;
@@ -504,39 +674,27 @@ export const PROMO_CATALOG_PAGES: {
 }[] = [
   { id: 'cover', number: 1 },
   { id: 'contents', number: 2 },
-  {
-    id: 'mugs-1',
-    number: 3,
-    section: 'mugs',
-    productIds: ['classic', 'inner', 'magicGlossy', 'magicMatte'],
-  },
-  {
-    id: 'mugs-2',
-    number: 4,
-    section: 'mugs',
-    productIds: ['windowBlue', 'redPatch', 'heart', 'cork'],
-  },
-  {
-    id: 'mugs-3',
-    number: 5,
-    section: 'mugs',
-    productIds: ['frosted', 'football', 'roseSparkle', 'redSparkle'],
-  },
+  ...MUG_PAGE_GROUPS.map((productIds, index) => ({
+    id: `mugs-${index + 1}` as PromoCatalogPageId,
+    number: 3 + index,
+    section: 'mugs' as const,
+    productIds,
+  })),
   ...MERCH_PAGE_GROUPS.map((productIds, index) => ({
     id: `merch-${index + 1}` as PromoCatalogPageId,
-    number: 6 + index,
+    number: MERCH_START + index,
     section: 'merch' as const,
     productIds,
   })),
   ...CALENDAR_PAGE_GROUPS.map((productIds, index) => ({
     id: `calendars-${index + 1}` as PromoCatalogPageId,
-    number: 6 + MERCH_PAGE_GROUPS.length + index,
+    number: CALENDAR_START + index,
     section: 'calendars' as const,
     productIds,
   })),
   {
     id: 'back',
-    number: 6 + MERCH_PAGE_GROUPS.length + CALENDAR_PAGE_GROUPS.length,
+    number: CALENDAR_START + CALENDAR_PAGE_GROUPS.length,
   },
 ];
 
