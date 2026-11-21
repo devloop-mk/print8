@@ -23,24 +23,24 @@ export function PromoCatalogSheet({
       )}
     >
       {variant !== 'cover' ? (
-        <div className="flex h-[2.55%] items-center justify-between gap-[3%] bg-brand-600 px-[4%]">
+        <div className="flex h-[3.55%] items-center justify-between gap-[3%] bg-brand-600 px-[4%]">
           {category ? (
-            <span className="min-w-0 truncate font-display text-[0.92cqw] font-semibold uppercase tracking-[0.16em] text-white/92">
+            <span className="min-w-0 truncate font-display text-[1.38cqw] font-semibold uppercase tracking-[0.14em] text-white">
               {category}
             </span>
           ) : (
             <span />
           )}
-          <Logo className="h-[62%] w-auto shrink-0 brightness-0 invert" />
+          <Logo className="h-[78%] w-auto shrink-0 brightness-0 invert" />
         </div>
       ) : null}
 
       <div className="relative min-h-0 flex-1">{children}</div>
 
       {variant !== 'cover' ? (
-        <div className="flex h-[2.7%] items-center justify-end bg-brand-600 px-[4%]">
+        <div className="flex h-[3.55%] items-center justify-end bg-brand-600 px-[4%]">
           {pageNumber ? (
-            <span className="font-display text-[1.05cqw] font-semibold tracking-wide text-white">
+            <span className="font-display text-[1.38cqw] font-semibold tracking-wide text-white">
               {pageNumber}
             </span>
           ) : null}

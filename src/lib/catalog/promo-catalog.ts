@@ -170,10 +170,19 @@ export const PROMO_CATALOG_PRODUCTS: PromoCatalogProduct[] = [
     href: '/products/mug-inner-red',
     image: '/supplier/koni/B11T-01.jpg',
     prices: PRICE_MUG_INNER,
-    swatches: ['#dc2626', '#93c5fd', '#f9a8d4', '#7c3aed', '#c4b5fd'],
+    swatches: [
+      '#e11d2e',
+      '#ef5b24',
+      '#f5c400',
+      '#8bc43f',
+      '#4aaee0',
+      '#1a3a6b',
+      '#e091b4',
+      '#6d3d68',
+    ],
   },
   {
-    id: 'stackableMint',
+    id: 'stackable',
     image: '/supplier/koni/BKD6T-MG.jpg',
     prices: [
       { label: '1', price: 350 },
@@ -627,21 +636,84 @@ export const PROMO_CATALOG_COVER_IMAGES = [
   `${CAL_IMG}/desk-landscape/hero.png`,
 ] as const;
 
-const MUG_PAGE_GROUPS: string[][] = [
-  ['classic', 'inner', 'bianca', 'happyNewYear'],
-  ['stackableMint'],
-];
+const MUG_IDS = [
+  'classic',
+  'inner',
+  'bianca',
+  'happyNewYear',
+  'stackable',
+] as const;
 
-const MERCH_PAGE_GROUPS: string[][] = [
-  ['tshirt', 'bluzonCrew', 'bluzonHood', 'bluzonZip'],
-  ['bluzonZipHood', 'bluzonQuarterZip', 'bottleRaise', 'bottleAlu600'],
-  ['bottleAlu400', 'towelPure', 'armada', 'oggi'],
-  ['alfa', 'twister', 'lighterLuss', 'lighterMavrovo'],
-  ['lighterFresh', 'keyHouse', 'keyCircle', 'keyCk40'],
-  ['keyHeart', 'keyCf40', 'keyHbRound', 'keyHbSquare'],
-  ['keyHbOval'],
-];
+const MERCH_IDS = [
+  'tshirt',
+  'bluzonCrew',
+  'bluzonHood',
+  'bluzonZip',
+  'bluzonZipHood',
+  'bluzonQuarterZip',
+  'bottleRaise',
+  'bottleAlu600',
+  'bottleAlu400',
+  'towelPure',
+  'armada',
+  'oggi',
+  'alfa',
+  'twister',
+  'lighterLuss',
+  'lighterMavrovo',
+  'lighterFresh',
+  'keyHouse',
+  'keyCircle',
+  'keyCk40',
+  'keyHeart',
+  'keyCf40',
+  'keyHbRound',
+  'keyHbSquare',
+  'keyHbOval',
+] as const;
 
+export const MERCH_TOC_GROUPS = [
+  {
+    key: 'merchApparel',
+    ids: [
+      'tshirt',
+      'bluzonCrew',
+      'bluzonHood',
+      'bluzonZip',
+      'bluzonZipHood',
+      'bluzonQuarterZip',
+    ],
+  },
+  {
+    key: 'merchBottles',
+    ids: ['bottleRaise', 'bottleAlu600', 'bottleAlu400', 'towelPure'],
+  },
+  {
+    key: 'merchWrite',
+    ids: [
+      'armada',
+      'oggi',
+      'alfa',
+      'twister',
+      'lighterLuss',
+      'lighterMavrovo',
+      'lighterFresh',
+    ],
+  },
+  {
+    key: 'merchKeys',
+    ids: [
+      'keyHouse',
+      'keyCircle',
+      'keyCk40',
+      'keyHeart',
+      'keyCf40',
+      'keyHbRound',
+      'keyHbSquare',
+      'keyHbOval',
+    ],
+  },
+] as const;
 
 const CALENDAR_PAGE_GROUPS: string[][] = [
   ['calTrodelen'],
@@ -663,40 +735,137 @@ const CALENDAR_PAGE_GROUPS: string[][] = [
   ['calChurchesWave', 'calSmallOrthodox'],
 ];
 
-const MERCH_START = 3 + MUG_PAGE_GROUPS.length;
-const CALENDAR_START = MERCH_START + MERCH_PAGE_GROUPS.length;
+export type PromoCatalogDensity = 'compact' | 'dense';
 
-export const PROMO_CATALOG_PAGES: {
+export type PromoCatalogPage = {
   id: PromoCatalogPageId;
   number: number;
   productIds?: string[];
   section?: 'mugs' | 'merch' | 'calendars';
-}[] = [
-  { id: 'cover', number: 1 },
-  { id: 'contents', number: 2 },
-  ...MUG_PAGE_GROUPS.map((productIds, index) => ({
-    id: `mugs-${index + 1}` as PromoCatalogPageId,
-    number: 3 + index,
-    section: 'mugs' as const,
-    productIds,
-  })),
-  ...MERCH_PAGE_GROUPS.map((productIds, index) => ({
-    id: `merch-${index + 1}` as PromoCatalogPageId,
-    number: MERCH_START + index,
-    section: 'merch' as const,
-    productIds,
-  })),
-  ...CALENDAR_PAGE_GROUPS.map((productIds, index) => ({
-    id: `calendars-${index + 1}` as PromoCatalogPageId,
-    number: CALENDAR_START + index,
-    section: 'calendars' as const,
-    productIds,
-  })),
-  {
-    id: 'back',
-    number: CALENDAR_START + CALENDAR_PAGE_GROUPS.length,
-  },
+  tocKey?: string;
+};
+
+function chunkIds(ids: readonly string[], size: number): string[][] {
+  const groups: string[][] = [];
+  for (let index = 0; index < ids.length; index += size) {
+    groups.push([...ids.slice(index, index + size)]);
+  }
+  return groups;
+}
+
+function mugTocKey(productIds: string[]): string {
+  if (productIds.length >= 4) return 'mugs-set';
+  if (productIds.length === 1 && productIds[0] === 'stackable') return 'mugs-3';
+  if (productIds.includes('bianca') || productIds.includes('happyNewYear')) {
+    return 'mugs-2';
+  }
+  return 'mugs-1';
+}
+
+const MERCH_PAGE_GROUPS_DENSE: string[][] = [
+  ['tshirt', 'bluzonCrew', 'bluzonHood', 'bluzonZip'],
+  ['bluzonZipHood', 'bluzonQuarterZip'],
+  ['bottleRaise', 'bottleAlu600', 'bottleAlu400', 'towelPure'],
+  ['armada', 'oggi', 'alfa', 'twister'],
+  ['lighterLuss', 'lighterMavrovo', 'lighterFresh'],
+  ['keyHouse', 'keyCircle', 'keyCk40', 'keyHeart'],
+  ['keyCf40', 'keyHbRound', 'keyHbSquare', 'keyHbOval'],
 ];
+
+function buildCatalogPages(productsPerPage: 2 | 4): PromoCatalogPage[] {
+  const mugGroups = chunkIds(MUG_IDS, productsPerPage);
+  const merchGroups =
+    productsPerPage === 4
+      ? MERCH_PAGE_GROUPS_DENSE
+      : chunkIds(MERCH_IDS, productsPerPage);
+  const merchStart = 3 + mugGroups.length;
+  const calendarStart = merchStart + merchGroups.length;
+
+  return [
+    { id: 'cover', number: 1 },
+    { id: 'contents', number: 2 },
+    ...mugGroups.map((productIds, index) => ({
+      id: `mugs-${index + 1}` as PromoCatalogPageId,
+      number: 3 + index,
+      section: 'mugs' as const,
+      productIds,
+      tocKey: mugTocKey(productIds),
+    })),
+    ...merchGroups.map((productIds, index) => ({
+      id: `merch-${index + 1}` as PromoCatalogPageId,
+      number: merchStart + index,
+      section: 'merch' as const,
+      productIds,
+    })),
+    ...CALENDAR_PAGE_GROUPS.map((productIds, index) => ({
+      id: `calendars-${index + 1}` as PromoCatalogPageId,
+      number: calendarStart + index,
+      section: 'calendars' as const,
+      productIds,
+    })),
+    {
+      id: 'back' as const,
+      number: calendarStart + CALENDAR_PAGE_GROUPS.length,
+    },
+  ];
+}
+
+/** Phone: at most 2 products per page. */
+export const PROMO_CATALOG_PAGES_COMPACT = buildCatalogPages(2);
+/** Desktop and A4 print: 4 products per page. */
+export const PROMO_CATALOG_PAGES_DENSE = buildCatalogPages(4);
+
+export const PROMO_CATALOG_PAGES = PROMO_CATALOG_PAGES_COMPACT;
+
+export function getPromoCatalogPages(density: PromoCatalogDensity): PromoCatalogPage[] {
+  return density === 'compact'
+    ? PROMO_CATALOG_PAGES_COMPACT
+    : PROMO_CATALOG_PAGES_DENSE;
+}
+
+export function merchTocRanges(pages: PromoCatalogPage[]) {
+  return MERCH_TOC_GROUPS.map((group) => {
+    const numbers = pages
+      .filter(
+        (page) =>
+          page.section === 'merch' &&
+          page.productIds?.some((id) =>
+            (group.ids as readonly string[]).includes(id),
+          ),
+      )
+      .map((page) => page.number);
+    return {
+      key: group.key,
+      pageNumber: numbers[0] ?? 0,
+      endPage: numbers[numbers.length - 1],
+    };
+  });
+}
+
+export function mapPromoCatalogPageIndex(
+  fromPages: PromoCatalogPage[],
+  toPages: PromoCatalogPage[],
+  index: number,
+) {
+  const from = fromPages[index];
+  if (!from) return 0;
+  if (from.id === 'cover' || from.id === 'contents' || from.id === 'back') {
+    const match = toPages.findIndex((page) => page.id === from.id);
+    return match >= 0 ? match : 0;
+  }
+  const productId = from.productIds?.[0];
+  if (productId) {
+    const match = toPages.findIndex((page) =>
+      page.productIds?.includes(productId),
+    );
+    if (match >= 0) return match;
+  }
+  if (from.section) {
+    const match = toPages.findIndex((page) => page.section === from.section);
+    if (match >= 0) return match;
+  }
+  return Math.min(index, Math.max(0, toPages.length - 1));
+}
 
 export function getPromoCatalogProduct(id: string): PromoCatalogProduct | undefined {
   return PROMO_CATALOG_PRODUCTS.find((item) => item.id === id);

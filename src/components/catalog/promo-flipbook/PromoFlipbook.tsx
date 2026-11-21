@@ -1,12 +1,17 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Printer, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { PageFlip } from 'page-flip/dist/js/page-flip.module.js';
 import { Link } from '@/i18n/navigation';
 import { Logo } from '@/components/brand/Logo';
-import { PROMO_CATALOG_PAGES } from '@/lib/catalog/promo-catalog';
+import {
+  PROMO_CATALOG_PAGES_COMPACT,
+  PROMO_CATALOG_PAGES_DENSE,
+  mapPromoCatalogPageIndex,
+  type PromoCatalogPage,
+} from '@/lib/catalog/promo-catalog';
 import { PromoCatalogPageView } from '@/components/catalog/promo-flipbook/PromoCatalogPages';
 import { fitPromoProductText } from '@/components/catalog/promo-flipbook/fitPromoProductText';
 import '@/components/catalog/promo-flipbook/promo-flipbook.css';
@@ -100,21 +105,70 @@ function restrictPageFlipCornerHit(pageFlip: PageFlip) {
   };
 }
 
+function CatalogPageLeaves({ pages }: { pages: PromoCatalogPage[] }) {
+  return (
+    <>
+      {pages.map((page) => (
+        <div
+          key={page.id}
+          data-catalog-page
+          data-density={
+            page.id === 'cover' || page.id === 'back' ? 'hard' : 'soft'
+          }
+          className="promo-flipbook-page h-full w-full"
+        >
+          <PromoCatalogPageView
+            pageId={page.id}
+            pageNumber={page.number}
+            productIds={page.productIds}
+            section={page.section}
+            catalogPages={pages}
+          />
+        </div>
+      ))}
+    </>
+  );
+}
+
 export function PromoFlipbook() {
   const t = useTranslations('promoCatalog');
-  const pages = PROMO_CATALOG_PAGES;
   const sourceRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const flipRef = useRef<PageFlip | null>(null);
+  const pageIndexRef = useRef(0);
+  const lastPagesRef = useRef(PROMO_CATALOG_PAGES_DENSE);
+  const firstInitRef = useRef(true);
+  const [compact, setCompact] = useState<boolean | null>(null);
   const [ready, setReady] = useState(false);
   const [pageIndex, setPageIndex] = useState(0);
-  const [pageCount, setPageCount] = useState(pages.length);
-  const [portrait, setPortrait] = useState(false);
+  const [pageCount, setPageCount] = useState(PROMO_CATALOG_PAGES_DENSE.length);
+  const compactMode = compact === true;
+  const pages = compactMode
+    ? PROMO_CATALOG_PAGES_COMPACT
+    : PROMO_CATALOG_PAGES_DENSE;
+  pageIndexRef.current = pageIndex;
 
   useEffect(() => {
+    const query = window.matchMedia('(max-width: 860px)');
+    const sync = () => setCompact(query.matches);
+    sync();
+    query.addEventListener('change', sync);
+    return () => query.removeEventListener('change', sync);
+  }, []);
+
+  useEffect(() => {
+    if (compact === null) return;
     const source = sourceRef.current;
     const stage = stageRef.current;
     if (!source || !stage) return;
+
+    setReady(false);
+    const fromPages = lastPagesRef.current;
+    lastPagesRef.current = pages;
+    const startPage = firstInitRef.current
+      ? readPromoCatalogPageIndex(source.querySelectorAll('[data-catalog-page]').length)
+      : mapPromoCatalogPageIndex(fromPages, pages, pageIndexRef.current);
+    firstInitRef.current = false;
 
     const host = document.createElement('div');
     host.className = 'promo-flipbook-book';
@@ -124,10 +178,6 @@ export function PromoFlipbook() {
       source.querySelectorAll<HTMLElement>('[data-catalog-page]'),
     ).map((node) => node.cloneNode(true) as HTMLElement);
     host.replaceChildren(...leaves);
-
-    const portraitMode = window.matchMedia('(max-width: 860px)').matches;
-    setPortrait(portraitMode);
-    const startPage = readPromoCatalogPageIndex(leaves.length);
     let pageFlip: PageFlip;
     let unbindShortcuts: (() => void) | undefined;
     try {
@@ -149,7 +199,7 @@ export function PromoFlipbook() {
         mobileScrollSupport: false,
         swipeDistance: 24,
         clickEventForward: true,
-        usePortrait: portraitMode,
+        usePortrait: compact,
         startPage,
       });
       const refit = () => fitPromoProductText(host);
@@ -162,7 +212,8 @@ export function PromoFlipbook() {
       }
       requestAnimationFrame(refit);
       setTimeout(refit, 200);
-    } catch {
+    } catch (error) {
+      console.error('Promo flipbook failed to start', error);
       unbindShortcuts?.();
       stage.replaceChildren();
       return undefined;
@@ -202,7 +253,7 @@ export function PromoFlipbook() {
       flipRef.current = null;
       stage.replaceChildren();
     };
-  }, []);
+  }, [compact, pages]);
 
   const go = useCallback((delta: number) => {
     const book = flipRef.current;
@@ -234,13 +285,13 @@ export function PromoFlipbook() {
   const canPrev = pageIndex > 0;
   const canNext = pageIndex < last;
   const pageLabel =
-    portrait || pageIndex === 0 || pageIndex >= last
+    compactMode || pageIndex === 0 || pageIndex >= last
       ? `${pageIndex + 1}`
       : `${pageIndex + 1}–${Math.min(pageIndex + 2, pageCount)}`;
 
   return (
-    <div className="flex h-dvh min-h-0 min-w-0 flex-col overflow-hidden bg-[#d5dde3]">
-      <header className="flex items-center justify-between gap-3 border-b border-black/5 bg-white/80 px-4 py-2.5 backdrop-blur">
+    <div className="promo-catalog-shell flex h-dvh min-h-0 min-w-0 flex-col overflow-hidden bg-[#d5dde3]">
+      <header className="promo-catalog-chrome flex items-center justify-between gap-3 border-b border-black/5 bg-white/80 px-4 py-2.5 backdrop-blur">
         <Link href="/" className="flex items-center gap-2">
           <Logo className="h-7 w-auto" />
         </Link>
@@ -250,13 +301,24 @@ export function PromoFlipbook() {
             {pageLabel}/{pageCount}
           </span>
         </p>
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1 text-sm font-medium text-ink-600 hover:text-brand-700"
-        >
-          <X className="h-4 w-4" />
-          {t('close')}
-        </Link>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="hidden items-center gap-1 text-sm font-medium text-ink-600 hover:text-brand-700 sm:inline-flex"
+            aria-label={t('print')}
+          >
+            <Printer className="h-4 w-4" />
+            <span>{t('print')}</span>
+          </button>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1 text-sm font-medium text-ink-600 hover:text-brand-700"
+          >
+            <X className="h-4 w-4" />
+            {t('close')}
+          </Link>
+        </div>
       </header>
 
       <div
@@ -264,26 +326,17 @@ export function PromoFlipbook() {
         aria-hidden
         className="pointer-events-none absolute left-[-9999px] top-0 h-[650px] w-[460px] overflow-hidden"
       >
-        {pages.map((page) => (
-          <div
-            key={page.id}
-            data-catalog-page
-            data-density={
-              page.id === 'cover' || page.id === 'back' ? 'hard' : 'soft'
-            }
-            className="promo-flipbook-page h-full w-full"
-          >
-            <PromoCatalogPageView
-              pageId={page.id}
-              pageNumber={page.number}
-              productIds={page.productIds}
-              section={page.section}
-            />
-          </div>
-        ))}
+        <CatalogPageLeaves pages={pages} />
       </div>
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+      <div
+        aria-hidden
+        className="promo-catalog-print"
+      >
+        <CatalogPageLeaves pages={PROMO_CATALOG_PAGES_DENSE} />
+      </div>
+
+      <div className="promo-catalog-chrome flex min-h-0 min-w-0 flex-1 flex-col">
         <div className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center overflow-visible px-3 py-2 sm:px-8 sm:py-3">
           <button
             type="button"
@@ -329,7 +382,6 @@ export function PromoFlipbook() {
           </button>
         </div>
       </div>
-
     </div>
   );
 }

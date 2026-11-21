@@ -48,22 +48,26 @@ export function PromoProductCard({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={product.image} alt={name} />
       </div>
-      <PromoPriceTable prices={product.prices} />
-      <div className="promo-product-meta">
-        <PromoProductTitle name={name} href={product.href} />
-        <div className="promo-product-specs">
-          {specs.map((line) => (
-            <p key={line}>{line}</p>
-          ))}
-        </div>
-        <div className="promo-product-swatches">
-          {product.swatches?.map((color) => (
-            <span
-              key={color}
-              className="promo-product-swatch"
-              style={{ backgroundColor: color }}
-            />
-          ))}
+      <div className="promo-product-info">
+        <PromoPriceTable prices={product.prices} />
+        <div className="promo-product-meta">
+          <PromoProductTitle name={name} href={product.href} />
+          <div className="promo-product-specs">
+            {specs.map((line) => (
+              <p key={line}>{line}</p>
+            ))}
+          </div>
+          {product.swatches?.length ? (
+            <div className="promo-product-swatches">
+              {product.swatches.map((color) => (
+                <span
+                  key={color}
+                  className="promo-product-swatch"
+                  style={{ backgroundColor: color }}
+                />
+              ))}
+            </div>
+          ) : null}
         </div>
       </div>
     </article>
