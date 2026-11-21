@@ -34,7 +34,14 @@ export function AdminLoginForm() {
       }
 
       const from = searchParams.get('from');
-      router.push(from && from.startsWith('/admin') ? from : '/admin');
+      const safeFrom =
+        from &&
+        (from.startsWith('/admin') ||
+          from === '/catalog/edit' ||
+          from.startsWith('/catalog/edit?'))
+          ? from
+          : '/admin';
+      router.push(safeFrom);
       router.refresh();
     } catch {
       setError(t.serverError);

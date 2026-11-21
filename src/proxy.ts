@@ -73,10 +73,36 @@ async function refreshSupabaseSession(
   }
 }
 
+function isCatalogEditPage(pathname: string) {
+  return (
+    pathname === '/catalog/edit' ||
+    pathname.startsWith('/catalog/edit/') ||
+    pathname === '/en/catalog/edit' ||
+    pathname.startsWith('/en/catalog/edit/') ||
+    pathname === '/mk/catalog/edit' ||
+    pathname.startsWith('/mk/catalog/edit/')
+  );
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const isCatalogLogoEditorApi = pathname.startsWith('/api/catalog/logo-editor');
   const isAdminArea =
-    pathname.startsWith('/admin') || pathname.startsWith('/api/admin');
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/api/admin') ||
+    isCatalogLogoEditorApi;
+
+  if (isCatalogEditPage(pathname)) {
+    const session = await verifyAdminSessionToken(
+      request.cookies.get(ADMIN_COOKIE_NAME)?.value,
+    );
+    if (!session) {
+      const loginUrl = new URL('/admin/login', request.url);
+      loginUrl.searchParams.set('from', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+    // Fall through to next-intl so /catalog/edit rewrites into [locale].
+  }
 
   if (isAdminArea && !LOGIN_PATHS.has(pathname)) {
     const session = await verifyAdminSessionToken(
@@ -84,7 +110,7 @@ export async function proxy(request: NextRequest) {
     );
 
     if (!session) {
-      if (pathname.startsWith('/api/admin')) {
+      if (pathname.startsWith('/api/admin') || isCatalogLogoEditorApi) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
 

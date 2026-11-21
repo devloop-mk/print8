@@ -38,29 +38,20 @@
     "contentsLines": {
       "mugs-1": "White and inner colour",
       "mugs-2": "Coloured base and Happy New Year",
-      "mugs-3": "Stackable mug",
+      "mugs-3": "Coloured interior, handle and base",
       "mugs-set": "Ceramic mugs",
       "merchApparel": "T-shirts and sweatshirts",
-      "merchBottles": "Bottles and cloth",
+      "merchBottles": "Bottles, cloth and tote",
       "merchWrite": "Pens and lighters",
       "merchKeys": "Keychains",
-      "calendars-1": "Tri-panel",
-      "calendars-2": "Wildlife",
-      "calendars-3": "Orthodox 1/6",
-      "calendars-4": "Landscapes 1/6",
-      "calendars-5": "Cars",
-      "calendars-6": "Landscapes and pets",
-      "calendars-7": "Mosques and trucks",
-      "calendars-8": "Orthodox spiral",
-      "calendars-9": "Landscape spiral",
-      "calendars-10": "Narrow and 1/4",
-      "calendars-11": "Pets",
-      "calendars-12": "Kids and wildlife",
-      "calendars-13": "Pocket",
-      "calendars-14": "Landscapes and cars",
-      "calendars-15": "Pocket pin-up",
-      "calendars-16": "Desk",
-      "calendars-17": "Churches and icons"
+      "calChurch": "Churches and orthodox",
+      "calWildlife": "Wildlife and animals",
+      "calPets": "Pets",
+      "calScenic": "Cars, landscapes and mosques",
+      "calDesk": "Desk",
+      "calPocket": "Pocket",
+      "calTrodelen": "Tri-panel",
+      "calClassic": "Classic wall"
     },
     "qty": "Quantity",
     "unitPrice": "Price per item",
@@ -172,11 +163,11 @@
         ]
       },
       "stackable": {
-        "name": "Stackable mug",
+        "name": "Mug with coloured interior, handle and base",
         "specs": [
           "Ceramic, ~300 ml · φ 8.4 × 9.8 cm",
-          "Coloured interior and handle",
-          "Sublimation · stackable"
+          "Coloured interior, handle and base",
+          "Sublimation · they nest inside each other"
         ]
       },
       "happyNewYear": {
@@ -200,7 +191,7 @@
         "specs": [
           "Ceramic, 325 ml · 81 × 95 mm",
           "Coloured base and handle",
-          "Sublimation · not dishwasher-safe"
+          "Sublimation"
         ]
       },
       "armada": {
@@ -355,7 +346,7 @@
         ]
       },
       "lighterFresh": {
-        "name": "Electronic lighter",
+        "name": "Lighter 3",
         "specs": [
           "Electronic plastic lighter, 8 × 2.5 × 1 cm",
           "Screen print",
@@ -363,7 +354,7 @@
         ]
       },
       "bottleRaise": {
-        "name": "Glass bottle 500 ml",
+        "name": "Glass bottle with soft sleeve 500 ml",
         "specs": [
           "Glass 500 ml + metal cap",
           "Soft sleeve and gift box",
@@ -383,6 +374,14 @@
           "Microfibre, white · 15 × 18 cm",
           "Sublimation",
           "Minimum order 10 pieces"
+        ]
+      },
+      "bagNaturella": {
+        "name": "Naturella cotton tote",
+        "specs": [
+          "100% cotton · 130 g/m²",
+          "38 × 42 cm · natural",
+          "Print area 220 × 150 mm"
         ]
       },
       "coasterHb": {
@@ -488,6 +487,24 @@
           "Glued with rivet · ad space 150 × 320 mm"
         ]
       },
+      "calClassicPlastic": {
+        "name": "Classic wall calendar with plastic spiral",
+        "specs": [
+          "Top A4 210 × 297 mm · bottom A3 420 × 297 mm",
+          "12 months · Orthodox holiday grid",
+          "Plastic spiral, black or white",
+          "Branding area on the A4 header"
+        ]
+      },
+      "calClassicMetal": {
+        "name": "Classic wall calendar with metal spiral",
+        "specs": [
+          "Top A4 210 × 297 mm · bottom A3 420 × 297 mm",
+          "12 months · Orthodox holiday grid",
+          "Metal spiral, black or white",
+          "Branding area on the A4 header"
+        ]
+      },
       "calWild": {
         "name": "Wildlife",
         "specs": [
@@ -552,22 +569,6 @@
           "Ad space 80 × 300 mm"
         ]
       },
-      "calSpiralOrthodox": {
-        "name": "Spiral Orthodox",
-        "specs": [
-          "Desk calendar with spiral binding",
-          "12 months · Orthodox icons",
-          "Ad space on the stand"
-        ]
-      },
-      "calSpiralLandscape": {
-        "name": "Spiral landscapes",
-        "specs": [
-          "Desk calendar with spiral binding",
-          "12 months · landscapes",
-          "Ad space on the stand"
-        ]
-      },
       "calNarrowOrthodox": {
         "name": "Slim Orthodox",
         "specs": [
@@ -593,17 +594,19 @@
         ]
       },
       "calRedOrthodox": {
-        "name": "Red Orthodox 1/4",
+        "name": "Orthodox 1/4",
         "specs": [
           "4 sheets",
-          "Format 500 × 300 mm"
+          "Format 500 × 300 mm",
+          "Ad space 80 × 300 mm"
         ]
       },
       "calKidsPets": {
         "name": "Children and pets 1/4",
         "specs": [
           "4 sheets",
-          "Format 500 × 300 mm"
+          "Format 500 × 300 mm",
+          "Ad space 80 × 300 mm"
         ]
       },
       "calPocketOrthodox": {
@@ -611,14 +614,7 @@
         "specs": [
           "Format 9 × 6 cm",
           "Picture on one side, calendar on the other",
-          "100 pieces = 1,200 MKD"
-        ]
-      },
-      "calPocketPinup": {
-        "name": "Pocket calendar 9×6 — pin-up",
-        "specs": [
-          "Format 9 × 6 cm",
-          "Picture on one side, calendar on the other",
+          "Ad space below the image",
           "100 pieces = 1,200 MKD"
         ]
       },
@@ -627,6 +623,7 @@
         "specs": [
           "Format 9 × 6 cm",
           "Picture on one side, calendar on the other",
+          "Ad space below the image",
           "100 pieces = 1,200 MKD"
         ]
       },
@@ -635,6 +632,7 @@
         "specs": [
           "Format 9 × 6 cm",
           "Picture on one side, calendar on the other",
+          "Ad space below the image",
           "100 pieces = 1,200 MKD"
         ]
       },
@@ -642,35 +640,56 @@
         "name": "Wildlife 1/4",
         "specs": [
           "4 sheets",
-          "Format 500 × 300 mm"
+          "Format 500 × 300 mm",
+          "Ad space 80 × 300 mm"
         ]
       },
       "calLandscapeWave": {
         "name": "Landscapes 1/4 — wave",
         "specs": [
           "4 sheets",
-          "Format 500 × 300 mm"
+          "Format 500 × 300 mm",
+          "Ad space 80 × 300 mm"
         ]
       },
       "calCarsWave": {
         "name": "Cars 1/4 — wave",
         "specs": [
           "4 sheets",
-          "Format 500 × 300 mm"
+          "Format 500 × 300 mm",
+          "Ad space 80 × 300 mm"
         ]
       },
       "calChurchesWave": {
         "name": "Churches and mosques 1/4",
         "specs": [
           "4 sheets",
-          "Format 500 × 300 mm"
+          "Format 500 × 300 mm",
+          "Ad space 80 × 300 mm"
         ]
       },
       "calSmallOrthodox": {
         "name": "Orthodox 1/4 — icons",
         "specs": [
           "4 sheets",
-          "Format 500 × 300 mm"
+          "Format 500 × 300 mm",
+          "Ad space 80 × 300 mm"
+        ]
+      },
+      "calSpiralOrthodox": {
+        "name": "Spiral Orthodox",
+        "specs": [
+          "Desk calendar with spiral binding",
+          "12 months · Orthodox icons",
+          "Ad space on the stand"
+        ]
+      },
+      "calSpiralLandscape": {
+        "name": "Spiral landscapes",
+        "specs": [
+          "Desk calendar with spiral binding",
+          "12 months · landscapes",
+          "Ad space on the stand"
         ]
       },
       "calDeskLandscape": {
@@ -678,6 +697,13 @@
         "specs": [
           "Desk calendar",
           "12 months · landscapes"
+        ]
+      },
+      "calDeskOrthodox": {
+        "name": "Orthodox desk calendar",
+        "specs": [
+          "Desk calendar",
+          "12 months"
         ]
       }
     }

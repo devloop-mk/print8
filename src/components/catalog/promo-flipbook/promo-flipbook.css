@@ -412,6 +412,25 @@ a.promo-product-title-link:hover .promo-product-title {
   row-gap: 2.4%;
 }
 
+.promo-cal-page--three,
+.promo-cal-page--four {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 2.2%;
+  row-gap: 2%;
+}
+
+.promo-cal-page--three .promo-cal--two,
+.promo-cal-page--four .promo-cal--two {
+  column-gap: 1.6%;
+  row-gap: 1%;
+}
+
+.promo-cal-page--three .promo-cal-hero,
+.promo-cal-page--four .promo-cal-hero {
+  padding: 3%;
+}
+
 .promo-cal {
   display: grid;
   width: 100%;
@@ -546,13 +565,17 @@ a.promo-product-title-link:hover .promo-product-title {
 }
 
 .promo-cal .promo-product-meta {
-  grid-template-rows: 2.7em 4em;
+  grid-template-rows: 2.7em 4em auto;
   margin-top: 0.35em;
 }
 
 .promo-cal--two .promo-product-meta {
-  grid-template-rows: 2.7em 3.9em;
+  grid-template-rows: 2.7em 3.9em auto;
   margin-top: 0;
+}
+
+.promo-cal .promo-product-swatches {
+  padding-top: 0.08em;
 }
 
 .promo-cal--two .promo-price-table {

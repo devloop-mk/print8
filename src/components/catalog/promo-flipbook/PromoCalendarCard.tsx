@@ -52,6 +52,17 @@ export function PromoCalendarCard({
               <p key={line}>{line}</p>
             ))}
           </div>
+          {product.swatches?.length ? (
+            <div className="promo-product-swatches">
+              {product.swatches.map((color) => (
+                <span
+                  key={color}
+                  className="promo-product-swatch"
+                  style={{ backgroundColor: color }}
+                />
+              ))}
+            </div>
+          ) : null}
         </div>
       </div>
     </article>

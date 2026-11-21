@@ -5,6 +5,7 @@ import { Link } from '@/i18n/navigation';
 import { Logo } from '@/components/brand/Logo';
 import {
   PROMO_CATALOG_COVER_IMAGES,
+  calendarTocRanges,
   getPromoCatalogProduct,
   isCalendarProductId,
   merchTocRanges,
@@ -146,6 +147,7 @@ function ContentsPage({
     (page) => page.section === 'calendars',
   );
   const merchRanges = merchTocRanges(catalogPages);
+  const calendarRanges = calendarTocRanges(catalogPages);
 
   return (
     <PromoCatalogSheet pageNumber={pageNumber} category={t('contents')}>
@@ -190,13 +192,14 @@ function ContentsPage({
           />
           <ol
             className="promo-toc-list"
-            style={{ flexGrow: Math.ceil(calendarPages.length / 2) }}
+            style={{ flexGrow: Math.ceil(calendarRanges.length / 2) }}
           >
-            {calendarPages.map((page) => (
+            {calendarRanges.map((range) => (
               <ContentsLine
-                key={page.id}
-                label={t(`contentsLines.${page.id}`)}
-                pageNumber={page.number}
+                key={range.key}
+                label={t(`contentsLines.${range.key}`)}
+                pageNumber={range.pageNumber}
+                endPage={range.endPage}
               />
             ))}
           </ol>
@@ -230,13 +233,16 @@ function ProductsPage({
 }) {
   const t = useTranslations('promoCatalog');
   const calendars = productIds.some(isCalendarProductId);
-  const calendarLayout = productIds.length === 1 ? 'one' : 'two';
+  const count = productIds.length;
+  const calendarPageLayout =
+    count <= 1 ? 'one' : count === 2 ? 'two' : count === 3 ? 'three' : 'four';
+  const calendarCardLayout = count === 1 ? 'one' : 'two';
 
   return (
     <PromoCatalogSheet pageNumber={pageNumber} category={sectionLabel(t, section)}>
       <div className="flex h-full min-h-0 flex-col px-[4.5%] pb-[1.2%] pt-[2%]">
         {calendars ? (
-          <div className={`promo-cal-page promo-cal-page--${calendarLayout}`}>
+          <div className={`promo-cal-page promo-cal-page--${calendarPageLayout}`}>
             {productIds.map((id) => {
               const product = getPromoCatalogProduct(id);
               if (!product) return null;
@@ -246,7 +252,7 @@ function ProductsPage({
                   product={product}
                   name={t(`items.${id}.name`)}
                   specs={t.raw(`items.${id}.specs`) as string[]}
-                  layout={calendarLayout}
+                  layout={calendarCardLayout}
                 />
               );
             })}
@@ -325,6 +331,13 @@ export function PromoCatalogPageView({
   if (pageId === 'cover') return <CoverPage pageNumber={pageNumber} />;
   if (pageId === 'contents') {
     return <ContentsPage pageNumber={pageNumber} catalogPages={catalogPages} />;
+  }
+  if (pageId === 'blank') {
+    return (
+      <PromoCatalogSheet pageNumber={pageNumber}>
+        <div className="h-full" />
+      </PromoCatalogSheet>
+    );
   }
   if (pageId === 'back') return <BackPage pageNumber={pageNumber} />;
   return (
