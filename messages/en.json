@@ -36,15 +36,15 @@
     "sectionCalendars": "Calendars 2027",
     "contentsNote": "Minimum order: 30 calendars, 100 pens or lighters. Prices are per piece, by quantity.",
     "contentsLines": {
-      "mugs-1": "White, inner-color, Bianca, Happy New Year",
+      "mugs-1": "White, inner-color, two-tone, New Year",
       "mugs-2": "Stackable mint mug",
       "merch-1": "T-shirts and sweatshirts",
       "merch-2": "Zip sweatshirts and bottles",
       "merch-3": "400 ml bottle, cloth and metal pens",
       "merch-4": "Plastic pens and lighters",
-      "merch-5": "Fresh lighter and PVC keychains",
-      "merch-6": "PVC and hardboard keychains",
-      "merch-7": "Hardboard oval keychain"
+      "merch-5": "Electronic lighter and PVC keychains",
+      "merch-6": "PVC and sublimation keychains",
+      "merch-7": "Sublimation oval keychain"
     },
     "qty": "Quantity",
     "unitPrice": "Price per item",
@@ -163,15 +163,15 @@
         ]
       },
       "happyNewYear": {
-        "name": "Mug with Happy New Year interior",
+        "name": "Mug with New Year interior",
         "specs": [
           "Ceramic, ~330 ml · φ 8.2 × 9.5 cm",
-          "Happy New Year interior",
+          "New Year interior print",
           "Sublimation on the outside"
         ]
       },
       "mia": {
-        "name": "MIA mug",
+        "name": "Mug with coloured interior and handle",
         "specs": [
           "Ceramic, 325 ml · 82 × 95 mm",
           "Coloured interior and handle",
@@ -179,7 +179,7 @@
         ]
       },
       "bianca": {
-        "name": "Bianca mug",
+        "name": "Two-tone mug",
         "specs": [
           "Ceramic, 325 ml · 81 × 95 mm",
           "Two-tone base and handle",
@@ -187,7 +187,7 @@
         ]
       },
       "armada": {
-        "name": "Armada Gold metal pen",
+        "name": "Metal pen 1",
         "specs": [
           "Metal body with stylus tip",
           "Engraving",
@@ -195,7 +195,7 @@
         ]
       },
       "oggi": {
-        "name": "Oggi metal pen",
+        "name": "Metal pen 2",
         "specs": [
           "Metal pen 137 × 10 mm",
           "Engraving",
@@ -203,7 +203,7 @@
         ]
       },
       "amiga": {
-        "name": "Amiga plastic pen",
+        "name": "Plastic pen 3",
         "specs": [
           "Plastic pen, 13.8 cm · UV print",
           "Several colours",
@@ -211,7 +211,7 @@
         ]
       },
       "alfa": {
-        "name": "Alfa plastic pen",
+        "name": "Plastic pen 1",
         "specs": [
           "Plastic pen 138 × 10.5 mm",
           "Screen print",
@@ -219,22 +219,22 @@
         ]
       },
       "twister": {
-        "name": "Twister plastic pen",
+        "name": "Plastic pen 2",
         "specs": [
-          "Ritter Twister · Jogger refill 2000 m",
+          "Click plastic pen",
           "Screen print",
           "Minimum order 100 pieces"
         ]
       },
       "keyCr18": {
-        "name": "PVC rectangle keychain CR-18",
+        "name": "PVC slim keychain",
         "specs": [
           "PVC, double-sided print",
           "Print area 18 × 50 mm"
         ]
       },
       "keyHouse": {
-        "name": "PVC house keychain CR-Y",
+        "name": "PVC house keychain",
         "specs": [
           "PVC, double-sided print",
           "Print area 30 × 36 mm",
@@ -242,7 +242,7 @@
         ]
       },
       "keyCircle": {
-        "name": "PVC circle keychain CR-33",
+        "name": "PVC circle keychain",
         "specs": [
           "PVC, double-sided print",
           "Print area Ø 33 mm",
@@ -250,7 +250,7 @@
         ]
       },
       "keyCk40": {
-        "name": "PVC rectangle keychain CK-40",
+        "name": "PVC rectangle keychain",
         "specs": [
           "PVC, double-sided print",
           "Print area 25 × 40 mm",
@@ -258,7 +258,7 @@
         ]
       },
       "keyHeart": {
-        "name": "PVC heart keychain CR-COR",
+        "name": "PVC heart keychain",
         "specs": [
           "PVC, double-sided print",
           "Print area 40 × 40 mm",
@@ -266,7 +266,7 @@
         ]
       },
       "keyCf40": {
-        "name": "PVC rectangle keychain CF-40",
+        "name": "PVC rounded keychain",
         "specs": [
           "PVC with rounded top",
           "Print area 25 × 40 mm",
@@ -274,31 +274,31 @@
         ]
       },
       "keyHbRound": {
-        "name": "Hardboard round keychain",
+        "name": "Sublimation round keychain",
         "specs": [
-          "Hardboard, sublimation",
+          "Hard board, sublimation",
           "Ø 50 mm",
           "Minimum order 10 pieces"
         ]
       },
       "keyHbSquare": {
-        "name": "Hardboard square keychain",
+        "name": "Sublimation square keychain",
         "specs": [
-          "Hardboard, sublimation",
+          "Hard board, sublimation",
           "50 × 50 mm",
           "Minimum order 10 pieces"
         ]
       },
       "keyHbOval": {
-        "name": "Hardboard oval keychain",
+        "name": "Sublimation oval keychain",
         "specs": [
-          "Hardboard, sublimation",
+          "Hard board, sublimation",
           "Oval shape",
           "Minimum order 10 pieces"
         ]
       },
       "lighterKrickMini": {
-        "name": "Krick Mini lighter",
+        "name": "Plastic lighter 3",
         "specs": [
           "Plastic lighter, 69 × 20 × 10 mm",
           "Print in one or two colours",
@@ -306,7 +306,7 @@
         ]
       },
       "lighterVulkan": {
-        "name": "Vulkan II lighter",
+        "name": "Plastic lighter 4",
         "specs": [
           "Plastic lighter, 82 × 24 × 11 mm",
           "Print in one or two colours",
@@ -314,7 +314,7 @@
         ]
       },
       "lighterKrick": {
-        "name": "Krick lighter",
+        "name": "Plastic lighter 5",
         "specs": [
           "Plastic lighter, 22 × 78 × 10 mm",
           "Print in one or two colours",
@@ -322,7 +322,7 @@
         ]
       },
       "lighterLuss": {
-        "name": "Luss HD white lighter",
+        "name": "Plastic lighter 1",
         "specs": [
           "Plastic lighter, 63 × 35 × 14 mm",
           "Screen print",
@@ -330,7 +330,7 @@
         ]
       },
       "lighterMavrovo": {
-        "name": "Mavrovo lighter",
+        "name": "Plastic lighter 2",
         "specs": [
           "Plastic lighter, 82.3 × 24.1 × 11.4 mm",
           "Screen print",
@@ -338,7 +338,7 @@
         ]
       },
       "lighterFresh": {
-        "name": "Fresh lighter",
+        "name": "Electronic lighter",
         "specs": [
           "Electronic plastic lighter, 8 × 2.5 × 1 cm",
           "Screen print",
@@ -346,7 +346,7 @@
         ]
       },
       "bottleRaise": {
-        "name": "Raise 2 glass bottle",
+        "name": "Glass bottle 500 ml",
         "specs": [
           "Glass 500 ml + metal cap",
           "Soft sleeve and gift box",
@@ -361,7 +361,7 @@
         ]
       },
       "towelPure": {
-        "name": "PURE sublimation cloth",
+        "name": "Microfibre sublimation cloth",
         "specs": [
           "Microfibre, white · 15 × 18 cm",
           "Sublimation",
