@@ -1,12 +1,7 @@
-import { Inter } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import mkMessages from '../../../messages/mk.json';
+import { inter } from '@/lib/site-fonts';
 import '@/app/globals.css';
-
-const inter = Inter({
-  variable: '--font-geist-sans',
-  subsets: ['latin', 'latin-ext'],
-});
 
 export default function AdminRootLayout({
   children,

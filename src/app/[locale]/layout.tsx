@@ -2,7 +2,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { Inter, Space_Grotesk } from "next/font/google";
+import { inter, spaceGrotesk } from "@/lib/site-fonts";
 import { routing, type Locale } from "@/i18n/routing";
 import { HeaderGate } from "@/components/layout/HeaderGate";
 import { FooterGate } from "@/components/layout/FooterGate";
@@ -19,17 +19,6 @@ import { ScrollToTop } from "@/components/navigation/ScrollToTop";
 import { PageTransition } from "@/components/motion/PageTransition";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 import "@/app/globals.css";
-
-const inter = Inter({
-  variable: "--font-geist-sans",
-  subsets: ["latin", "latin-ext", "cyrillic", "cyrillic-ext"],
-});
-
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-display",
-  subsets: ["latin", "latin-ext"],
-  weight: ["500", "600", "700"],
-});
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
