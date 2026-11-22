@@ -22,62 +22,52 @@ function CoverPage({ pageNumber }: { pageNumber: number }) {
 
   return (
     <PromoCatalogSheet variant="cover" pageNumber={pageNumber}>
-      <div className="absolute inset-0 bg-white">
-        <div className="absolute inset-y-0 left-0 w-[72%] bg-brand-600" />
-        <div className="absolute right-0 top-0 h-[38%] w-[28%] bg-white" />
-        <div className="absolute bottom-0 right-0 h-[62%] w-[28%] bg-[#e8edf1]" />
-        <div className="absolute left-[58%] top-0 h-full w-[1.15%] bg-brand-400/80" />
-        <div className="absolute left-0 top-[38%] h-[1.1%] w-[72%] bg-brand-400/70" />
-
-        <div className="absolute left-[8%] top-[8%] max-w-[54%]">
-          <Logo className="h-10 w-auto brightness-0 invert sm:h-12" />
-          <p className="mt-3 max-w-xs text-[clamp(0.7rem,1.15cqw,0.9rem)] leading-snug text-white/85">
-            {t('tagline')}
-          </p>
+      <div className="promo-cover">
+        <div className="promo-cover-deco" aria-hidden>
+          <div className="promo-cover-deco-blue" />
+          <div className="promo-cover-deco-white" />
+          <div className="promo-cover-deco-gray" />
+          <div className="promo-cover-deco-vline" />
+          <div className="promo-cover-deco-hline" />
         </div>
 
-        <div className="absolute left-[8%] top-[38%] max-w-[58%] -translate-y-1/2 pt-6">
-          <p className="font-display text-[clamp(0.85rem,1.6cqw,1.15rem)] font-medium uppercase tracking-[0.22em] text-white/80">
-            {t('kicker')}
-          </p>
-          <h1 className="mt-2 font-display text-[clamp(1.7rem,4.1cqw,3.35rem)] font-bold uppercase leading-[0.95] tracking-[-0.03em] text-white">
-            {t('headline')}
-          </h1>
+        <div className="promo-cover-brand">
+          <Logo className="promo-cover-logo" />
+          <p className="promo-cover-tagline">{t('tagline')}</p>
         </div>
 
-        <div className="absolute bottom-[14%] left-[8%] right-[8%] overflow-hidden bg-[#d9e1e8] shadow-[0_18px_40px_rgba(18,43,61,0.22)]">
-          <div className="grid grid-cols-3 gap-px bg-brand-200/40 p-2 sm:p-3">
+        <div className="promo-cover-title">
+          <p className="promo-cover-kicker font-display">{t('kicker')}</p>
+          <h1 className="promo-cover-headline font-display">{t('headline')}</h1>
+        </div>
+
+        <div className="promo-cover-mosaic">
+          <div className="promo-cover-mosaic-grid">
             {PROMO_CATALOG_COVER_IMAGES.map((src) => (
-              <div key={src} className="aspect-[5/4] bg-white">
+              <div key={src} className="promo-cover-cell">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={src} alt="" className="h-full w-full object-contain p-1.5" />
+                <img src={src} alt="" />
               </div>
             ))}
           </div>
         </div>
 
-        <div className="absolute bottom-[3.5%] left-[8%] right-[32%] grid grid-cols-3 gap-3 text-[clamp(0.62rem,1.05cqw,0.78rem)] text-white">
+        <div className="promo-cover-foot">
           <div>
-            <p className="font-semibold uppercase tracking-[0.08em] text-brand-100">
-              {t('deliveryLabel')}
-            </p>
-            <p className="mt-1 leading-snug text-white/90">{t('delivery')}</p>
+            <p className="promo-cover-foot-label">{t('deliveryLabel')}</p>
+            <p className="promo-cover-foot-value">{t('delivery')}</p>
           </div>
           <div>
-            <p className="font-semibold uppercase tracking-[0.08em] text-brand-100">
-              {t('contactLabel')}
-            </p>
-            <p className="mt-1 leading-snug text-white/90">
+            <p className="promo-cover-foot-label">{t('contactLabel')}</p>
+            <p className="promo-cover-foot-value">
               {contact('phoneValue')}
               <br />
               {contact('emailValue')}
             </p>
           </div>
           <div>
-            <p className="font-semibold uppercase tracking-[0.08em] text-brand-100">
-              {t('webLabel')}
-            </p>
-            <p className="mt-1 leading-snug text-white/90">print8.mk</p>
+            <p className="promo-cover-foot-label">{t('webLabel')}</p>
+            <p className="promo-cover-foot-value">print8.mk</p>
           </div>
         </div>
       </div>

@@ -27,7 +27,7 @@ export function PromoCalendarCard({
   return (
     <article
       ref={cardRef}
-      className={`promo-cal promo-cal--${layout}${extras.length ? '' : ' promo-cal--solo'}`}
+      className={`promo-cal promo-cal--${layout}${extras.length ? ` promo-cal--extras-${extras.length}` : ' promo-cal--solo'}`}
     >
       <div className="promo-cal-hero">
         {/* eslint-disable-next-line @next/next/no-img-element */}

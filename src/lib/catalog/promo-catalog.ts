@@ -939,13 +939,48 @@ const MERCH_PAGE_GROUPS_DENSE: string[][] = [
   ['keyCf40', 'keyHbRound', 'keyHbSquare', 'keyHbOval'],
 ];
 
+function productHasExtraImages(id: string): boolean {
+  const product = PROMO_CATALOG_PRODUCTS_RAW.find((item) => item.id === id);
+  return Boolean(product?.images?.length);
+}
+
+/** Phone: one calendar per page whenever extra sheets/months exist. */
+function compactCalendarGroups(source: string[][]): string[][] {
+  const groups: string[][] = [];
+  let withoutExtras: string[] = [];
+
+  const flush = () => {
+    if (withoutExtras.length) {
+      groups.push(withoutExtras);
+      withoutExtras = [];
+    }
+  };
+
+  for (const group of source) {
+    for (const id of group) {
+      if (productHasExtraImages(id)) {
+        flush();
+        groups.push([id]);
+      } else {
+        withoutExtras.push(id);
+        if (withoutExtras.length === 2) flush();
+      }
+    }
+  }
+  flush();
+  return groups;
+}
+
 function buildCatalogPages(productsPerPage: 2 | 4): PromoCatalogPage[] {
   const mugGroups = chunkIds(MUG_IDS, productsPerPage);
   const merchGroups =
     productsPerPage === 4
       ? MERCH_PAGE_GROUPS_DENSE
       : chunkIds(MERCH_IDS, productsPerPage);
-  const calendarGroups = CALENDAR_PAGE_GROUPS;
+  const calendarGroups =
+    productsPerPage === 2
+      ? compactCalendarGroups(CALENDAR_PAGE_GROUPS)
+      : CALENDAR_PAGE_GROUPS;
   const merchStart = 3 + mugGroups.length;
   const calendarStart = merchStart + merchGroups.length;
 
