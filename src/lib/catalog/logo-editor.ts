@@ -39,6 +39,7 @@ const SOURCE_OVERRIDES: Record<string, string> = {
   stackable: 'public/supplier/koni/BKD6T-MG.jpg',
   tshirt: 'public/t-shirts/unisex/bela-front.jpg',
   bluzonCrew: 'public/hoodies/crewneck/bela-front.jpg',
+  keyHouse: 'public/catalog/merch/key-house-blank.jpg',
 };
 
 function stripQuery(url: string): string {
