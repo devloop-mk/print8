@@ -1170,10 +1170,12 @@ a.promo-product-title-link:hover .promo-product-title {
   .promo-catalog-print .promo-products-grid,
   .promo-catalog-print .promo-products-grid--3,
   .promo-catalog-print .promo-products-grid--4 {
+    align-items: stretch;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+    /* Photo | table+copy | photo | table+copy — subgrid keeps tables on one line. */
+    grid-template-rows: minmax(0, 1.7fr) auto minmax(0, 1.7fr) auto;
     column-gap: 3.2%;
-    row-gap: 1.6%;
+    row-gap: 0.9%;
   }
 
   .promo-catalog-print .promo-products-grid--1 {
@@ -1181,24 +1183,32 @@ a.promo-product-title-link:hover .promo-product-title {
     grid-template-rows: minmax(0, 1fr);
   }
 
-  .promo-catalog-print .promo-products-grid--1 .promo-product-card {
-    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr);
-    column-gap: 4%;
-  }
-
   .promo-catalog-print .promo-products-grid--2 {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1.7fr) auto;
     column-gap: 3.2%;
     row-gap: 0;
   }
 
   .promo-catalog-print .promo-product-card {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1.7fr) auto;
+    grid-template-rows: subgrid;
+    grid-row: span 2;
+    height: auto;
     column-gap: 0;
     padding: 0;
     box-shadow: none;
+  }
+
+  .promo-catalog-print .promo-products-grid--1 .promo-product-card {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    grid-row: auto;
+    height: 100%;
+    column-gap: 4%;
+  }
+
+  .promo-catalog-print .promo-product-info {
+    justify-content: flex-start;
   }
 }
