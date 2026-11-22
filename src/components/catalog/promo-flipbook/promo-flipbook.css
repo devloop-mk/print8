@@ -201,8 +201,9 @@ html:has(.promo-flipbook-stage) body {
 
 .promo-product-title-link {
   display: block;
+  flex-shrink: 0;
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
   color: inherit;
   text-decoration: none;
 }
@@ -229,7 +230,7 @@ html:has(.promo-flipbook-stage) body {
 
 .promo-product-title {
   margin: 0;
-  overflow: hidden;
+  overflow: visible;
   font-size: clamp(0.95rem, 2.6cqw, 1.28rem);
   font-weight: 700;
   line-height: 1.2;
@@ -489,6 +490,8 @@ a.promo-product-title-link:hover .promo-product-title {
   height: auto;
   max-width: 100%;
   max-height: 100%;
+  min-width: 0;
+  min-height: 0;
   object-fit: contain;
   object-position: center;
   background: #fff;
@@ -584,12 +587,18 @@ a.promo-product-title-link:hover .promo-product-title {
 
 @media screen and (max-width: 860px) {
   .promo-products-grid,
-  .promo-products-grid--1,
   .promo-products-grid--2,
   .promo-products-grid--3,
   .promo-products-grid--4 {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 0;
+    row-gap: 0;
+  }
+
+  .promo-products-grid--1 {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
     column-gap: 0;
     row-gap: 0;
   }
@@ -628,6 +637,44 @@ a.promo-product-title-link:hover .promo-product-title {
   .promo-cal .promo-product-meta,
   .promo-cal--two .promo-product-meta {
     gap: 0.2em;
+  }
+
+  .promo-cal-page--two {
+    row-gap: 1.4%;
+  }
+
+  .promo-cal--two,
+  .promo-cal--two.promo-cal--solo {
+    grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-areas: 'hero meta';
+    column-gap: 3.5%;
+    row-gap: 0;
+    padding: 1.2% 0 1.6%;
+    box-shadow: 0 1px 0 #d8e1e8;
+  }
+
+  .promo-cal--two:last-child {
+    box-shadow: none;
+  }
+
+  .promo-cal--two .promo-cal-thumbs {
+    display: none;
+  }
+
+  .promo-cal--two .promo-cal-meta {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.55em;
+  }
+
+  .promo-cal--one {
+    grid-template-rows: minmax(0, 1.65fr) minmax(0, 0.45fr) auto;
+  }
+
+  .promo-cal--one.promo-cal--solo {
+    grid-template-rows: minmax(0, 1.45fr) auto;
   }
 
   .promo-toc-title {

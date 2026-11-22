@@ -443,6 +443,14 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
       ['50', 310],
       ['100+', 280],
     ]),
+    [
+      '#c5c9ce',
+      '#ffffff',
+      '#f0c42e',
+      '#7dcdc0',
+      '#8ec4e8',
+      '#e59bb4',
+    ],
   ),
   merchProduct(
     'bottleAlu400',
