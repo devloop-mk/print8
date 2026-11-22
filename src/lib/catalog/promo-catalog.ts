@@ -499,14 +499,14 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
   },
   {
     ...calendarProduct('calClassicPlastic', 'classic-plastic', 1, CAL_CLASSIC_PLASTIC),
-    image: `${CAL_IMG}/classic-plastic/hero.jpg?v=jan`,
-    images: [`${CAL_IMG}/classic-plastic/january.jpg?v=jan`],
+    image: `${CAL_IMG}/classic-plastic/hero.jpg?v=a4h`,
+    images: [`${CAL_IMG}/classic-plastic/header.jpg?v=a4h`],
     swatches: CAL_SPIRAL_SWATCHES,
   },
   {
     ...calendarProduct('calClassicMetal', 'classic-metal', 1, CAL_CLASSIC_METAL),
-    image: `${CAL_IMG}/classic-metal/hero.jpg?v=jan`,
-    images: [`${CAL_IMG}/classic-metal/january.jpg?v=jan`],
+    image: `${CAL_IMG}/classic-metal/hero.jpg?v=a4h`,
+    images: [`${CAL_IMG}/classic-metal/header.jpg?v=a4h`],
     swatches: CAL_SPIRAL_SWATCHES,
   },
   {

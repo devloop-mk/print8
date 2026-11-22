@@ -40,6 +40,7 @@ const SOURCE_OVERRIDES: Record<string, string> = {
   tshirt: 'public/t-shirts/unisex/bela-front.jpg',
   bluzonCrew: 'public/hoodies/crewneck/bela-front.jpg',
   keyHouse: 'public/catalog/merch/key-house-blank.jpg',
+  towelPure: 'public/catalog/merch/towel-pure-blank.jpg',
 };
 
 function stripQuery(url: string): string {

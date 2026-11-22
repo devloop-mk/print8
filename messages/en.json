@@ -490,7 +490,7 @@
       "calClassicPlastic": {
         "name": "Classic wall calendar with plastic spiral",
         "specs": [
-          "Top A4 210 × 297 mm · bottom A3 420 × 297 mm",
+          "Top A4 297 × 210 mm · bottom A3 420 × 297 mm",
           "12 months · Orthodox holiday grid",
           "Plastic spiral, black or white",
           "Branding area on the A4 header"
@@ -499,7 +499,7 @@
       "calClassicMetal": {
         "name": "Classic wall calendar with metal spiral",
         "specs": [
-          "Top A4 210 × 297 mm · bottom A3 420 × 297 mm",
+          "Top A4 297 × 210 mm · bottom A3 420 × 297 mm",
           "12 months · Orthodox holiday grid",
           "Metal spiral, black or white",
           "Branding area on the A4 header"
