@@ -112,6 +112,7 @@ function CatalogPageLeaves({ pages }: { pages: PromoCatalogPage[] }) {
         <div
           key={page.id}
           data-catalog-page
+          data-page-id={page.id}
           data-density={
             page.id === 'cover' || page.id === 'back' ? 'hard' : 'soft'
           }
@@ -333,7 +334,9 @@ export function PromoFlipbook() {
         aria-hidden
         className="promo-catalog-print"
       >
-        <CatalogPageLeaves pages={PROMO_CATALOG_PAGES_DENSE} />
+        <CatalogPageLeaves
+          pages={PROMO_CATALOG_PAGES_DENSE.filter((page) => page.id !== 'blank')}
+        />
       </div>
 
       <div className="promo-catalog-chrome flex min-h-0 min-w-0 flex-1 flex-col">
