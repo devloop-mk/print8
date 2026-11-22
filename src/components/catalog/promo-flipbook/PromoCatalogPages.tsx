@@ -223,6 +223,7 @@ function ProductsPage({
 }) {
   const t = useTranslations('promoCatalog');
   const calendars = productIds.some(isCalendarProductId);
+  const hasHoodie = productIds.some((id) => id.startsWith('bluzon'));
   const count = productIds.length;
   const calendarPageLayout =
     count <= 1 ? 'one' : count === 2 ? 'two' : count === 3 ? 'three' : 'four';
@@ -267,6 +268,7 @@ function ProductsPage({
         )}
         <p className="promo-page-vat">
           {calendars ? t('vatCalendars') : t('vat')}
+          {hasHoodie ? ` ${t('hoodieXlNote')}` : ''}
         </p>
       </div>
     </PromoCatalogSheet>

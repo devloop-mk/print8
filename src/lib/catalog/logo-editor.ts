@@ -40,6 +40,9 @@ const SOURCE_OVERRIDES: Record<string, string> = {
   tshirt: 'public/t-shirts/unisex/bela-front.jpg',
   bluzonCrew: 'public/hoodies/crewneck/bela-front.jpg',
   keyHouse: 'public/catalog/merch/key-house-blank.jpg',
+  keyCircle: 'public/catalog/merch/key-circle-blank.jpg',
+  keyCk40: 'public/catalog/merch/key-ck40-blank.jpg',
+  keyCf40: 'public/catalog/merch/key-cf40-blank.jpg',
   towelPure: 'public/catalog/merch/towel-pure-blank.jpg',
 };
 

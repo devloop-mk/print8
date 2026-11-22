@@ -626,7 +626,7 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
   calendarProduct('calKidsPets', 'kids-pets', 4, CAL_QUARTER),
   {
     ...calendarProduct('calSpiralOrthodox', 'spiral-orthodox', 12, CAL_SPIRAL),
-    image: `${CAL_IMG}/spiral-orthodox/hero.jpg?v=jan`,
+    image: `${CAL_IMG}/spiral-orthodox/hero.jpg?v=tent3d`,
     images: [
       `${CAL_IMG}/spiral-orthodox/2.jpg?v=match`,
       `${CAL_IMG}/spiral-orthodox/3.jpg?v=match`,
@@ -693,7 +693,7 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
   calendarProduct('calSmallOrthodox', 'small-orthodox', 4, CAL_QUARTER),
   {
     ...calendarProduct('calDeskLandscape', 'desk-landscape', 11, CAL_SPIRAL),
-    image: `${CAL_IMG}/desk-landscape/hero.jpg?v=real`,
+    image: `${CAL_IMG}/desk-landscape/hero.jpg?v=tent3d`,
     images: [
       `${CAL_IMG}/desk-landscape/2.png`,
       `${CAL_IMG}/desk-landscape/3.png`,
@@ -734,11 +734,11 @@ export const PROMO_CATALOG_PRODUCTS: PromoCatalogProduct[] =
 
 export const PROMO_CATALOG_COVER_IMAGES = [
   withLogoCache(`${MERCH_IMG}/mug-classic-p8.jpg?v=p8n`, 'classic'),
-  `${CAL_IMG}/pets/hero.png?v=p8`,
+  `${CAL_IMG}/classic-metal/hero.jpg?v=a4h`,
   `${MERCH_IMG}/armada.jpg?v=p8`,
   `${CAL_IMG}/landscape-4/hero.png?v=p8`,
   withLogoCache(`${MERCH_IMG}/key-heart.jpg?v=p8n`, 'keyHeart'),
-  `${CAL_IMG}/desk-landscape/hero.jpg?v=real`,
+  `${CAL_IMG}/desk-landscape/hero.jpg?v=tent3d`,
 ] as const;
 
 const MUG_IDS = [
@@ -828,11 +828,10 @@ const CALENDAR_PAGE_GROUPS: string[][] = [
   ['calOrthodox6'],
   ['calOrthodox4', 'calRedOrthodox'],
   ['calSmallOrthodox', 'calNarrowOrthodox'],
-  ['calChurchesWave'],
+  ['calChurchesWave', 'calMosques'],
   ['calCars', 'calTrucks'],
   ['calCarsWave', 'calLandscape6'],
   ['calLandscape4', 'calLandscapeWave'],
-  ['calMosques'],
   ['calWild'],
   ['calWildGreen', 'calDomestic'],
   ['calPets', 'calKidsPets'],
@@ -860,6 +859,7 @@ export const CALENDAR_TOC_GROUPS = [
       'calSmallOrthodox',
       'calNarrowOrthodox',
       'calChurchesWave',
+      'calMosques',
     ],
   },
   {
@@ -871,7 +871,6 @@ export const CALENDAR_TOC_GROUPS = [
       'calLandscape6',
       'calLandscape4',
       'calLandscapeWave',
-      'calMosques',
     ],
   },
   {

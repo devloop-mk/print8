@@ -152,5 +152,26 @@
     "cy": 0.445,
     "widthFrac": 0.38,
     "angle": -2.2
+  },
+  "keyCircle": {
+    "logo": "light",
+    "cx": 0.49361880500812577,
+    "cy": 0.7260277504568168,
+    "widthFrac": 0.33690624342227643,
+    "angle": 0
+  },
+  "keyCk40": {
+    "logo": "dark",
+    "cx": 0.488,
+    "cy": 0.643,
+    "widthFrac": 0.2028,
+    "angle": 0
+  },
+  "keyCf40": {
+    "logo": "dark",
+    "cx": 0.493,
+    "cy": 0.7105,
+    "widthFrac": 0.20592000000000002,
+    "angle": 0
   }
 }

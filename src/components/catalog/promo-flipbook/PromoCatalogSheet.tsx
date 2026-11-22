@@ -23,7 +23,7 @@ export function PromoCatalogSheet({
       )}
     >
       {variant !== 'cover' ? (
-        <div className="flex h-[3.55%] items-center justify-between gap-[3%] bg-brand-600 px-[4%]">
+        <div className="promo-sheet-chrome promo-sheet-chrome--head flex h-[3.55%] items-center justify-between gap-[3%] bg-brand-600 px-[4%]">
           {category ? (
             <span className="min-w-0 truncate font-display text-[1.38cqw] font-semibold uppercase tracking-[0.14em] text-white">
               {category}
@@ -38,7 +38,7 @@ export function PromoCatalogSheet({
       <div className="relative min-h-0 flex-1">{children}</div>
 
       {variant !== 'cover' ? (
-        <div className="flex h-[3.55%] items-center justify-end bg-brand-600 px-[4%]">
+        <div className="promo-sheet-chrome promo-sheet-chrome--foot flex h-[3.55%] items-center justify-end bg-brand-600 px-[4%]">
           {pageNumber ? (
             <span className="font-display text-[1.38cqw] font-semibold tracking-wide text-white">
               {pageNumber}

@@ -56,8 +56,9 @@
     "qty": "Quantity",
     "unitPrice": "Price per item",
     "qty100": "100+",
-    "vat": "Prices include 18% VAT",
-    "vatCalendars": "Prices include 18% VAT. Minimum order: 30 calendars.",
+    "vat": "Prices include VAT.",
+    "vatCalendars": "Prices include VAT. Minimum order: 30 calendars.",
+    "hoodieXlNote": "5XL and 6XL hoodies are available on order only, at a different price.",
     "deliveryLabel": "Delivery",
     "delivery": "Delivery across North Macedonia",
     "contactLabel": "Contact",
@@ -493,7 +494,7 @@
           "Top A4 297 × 210 mm · bottom A3 420 × 297 mm",
           "12 months · Orthodox holiday grid",
           "Plastic spiral, black or white",
-          "Branding area on the A4 header"
+          "The full A4 header can be printed with the client's own design"
         ]
       },
       "calClassicMetal": {
@@ -502,7 +503,7 @@
           "Top A4 297 × 210 mm · bottom A3 420 × 297 mm",
           "12 months · Orthodox holiday grid",
           "Metal spiral, black or white",
-          "Branding area on the A4 header"
+          "The full A4 header can be printed with the client's own design"
         ]
       },
       "calWild": {

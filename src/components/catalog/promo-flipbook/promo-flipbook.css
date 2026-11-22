@@ -1157,6 +1157,11 @@ a.promo-product-title-link:hover .promo-product-title {
     print-color-adjust: exact;
   }
 
+  /* Screen chrome bleeds off A4; hide it so print fits without trimming. */
+  .promo-catalog-print .promo-sheet-chrome {
+    display: none;
+  }
+
   .promo-catalog-print .promo-flipbook-page:last-child {
     break-after: auto;
     page-break-after: auto;
