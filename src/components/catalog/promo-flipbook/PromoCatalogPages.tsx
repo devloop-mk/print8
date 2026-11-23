@@ -131,6 +131,7 @@ function ContentsPage({
   catalogPages: PromoCatalogPage[];
 }) {
   const t = useTranslations('promoCatalog');
+  const infoPage = catalogPages.find((page) => page.id === 'info');
   const mugPages = catalogPages.filter((page) => page.section === 'mugs');
   const merchPages = catalogPages.filter((page) => page.section === 'merch');
   const calendarPages = catalogPages.filter(
@@ -149,9 +150,15 @@ function ContentsPage({
           {t('contents')}
         </h2>
         <div className="promo-toc-body">
+          <ol className="promo-toc-list promo-toc-info">
+            <ContentsLine
+              label={t('contentsLines.info')}
+              pageNumber={infoPage?.number ?? 3}
+            />
+          </ol>
           <ContentsSectionHeading
             label={t('sectionMugs')}
-            pageNumber={mugPages[0]?.number ?? 3}
+            pageNumber={mugPages[0]?.number ?? 4}
           />
           <ol className="promo-toc-list" style={{ flexGrow: 2 }}>
             {mugPages.map((page) => (
@@ -202,6 +209,50 @@ function ContentsPage({
   );
 }
 
+const INFO_BLOCKS = [
+  { title: 'qtyTitle', body: 'qty', extra: 'qtyExample' },
+  { title: 'customTitle', body: 'custom' },
+  { title: 'embroideryTitle', body: 'embroidery' },
+  { title: 'sizesTitle', body: 'sizes' },
+  { title: 'combineTitle', body: 'combine' },
+] as const;
+
+function InfoPage({ pageNumber }: { pageNumber: number }) {
+  const t = useTranslations('promoCatalog');
+  const contact = useTranslations('contact');
+
+  return (
+    <PromoCatalogSheet pageNumber={pageNumber} category={t('sectionInfo')}>
+      <div className="promo-info relative flex h-full min-h-0 flex-col px-[7%] pb-[3%] pt-[4%]">
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.03]">
+          <Logo className="h-[58%] w-auto" />
+        </div>
+        <h2 className="promo-info-title relative w-full shrink-0 text-center font-display font-bold text-ink-900">
+          {t('infoTitle')}
+        </h2>
+        <ul className="promo-info-list">
+          {INFO_BLOCKS.map((block) => (
+            <li key={block.title} className="promo-info-item">
+              <h3 className="promo-info-heading font-display">
+                {t(`info.${block.title}`)}
+              </h3>
+              <p>{t(`info.${block.body}`)}</p>
+              {'extra' in block ? (
+                <p className="promo-info-example">{t(`info.${block.extra}`)}</p>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+        <div className="promo-info-contact">
+          <p className="promo-info-heading font-display">{t('contactLabel')}</p>
+          <p className="promo-info-contact-value">{contact('phoneValue')}</p>
+          <p className="promo-info-contact-value">{contact('emailValue')}</p>
+        </div>
+      </div>
+    </PromoCatalogSheet>
+  );
+}
+
 function sectionLabel(
   t: (key: 'sectionMugs' | 'sectionMerch' | 'sectionCalendars') => string,
   section?: 'mugs' | 'merch' | 'calendars',
@@ -223,7 +274,13 @@ function ProductsPage({
 }) {
   const t = useTranslations('promoCatalog');
   const calendars = productIds.some(isCalendarProductId);
-  const hasHoodie = productIds.some((id) => id.startsWith('bluzon'));
+  const hasApparelXlNote = productIds.some(
+    (id) => id === 'tshirt' || id.startsWith('bluzon'),
+  );
+  const hasEmbroideryNote = productIds.some(
+    (id) =>
+      id === 'tshirt' || id.startsWith('bluzon') || id.startsWith('polar'),
+  );
   const count = productIds.length;
   const calendarPageLayout =
     count <= 1 ? 'one' : count === 2 ? 'two' : count === 3 ? 'three' : 'four';
@@ -268,7 +325,8 @@ function ProductsPage({
         )}
         <p className="promo-page-vat">
           {calendars ? t('vatCalendars') : t('vat')}
-          {hasHoodie ? ` ${t('hoodieXlNote')}` : ''}
+          {hasApparelXlNote ? ` ${t('hoodieXlNote')}` : ''}
+          {hasEmbroideryNote ? ` ${t('embroideryQuoteNote')}` : ''}
         </p>
       </div>
     </PromoCatalogSheet>
@@ -324,6 +382,7 @@ export function PromoCatalogPageView({
   if (pageId === 'contents') {
     return <ContentsPage pageNumber={pageNumber} catalogPages={catalogPages} />;
   }
+  if (pageId === 'info') return <InfoPage pageNumber={pageNumber} />;
   if (pageId === 'blank') {
     return (
       <PromoCatalogSheet pageNumber={pageNumber}>

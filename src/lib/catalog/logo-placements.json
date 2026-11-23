@@ -27,6 +27,27 @@
     "widthFrac": 0.45238095238095244,
     "angle": 0
   },
+  "goldHandle": {
+    "logo": "dark",
+    "cx": 0.39,
+    "cy": 0.5,
+    "widthFrac": 0.3,
+    "angle": 0
+  },
+  "heartHandle": {
+    "logo": "dark",
+    "cx": 0.405,
+    "cy": 0.515,
+    "widthFrac": 0.3,
+    "angle": 0
+  },
+  "corkLid": {
+    "logo": "dark",
+    "cx": 0.42,
+    "cy": 0.4,
+    "widthFrac": 0.3,
+    "angle": 0
+  },
   "armada": {
     "logo": "light",
     "cx": 0.5148809523809523,

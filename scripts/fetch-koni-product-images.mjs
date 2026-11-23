@@ -20,6 +20,7 @@ const SLUG_BY_SKU = {
   'BD101-HB': 'bd101-hb-bela-chasha-so-vnatreshnost-happy-birthday',
   'BD101-TKG': 'bd101-tkg-chasha-so-vnatreshnost-thank-you-naskoro',
   B101H: 'chasha-bela-so-rachka-srtse',
+  B101DHG: 'b101dhg-chasha-bela-so-zlatna-rachka',
   'B11T-01': 'b11t-01-chasha-so-vnatreshnost-i-rachka-vo-boja-tsrvena',
   'B11T-07': 'b11t-07-chasha-so-vnatreshnost-i-rachka-vo-boja-svetlo-sina',
   'B11T-08': 'b11t-08-chasha-so-vnatreshnost-i-rachka-vo-boja-rozova',

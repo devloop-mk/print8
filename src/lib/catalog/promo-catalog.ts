@@ -28,6 +28,7 @@ function withLogoCache(url: string, id: string): string {
 export type PromoCatalogPageId =
   | 'cover'
   | 'contents'
+  | 'info'
   | 'back'
   | 'blank'
   | `mugs-${number}`
@@ -56,32 +57,51 @@ function breaks(
 
 const PRICE_TEE = breaks([
   ['1', 550],
-  ['10', 450],
-  ['20', 380],
-  ['50', 350],
+  ['10–20', 450],
+  ['20–50', 380],
+  ['50–100', 350],
   ['100+', 320],
 ]);
 const PRICE_SWEAT = breaks([
   ['1', 1100],
-  ['10', 1000],
-  ['20', 900],
-  ['50', 800],
+  ['10–20', 1000],
+  ['20–50', 900],
+  ['50–100', 800],
   ['100+', 750],
 ]);
 const PRICE_HOOD = breaks([
   ['1', 1200],
-  ['10', 1100],
-  ['20', 1000],
-  ['50', 900],
+  ['10–20', 1100],
+  ['20–50', 1000],
+  ['50–100', 900],
   ['100+', 800],
 ]);
 const PRICE_ZIP = breaks([
   ['1', 1300],
-  ['10', 1200],
-  ['20', 1100],
-  ['50', 950],
+  ['10–20', 1200],
+  ['20–50', 1100],
+  ['50–100', 950],
   ['100+', 850],
 ]);
+const PRICE_POLAR = breaks([
+  ['1–10', 1400],
+  ['10–20', 1300],
+  ['20–50', 1200],
+  ['50–100', 1100],
+  ['100+', 1000],
+]);
+const POLAR_SWATCHES = ['#ffffff', '#1e3a8a', '#111111'];
+const PRICE_NOTEBOOK_A4 = breaks([
+  ['1–10', 300],
+  ['10–50', 260],
+  ['50+', 210],
+]);
+const PRICE_NOTEBOOK_A5 = breaks([
+  ['1–10', 220],
+  ['10–50', 180],
+  ['50+', 150],
+]);
+const NOTEBOOK_SPIRAL_SWATCHES = ['#ffffff', '#111111'];
 const PRICE_MUG_WHITE = breaks([
   ['1', 280],
   ['10–20', 230],
@@ -95,6 +115,27 @@ const PRICE_MUG_INNER = breaks([
   ['20–50', 250],
   ['50–100', 230],
   ['100+', 200],
+]);
+const PRICE_MUG_GOLD = breaks([
+  ['1', 400],
+  ['10–20', 370],
+  ['20–50', 330],
+  ['50–100', 290],
+  ['100+', 250],
+]);
+const PRICE_MUG_HEART = breaks([
+  ['1–10', 300],
+  ['10–20', 280],
+  ['20–50', 260],
+  ['50–100', 230],
+  ['100+', 200],
+]);
+const PRICE_MUG_CORK = breaks([
+  ['1', 450],
+  ['10–20', 390],
+  ['20–50', 360],
+  ['50–100', 340],
+  ['100+', 280],
 ]);
 const CAL_QUARTER = breaks([
   ['30–50', 75],
@@ -206,13 +247,31 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     ],
   },
   {
+    id: 'goldHandle',
+    href: '/products/mug-gold-handle',
+    image: `${MERCH_IMG}/mug-gold-handle-p8.jpg?v=p8n`,
+    prices: PRICE_MUG_GOLD,
+  },
+  {
+    id: 'heartHandle',
+    href: '/products/mug-heart-handle',
+    image: `${MERCH_IMG}/mug-heart-handle-p8.jpg?v=p8n`,
+    prices: PRICE_MUG_HEART,
+  },
+  {
+    id: 'corkLid',
+    href: '/products/mug-cork-lid',
+    image: `${MERCH_IMG}/mug-cork-lid-p8.jpg?v=p8n`,
+    prices: PRICE_MUG_CORK,
+  },
+  {
     id: 'stackable',
     image: `${MERCH_IMG}/mug-stackable-p8.jpg?v=p8n`,
     prices: [
       { label: '1', price: 350 },
-      { label: '10', price: 320 },
-      { label: '20', price: 290 },
-      { label: '50', price: 260 },
+      { label: '10–20', price: 320 },
+      { label: '20–50', price: 290 },
+      { label: '50–100', price: 260 },
       { label: '100+', price: 220 },
     ],
     swatches: [
@@ -230,9 +289,9 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     image: '/supplier/koni/BD101-HN.jpg',
     prices: [
       { label: '1', price: 360 },
-      { label: '10', price: 320 },
-      { label: '20', price: 290 },
-      { label: '50', price: 270 },
+      { label: '10–20', price: 320 },
+      { label: '20–50', price: 290 },
+      { label: '50–100', price: 270 },
       { label: '100+', price: 240 },
     ],
   },
@@ -241,9 +300,9 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     'mug-bianca.jpg?v=2',
     breaks([
       ['1', 300],
-      ['10', 280],
-      ['20', 260],
-      ['50', 230],
+      ['10–20', 280],
+      ['20–50', 260],
+      ['50–100', 230],
       ['100+', 200],
     ]),
     ['#86efac', '#dc2626', '#111111'],
@@ -252,8 +311,8 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     'armada',
     'armada.jpg',
     breaks([
-      ['100', 45],
-      ['200', 42],
+      ['100–200', 45],
+      ['200–300', 42],
       ['300+', 39],
     ]),
     ['#7f1d1d', '#c0c0c0', '#4b5563', '#e8b4b8', '#27272a', '#111111'],
@@ -262,8 +321,8 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     'oggi',
     'pen-oggi.jpg',
     breaks([
-      ['100', 40],
-      ['200', 37],
+      ['100–200', 40],
+      ['200–300', 37],
       ['300+', 33],
     ]),
     ['#a855f7', '#3b82f6', '#c0c0c0', '#1e3a8a', '#f4f4f5', '#dc2626', '#111111'],
@@ -272,8 +331,8 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     'alfa',
     'pen-alfa.jpg',
     breaks([
-      ['100', 18],
-      ['200', 16.5],
+      ['100–200', 18],
+      ['200–300', 16.5],
       ['300+', 15],
     ]),
     [
@@ -294,8 +353,8 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     'twister',
     'pen-twister.jpg',
     breaks([
-      ['100', 20],
-      ['200', 18],
+      ['100–200', 20],
+      ['200–300', 18],
       ['300+', 16],
     ]),
     ['#a855f7', '#9ca3af', '#f4f4f5', '#1e3a8a', '#111111'],
@@ -304,7 +363,7 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     'keyHouse',
     'key-house.jpg',
     breaks([
-      ['50', 40],
+      ['50–100', 40],
       ['100+', 30],
     ]),
   ),
@@ -312,7 +371,7 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     'keyCircle',
     'key-circle.jpg',
     breaks([
-      ['50', 40],
+      ['50–100', 40],
       ['100+', 30],
     ]),
   ),
@@ -320,7 +379,7 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     'keyCk40',
     'key-ck40.jpg',
     breaks([
-      ['50', 50],
+      ['50–100', 50],
       ['100+', 40],
     ]),
   ),
@@ -328,7 +387,7 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     'keyHeart',
     'key-heart.jpg',
     breaks([
-      ['50', 50],
+      ['50–100', 50],
       ['100+', 40],
     ]),
   ),
@@ -336,7 +395,7 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     'keyCf40',
     'key-cf40.jpg',
     breaks([
-      ['50', 40],
+      ['50–100', 40],
       ['100+', 30],
     ]),
   ),
@@ -344,9 +403,9 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     'keyHbRound',
     'key-hb-round.jpg?v=2',
     breaks([
-      ['10', 130],
-      ['20', 120],
-      ['50', 100],
+      ['10–20', 130],
+      ['20–50', 120],
+      ['50–100', 100],
       ['100+', 90],
     ]),
   ),
@@ -354,9 +413,9 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     'keyHbSquare',
     'key-hb-square.jpg?v=2',
     breaks([
-      ['10', 130],
-      ['20', 120],
-      ['50', 100],
+      ['10–20', 130],
+      ['20–50', 120],
+      ['50–100', 100],
       ['100+', 90],
     ]),
   ),
@@ -364,9 +423,9 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     'keyHbOval',
     'key-hb-oval.jpg?v=2',
     breaks([
-      ['10', 130],
-      ['20', 120],
-      ['50', 100],
+      ['10–20', 130],
+      ['20–50', 120],
+      ['50–100', 100],
       ['100+', 90],
     ]),
   ),
@@ -374,8 +433,8 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     'lighterLuss',
     'lighter-luss.jpg',
     breaks([
-      ['100', 39],
-      ['200', 28],
+      ['100–200', 39],
+      ['200–300', 28],
       ['300+', 26],
     ]),
   ),
@@ -383,8 +442,8 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     'lighterMavrovo',
     'lighter-mavrovo.jpg',
     breaks([
-      ['100', 19],
-      ['200', 17],
+      ['100–200', 19],
+      ['200–300', 17],
       ['300+', 15.5],
     ]),
     ['#22c55e', '#2563eb', '#dc2626', '#111111'],
@@ -393,8 +452,8 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     'lighterFresh',
     'lighter-fresh.jpg',
     breaks([
-      ['100', 25],
-      ['200', 23],
+      ['100–200', 25],
+      ['200–300', 23],
       ['300+', 21],
     ]),
     ['#22c55e', '#2563eb', '#dc2626', '#111111'],
@@ -404,9 +463,9 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     'bottle-raise.jpg',
     breaks([
       ['1', 350],
-      ['10', 310],
-      ['20', 280],
-      ['50', 240],
+      ['10–20', 310],
+      ['20–50', 280],
+      ['50–100', 240],
       ['100+', 200],
     ]),
   ),
@@ -414,8 +473,8 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     'towelPure',
     'towel-pure.jpg',
     breaks([
-      ['10', 50],
-      ['50', 40],
+      ['10–50', 50],
+      ['50–100', 40],
       ['100+', 30],
     ]),
   ),
@@ -425,9 +484,9 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
       'bag-naturella.jpg',
       breaks([
         ['1', 300],
-        ['5', 250],
-        ['20', 220],
-        ['50', 200],
+        ['5–20', 250],
+        ['20–50', 220],
+        ['50–100', 200],
         ['100+', 180],
       ]),
     ),
@@ -438,9 +497,9 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     'bottle-alu-600.jpg?v=2',
     breaks([
       ['1', 400],
-      ['10', 380],
-      ['20', 340],
-      ['50', 310],
+      ['10–20', 380],
+      ['20–50', 340],
+      ['50–100', 310],
       ['100+', 280],
     ]),
     [
@@ -457,9 +516,9 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     'bottle-alu-400.jpg',
     breaks([
       ['1', 350],
-      ['10', 330],
-      ['20', 300],
-      ['50', 280],
+      ['10–20', 330],
+      ['20–50', 300],
+      ['50–100', 280],
       ['100+', 250],
     ]),
   ),
@@ -493,6 +552,21 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     ...merchProduct('bluzonQuarterZip', 'bluzon-quarter-zip.jpg', PRICE_ZIP, BLUZON_SWATCHES),
     href: '/products/hoodie-quarter-zip',
   },
+  merchProduct('polarZip', 'polar-zip.jpg', PRICE_POLAR, POLAR_SWATCHES),
+  merchProduct('polarQuarterZip', 'polar-quarter-zip.jpg', PRICE_POLAR, POLAR_SWATCHES),
+  merchProduct('polarVest', 'polar-vest.jpg', PRICE_POLAR, POLAR_SWATCHES),
+  merchProduct(
+    'notebookA4',
+    'notebook-spiral.jpg',
+    PRICE_NOTEBOOK_A4,
+    NOTEBOOK_SPIRAL_SWATCHES,
+  ),
+  merchProduct(
+    'notebookA5',
+    'notebook-spiral.jpg',
+    PRICE_NOTEBOOK_A5,
+    NOTEBOOK_SPIRAL_SWATCHES,
+  ),
   {
     ...calendarProduct('calTrodelen', 'trodelen', 1, CAL_TRODELEN),
     image: `${CAL_IMG}/trodelen/hero.png?v=p8`,
@@ -744,23 +818,35 @@ export const PROMO_CATALOG_COVER_IMAGES = [
 const MUG_IDS = [
   'classic',
   'inner',
+  'goldHandle',
+  'heartHandle',
+  'corkLid',
   'bianca',
   'happyNewYear',
   'stackable',
 ] as const;
 
-const MERCH_IDS = [
+const APPAREL_MERCH_IDS = [
   'tshirt',
   'bluzonCrew',
   'bluzonHood',
   'bluzonZip',
   'bluzonZipHood',
   'bluzonQuarterZip',
+  'polarZip',
+  'polarQuarterZip',
+  'polarVest',
+] as const;
+
+const MERCH_IDS = [
+  ...APPAREL_MERCH_IDS,
   'bottleRaise',
   'bottleAlu600',
   'bottleAlu400',
   'towelPure',
   'bagNaturella',
+  'notebookA4',
+  'notebookA5',
   'armada',
   'oggi',
   'alfa',
@@ -781,18 +867,15 @@ const MERCH_IDS = [
 export const MERCH_TOC_GROUPS = [
   {
     key: 'merchApparel',
-    ids: [
-      'tshirt',
-      'bluzonCrew',
-      'bluzonHood',
-      'bluzonZip',
-      'bluzonZipHood',
-      'bluzonQuarterZip',
-    ],
+    ids: [...APPAREL_MERCH_IDS],
   },
   {
     key: 'merchBottles',
     ids: ['bottleRaise', 'bottleAlu600', 'bottleAlu400', 'towelPure', 'bagNaturella'],
+  },
+  {
+    key: 'merchNotebooks',
+    ids: ['notebookA4', 'notebookA5'],
   },
   {
     key: 'merchWrite',
@@ -828,17 +911,19 @@ const CALENDAR_PAGE_GROUPS: string[][] = [
   ['calOrthodox6'],
   ['calOrthodox4', 'calRedOrthodox'],
   ['calSmallOrthodox', 'calNarrowOrthodox'],
-  ['calChurchesWave', 'calMosques'],
-  ['calCars', 'calTrucks'],
-  ['calCarsWave', 'calLandscape6'],
+  ['calChurchesWave'],
+  ['calSpiralOrthodox', 'calDeskOrthodox'],
+  ['calPocketOrthodox'],
+  ['calLandscape6'],
   ['calLandscape4', 'calLandscapeWave'],
+  ['calSpiralLandscape', 'calDeskLandscape'],
+  ['calPocketLandscape'],
+  ['calCars', 'calTrucks'],
+  ['calCarsWave', 'calPocketCar'],
+  ['calMosques'],
   ['calWild'],
   ['calWildGreen', 'calDomestic'],
   ['calPets', 'calKidsPets'],
-  ['calSpiralOrthodox', 'calSpiralLandscape'],
-  ['calDeskLandscape', 'calDeskOrthodox'],
-  ['calPocketOrthodox', 'calPocketLandscape'],
-  ['calPocketCar'],
 ];
 
 export const CALENDAR_TOC_GROUPS = [
@@ -859,19 +944,29 @@ export const CALENDAR_TOC_GROUPS = [
       'calSmallOrthodox',
       'calNarrowOrthodox',
       'calChurchesWave',
-      'calMosques',
+      'calSpiralOrthodox',
+      'calDeskOrthodox',
+      'calPocketOrthodox',
     ],
   },
   {
-    key: 'calScenic',
+    key: 'calLandscape',
     ids: [
-      'calCars',
-      'calTrucks',
-      'calCarsWave',
       'calLandscape6',
       'calLandscape4',
       'calLandscapeWave',
+      'calSpiralLandscape',
+      'calDeskLandscape',
+      'calPocketLandscape',
     ],
+  },
+  {
+    key: 'calCars',
+    ids: ['calCars', 'calTrucks', 'calCarsWave', 'calPocketCar'],
+  },
+  {
+    key: 'calMosques',
+    ids: ['calMosques'],
   },
   {
     key: 'calWildlife',
@@ -880,23 +975,6 @@ export const CALENDAR_TOC_GROUPS = [
   {
     key: 'calPets',
     ids: ['calPets', 'calKidsPets'],
-  },
-  {
-    key: 'calDesk',
-    ids: [
-      'calSpiralOrthodox',
-      'calSpiralLandscape',
-      'calDeskLandscape',
-      'calDeskOrthodox',
-    ],
-  },
-  {
-    key: 'calPocket',
-    ids: [
-      'calPocketOrthodox',
-      'calPocketLandscape',
-      'calPocketCar',
-    ],
   },
 ] as const;
 
@@ -921,6 +999,9 @@ function chunkIds(ids: readonly string[], size: number): string[][] {
 function mugTocKey(productIds: string[]): string {
   if (productIds.length >= 4) return 'mugs-set';
   if (productIds.length === 1 && productIds[0] === 'stackable') return 'mugs-3';
+  if (productIds.includes('goldHandle') || productIds.includes('heartHandle')) {
+    return 'mugs-handles';
+  }
   if (productIds.includes('bianca') || productIds.includes('happyNewYear')) {
     return 'mugs-2';
   }
@@ -930,8 +1011,10 @@ function mugTocKey(productIds: string[]): string {
 const MERCH_PAGE_GROUPS_DENSE: string[][] = [
   ['tshirt', 'bluzonCrew', 'bluzonHood', 'bluzonZip'],
   ['bluzonZipHood', 'bluzonQuarterZip'],
+  ['polarZip', 'polarQuarterZip', 'polarVest'],
   ['bottleRaise', 'bottleAlu600', 'bottleAlu400', 'towelPure'],
   ['bagNaturella'],
+  ['notebookA4', 'notebookA5'],
   ['armada', 'oggi', 'alfa', 'twister'],
   ['lighterLuss', 'lighterMavrovo', 'lighterFresh'],
   ['keyHouse', 'keyCircle', 'keyCk40', 'keyHeart'],
@@ -975,20 +1058,30 @@ function buildCatalogPages(productsPerPage: 2 | 4): PromoCatalogPage[] {
   const merchGroups =
     productsPerPage === 4
       ? MERCH_PAGE_GROUPS_DENSE
-      : chunkIds(MERCH_IDS, productsPerPage);
+      : [
+          ...chunkIds(APPAREL_MERCH_IDS, productsPerPage),
+          ...chunkIds(
+            MERCH_IDS.filter(
+              (id) => !(APPAREL_MERCH_IDS as readonly string[]).includes(id),
+            ),
+            productsPerPage,
+          ),
+        ];
   const calendarGroups =
     productsPerPage === 2
       ? compactCalendarGroups(CALENDAR_PAGE_GROUPS)
       : CALENDAR_PAGE_GROUPS;
-  const merchStart = 3 + mugGroups.length;
+  const mugStart = 4;
+  const merchStart = mugStart + mugGroups.length;
   const calendarStart = merchStart + merchGroups.length;
 
   const pages: PromoCatalogPage[] = [
     { id: 'cover', number: 1 },
     { id: 'contents', number: 2 },
+    { id: 'info', number: 3 },
     ...mugGroups.map((productIds, index) => ({
       id: `mugs-${index + 1}` as PromoCatalogPageId,
-      number: 3 + index,
+      number: mugStart + index,
       section: 'mugs' as const,
       productIds,
       tocKey: mugTocKey(productIds),
@@ -1075,6 +1168,7 @@ export function mapPromoCatalogPageIndex(
   if (
     from.id === 'cover' ||
     from.id === 'contents' ||
+    from.id === 'info' ||
     from.id === 'back' ||
     from.id === 'blank'
   ) {

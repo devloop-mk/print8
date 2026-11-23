@@ -397,6 +397,70 @@ a.promo-product-title-link:hover .promo-product-title {
   color: #286694;
 }
 
+.promo-toc-info {
+  flex: 0 0 auto;
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-rows: auto;
+  margin-top: 0.35em;
+}
+
+.promo-info-title {
+  font-size: clamp(1.15rem, 4.8cqh, 2.4rem);
+  line-height: 1.1;
+}
+
+.promo-info-list {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  justify-content: space-evenly;
+  gap: 0.35em;
+  margin-top: 0.45em;
+}
+
+.promo-info-item {
+  padding-left: 0.85em;
+  border-left: 2px solid #2f7cb2;
+}
+
+.promo-info-heading {
+  font-size: clamp(0.62rem, 2.2cqh, 0.92rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #122b3d;
+}
+
+.promo-info-item p,
+.promo-info-contact-value {
+  margin-top: 0.12em;
+  font-size: clamp(0.58rem, 2.05cqh, 0.84rem);
+  line-height: 1.28;
+  color: #3d5563;
+}
+
+.promo-info-example {
+  color: #1e3344;
+}
+
+.promo-info-contact {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  margin-top: 0.45em;
+  padding-top: 0.5em;
+  border-top: 1px solid #d8e1e8;
+  text-align: center;
+}
+
+.promo-info-contact .promo-info-heading {
+  margin-bottom: 0.15em;
+}
+
 .promo-cal-page {
   display: grid;
   min-width: 0;
@@ -1091,6 +1155,33 @@ a.promo-product-title-link:hover .promo-product-title {
     font-size: clamp(0.44rem, 1.7cqh, 0.58rem);
   }
 
+  .promo-info-title {
+    font-size: clamp(1rem, 4.6cqh, 1.45rem);
+  }
+
+  .promo-info-heading {
+    font-size: clamp(0.55rem, 2.05cqh, 0.72rem);
+  }
+
+  .promo-info-item p,
+  .promo-info-contact-value {
+    font-size: clamp(0.52rem, 1.95cqh, 0.68rem);
+  }
+
+  .promo-info-list {
+    gap: 0.22em;
+    margin-top: 0.3em;
+  }
+
+  .promo-info-item {
+    padding-left: 0.7em;
+  }
+
+  .promo-info-contact {
+    margin-top: 0.3em;
+    padding-top: 0.35em;
+  }
+
   .promo-price-table th,
   .promo-price-table td {
     padding: 0.18em 0.06em;
@@ -1232,6 +1323,10 @@ a.promo-product-title-link:hover .promo-product-title {
 
   .promo-catalog-print .promo-flipbook-page[data-page-id='blank'] {
     display: none !important;
+  }
+
+  .promo-catalog-print .promo-info {
+    padding-top: 6%;
   }
 
   /* Solo calendars must not stretch a grey well across A4. */
