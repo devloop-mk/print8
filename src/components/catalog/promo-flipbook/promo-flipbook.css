@@ -282,9 +282,35 @@ a.promo-product-title-link:hover .promo-product-title {
   height: clamp(1rem, 2.85cqw, 1.45rem);
 }
 
+.promo-toc-watermark {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.promo-toc-mark {
+  height: 52% !important;
+  width: auto !important;
+  opacity: 0.14;
+  filter: sepia(0.85) saturate(3.4) hue-rotate(-20deg) brightness(1.15);
+}
+
+.promo-toc-title,
+.promo-toc-body,
+.promo-toc-note {
+  position: relative;
+  z-index: 1;
+}
+
 .promo-toc-title {
-  font-size: clamp(1.15rem, 4.8cqh, 2.4rem);
+  font-size: clamp(1.35rem, 5.2cqh, 2.15rem);
   line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.7em;
 }
 
 .promo-toc-body {
@@ -292,40 +318,36 @@ a.promo-product-title-link:hover .promo-product-title {
   min-height: 0;
   flex: 1;
   flex-direction: column;
+  justify-content: flex-start;
+  gap: clamp(0.55em, 1.8cqh, 1.05em);
   overflow: visible;
 }
 
+.promo-toc-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12em;
+}
+
 .promo-toc-list {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   min-width: 0;
-  min-height: 0;
-  flex: 1 1 0;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  grid-auto-rows: minmax(0, 1fr);
-  column-gap: 4%;
-  row-gap: 0.06em;
-  align-content: start;
-}
-
-.promo-toc-body .promo-toc-section {
-  margin-top: 0.55em;
-  flex-shrink: 0;
-}
-
-.promo-toc-body .promo-toc-section:first-child {
-  margin-top: 0.35em;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  gap: 0.02em;
 }
 
 .promo-toc-section {
   display: block;
   overflow: hidden;
-  font-family: inherit;
-  font-size: clamp(0.62rem, 2.35cqh, 1rem);
+  font-size: clamp(0.72rem, 2.45cqh, 0.98rem);
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.25;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #122b3d;
+  letter-spacing: 0.01em;
+  color: #111827;
   text-decoration: none;
 }
 
@@ -335,15 +357,13 @@ a.promo-product-title-link:hover .promo-product-title {
 }
 
 .promo-toc-link {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0.5rem, 1fr) auto;
-  align-items: end;
-  column-gap: 0.28rem;
+  display: flex;
+  align-items: baseline;
   min-width: 0;
-  color: #3d5563;
+  color: #1f2937;
   text-decoration: none;
-  font-size: clamp(0.58rem, 2.2cqh, 0.84rem);
-  line-height: 1.2;
+  font-size: clamp(0.68rem, 2.3cqh, 0.9rem);
+  line-height: 1.48;
 }
 
 .promo-toc-section > *,
@@ -352,21 +372,35 @@ a.promo-product-title-link:hover .promo-product-title {
 }
 
 .promo-toc-label {
+  flex: 0 1 auto;
   min-width: 0;
-  overflow: hidden;
-  overflow-wrap: break-word;
+  max-width: 78%;
 }
 
 .promo-toc-dots {
-  min-width: 0.55rem;
-  border-bottom: 1px dotted #94a3b0;
-  transform: translateY(-0.28em);
+  flex: 1 1 0;
+  min-width: 0.85rem;
+  overflow: hidden;
+  height: 1.1em;
+  margin: 0 0.4em 0 0.45em;
+  border: 0;
+  transform: none;
+}
+
+.promo-toc-dots::after {
+  content: ' . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .';
+  display: block;
+  letter-spacing: 0.08em;
+  color: #9aa7b0;
+  white-space: nowrap;
 }
 
 .promo-toc-page {
   flex-shrink: 0;
+  min-width: 1.15em;
+  text-align: right;
   font-variant-numeric: tabular-nums;
-  color: #1e3344;
+  color: #111827;
 }
 
 .promo-toc-note,
@@ -374,14 +408,14 @@ a.promo-product-title-link:hover .promo-product-title {
   position: relative;
   z-index: 1;
   flex-shrink: 0;
-  margin-top: 0.45em;
-  background: #fff;
+  margin-top: 0.7em;
+  background: transparent;
 }
 
 .promo-toc-note {
-  padding-top: 0.35em;
-  font-size: clamp(0.48rem, 1.9cqh, 0.72rem);
-  line-height: 1.25;
+  padding-top: 0.2em;
+  font-size: clamp(0.48rem, 1.85cqh, 0.7rem);
+  line-height: 1.3;
   color: #7a8d99;
 }
 
@@ -398,10 +432,7 @@ a.promo-product-title-link:hover .promo-product-title {
 }
 
 .promo-toc-info {
-  flex: 0 0 auto;
-  grid-template-columns: minmax(0, 1fr);
-  grid-auto-rows: auto;
-  margin-top: 0.35em;
+  margin: 0;
 }
 
 .promo-info-title {
@@ -1140,19 +1171,20 @@ a.promo-product-title-link:hover .promo-product-title {
   }
 
   .promo-toc-title {
-    font-size: clamp(1rem, 4.6cqh, 1.45rem);
+    font-size: clamp(1.2rem, 4.8cqh, 1.7rem);
+    margin-bottom: 0.55em;
   }
 
   .promo-toc-section {
-    font-size: clamp(0.55rem, 2.15cqh, 0.72rem);
+    font-size: clamp(0.68rem, 2.3cqh, 0.82rem);
   }
 
   .promo-toc-link {
-    font-size: clamp(0.52rem, 2cqh, 0.68rem);
+    font-size: clamp(0.62rem, 2.15cqh, 0.78rem);
   }
 
   .promo-toc-note {
-    font-size: clamp(0.44rem, 1.7cqh, 0.58rem);
+    font-size: clamp(0.46rem, 1.7cqh, 0.6rem);
   }
 
   .promo-info-title {

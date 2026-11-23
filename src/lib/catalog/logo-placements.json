@@ -34,6 +34,13 @@
     "widthFrac": 0.3,
     "angle": 0
   },
+  "silverHandle": {
+    "logo": "dark",
+    "cx": 0.39,
+    "cy": 0.5,
+    "widthFrac": 0.3,
+    "angle": 0
+  },
   "heartHandle": {
     "logo": "dark",
     "cx": 0.405,

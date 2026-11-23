@@ -327,6 +327,8 @@ export const SUPPLIER_SKU_TO_EXISTING_PRODUCT_ID: Record<string, string> = {
   'BD101-MD': 'mug-inside-mothers-day',
   'BD101-TKG': 'mug-inside-thanksgiving',
   B101H: 'mug-heart-handle',
+  B101DHG: 'mug-gold-handle',
+  'B101-DHS': 'mug-chrome-handle',
   'B1G-01': 'mug-frosted',
   BN1C: 'cup-glass-beer',
   'CB11C-R': 'mug-red-patch',

@@ -38,6 +38,7 @@ const SOURCE_OVERRIDES: Record<string, string> = {
   inner: 'public/supplier/koni/B11T-01.jpg',
   stackable: 'public/supplier/koni/BKD6T-MG.jpg',
   goldHandle: 'public/supplier/koni/B101DHG.jpg',
+  silverHandle: 'public/supplier/koni/B101-DHS.jpg',
   heartHandle: 'public/supplier/koni/B101H.jpg',
   corkLid: 'public/supplier/promocija/4412690_001.jpg',
   tshirt: 'public/t-shirts/unisex/bela-front.jpg',

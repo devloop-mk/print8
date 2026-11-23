@@ -46,7 +46,7 @@
       "embroideryTitle": "Embroidery",
       "embroidery": "Embroidery on hoodies, sweatshirts and t-shirts. Special offer, by specification. Request a quote.",
       "sizesTitle": "Sizes",
-      "sizes": "Hoodies and t-shirts up to 6XL, at a different price. 4XL–6XL on request.",
+      "sizes": "Hoodies and t-shirts from 4XL to 6XL available on order. The price differs from the standard size.",
       "combineTitle": "Mixed orders",
       "combine": "Combining different products in a larger quantity — the discount is calculated on request."
     },
@@ -55,7 +55,7 @@
       "mugs-1": "White and inner colour",
       "mugs-2": "Coloured base and Happy New Year",
       "mugs-3": "Coloured interior, handle and base",
-      "mugs-handles": "Gold handle and heart handle",
+      "mugs-handles": "Gold, silver and heart handle",
       "mugs-set": "Ceramic mugs",
       "merchApparel": "T-shirts and sweatshirts",
       "merchBottles": "Bottles, cloth and tote",
@@ -219,6 +219,14 @@
         "specs": [
           "Ceramic, ~330 ml · φ 8.2 × 9.5 cm",
           "White mug with gold handle",
+          "Sublimation · dishwasher-safe"
+        ]
+      },
+      "silverHandle": {
+        "name": "Mug with silver handle",
+        "specs": [
+          "Ceramic, ~330 ml · φ 8.2 × 9.5 cm",
+          "White mug with silver handle",
           "Sublimation · dishwasher-safe"
         ]
       },
@@ -470,7 +478,7 @@
       "polarZip": {
         "name": "Polar fleece full-zip",
         "specs": [
-          "Thick triple-yarn fleece · embroidery on request",
+          "280 g/m² · 100% polyester · not french terry · embroidery on request",
           "Sizes XS–4XL · white, navy and black",
           "Front and back · warm, durable and soft to the touch"
         ]
@@ -478,7 +486,7 @@
       "polarQuarterZip": {
         "name": "Polar fleece quarter-zip",
         "specs": [
-          "Thick triple-yarn fleece · embroidery on request",
+          "280 g/m² · 100% polyester · not french terry · embroidery on request",
           "Sizes XS–4XL · white, navy and black",
           "Front and back · warm, durable and soft to the touch"
         ]
@@ -486,7 +494,7 @@
       "polarVest": {
         "name": "Polar fleece vest",
         "specs": [
-          "Thick triple-yarn fleece · embroidery on request",
+          "280 g/m² · 100% polyester · not french terry · embroidery on request",
           "Sizes XS–4XL · white, navy and black",
           "Front and back · warm, durable and soft to the touch"
         ]
@@ -2944,7 +2952,7 @@
       "hoodieZipHood": "Personalized full-zip hoodie",
       "mugClassic": "Classic mug",
       "mugHeartHandle": "Personalized heart handle mug",
-      "mugChromeHandle": "Chrome handle mug",
+      "mugChromeHandle": "Mug with silver handle",
       "mugGoldHandle": "Gold handle mug",
       "mugB5kfWhite": "Personalized white ceramic mug",
       "mugRedPatch": "Personalized red mug with print area",

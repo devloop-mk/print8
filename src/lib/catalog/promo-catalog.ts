@@ -56,28 +56,28 @@ function breaks(
 }
 
 const PRICE_TEE = breaks([
-  ['1', 550],
+  ['1–10', 550],
   ['10–20', 450],
   ['20–50', 380],
   ['50–100', 350],
   ['100+', 320],
 ]);
 const PRICE_SWEAT = breaks([
-  ['1', 1100],
+  ['1–10', 1100],
   ['10–20', 1000],
   ['20–50', 900],
   ['50–100', 800],
   ['100+', 750],
 ]);
 const PRICE_HOOD = breaks([
-  ['1', 1200],
+  ['1–10', 1200],
   ['10–20', 1100],
   ['20–50', 1000],
   ['50–100', 900],
   ['100+', 800],
 ]);
 const PRICE_ZIP = breaks([
-  ['1', 1300],
+  ['1–10', 1300],
   ['10–20', 1200],
   ['20–50', 1100],
   ['50–100', 950],
@@ -103,21 +103,21 @@ const PRICE_NOTEBOOK_A5 = breaks([
 ]);
 const NOTEBOOK_SPIRAL_SWATCHES = ['#ffffff', '#111111'];
 const PRICE_MUG_WHITE = breaks([
-  ['1', 280],
+  ['1–10', 280],
   ['10–20', 230],
   ['20–50', 200],
   ['50–100', 170],
   ['100+', 150],
 ]);
 const PRICE_MUG_INNER = breaks([
-  ['1', 330],
+  ['1–10', 330],
   ['10–20', 280],
   ['20–50', 250],
   ['50–100', 230],
   ['100+', 200],
 ]);
 const PRICE_MUG_GOLD = breaks([
-  ['1', 400],
+  ['1–10', 400],
   ['10–20', 370],
   ['20–50', 330],
   ['50–100', 290],
@@ -131,7 +131,7 @@ const PRICE_MUG_HEART = breaks([
   ['100+', 200],
 ]);
 const PRICE_MUG_CORK = breaks([
-  ['1', 450],
+  ['1–10', 450],
   ['10–20', 390],
   ['20–50', 360],
   ['50–100', 340],
@@ -253,6 +253,12 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     prices: PRICE_MUG_GOLD,
   },
   {
+    id: 'silverHandle',
+    href: '/products/mug-chrome-handle',
+    image: `${MERCH_IMG}/mug-silver-handle-p8.jpg?v=p8n`,
+    prices: PRICE_MUG_GOLD,
+  },
+  {
     id: 'heartHandle',
     href: '/products/mug-heart-handle',
     image: `${MERCH_IMG}/mug-heart-handle-p8.jpg?v=p8n`,
@@ -268,7 +274,7 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     id: 'stackable',
     image: `${MERCH_IMG}/mug-stackable-p8.jpg?v=p8n`,
     prices: [
-      { label: '1', price: 350 },
+      { label: '1–10', price: 350 },
       { label: '10–20', price: 320 },
       { label: '20–50', price: 290 },
       { label: '50–100', price: 260 },
@@ -288,7 +294,7 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     id: 'happyNewYear',
     image: '/supplier/koni/BD101-HN.jpg',
     prices: [
-      { label: '1', price: 360 },
+      { label: '1–10', price: 360 },
       { label: '10–20', price: 320 },
       { label: '20–50', price: 290 },
       { label: '50–100', price: 270 },
@@ -299,7 +305,7 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     'bianca',
     'mug-bianca.jpg?v=2',
     breaks([
-      ['1', 300],
+      ['1–10', 300],
       ['10–20', 280],
       ['20–50', 260],
       ['50–100', 230],
@@ -462,7 +468,7 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     'bottleRaise',
     'bottle-raise.jpg',
     breaks([
-      ['1', 350],
+      ['1–10', 350],
       ['10–20', 310],
       ['20–50', 280],
       ['50–100', 240],
@@ -483,7 +489,7 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
       'bagNaturella',
       'bag-naturella.jpg',
       breaks([
-        ['1', 300],
+        ['1–10', 300],
         ['5–20', 250],
         ['20–50', 220],
         ['50–100', 200],
@@ -496,7 +502,7 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     'bottleAlu600',
     'bottle-alu-600.jpg?v=2',
     breaks([
-      ['1', 400],
+      ['1–10', 400],
       ['10–20', 380],
       ['20–50', 340],
       ['50–100', 310],
@@ -515,7 +521,7 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     'bottleAlu400',
     'bottle-alu-400.jpg',
     breaks([
-      ['1', 350],
+      ['1–10', 350],
       ['10–20', 330],
       ['20–50', 300],
       ['50–100', 280],
@@ -819,6 +825,7 @@ const MUG_IDS = [
   'classic',
   'inner',
   'goldHandle',
+  'silverHandle',
   'heartHandle',
   'corkLid',
   'bianca',
@@ -911,16 +918,16 @@ const CALENDAR_PAGE_GROUPS: string[][] = [
   ['calOrthodox6'],
   ['calOrthodox4', 'calRedOrthodox'],
   ['calSmallOrthodox', 'calNarrowOrthodox'],
-  ['calChurchesWave'],
   ['calSpiralOrthodox', 'calDeskOrthodox'],
   ['calPocketOrthodox'],
   ['calLandscape6'],
   ['calLandscape4', 'calLandscapeWave'],
   ['calSpiralLandscape', 'calDeskLandscape'],
   ['calPocketLandscape'],
+  ['calMosques'],
+  ['calChurchesWave'],
   ['calCars', 'calTrucks'],
   ['calCarsWave', 'calPocketCar'],
-  ['calMosques'],
   ['calWild'],
   ['calWildGreen', 'calDomestic'],
   ['calPets', 'calKidsPets'],
@@ -943,7 +950,6 @@ export const CALENDAR_TOC_GROUPS = [
       'calRedOrthodox',
       'calSmallOrthodox',
       'calNarrowOrthodox',
-      'calChurchesWave',
       'calSpiralOrthodox',
       'calDeskOrthodox',
       'calPocketOrthodox',
@@ -961,12 +967,12 @@ export const CALENDAR_TOC_GROUPS = [
     ],
   },
   {
-    key: 'calCars',
-    ids: ['calCars', 'calTrucks', 'calCarsWave', 'calPocketCar'],
+    key: 'calMosques',
+    ids: ['calMosques', 'calChurchesWave'],
   },
   {
-    key: 'calMosques',
-    ids: ['calMosques'],
+    key: 'calCars',
+    ids: ['calCars', 'calTrucks', 'calCarsWave', 'calPocketCar'],
   },
   {
     key: 'calWildlife',
@@ -999,7 +1005,11 @@ function chunkIds(ids: readonly string[], size: number): string[][] {
 function mugTocKey(productIds: string[]): string {
   if (productIds.length >= 4) return 'mugs-set';
   if (productIds.length === 1 && productIds[0] === 'stackable') return 'mugs-3';
-  if (productIds.includes('goldHandle') || productIds.includes('heartHandle')) {
+  if (
+    productIds.includes('goldHandle') ||
+    productIds.includes('silverHandle') ||
+    productIds.includes('heartHandle')
+  ) {
     return 'mugs-handles';
   }
   if (productIds.includes('bianca') || productIds.includes('happyNewYear')) {

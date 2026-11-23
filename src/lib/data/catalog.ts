@@ -1599,6 +1599,7 @@ export const products: Product[] = [
     id: 'mug-chrome-handle',
     type: 'mug',
     nameKey: 'mugChromeHandle',
+    vendorSku: 'B101-DHS',
     image: '/mugs/mug-chrome-handle.png',
     colorsImages: {
       '#ffffff': '/mugs/mug-chrome-handle.png',

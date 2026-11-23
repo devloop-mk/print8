@@ -142,9 +142,9 @@ function ContentsPage({
 
   return (
     <PromoCatalogSheet pageNumber={pageNumber} category={t('contents')}>
-      <div className="promo-toc relative flex h-full min-h-0 flex-col px-[7%] pb-[3%] pt-[4%]">
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.03]">
-          <Logo className="h-[58%] w-auto" />
+      <div className="promo-toc relative flex h-full min-h-0 flex-col px-[8%] pb-[4%] pt-[5%]">
+        <div className="promo-toc-watermark" aria-hidden>
+          <Logo variant="mark" className="promo-toc-mark" />
         </div>
         <h2 className="promo-toc-title relative w-full shrink-0 text-center font-display font-bold text-ink-900">
           {t('contents')}
@@ -156,54 +156,55 @@ function ContentsPage({
               pageNumber={infoPage?.number ?? 3}
             />
           </ol>
-          <ContentsSectionHeading
-            label={t('sectionMugs')}
-            pageNumber={mugPages[0]?.number ?? 4}
-          />
-          <ol className="promo-toc-list" style={{ flexGrow: 2 }}>
-            {mugPages.map((page) => (
-              <ContentsLine
-                key={page.id}
-                label={t(`contentsLines.${page.tocKey ?? page.id}`)}
-                pageNumber={page.number}
-              />
-            ))}
-          </ol>
-          <ContentsSectionHeading
-            label={t('sectionMerch')}
-            pageNumber={merchPages[0]?.number ?? 5}
-          />
-          <ol className="promo-toc-list" style={{ flexGrow: 2 }}>
-            {merchRanges.map((range) => (
-              <ContentsLine
-                key={range.key}
-                label={t(`contentsLines.${range.key}`)}
-                pageNumber={range.pageNumber}
-                endPage={range.endPage}
-              />
-            ))}
-          </ol>
-          <ContentsSectionHeading
-            label={t('sectionCalendars')}
-            pageNumber={calendarPages[0]?.number ?? 12}
-          />
-          <ol
-            className="promo-toc-list"
-            style={{ flexGrow: Math.ceil(calendarRanges.length / 2) }}
-          >
-            {calendarRanges.map((range) => (
-              <ContentsLine
-                key={range.key}
-                label={t(`contentsLines.${range.key}`)}
-                pageNumber={range.pageNumber}
-                endPage={range.endPage}
-              />
-            ))}
-          </ol>
+          <section className="promo-toc-group">
+            <ContentsSectionHeading
+              label={t('sectionMugs')}
+              pageNumber={mugPages[0]?.number ?? 4}
+            />
+            <ol className="promo-toc-list">
+              {mugPages.map((page) => (
+                <ContentsLine
+                  key={page.id}
+                  label={t(`contentsLines.${page.tocKey ?? page.id}`)}
+                  pageNumber={page.number}
+                />
+              ))}
+            </ol>
+          </section>
+          <section className="promo-toc-group">
+            <ContentsSectionHeading
+              label={t('sectionMerch')}
+              pageNumber={merchPages[0]?.number ?? 5}
+            />
+            <ol className="promo-toc-list">
+              {merchRanges.map((range) => (
+                <ContentsLine
+                  key={range.key}
+                  label={t(`contentsLines.${range.key}`)}
+                  pageNumber={range.pageNumber}
+                  endPage={range.endPage}
+                />
+              ))}
+            </ol>
+          </section>
+          <section className="promo-toc-group">
+            <ContentsSectionHeading
+              label={t('sectionCalendars')}
+              pageNumber={calendarPages[0]?.number ?? 12}
+            />
+            <ol className="promo-toc-list">
+              {calendarRanges.map((range) => (
+                <ContentsLine
+                  key={range.key}
+                  label={t(`contentsLines.${range.key}`)}
+                  pageNumber={range.pageNumber}
+                  endPage={range.endPage}
+                />
+              ))}
+            </ol>
+          </section>
         </div>
-        <p className="promo-toc-note">
-          {t('contentsNote')}
-        </p>
+        <p className="promo-toc-note">{t('contentsNote')}</p>
       </div>
     </PromoCatalogSheet>
   );
