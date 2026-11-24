@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Printer, X } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, Printer, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { PageFlip } from 'page-flip/dist/js/page-flip.module.js';
 import { Link } from '@/i18n/navigation';
@@ -9,7 +9,9 @@ import { Logo } from '@/components/brand/Logo';
 import {
   PROMO_CATALOG_PAGES_COMPACT,
   PROMO_CATALOG_PAGES_DENSE,
+  calendarTocRanges,
   mapPromoCatalogPageIndex,
+  merchTocRanges,
   type PromoCatalogPage,
 } from '@/lib/catalog/promo-catalog';
 import { PromoCatalogPageView } from '@/components/catalog/promo-flipbook/PromoCatalogPages';
@@ -128,6 +130,150 @@ function CatalogPageLeaves({ pages }: { pages: PromoCatalogPage[] }) {
         </div>
       ))}
     </>
+  );
+}
+
+function catalogJumpLabel(
+  page: PromoCatalogPage,
+  t: (key: string) => string,
+  merchRanges: ReturnType<typeof merchTocRanges>,
+  calendarRanges: ReturnType<typeof calendarTocRanges>,
+) {
+  if (page.id === 'cover') return t('cover');
+  if (page.id === 'contents') return t('contents');
+  if (page.id === 'info') return t('infoTitle');
+  if (page.id === 'back') return t('backCover');
+  if (page.tocKey) return t(`contentsLines.${page.tocKey}`);
+  if (page.section === 'merch') {
+    const match = merchRanges.find(
+      (range) =>
+        page.number >= range.pageNumber &&
+        page.number <= (range.endPage ?? range.pageNumber),
+    );
+    return match ? t(`contentsLines.${match.key}`) : t('sectionMerch');
+  }
+  if (page.section === 'calendars') {
+    const match = calendarRanges.find(
+      (range) =>
+        page.number >= range.pageNumber &&
+        page.number <= (range.endPage ?? range.pageNumber),
+    );
+    return match ? t(`contentsLines.${match.key}`) : t('sectionCalendars');
+  }
+  return String(page.number);
+}
+
+function CatalogPageJump({
+  pages,
+  pageIndex,
+  pageCount,
+  pageLabel,
+  disabled,
+  onJump,
+}: {
+  pages: PromoCatalogPage[];
+  pageIndex: number;
+  pageCount: number;
+  pageLabel: string;
+  disabled: boolean;
+  onJump: (index: number) => void;
+}) {
+  const t = useTranslations('promoCatalog');
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(String(pageIndex + 1));
+  const merchRanges = merchTocRanges(pages);
+  const calendarRanges = calendarTocRanges(pages);
+
+  useEffect(() => {
+    setValue(String(pageIndex + 1));
+  }, [pageIndex]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (event: MouseEvent) => {
+      if (!wrapRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDoc);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  const jumpTo = (raw: string | number) => {
+    const parsed = typeof raw === 'number' ? raw : Number.parseInt(raw, 10);
+    if (!Number.isFinite(parsed)) return;
+    const index = Math.min(pageCount, Math.max(1, parsed)) - 1;
+    onJump(index);
+    setOpen(false);
+  };
+
+  return (
+    <div ref={wrapRef} className="relative">
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setOpen((current) => !current)}
+        className="inline-flex items-center gap-1 rounded-full border border-black/10 bg-white px-2.5 py-1 text-sm font-medium text-ink-700 shadow-sm hover:border-brand-500 hover:text-brand-700 disabled:opacity-40"
+        aria-expanded={open}
+        aria-haspopup="dialog"
+        aria-label={t('goToPage')}
+      >
+        <span className="tabular-nums">
+          {pageLabel}/{pageCount}
+        </span>
+        <ChevronDown className="h-3.5 w-3.5 opacity-70" />
+      </button>
+      {open ? (
+        <form
+          className="absolute left-1/2 top-[calc(100%+0.4rem)] z-30 w-[min(16.5rem,calc(100vw-2rem))] -translate-x-1/2 rounded-xl border border-black/10 bg-white p-3 shadow-lg"
+          onSubmit={(event) => {
+            event.preventDefault();
+            jumpTo(value);
+          }}
+        >
+          <label className="mb-1.5 block text-xs font-medium text-ink-500">
+            {t('goToPage')}
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="number"
+              min={1}
+              max={pageCount}
+              value={value}
+              onChange={(event) => setValue(event.target.value)}
+              className="w-full rounded-lg border border-black/10 px-2.5 py-1.5 text-sm tabular-nums text-ink-800 outline-none focus:border-brand-500"
+              autoFocus
+            />
+            <button
+              type="submit"
+              className="shrink-0 rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
+            >
+              {t('goToPageGo')}
+            </button>
+          </div>
+          <select
+            value={String(pageIndex)}
+            onChange={(event) => jumpTo(Number(event.target.value) + 1)}
+            className="mt-2 w-full rounded-lg border border-black/10 bg-white px-2.5 py-1.5 text-sm text-ink-800 outline-none focus:border-brand-500"
+            aria-label={t('goToPage')}
+          >
+            {pages.map((page, index) =>
+              page.id === 'blank' ? null : (
+                <option key={page.id} value={index}>
+                  {page.number} · {catalogJumpLabel(page, t, merchRanges, calendarRanges)}
+                </option>
+              ),
+            )}
+          </select>
+        </form>
+      ) : null}
+    </div>
   );
 }
 
@@ -263,8 +409,27 @@ export function PromoFlipbook() {
     else book.flipPrev();
   }, []);
 
+  const goToIndex = useCallback((index: number) => {
+    const book = flipRef.current;
+    if (!book) return;
+    const next = Math.min(Math.max(0, index), book.getPageCount() - 1);
+    book.turnToPage(next);
+    const current = book.getCurrentPageIndex();
+    setPageIndex(current);
+    writePromoCatalogPageIndex(current);
+  }, []);
+
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'SELECT' ||
+          target.tagName === 'TEXTAREA')
+      ) {
+        return;
+      }
       if (event.key === 'ArrowRight') go(1);
       if (event.key === 'ArrowLeft') go(-1);
     };
@@ -296,12 +461,19 @@ export function PromoFlipbook() {
         <Link href="/" className="flex items-center gap-2">
           <Logo className="h-7 w-auto" />
         </Link>
-        <p className="text-center text-sm font-medium text-ink-700">
-          <span className="hidden sm:inline">{t('title')}</span>
-          <span className="font-normal tabular-nums text-ink-400 sm:ml-3">
-            {pageLabel}/{pageCount}
-          </span>
-        </p>
+        <div className="flex min-w-0 items-center justify-center gap-2">
+          <p className="hidden truncate text-center text-sm font-medium text-ink-700 sm:block">
+            {t('title')}
+          </p>
+          <CatalogPageJump
+            pages={pages}
+            pageIndex={pageIndex}
+            pageCount={pageCount}
+            pageLabel={pageLabel}
+            disabled={!ready}
+            onJump={goToIndex}
+          />
+        </div>
         <div className="flex items-center gap-3">
           <button
             type="button"

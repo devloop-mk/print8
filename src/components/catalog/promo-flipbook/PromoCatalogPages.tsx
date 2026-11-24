@@ -9,6 +9,7 @@ import {
   getPromoCatalogProduct,
   isCalendarProductId,
   merchTocRanges,
+  mugTocRanges,
   type PromoCatalogPage,
   type PromoCatalogPageId,
 } from '@/lib/catalog/promo-catalog';
@@ -137,6 +138,7 @@ function ContentsPage({
   const calendarPages = catalogPages.filter(
     (page) => page.section === 'calendars',
   );
+  const mugRanges = mugTocRanges(catalogPages);
   const merchRanges = merchTocRanges(catalogPages);
   const calendarRanges = calendarTocRanges(catalogPages);
 
@@ -162,11 +164,12 @@ function ContentsPage({
               pageNumber={mugPages[0]?.number ?? 4}
             />
             <ol className="promo-toc-list">
-              {mugPages.map((page) => (
+              {mugRanges.map((range) => (
                 <ContentsLine
-                  key={page.id}
-                  label={t(`contentsLines.${page.tocKey ?? page.id}`)}
-                  pageNumber={page.number}
+                  key={range.key}
+                  label={t(`contentsLines.${range.key}`)}
+                  pageNumber={range.pageNumber}
+                  endPage={range.endPage}
                 />
               ))}
             </ol>

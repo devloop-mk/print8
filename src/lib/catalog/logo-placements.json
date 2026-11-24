@@ -1,8 +1,8 @@
 {
   "classic": {
     "logo": "dark",
-    "cx": 0.41964285714285715,
-    "cy": 0.4728422619047619,
+    "cx": 0.4245742092457421,
+    "cy": 0.49476278496611215,
     "widthFrac": 0.37797619047619035,
     "angle": 0
   },
@@ -15,9 +15,9 @@
   },
   "stackable": {
     "logo": "dark",
-    "cx": 0.43154761904761907,
-    "cy": 0.43601190476190477,
-    "widthFrac": 0.28,
+    "cx": 0.4325,
+    "cy": 0.43625,
+    "widthFrac": 0.28940476190476194,
     "angle": 0
   },
   "bianca": {
@@ -29,30 +29,30 @@
   },
   "goldHandle": {
     "logo": "dark",
-    "cx": 0.39,
-    "cy": 0.5,
+    "cx": 0.4075,
+    "cy": 0.5129166666666667,
     "widthFrac": 0.3,
     "angle": 0
   },
   "silverHandle": {
     "logo": "dark",
-    "cx": 0.39,
-    "cy": 0.5,
+    "cx": 0.4077117572692794,
+    "cy": 0.5163590604026845,
     "widthFrac": 0.3,
     "angle": 0
   },
   "heartHandle": {
     "logo": "dark",
-    "cx": 0.405,
-    "cy": 0.515,
-    "widthFrac": 0.3,
+    "cx": 0.424,
+    "cy": 0.5095,
+    "widthFrac": 0.33399999999999985,
     "angle": 0
   },
   "corkLid": {
     "logo": "dark",
-    "cx": 0.42,
-    "cy": 0.4,
-    "widthFrac": 0.3,
+    "cx": 0.39172749391727496,
+    "cy": 0.4787430683918669,
+    "widthFrac": 0.48661800486618,
     "angle": 0
   },
   "armada": {
@@ -200,6 +200,111 @@
     "cx": 0.493,
     "cy": 0.7105,
     "widthFrac": 0.20592000000000002,
+    "angle": 0
+  },
+  "polarZip": {
+    "logo": "light",
+    "cx": 0.5843471208434712,
+    "cy": 0.40850277264325324,
+    "widthFrac": 0.17842660178426595,
+    "angle": 0
+  },
+  "polarQuarterZip": {
+    "logo": "light",
+    "cx": 0.597323600973236,
+    "cy": 0.42945163277880466,
+    "widthFrac": 0.16869424168694236,
+    "angle": 0
+  },
+  "polarVest": {
+    "logo": "light",
+    "cx": 0.605433901054339,
+    "cy": 0.4183610597658657,
+    "widthFrac": 0.1719383617193837,
+    "angle": 0
+  },
+  "calOrthodox4": {
+    "logo": "dark",
+    "cx": 0.5029498525073747,
+    "cy": 0.9044894366197183,
+    "widthFrac": 0.5368731563421829,
+    "angle": 0
+  },
+  "calPets": {
+    "logo": "dark",
+    "cx": 0.49122807017543857,
+    "cy": 0.8978070175438596,
+    "widthFrac": 0.47953216374269014,
+    "angle": 0
+  },
+  "calRedOrthodox": {
+    "logo": "dark",
+    "cx": 0.5040190906807335,
+    "cy": 0.9260628465804066,
+    "widthFrac": 0.5867872393870888,
+    "angle": 0
+  },
+  "calKidsPets": {
+    "logo": "dark",
+    "cx": 0.4922309727247849,
+    "cy": 0.9260628465804066,
+    "widthFrac": 0.40867211968254935,
+    "angle": 0
+  },
+  "calPocketOrthodox": {
+    "logo": "dark",
+    "cx": 0.5,
+    "cy": 0.8902173913043478,
+    "widthFrac": 0.5970149253731344,
+    "angle": 0
+  },
+  "calPocketLandscape": {
+    "logo": "dark",
+    "cx": 0.5,
+    "cy": 0.8851931330472103,
+    "widthFrac": 0.5714285714285714,
+    "angle": 0
+  },
+  "calPocketCar": {
+    "logo": "dark",
+    "cx": 0.49038461538461536,
+    "cy": 0.8401898734177216,
+    "widthFrac": 0.4134615384615383,
+    "angle": 0
+  },
+  "calWildGreen": {
+    "logo": "dark",
+    "cx": 0.4934210526315789,
+    "cy": 0.9123246492985972,
+    "widthFrac": 0.493421052631579,
+    "angle": 0
+  },
+  "calLandscapeWave": {
+    "logo": "dark",
+    "cx": 0.4920620126137882,
+    "cy": 0.9272951324707333,
+    "widthFrac": 0.4652810140740049,
+    "angle": 0
+  },
+  "calCarsWave": {
+    "logo": "dark",
+    "cx": 0.4981672294859584,
+    "cy": 0.9235982747997535,
+    "widthFrac": 0.4433284267036106,
+    "angle": 0
+  },
+  "calChurchesWave": {
+    "logo": "dark",
+    "cx": 0.49038461538461536,
+    "cy": 0.921078431372549,
+    "widthFrac": 0.5641025641025641,
+    "angle": 0
+  },
+  "calSmallOrthodox": {
+    "logo": "dark",
+    "cx": 0.5026246719160105,
+    "cy": 0.924565560821485,
+    "widthFrac": 0.5459317585301838,
     "angle": 0
   }
 }

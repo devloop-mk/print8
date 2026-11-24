@@ -274,8 +274,8 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     id: 'stackable',
     image: `${MERCH_IMG}/mug-stackable-p8.jpg?v=p8n`,
     prices: [
-      { label: '1–10', price: 350 },
-      { label: '10–20', price: 320 },
+      { label: '1–10', price: 360 },
+      { label: '10–20', price: 330 },
       { label: '20–50', price: 290 },
       { label: '50–100', price: 260 },
       { label: '100+', price: 220 },
@@ -521,10 +521,10 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     'bottleAlu400',
     'bottle-alu-400.jpg',
     breaks([
-      ['1–10', 350],
-      ['10–20', 330],
-      ['20–50', 300],
-      ['50–100', 280],
+      ['1–10', 380],
+      ['10–20', 350],
+      ['20–50', 330],
+      ['50–100', 290],
       ['100+', 250],
     ]),
   ),
@@ -1114,13 +1114,6 @@ function buildCatalogPages(productsPerPage: 2 | 4): PromoCatalogPage[] {
     },
   ];
 
-  // StPageFlip needs an even leaf count; print booklets also duplex cleaner.
-  if (pages.length % 2 === 1) {
-    const back = pages.pop()!;
-    pages.push({ id: 'blank', number: back.number });
-    pages.push({ ...back, number: back.number + 1 });
-  }
-
   return pages;
 }
 
@@ -1162,6 +1155,21 @@ function tocRangesFor(
 
 export function merchTocRanges(pages: PromoCatalogPage[]) {
   return tocRangesFor(pages, 'merch', MERCH_TOC_GROUPS);
+}
+
+export function mugTocRanges(pages: PromoCatalogPage[]) {
+  const ranges: { key: string; pageNumber: number; endPage: number }[] = [];
+  for (const page of pages) {
+    if (page.section !== 'mugs') continue;
+    const key = page.tocKey ?? page.id;
+    const last = ranges[ranges.length - 1];
+    if (last && last.key === key) {
+      last.endPage = page.number;
+      continue;
+    }
+    ranges.push({ key, pageNumber: page.number, endPage: page.number });
+  }
+  return ranges;
 }
 
 export function calendarTocRanges(pages: PromoCatalogPage[]) {
