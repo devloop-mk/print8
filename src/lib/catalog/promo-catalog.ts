@@ -152,11 +152,6 @@ const CAL_NARROW = breaks([
   ['50–100', 65],
   ['100+', 55],
 ]);
-const CAL_SPIRAL = breaks([
-  ['30–50', 80],
-  ['50–100', 65],
-  ['100+', 55],
-]);
 const CAL_DESK = breaks([
   ['30–50', 85],
   ['50–100', 75],
@@ -700,7 +695,7 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     ],
   },
   {
-    ...calendarProduct('calRedOrthodox', 'red-orthodox', 4, CAL_QUARTER),
+    ...calendarProduct('calRedOrthodox', 'red-orthodox', 4, CAL_NARROW),
     image: `${CAL_IMG}/red-orthodox/hero.jpg?v=p8`,
     images: [
       `${CAL_IMG}/red-orthodox/2.jpg?v=2027b`,
@@ -710,7 +705,7 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
   },
   calendarProduct('calKidsPets', 'kids-pets', 4, CAL_QUARTER),
   {
-    ...calendarProduct('calSpiralOrthodox', 'spiral-orthodox', 12, CAL_SPIRAL),
+    ...calendarProduct('calSpiralOrthodox', 'spiral-orthodox', 12, CAL_DESK),
     image: `${CAL_IMG}/spiral-orthodox/hero.jpg?v=tent3d`,
     images: [
       `${CAL_IMG}/spiral-orthodox/2.jpg?v=match`,
@@ -727,7 +722,7 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     ],
   },
   {
-    ...calendarProduct('calSpiralLandscape', 'spiral-landscape', 12, CAL_SPIRAL),
+    ...calendarProduct('calSpiralLandscape', 'spiral-landscape', 12, CAL_DESK),
     image: `${CAL_IMG}/spiral-landscape/hero.jpg?v=p8n`,
     images: [
       `${CAL_IMG}/spiral-landscape/2.png?v=user`,

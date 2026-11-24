@@ -22,6 +22,13 @@ export const promoBannerSlides: PromoBannerSlide[] = [
     mobileObjectPosition: 'center 42%',
   },
   {
+    id: 'promoCatalog',
+    href: '/catalog',
+    imageDesktop: '/banners/banner-desktop-catalog-v2.png',
+    imageMobile: '/banners/banner-mobile-catalog-v2.png',
+    mobileObjectPosition: 'left 36%',
+  },
+  {
     id: 'branding',
     href: '/products/branding-pack',
     imageDesktop: '/banners/banner-desktop-branding.png',
