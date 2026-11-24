@@ -26,6 +26,23 @@ type FlipController = {
   render: { convertToBook: (pos: FlipPoint) => FlipPoint };
 };
 
+/** Facebook / Messenger in-app browsers (and Instagram’s sibling WebView). */
+const IN_APP_BROWSER_UA = /FBAN|FBAV|FB_IAB|FBIOS|FB4A|Messenger|Instagram/i;
+
+function isMessengerInAppBrowser() {
+  return IN_APP_BROWSER_UA.test(navigator.userAgent);
+}
+
+function prefersCoarsePointer() {
+  return window.matchMedia('(pointer: coarse)').matches;
+}
+
+function isPageFlipInMotion(state: string) {
+  return (
+    state === 'flipping' || state === 'user_fold' || state === 'fold_corner'
+  );
+}
+
 function readPromoCatalogPageIndex(pageCount: number) {
   const raw = new URLSearchParams(window.location.search).get('page');
   const parsed = Number.parseInt(raw ?? '1', 10);
@@ -279,6 +296,7 @@ function CatalogPageJump({
 
 export function PromoFlipbook() {
   const t = useTranslations('promoCatalog');
+  const shellRef = useRef<HTMLDivElement>(null);
   const sourceRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const flipRef = useRef<PageFlip | null>(null);
@@ -297,10 +315,25 @@ export function PromoFlipbook() {
 
   useEffect(() => {
     const query = window.matchMedia('(max-width: 860px)');
-    const sync = () => setCompact(query.matches);
+    const coarse = window.matchMedia('(pointer: coarse)');
+    const sync = () => {
+      setCompact(query.matches);
+      const shell = shellRef.current;
+      if (!shell) return;
+      const webview = isMessengerInAppBrowser();
+      shell.classList.toggle('promo-catalog-shell--webview', webview);
+      shell.classList.toggle(
+        'promo-catalog-shell--reduced-fx',
+        webview || query.matches || coarse.matches,
+      );
+    };
     sync();
     query.addEventListener('change', sync);
-    return () => query.removeEventListener('change', sync);
+    coarse.addEventListener('change', sync);
+    return () => {
+      query.removeEventListener('change', sync);
+      coarse.removeEventListener('change', sync);
+    };
   }, []);
 
   useEffect(() => {
@@ -327,6 +360,24 @@ export function PromoFlipbook() {
     host.replaceChildren(...leaves);
     let pageFlip: PageFlip;
     let unbindShortcuts: (() => void) | undefined;
+    let resizeTimer = 0;
+    let refitTimer = 0;
+    let flipping = false;
+    const reducedFx =
+      isMessengerInAppBrowser() || compact || prefersCoarsePointer();
+    const setFlipping = (next: boolean) => {
+      flipping = next;
+      shellRef.current?.classList.toggle('promo-catalog-shell--flipping', next);
+    };
+    const refitIfIdle = () => {
+      if (flipping) return;
+      fitPromoProductText(host);
+    };
+    const updateIfIdle = () => {
+      if (flipping) return;
+      pageFlip.update();
+      fitPromoProductText(host);
+    };
     try {
       pageFlip = new PageFlip(host, {
         width: 460,
@@ -337,9 +388,9 @@ export function PromoFlipbook() {
         minHeight: 400,
         maxHeight: 820,
         showCover: true,
-        drawShadow: true,
-        flippingTime: 900,
-        maxShadowOpacity: 0.55,
+        drawShadow: !reducedFx,
+        flippingTime: reducedFx ? 550 : 900,
+        maxShadowOpacity: reducedFx ? 0 : 0.55,
         useMouseEvents: true,
         startZIndex: 1,
         autoSize: true,
@@ -349,16 +400,15 @@ export function PromoFlipbook() {
         usePortrait: compact,
         startPage,
       });
-      const refit = () => fitPromoProductText(host);
-      pageFlip.on('init', refit);
+      pageFlip.on('init', refitIfIdle);
       pageFlip.loadFromHTML(leaves);
       restrictPageFlipCornerHit(pageFlip);
       unbindShortcuts = bindFlipbookPageShortcuts(host, pageFlip);
       if (pageFlip.getCurrentPageIndex() !== startPage) {
         pageFlip.turnToPage(startPage);
       }
-      requestAnimationFrame(refit);
-      setTimeout(refit, 200);
+      requestAnimationFrame(refitIfIdle);
+      refitTimer = window.setTimeout(refitIfIdle, 200);
     } catch (error) {
       console.error('Promo flipbook failed to start', error);
       unbindShortcuts?.();
@@ -366,11 +416,17 @@ export function PromoFlipbook() {
       return undefined;
     }
 
+    pageFlip.on('changeState', (event) => {
+      const busy = isPageFlipInMotion(String(event.data));
+      setFlipping(busy);
+      if (!busy) requestAnimationFrame(refitIfIdle);
+    });
+
     pageFlip.on('flip', (event) => {
       const index = Number(event.data) || 0;
       setPageIndex(index);
       writePromoCatalogPageIndex(index);
-      requestAnimationFrame(() => fitPromoProductText(host));
+      requestAnimationFrame(refitIfIdle);
     });
 
     flipRef.current = pageFlip;
@@ -381,8 +437,9 @@ export function PromoFlipbook() {
     const observer =
       typeof ResizeObserver !== 'undefined'
         ? new ResizeObserver(() => {
-            pageFlip.update();
-            fitPromoProductText(host);
+            if (flipping) return;
+            window.clearTimeout(resizeTimer);
+            resizeTimer = window.setTimeout(updateIfIdle, 120);
           })
         : null;
     observer?.observe(stage);
@@ -390,7 +447,11 @@ export function PromoFlipbook() {
     return () => {
       unbindShortcuts?.();
       observer?.disconnect();
+      window.clearTimeout(resizeTimer);
+      window.clearTimeout(refitTimer);
+      setFlipping(false);
       pageFlip.off('flip');
+      pageFlip.off('changeState');
       pageFlip.off('init');
       try {
         pageFlip.destroy();
@@ -456,8 +517,11 @@ export function PromoFlipbook() {
       : `${pageIndex + 1}–${Math.min(pageIndex + 2, pageCount)}`;
 
   return (
-    <div className="promo-catalog-shell flex h-dvh min-h-0 min-w-0 flex-col overflow-hidden bg-[#d5dde3]">
-      <header className="promo-catalog-chrome flex items-center justify-between gap-3 border-b border-black/5 bg-white/80 px-4 py-2.5 backdrop-blur">
+    <div
+      ref={shellRef}
+      className="promo-catalog-shell flex h-dvh min-h-0 min-w-0 flex-col overflow-hidden bg-[#d5dde3]"
+    >
+      <header className="promo-catalog-chrome promo-catalog-header flex items-center justify-between gap-3 border-b border-black/5 bg-white/80 px-4 py-2.5 backdrop-blur">
         <Link href="/" className="flex items-center gap-2">
           <Logo className="h-7 w-auto" />
         </Link>
@@ -512,7 +576,7 @@ export function PromoFlipbook() {
       </div>
 
       <div className="promo-catalog-chrome flex min-h-0 min-w-0 flex-1 flex-col">
-        <div className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center overflow-visible px-3 py-2 sm:px-8 sm:py-3">
+        <div className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center overflow-hidden px-3 py-2 sm:px-8 sm:py-3">
           <button
             type="button"
             onClick={() => go(-1)}

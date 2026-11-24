@@ -11,16 +11,23 @@ html:has(.promo-flipbook-stage) body {
   justify-content: center;
   width: min(96vw, calc((100dvh - 5.5rem) * 1.415));
   height: min(calc(100dvh - 5.5rem), 90vh);
-  overflow: visible;
+  overflow: hidden;
+  isolation: isolate;
+  contain: layout paint;
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 /* Let PageFlip size the book from padding-bottom. Forcing height: 100%
    vertically centers pages (top ~90px) while hard-cover drawing uses top: 0,
-   which makes the book jump up on the cover turn. */
+   which makes the book jump up on the cover turn. Keep overflow visible so
+   the 3D curl can paint past the page box; the stage clips it. */
 .promo-flipbook-book.stf__parent {
   width: 100%;
   max-height: 100%;
   overflow: visible !important;
+  isolation: isolate;
 }
 
 .promo-flipbook-book .stf__wrapper,
@@ -62,6 +69,8 @@ html:has(.promo-flipbook-stage) body {
   display: none;
   position: absolute;
   transform-style: preserve-3d;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 .stf__outerShadow,
@@ -71,11 +80,49 @@ html:has(.promo-flipbook-stage) body {
   position: absolute;
   left: 0;
   top: 0;
+  contain: paint;
+  pointer-events: none;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 .promo-flipbook-page {
   background: #fff;
   box-shadow: 0 12px 40px rgba(18, 43, 61, 0.18);
+}
+
+/* Messenger / coarse / narrow: drop expensive blur and fold shadows that
+   composite badly with 3D transforms in in-app WebViews. */
+.promo-catalog-shell--webview .promo-catalog-header,
+.promo-catalog-shell--reduced-fx .promo-catalog-header,
+.promo-catalog-shell--flipping .promo-catalog-header {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  background-color: #fff;
+}
+
+.promo-catalog-shell--reduced-fx .promo-flipbook-page {
+  box-shadow: 0 4px 14px rgba(18, 43, 61, 0.12);
+}
+
+.promo-catalog-shell--webview .promo-flipbook-page,
+.promo-catalog-shell--flipping .promo-flipbook-page {
+  box-shadow: 0 2px 8px rgba(18, 43, 61, 0.1);
+}
+
+.promo-catalog-shell--webview .stf__outerShadow,
+.promo-catalog-shell--webview .stf__innerShadow,
+.promo-catalog-shell--webview .stf__hardShadow,
+.promo-catalog-shell--webview .stf__hardInnerShadow,
+.promo-catalog-shell--reduced-fx .stf__outerShadow,
+.promo-catalog-shell--reduced-fx .stf__innerShadow,
+.promo-catalog-shell--reduced-fx .stf__hardShadow,
+.promo-catalog-shell--reduced-fx .stf__hardInnerShadow {
+  display: none !important;
+}
+
+.promo-catalog-shell--webview .promo-toc-mark {
+  filter: none;
 }
 
 .promo-products-grid {

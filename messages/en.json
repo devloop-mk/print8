@@ -402,9 +402,9 @@
         ]
       },
       "lighterFresh": {
-        "name": "Lighter 3",
+        "name": "Plastic lighter 3",
         "specs": [
-          "Electronic plastic lighter, 8 × 2.5 × 1 cm",
+          "Plastic lighter, 8 × 2.5 × 1 cm",
           "Screen print",
           "Minimum order 100 pieces"
         ]
@@ -482,7 +482,7 @@
       "polarZip": {
         "name": "Polar fleece full-zip",
         "specs": [
-          "280 g/m² · 100% polyester · not french terry · embroidery on request",
+          "280 g/m² · 100% polyester · embroidery on request",
           "Sizes XS–4XL · white, navy and black",
           "Front and back · warm, durable and soft to the touch"
         ]
@@ -490,7 +490,7 @@
       "polarQuarterZip": {
         "name": "Polar fleece quarter-zip",
         "specs": [
-          "280 g/m² · 100% polyester · not french terry · embroidery on request",
+          "280 g/m² · 100% polyester · embroidery on request",
           "Sizes XS–4XL · white, navy and black",
           "Front and back · warm, durable and soft to the touch"
         ]
@@ -498,7 +498,7 @@
       "polarVest": {
         "name": "Polar fleece vest",
         "specs": [
-          "280 g/m² · 100% polyester · not french terry · embroidery on request",
+          "280 g/m² · 100% polyester · embroidery on request",
           "Sizes XS–4XL · white, navy and black",
           "Front and back · warm, durable and soft to the touch"
         ]
@@ -725,7 +725,7 @@
         ]
       },
       "calCarsWave": {
-        "name": "Cars 1/4 — wave",
+        "name": "Cars 1/4",
         "specs": [
           "4 sheets",
           "Format 500 × 300 mm",
@@ -733,7 +733,7 @@
         ]
       },
       "calChurchesWave": {
-        "name": "Churches and mosques 1/4",
+        "name": "Mosques 1/4",
         "specs": [
           "4 sheets",
           "Format 500 × 300 mm",

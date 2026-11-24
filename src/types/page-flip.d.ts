@@ -9,7 +9,10 @@ declare module 'page-flip' {
     turnToPage(pageIndex: number): void;
     getCurrentPageIndex(): number;
     getPageCount(): number;
-    on(event: string, callback: (e: { data: number }) => void): this;
+    on(
+      event: string,
+      callback: (e: { data: number | string }) => void,
+    ): this;
     off(event: string): void;
   }
 }

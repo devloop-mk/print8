@@ -138,9 +138,9 @@ const PRICE_MUG_CORK = breaks([
   ['100+', 280],
 ]);
 const CAL_QUARTER = breaks([
-  ['30–50', 75],
-  ['50–100', 60],
-  ['100+', 50],
+  ['30–50', 80],
+  ['50–100', 70],
+  ['100+', 60],
 ]);
 const CAL_SIXTH = breaks([
   ['30–50', 95],
@@ -148,14 +148,19 @@ const CAL_SIXTH = breaks([
   ['100+', 70],
 ]);
 const CAL_NARROW = breaks([
-  ['30–50', 70],
-  ['50–100', 60],
-  ['100+', 45],
+  ['30–50', 75],
+  ['50–100', 65],
+  ['100+', 55],
 ]);
 const CAL_SPIRAL = breaks([
   ['30–50', 80],
   ['50–100', 65],
   ['100+', 55],
+]);
+const CAL_DESK = breaks([
+  ['30–50', 85],
+  ['50–100', 75],
+  ['100+', 65],
 ]);
 const CAL_TRODELEN = breaks([
   ['30–50', 160],
@@ -163,9 +168,9 @@ const CAL_TRODELEN = breaks([
   ['100+', 120],
 ]);
 const CAL_CLASSIC_PLASTIC = breaks([
-  ['30–50', 80],
-  ['50–100', 70],
-  ['100+', 60],
+  ['30–50', 85],
+  ['50–100', 75],
+  ['100+', 65],
 ]);
 const CAL_CLASSIC_METAL = breaks([
   ['30–50', 95],
@@ -311,7 +316,7 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
       ['50–100', 230],
       ['100+', 200],
     ]),
-    ['#86efac', '#dc2626', '#111111'],
+    ['#86efac', '#dc2626', '#2563eb', '#111111'],
   ),
   merchProduct(
     'armada',
@@ -772,7 +777,7 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
   },
   calendarProduct('calSmallOrthodox', 'small-orthodox', 4, CAL_QUARTER),
   {
-    ...calendarProduct('calDeskLandscape', 'desk-landscape', 11, CAL_SPIRAL),
+    ...calendarProduct('calDeskLandscape', 'desk-landscape', 11, CAL_DESK),
     image: `${CAL_IMG}/desk-landscape/hero.jpg?v=tent3d`,
     images: [
       `${CAL_IMG}/desk-landscape/2.png`,
@@ -788,7 +793,7 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     ],
   },
   {
-    ...calendarProduct('calDeskOrthodox', 'desk-orthodox', 12, CAL_SPIRAL),
+    ...calendarProduct('calDeskOrthodox', 'desk-orthodox', 12, CAL_DESK),
     image: `${CAL_IMG}/desk-orthodox/hero.jpg?v=p8n`,
     images: [
       `${CAL_IMG}/desk-orthodox/2.jpg?v=icons`,
