@@ -5,9 +5,24 @@ export type PromoBannerSlide = {
   imageMobile: string;
   /** Mobile hero crop anchor; defaults to center 40% in the carousel. */
   mobileObjectPosition?: string;
+  /** Mobile object-fit; catalog still-life uses contain so products are not cropped. */
+  mobileFit?: 'cover' | 'contain';
+  /** Thin top strip with catalog kicker copy. */
+  kicker?: boolean;
+  /** Extra mobile image classes (e.g. lift a still-life above the copy overlay). */
+  mobileImageClass?: string;
 };
 
 export const promoBannerSlides: PromoBannerSlide[] = [
+  {
+    id: 'promoCatalog',
+    href: '/catalog',
+    imageDesktop: '/banners/banner-desktop-catalog-v3.png',
+    imageMobile: '/banners/banner-mobile-catalog-v4.png',
+    mobileObjectPosition: 'center 82%',
+    mobileImageClass: 'scale-[1.12] -translate-y-[7%] origin-center',
+    kicker: true,
+  },
   {
     id: 'apparel',
     href: '/products/category/apparel',
@@ -20,13 +35,6 @@ export const promoBannerSlides: PromoBannerSlide[] = [
     imageDesktop: '/banners/banner-desktop-students.png',
     imageMobile: '/banners/banner-mobile-students.png',
     mobileObjectPosition: 'center 42%',
-  },
-  {
-    id: 'promoCatalog',
-    href: '/catalog',
-    imageDesktop: '/banners/banner-desktop-catalog-v2.png',
-    imageMobile: '/banners/banner-mobile-catalog-v2.png',
-    mobileObjectPosition: 'left 36%',
   },
   {
     id: 'branding',

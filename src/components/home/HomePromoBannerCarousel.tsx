@@ -12,6 +12,16 @@ import { PromoBannerDesktopBackdrop } from '@/components/home/PromoBannerDesktop
 const AUTO_ADVANCE_MS = 6500;
 const PROGRAMMATIC_SCROLL_MS = 350;
 
+function SlideKicker({ slideId }: { slideId: string }) {
+  const t = useTranslations('home.promoBanners');
+
+  return (
+    <p className="pointer-events-none absolute inset-x-0 top-0 z-[15] bg-[#e85d04] px-3 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.18em] text-white sm:py-2 sm:text-[11px] sm:tracking-[0.2em]">
+      {t(`slides.${slideId}.kicker`)}
+    </p>
+  );
+}
+
 function SlideCopy({
   slideId,
   href,
@@ -200,7 +210,12 @@ export function HomePromoBannerCarousel({ className = '' }: { className?: string
   );
 
   const renderMobileImage = (slide: (typeof promoBannerSlides)[number], slideIndex: number) => (
-    <div className="absolute inset-0 overflow-hidden sm:hidden">
+    <div
+      className={cn(
+        'absolute inset-0 overflow-hidden sm:hidden',
+        slide.mobileFit === 'contain' && 'bg-[#e8eaed]',
+      )}
+    >
       <Link
         href={slide.href}
         tabIndex={slideIndex === index ? 0 : -1}
@@ -214,16 +229,21 @@ export function HomePromoBannerCarousel({ className = '' }: { className?: string
         priority={slideIndex === 0}
         sizes="100vw"
         className={cn(
-          'object-cover',
-          !slide.mobileObjectPosition && 'object-[center_40%]',
-          '[mask-image:linear-gradient(to_bottom,black_0%,black_52%,rgba(0,0,0,0.82)_68%,rgba(0,0,0,0.35)_82%,transparent_100%)]',
-          '[-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_52%,rgba(0,0,0,0.82)_68%,rgba(0,0,0,0.35)_82%,transparent_100%)]',
+          slide.mobileFit === 'contain' ? 'object-contain' : 'object-cover',
+          !slide.mobileObjectPosition && slide.mobileFit !== 'contain' && 'object-[center_40%]',
+          slide.mobileFit !== 'contain' &&
+            (slide.mobileImageClass
+              ? '[mask-image:linear-gradient(to_bottom,black_0%,black_60%,rgba(0,0,0,0.9)_78%,rgba(0,0,0,0.4)_90%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_60%,rgba(0,0,0,0.9)_78%,rgba(0,0,0,0.4)_90%,transparent_100%)]'
+              : '[mask-image:linear-gradient(to_bottom,black_0%,black_52%,rgba(0,0,0,0.82)_68%,rgba(0,0,0,0.35)_82%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_52%,rgba(0,0,0,0.82)_68%,rgba(0,0,0,0.35)_82%,transparent_100%)]'),
+          slide.mobileImageClass,
         )}
         style={{
-          objectFit: 'cover',
+          objectFit: slide.mobileFit === 'contain' ? 'contain' : 'cover',
           ...(slide.mobileObjectPosition
             ? { objectPosition: slide.mobileObjectPosition }
-            : {}),
+            : slide.mobileFit === 'contain'
+              ? { objectPosition: 'center top' }
+              : {}),
         }}
       />
       <div
@@ -281,6 +301,8 @@ export function HomePromoBannerCarousel({ className = '' }: { className?: string
                   className="pointer-events-none absolute inset-0 bg-gradient-to-r from-brand-950/50 from-[18%] via-brand-900/35 via-[42%] to-transparent to-[60%]"
                   aria-hidden
                 />
+
+                {slide.kicker ? <SlideKicker slideId={slide.id} /> : null}
 
                 <div className="absolute inset-0 flex items-center">
                   <div className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -341,10 +363,14 @@ export function HomePromoBannerCarousel({ className = '' }: { className?: string
             <div
               key={slide.id}
               data-promo-slide
-              className="relative h-full min-w-full shrink-0 snap-center snap-always self-stretch overflow-hidden bg-[#0a1a38]"
+              className={cn(
+                'relative h-full min-w-full shrink-0 snap-center snap-always self-stretch overflow-hidden',
+                slide.mobileFit === 'contain' ? 'bg-[#e8eaed]' : 'bg-[#0a1a38]',
+              )}
               aria-hidden={slideIndex !== index}
             >
               {renderMobileImage(slide, slideIndex)}
+              {slide.kicker ? <SlideKicker slideId={slide.id} /> : null}
             </div>
           ))}
         </div>

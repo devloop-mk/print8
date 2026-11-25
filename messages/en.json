@@ -976,8 +976,9 @@
           "cta": "Start your order"
         },
         "promoCatalog": {
+          "kicker": "Holiday offer · 2027 catalog",
           "title": "Promo products and calendars",
-          "subtitle": "Mugs, pens, keychains, notebooks, and calendars — all in the catalog.",
+          "subtitle": "Mugs, bags, bottles, pens, and calendars — all in the catalog.",
           "cta": "Browse the catalog"
         },
         "branding": {
