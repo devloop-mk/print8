@@ -71,10 +71,57 @@ function isFlipbookInteractiveTarget(target: EventTarget | null) {
 }
 
 function bindFlipbookPageShortcuts(host: HTMLElement, pageFlip: PageFlip) {
-  const stopFlip = (event: Event) => {
+  let touchStart: { x: number; y: number; fromLink: boolean } | null = null;
+  let ignoreClick = false;
+
+  const stopMouseFlip = (event: Event) => {
     if (isFlipbookInteractiveTarget(event.target)) event.stopPropagation();
   };
+
+  const onTouchStart = (event: TouchEvent) => {
+    const touch = event.changedTouches[0];
+    if (!touch) return;
+    touchStart = {
+      x: touch.clientX,
+      y: touch.clientY,
+      fromLink: isFlipbookInteractiveTarget(event.target),
+    };
+    ignoreClick = false;
+  };
+
+  const onTouchMove = (event: TouchEvent) => {
+    if (!touchStart?.fromLink) return;
+    const touch = event.changedTouches[0];
+    if (!touch) return;
+    const dx = touch.clientX - touchStart.x;
+    const dy = touch.clientY - touchStart.y;
+    if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy)) {
+      event.preventDefault();
+    }
+  };
+
+  const onTouchEnd = (event: TouchEvent) => {
+    const start = touchStart;
+    touchStart = null;
+    if (!start?.fromLink) return;
+    const touch = event.changedTouches[0];
+    if (!touch) return;
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (Math.abs(dx) < 32 || Math.abs(dx) < Math.abs(dy) * 1.1) return;
+    ignoreClick = true;
+    event.preventDefault();
+    if (dx < 0) pageFlip.flipNext();
+    else pageFlip.flipPrev();
+  };
+
   const goToListedPage = (event: Event) => {
+    if (ignoreClick) {
+      event.preventDefault();
+      event.stopPropagation();
+      ignoreClick = false;
+      return;
+    }
     const link =
       event.target instanceof Element
         ? event.target.closest('[data-catalog-goto]')
@@ -89,13 +136,17 @@ function bindFlipbookPageShortcuts(host: HTMLElement, pageFlip: PageFlip) {
     writePromoCatalogPageIndex(index);
   };
 
-  host.addEventListener('mousedown', stopFlip, true);
-  host.addEventListener('touchstart', stopFlip, true);
+  host.addEventListener('mousedown', stopMouseFlip, true);
+  host.addEventListener('touchstart', onTouchStart, { capture: true, passive: true });
+  host.addEventListener('touchmove', onTouchMove, { capture: true, passive: false });
+  host.addEventListener('touchend', onTouchEnd, { capture: true, passive: false });
   host.addEventListener('click', goToListedPage, true);
 
   return () => {
-    host.removeEventListener('mousedown', stopFlip, true);
-    host.removeEventListener('touchstart', stopFlip, true);
+    host.removeEventListener('mousedown', stopMouseFlip, true);
+    host.removeEventListener('touchstart', onTouchStart, true);
+    host.removeEventListener('touchmove', onTouchMove, true);
+    host.removeEventListener('touchend', onTouchEnd, true);
     host.removeEventListener('click', goToListedPage, true);
   };
 }

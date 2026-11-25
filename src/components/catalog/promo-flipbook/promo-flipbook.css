@@ -28,6 +28,7 @@ html:has(.promo-flipbook-stage) body {
   max-height: 100%;
   overflow: visible !important;
   isolation: isolate;
+  touch-action: none;
 }
 
 .promo-flipbook-book .stf__wrapper,
