@@ -1,4 +1,4 @@
-import { getSiteUrl, localePath } from '@/lib/seo/site';
+import { getCanonicalSiteUrl, localePath } from '@/lib/seo/site';
 import type { Locale } from '@/i18n/routing';
 import {
   getNewsletterTemplate,
@@ -9,7 +9,7 @@ import {
   EMAIL_BRAND as BRAND,
   escapeHtml,
   getBrevoClient,
-  getEmailFromAddress,
+  getNewsletterFromAddress,
   sendTransactionalEmail,
 } from '@/lib/email/email-client';
 
@@ -18,7 +18,7 @@ export function buildNewsletterUnsubscribeUrl(
   locale: string | null | undefined,
 ) {
   const resolved: Locale = locale === 'en' ? 'en' : 'mk';
-  return `${getSiteUrl()}${localePath(resolved, '/newsletter/unsubscribe')}?token=${encodeURIComponent(token)}`;
+  return `${getCanonicalSiteUrl()}${localePath(resolved, '/newsletter/unsubscribe')}?token=${encodeURIComponent(token)}`;
 }
 
 export function toNewsletterHtmlParagraphs(body: string) {
@@ -45,6 +45,21 @@ function pickTemplateCopy(
   return locale === 'en' ? template.en : template.mk;
 }
 
+const NEWSLETTER_LOGO_PATH = '/email/newsletter-logo.png';
+
+function getNewsletterHostedAssetUrl(path: string) {
+  const normalized = path.startsWith('/') ? path : `/${path}`;
+  const cdn = process.env.NEXT_PUBLIC_ASSETS_CDN_URL?.replace(/\/$/, '');
+  if (cdn && normalized.startsWith('/email/')) {
+    return `${cdn}${normalized}`;
+  }
+  return `${getCanonicalSiteUrl()}${normalized}`;
+}
+
+export function getNewsletterLogoUrl() {
+  return getNewsletterHostedAssetUrl(NEWSLETTER_LOGO_PATH);
+}
+
 export function buildBrandedNewsletterHtml(options: {
   locale: Locale;
   headline: string;
@@ -52,6 +67,7 @@ export function buildBrandedNewsletterHtml(options: {
   bodyHtml: string;
   ctaLabel?: string;
   ctaUrl?: string;
+  heroImageUrl?: string;
   unsubscribeUrl: string;
 }) {
   const isMk = options.locale !== 'en';
@@ -59,17 +75,37 @@ export function buildBrandedNewsletterHtml(options: {
   const footerNote = isMk
     ? 'Го добивате овој е-маил бидејќи се претплативте на Print 8.'
     : 'You are receiving this email because you subscribed to Print 8.';
+  const logoUrl = getNewsletterLogoUrl();
+  const phoneLabel = isMk ? 'Тел' : 'Phone';
+  const webLabel = isMk ? 'Веб' : 'Web';
 
   const ctaBlock =
     options.ctaLabel && options.ctaUrl
       ? `<tr>
-          <td style="padding:8px 32px 28px;">
-            <a href="${escapeHtml(options.ctaUrl)}" style="display:inline-block;background:${BRAND.primary};color:${BRAND.white};text-decoration:none;font-size:14px;font-weight:700;padding:12px 22px;border-radius:6px;">
+          <td align="center" style="padding:8px 32px 32px;">
+            <a href="${escapeHtml(options.ctaUrl)}" style="display:inline-block;background:${BRAND.accent};color:${BRAND.white};text-decoration:none;font-size:15px;font-weight:700;letter-spacing:0.02em;padding:14px 28px;border-radius:6px;">
               ${escapeHtml(options.ctaLabel)}
             </a>
           </td>
         </tr>`
       : '';
+
+  const heroBlock =
+    options.heroImageUrl && options.ctaUrl
+      ? `<tr>
+          <td style="padding:0;font-size:0;line-height:0;">
+            <a href="${escapeHtml(options.ctaUrl)}" style="display:block;">
+              <img src="${escapeHtml(options.heroImageUrl)}" alt="${escapeHtml(options.headline)}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0;" />
+            </a>
+          </td>
+        </tr>`
+      : options.heroImageUrl
+        ? `<tr>
+          <td style="padding:0;font-size:0;line-height:0;">
+            <img src="${escapeHtml(options.heroImageUrl)}" alt="${escapeHtml(options.headline)}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0;" />
+          </td>
+        </tr>`
+        : '';
 
   return `<!DOCTYPE html>
 <html lang="${options.locale}">
@@ -84,16 +120,20 @@ export function buildBrandedNewsletterHtml(options: {
       <td align="center" style="padding:32px 16px;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;max-width:600px;background:${BRAND.white};border:1px solid ${BRAND.border};">
           <tr>
-            <td style="padding:28px 32px;background:${BRAND.primaryDark};">
-              <p style="margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#b9d5e9;">Print 8</p>
-              <h1 style="margin:0;font-size:24px;line-height:1.25;font-weight:700;color:${BRAND.white};">${escapeHtml(options.headline)}</h1>
+            <td style="height:6px;line-height:6px;font-size:0;background:${BRAND.accent};">&nbsp;</td>
+          </tr>
+          <tr>
+            <td style="padding:28px 32px 26px;background:${BRAND.primaryDark};">
+              <img src="${escapeHtml(logoUrl)}" alt="Print 8" width="168" height="45" style="display:block;width:168px;height:auto;border:0;margin:0 0 18px;" />
               ${
                 options.subtitle
-                  ? `<p style="margin:10px 0 0;font-size:14px;line-height:1.5;color:#dceaf4;">${escapeHtml(options.subtitle)}</p>`
-                  : ''
+                  ? `<p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#f4c7a8;">${escapeHtml(options.subtitle)}</p>`
+                  : `<p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#b9d5e9;">Print 8</p>`
               }
+              <h1 style="margin:0;font-size:26px;line-height:1.25;font-weight:700;color:${BRAND.white};">${escapeHtml(options.headline)}</h1>
             </td>
           </tr>
+          ${heroBlock}
           <tr>
             <td style="padding:28px 32px 12px;">
               ${options.bodyHtml}
@@ -101,7 +141,23 @@ export function buildBrandedNewsletterHtml(options: {
           </tr>
           ${ctaBlock}
           <tr>
-            <td style="padding:20px 32px;border-top:1px solid ${BRAND.border};background:${BRAND.surface};">
+            <td style="padding:22px 32px;border-top:1px solid ${BRAND.border};background:${BRAND.surface};">
+              <p style="margin:0 0 10px;font-size:13px;font-weight:700;color:${BRAND.ink};">PRINT8</p>
+              <p style="margin:0 0 4px;font-size:13px;line-height:1.55;color:${BRAND.ink};">
+                ${phoneLabel}: <a href="tel:+38974606906" style="color:${BRAND.primary};text-decoration:none;">074 606 906</a>
+              </p>
+              <p style="margin:0 0 4px;font-size:13px;line-height:1.55;color:${BRAND.ink};">
+                <a href="mailto:print8@gmail.com" style="color:${BRAND.primary};text-decoration:none;">print8@gmail.com</a>
+                &nbsp;·&nbsp;
+                <a href="mailto:print8mk@hotmail.com" style="color:${BRAND.primary};text-decoration:none;">print8mk@hotmail.com</a>
+              </p>
+              <p style="margin:0;font-size:13px;line-height:1.55;color:${BRAND.ink};">
+                ${webLabel}: <a href="https://www.print8.mk" style="color:${BRAND.primary};text-decoration:none;">www.print8.mk</a>
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 32px 22px;background:${BRAND.surface};">
               <p style="margin:0 0 8px;font-size:12px;line-height:1.5;color:${BRAND.muted};">${escapeHtml(footerNote)}</p>
               <p style="margin:0;font-size:12px;">
                 <a href="${options.unsubscribeUrl}" style="color:${BRAND.primary};">${unsubscribeLabel}</a>
@@ -167,9 +223,13 @@ function resolveCopyForRecipient(
   const ctaPath = input.ctaPath?.trim() || fromTemplate?.ctaPath || '/';
   // Support paths with query strings: /products/ready-designs?collection=x
   const [ctaPathname, ctaSearch = ''] = ctaPath.split('?');
-  const ctaUrl = `${getSiteUrl()}${localePath(locale, ctaPathname || '/')}${
+  const ctaUrl = `${getCanonicalSiteUrl()}${localePath(locale, ctaPathname || '/')}${
     ctaSearch ? `?${ctaSearch}` : ''
   }`;
+
+  const heroImageUrl = template?.heroImagePath
+    ? getNewsletterHostedAssetUrl(template.heroImagePath)
+    : undefined;
 
   return {
     subject,
@@ -178,6 +238,7 @@ function resolveCopyForRecipient(
     subtitle,
     ctaLabel,
     ctaUrl: ctaLabel ? ctaUrl : undefined,
+    heroImageUrl,
   };
 }
 
@@ -231,12 +292,13 @@ export async function sendNewsletterBroadcast(
         bodyHtml: toNewsletterHtmlParagraphs(copy.body),
         ctaLabel: copy.ctaLabel,
         ctaUrl: copy.ctaUrl,
+        heroImageUrl: copy.heroImageUrl,
         unsubscribeUrl,
       });
 
       try {
         const result = await sendTransactionalEmail({
-          from: getEmailFromAddress(),
+          from: getNewsletterFromAddress(),
           to: recipient.email,
           subject: copy.subject,
           html,

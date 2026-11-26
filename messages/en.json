@@ -346,19 +346,19 @@
         ]
       },
       "keyHbSquare": {
-        "name": "Sublimation square keychain",
+        "name": "Mediapan keychain — square",
         "specs": [
-          "Hard board, sublimation",
+          "Mediapan, sublimation",
           "50 × 50 mm",
-          "Minimum order 10 pieces"
+          "Minimum order 30 pieces"
         ]
       },
       "keyHbOval": {
-        "name": "Sublimation oval keychain",
+        "name": "Mediapan keychain — oval",
         "specs": [
-          "Hard board, sublimation",
+          "Mediapan, sublimation",
           "Oval shape",
-          "Minimum order 10 pieces"
+          "Minimum order 30 pieces"
         ]
       },
       "lighterKrickMini": {
@@ -602,7 +602,7 @@
         ]
       },
       "calCars": {
-        "name": "Cars",
+        "name": "Cars 1/4",
         "specs": [
           "4 sheets · art paper 90 g/m² · chrome board 250 g/m²",
           "Format 500 × 300 mm · metal rail",
@@ -752,16 +752,14 @@
         "name": "Spiral Orthodox",
         "specs": [
           "Desk calendar with spiral binding",
-          "12 months · Orthodox icons",
-          "Ad space on the stand"
+          "12 months · Orthodox icons"
         ]
       },
       "calSpiralLandscape": {
         "name": "Spiral landscapes",
         "specs": [
           "Desk calendar with spiral binding",
-          "12 months · landscapes",
-          "Ad space on the stand"
+          "12 months · landscapes"
         ]
       },
       "calDeskLandscape": {
@@ -3917,5 +3915,85 @@
       "dismiss": "Close"
     },
     "footerLink": "Rewards wheel"
+  },
+  "holidayWorkshop": {
+    "noticeTitle": "Holiday Challenge Available",
+    "noticeBody": "Help Santa collect 10 Print8 products and unlock a surprise gift.",
+    "noticeTitleClaimed": "Your holiday gift is waiting",
+    "noticeBodyClaimed": "Open your gift and copy the code for your order.",
+    "startCta": "Start Challenge",
+    "viewGift": "Open gift",
+    "later": "Later",
+    "dismiss": "Close",
+    "eyebrow": "New Year challenge",
+    "gameTitle": "New Year orders",
+    "gameHint": "Catch or tap falling Print8 products. Fill Santa’s sack to 10/10.",
+    "counter": "{collected}/{target}",
+    "sackLabel": "Santa’s sack",
+    "close": "Close",
+    "missTitle": "Almost there",
+    "missBody": "Santa still needs a few more products before the delivery run. Try again — no coupon is used until you collect 10.",
+    "tryAgain": "Try again",
+    "claiming": "Santa is wrapping your gift…",
+    "claimError": "The gift could not be opened just now. Please try again.",
+    "retryClaim": "Open gift again",
+    "rewardEyebrow": "Your holiday gift",
+    "goldenBadge": "Golden gift",
+    "couponLabel": "Your unique coupon",
+    "couponRulesPercent": "{percent}% off · min. {min} · valid {days} days · one use",
+    "couponRulesPercentNoMin": "{percent}% off · valid {days} days · one use",
+    "couponRulesPercentBoost": "{percent}% off everything · {boost}% off {product} · valid {days} days · one use",
+    "couponRulesPercentBoostMin": "{percent}% off everything · {boost}% off {product} · min. {min} · valid {days} days · one use",
+    "couponRulesFixed": "Credit {amount} · min. {min} · valid {days} days · one use",
+    "couponRulesNoMin": "Credit {amount} · valid {days} days · one use",
+    "copyCode": "Copy code",
+    "copied": "Copied",
+    "useNow": "Use at checkout",
+    "shopCta": "Browse products",
+    "shareCta": "Share the challenge",
+    "shareTitle": "New Year challenge — Print8",
+    "shareText": "I helped Santa collect Print8 products and unlocked a holiday gift. Try the challenge:",
+    "santaPick": "Double discount on {product}",
+    "santaPickBody": "{product} get {boost}% off. Everything else gets {base}%.",
+    "santaPickCta": "Browse {product}",
+    "products": {
+      "mug": "Mugs",
+      "tshirt": "T-shirts",
+      "calendar": "Calendars",
+      "cards": "Business cards",
+      "poster": "Posters",
+      "sticker": "Stickers & magnets",
+      "gift": "Gift boxes"
+    },
+    "prizes": {
+      "percent5": {
+        "title": "5% off your order",
+        "body": "A New Year discount on all Print8 products. The selected product gets double — enter the code when placing your order."
+      },
+      "percent10": {
+        "title": "10% off your order",
+        "body": "A larger New Year discount on all Print8 products — enter the code when placing your order."
+      },
+      "percent15": {
+        "title": "15% off your order",
+        "body": "One of the best New Year discounts on all Print8 products — enter the code when placing your order."
+      },
+      "delivery": {
+        "title": "Free delivery",
+        "body": "Cargo delivery credited at checkout (equivalent to the 150 MKD delivery fee)."
+      },
+      "design": {
+        "title": "Free design service",
+        "body": "A design credit for layout help on your next Print8 order — enter the code when placing your order."
+      },
+      "mystery": {
+        "title": "Mystery surprise gift",
+        "body": "A unique code for a small branded surprise with your next order, plus a checkout credit."
+      },
+      "golden": {
+        "title": "Golden 15% off",
+        "body": "A rare golden gift — 15% off all Print8 products. Enter the code when placing your order."
+      }
+    }
   }
 }

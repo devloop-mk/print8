@@ -1,5 +1,7 @@
-import { nanoid } from 'nanoid';
+import { customAlphabet, nanoid } from 'nanoid';
 import { getSupabaseAdmin } from '@/lib/supabase/client';
+
+const holidayCouponId = customAlphabet('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', 8);
 
 export type CouponKind = 'public' | 'reward_issued';
 
@@ -417,6 +419,45 @@ export async function issueRewardCoupon(input: {
     issuedFromOrderId: input.fromOrderId,
     note: 'Auto-issued reward coupon',
   });
+}
+
+/** One-time Santa workshop coupon — guest-usable unique code (not email-locked). */
+export async function issueHolidayWorkshopCoupon(input: {
+  discountAmount: number;
+  minOrderAmount: number;
+  validDays: number;
+  note: string;
+}): Promise<CouponRecord> {
+  const endsAt = new Date();
+  endsAt.setUTCDate(endsAt.getUTCDate() + input.validDays);
+  const payload = {
+    kind: 'public' as const,
+    discountAmount: input.discountAmount,
+    minOrderAmount: input.minOrderAmount,
+    startsAt: new Date().toISOString(),
+    endsAt: endsAt.toISOString(),
+    maxRedemptionsPerDay: 1,
+    maxRedemptionsTotal: 1,
+    active: true,
+    issuedToEmail: null,
+    issuedFromOrderId: null,
+    note: input.note,
+  };
+
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    try {
+      return await createCoupon({
+        ...payload,
+        code: `P8NY-${holidayCouponId()}`,
+      });
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError instanceof Error
+    ? lastError
+    : new Error('Failed to issue holiday coupon');
 }
 
 /** One-time spin-wheel coupon locked to the winner's email. */

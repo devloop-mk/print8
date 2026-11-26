@@ -48,6 +48,22 @@ export function getSiteUrl() {
   return DEFAULT_SITE_URL;
 }
 
+function isLocalHostname(value: string) {
+  return /localhost|127\.0\.0\.1/i.test(value);
+}
+
+/**
+ * Public origin for links and images inside emails. Never localhost — Gmail
+ * and other clients cannot fetch those URLs.
+ */
+export function getCanonicalSiteUrl() {
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (explicit && !isLocalHostname(explicit)) {
+    return explicit.replace(/\/$/, '');
+  }
+  return DEFAULT_SITE_URL;
+}
+
 export function absoluteUrl(path: string) {
   const normalized = path.startsWith('/') ? path : `/${path}`;
   return `${getSiteUrl()}${normalized}`;

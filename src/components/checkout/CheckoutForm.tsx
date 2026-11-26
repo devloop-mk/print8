@@ -291,6 +291,32 @@ export function CheckoutForm() {
           email:
             (emailOverride ?? pendingCouponEmail.current ?? form.email).trim() ||
             undefined,
+          items: items.map((item) => ({
+            type: item.type,
+            price: item.price,
+            quantity: item.quantity,
+            metadata: item.metadata
+              ? {
+                  ...(typeof item.metadata.productId === "string"
+                    ? { productId: item.metadata.productId }
+                    : {}),
+                  ...(typeof item.metadata.serviceId === "string"
+                    ? { serviceId: item.metadata.serviceId }
+                    : {}),
+                  ...(typeof item.metadata.catalogServiceId === "string"
+                    ? { catalogServiceId: item.metadata.catalogServiceId }
+                    : {}),
+                  ...(typeof item.metadata.category === "string"
+                    ? { category: item.metadata.category }
+                    : {}),
+                  ...(typeof item.metadata.customDesignCategory === "string"
+                    ? {
+                        customDesignCategory: item.metadata.customDesignCategory,
+                      }
+                    : {}),
+                }
+              : undefined,
+          })),
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -320,6 +346,13 @@ export function CheckoutForm() {
     }
   }
 
+  const couponCartKey = items
+    .map(
+      (item) =>
+        `${item.id}:${item.quantity}:${item.price}:${String(item.metadata?.productId ?? item.metadata?.serviceId ?? "")}`,
+    )
+    .join("|");
+
   useEffect(() => {
     if (!pendingCouponAutoApply.current || !hydrated) return;
     if (!couponCode.trim() || total <= 0) return;
@@ -327,6 +360,12 @@ export function CheckoutForm() {
     void applyCoupon(couponCode, pendingCouponEmail.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot after spin "use now"
   }, [hydrated, couponCode, total]);
+
+  useEffect(() => {
+    if (!hydrated || !couponCode.trim() || total <= 0 || couponDiscount <= 0) return;
+    void applyCoupon(couponCode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- recompute holiday boost when cart lines change
+  }, [hydrated, total, couponCartKey]);
 
   const hasServiceItems = items.some((item) => item.type === "service");
   const hasCustomProductItems = items.some((item) => item.type === "product");

@@ -1,4 +1,5 @@
 export type NewsletterTemplateId =
+  | 'holiday-catalog-2027'
   | 'coupon-500'
   | 'coupon-1000'
   | 'couples'
@@ -26,11 +27,75 @@ export type NewsletterTemplate = {
   label: string;
   labelEn: string;
   description: string;
+  /** Optional full-width image under the header (site-relative path). */
+  heroImagePath?: string;
   mk: NewsletterTemplateLocaleCopy;
   en: NewsletterTemplateLocaleCopy;
 };
 
 export const NEWSLETTER_TEMPLATES: NewsletterTemplate[] = [
+  {
+    id: 'holiday-catalog-2027',
+    label: 'Новогодишен каталог 2027',
+    labelEn: 'New Year catalog 2027',
+    description:
+      'Бизнис писмо за новогодишниот каталог: деловни подароци, брендирање и линк кон каталогот.',
+    heroImagePath: '/email/newsletter-hero-v2.jpg',
+    mk: {
+      subject: 'PRINT8 | Новогодишен каталог – деловни подароци и брендирани производи',
+      headline: 'Новогодишен каталог – деловни подароци и брендирани производи',
+      subtitle: 'Празнична понуда · Каталог 2027',
+      body: `Почитувани,
+
+Во пресрет на новогодишните празници, со особено задоволство Ви го претставуваме новогодишниот каталог на PRINT8.
+
+За Вас подготвивме разновидна понуда на деловни подароци и промотивни производи – календари, пенкала, нотеси, приврзоци, текстил и многу други производи со можност за персонализирано брендирање.
+
+Како млад бизнис, веруваме дека успешните соработки започнуваат со доверба, квалитет и посветеност. Секоја нова соработка за нас е поттик за понатамошен раст и развој.
+
+За Ваше полесно разгледување, каталогот е достапен на следниот линк, како и во PDF формат во прилог на оваа порака.
+
+Се надеваме дека во нашата понуда ќе пронајдете нешто соодветно за Вашите вработени, клиенти и деловни партнери.
+
+Со задоволство стоиме на располагање за дополнителни информации и индивидуални понуди.
+
+Ви благодариме за одвоеното време и можноста да Ви се претставиме.
+
+Ви посакуваме успешен завршеток на годината и многу нови успеси во 2027 година!
+
+Со почит,
+Тимот на PRINT8`,
+      ctaLabel: 'Погледнете го нашиот каталог',
+      ctaPath: '/catalog',
+    },
+    en: {
+      subject: 'PRINT8 | New Year catalog – business gifts and branded products',
+      headline: 'New Year catalog – business gifts and branded products',
+      subtitle: 'Holiday offer · Catalog 2027',
+      body: `Dear partners,
+
+Ahead of the New Year holidays, we are pleased to present PRINT8’s New Year catalog.
+
+We have prepared a varied offer of business gifts and promotional products – calendars, pens, notebooks, keychains, textiles and many other products with personalized branding.
+
+As a young business, we believe successful partnerships start with trust, quality and dedication. Every new collaboration is an incentive for our further growth.
+
+For easier browsing, the catalog is available at the link below, and as a PDF attached to this message.
+
+We hope you will find something suitable for your employees, clients and business partners.
+
+We are happy to provide additional information and individual quotes.
+
+Thank you for your time and the opportunity to introduce ourselves.
+
+We wish you a successful end of the year and many new successes in 2027!
+
+Kind regards,
+The PRINT8 team`,
+      ctaLabel: 'View our catalog',
+      ctaPath: '/catalog',
+    },
+  },
   {
     id: 'coupon-500',
     label: 'Купон −500 / 3.500+',

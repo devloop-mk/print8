@@ -27,6 +27,7 @@ type TemplateRow = {
   label: string;
   labelEn: string;
   description?: string;
+  heroImagePath?: string | null;
   mk: TemplateLocaleCopy;
   en: TemplateLocaleCopy;
 };
@@ -54,6 +55,11 @@ export function NewsletterAdminPanel() {
   const [meta, setMeta] = useState(emptyMeta);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [recipientQuery, setRecipientQuery] = useState('');
+  const [testEmail, setTestEmail] = useState('');
+  const [testLocale, setTestLocale] = useState<'mk' | 'en'>('mk');
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -111,10 +117,81 @@ export function NewsletterAdminPanel() {
     [body],
   );
 
+  const previewHero = useMemo(
+    () => templates.find((item) => item.id === templateId)?.heroImagePath ?? null,
+    [templates, templateId],
+  );
+
+  const activeSubscribers = useMemo(
+    () => subscribers.filter((item) => item.status === 'active'),
+    [subscribers],
+  );
+
+  const filteredSubscribers = useMemo(() => {
+    const query = recipientQuery.trim().toLowerCase();
+    const list = query
+      ? subscribers.filter((item) => item.email.toLowerCase().includes(query))
+      : subscribers;
+    return [...list].sort((a, b) => {
+      if (a.status !== b.status) return a.status === 'active' ? -1 : 1;
+      return a.email.localeCompare(b.email);
+    });
+  }, [subscribers, recipientQuery]);
+
+  const visibleActiveIds = useMemo(
+    () =>
+      filteredSubscribers
+        .filter((item) => item.status === 'active')
+        .map((item) => item.id),
+    [filteredSubscribers],
+  );
+
+  function composePayload(mode: 'broadcast' | 'test') {
+    return {
+      subject,
+      body,
+      subjectEn: subjectEn || null,
+      bodyEn: bodyEn || null,
+      templateId: templateId || null,
+      headline: meta.headline || null,
+      subtitle: meta.subtitle || null,
+      headlineEn: meta.headlineEn || null,
+      subtitleEn: meta.subtitleEn || null,
+      ctaLabel: meta.ctaLabel || null,
+      ctaLabelEn: meta.ctaLabelEn || null,
+      ctaPath: meta.ctaPath || null,
+      mode,
+      recipientIds: mode === 'broadcast' ? Array.from(selectedIds) : undefined,
+      testEmail: mode === 'test' ? testEmail.trim() : undefined,
+      testLocale: mode === 'test' ? testLocale : undefined,
+    };
+  }
+
+  function toggleRecipient(id: string, checked: boolean) {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }
+
+  function selectVisible() {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      for (const id of visibleActiveIds) next.add(id);
+      return next;
+    });
+  }
+
   async function handleSend(event: React.FormEvent) {
     event.preventDefault();
-    if (sending) return;
-    if (!window.confirm(t.confirmSend.replace('{count}', String(counts.active)))) {
+    if (sending || testing) return;
+    if (selectedIds.size === 0) {
+      setError(t.sendDisabled);
+      return;
+    }
+    if (!window.confirm(t.confirmSend.replace('{count}', String(selectedIds.size)))) {
       return;
     }
 
@@ -126,25 +203,11 @@ export function NewsletterAdminPanel() {
       const res = await fetch('/api/admin/newsletter', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          subject,
-          body,
-          subjectEn: subjectEn || null,
-          bodyEn: bodyEn || null,
-          templateId: templateId || null,
-          headline: meta.headline || null,
-          subtitle: meta.subtitle || null,
-          headlineEn: meta.headlineEn || null,
-          subtitleEn: meta.subtitleEn || null,
-          ctaLabel: meta.ctaLabel || null,
-          ctaLabelEn: meta.ctaLabelEn || null,
-          ctaPath: meta.ctaPath || null,
-        }),
+        body: JSON.stringify(composePayload('broadcast')),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(typeof data.error === 'string' ? data.error : t.sendError);
-        setSending(false);
         return;
       }
 
@@ -157,6 +220,36 @@ export function NewsletterAdminPanel() {
       setError(t.sendError);
     } finally {
       setSending(false);
+    }
+  }
+
+  async function handleTestSend() {
+    if (sending || testing) return;
+    if (!testEmail.trim()) {
+      setError(t.testEmailRequired);
+      return;
+    }
+
+    setTesting(true);
+    setMessage(null);
+    setError(null);
+
+    try {
+      const res = await fetch('/api/admin/newsletter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(composePayload('test')),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(typeof data.error === 'string' ? data.error : t.testError);
+        return;
+      }
+      setMessage(t.testSuccess.replace('{email}', testEmail.trim()));
+    } catch {
+      setError(t.testError);
+    } finally {
+      setTesting(false);
     }
   }
 
@@ -282,7 +375,7 @@ export function NewsletterAdminPanel() {
                     onChange={(e) => setBody(e.target.value)}
                     required
                     minLength={10}
-                    rows={8}
+                    rows={14}
                     placeholder={t.bodyPlaceholder}
                     className="w-full border border-ink-300 px-3 py-2 text-sm"
                   />
@@ -332,7 +425,7 @@ export function NewsletterAdminPanel() {
                   <textarea
                     value={bodyEn}
                     onChange={(e) => setBodyEn(e.target.value)}
-                    rows={8}
+                    rows={14}
                     placeholder={t.bodyEnPlaceholder}
                     className="w-full border border-ink-300 px-3 py-2 text-sm"
                   />
@@ -387,17 +480,37 @@ export function NewsletterAdminPanel() {
             </p>
             {meta.headline || subject ? (
               <div className="overflow-hidden border border-ink-200 bg-white shadow-sm">
+                <div className="h-1.5 bg-[#e85d04]" />
                 <div className="bg-[#225376] px-4 py-5 text-white">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#b9d5e9]">
-                    Print 8
-                  </p>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/email/newsletter-logo.png"
+                    alt="Print 8"
+                    width={140}
+                    height={38}
+                    className="mb-4 h-8 w-auto"
+                  />
+                  {meta.subtitle ? (
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#f4c7a8]">
+                      {meta.subtitle}
+                    </p>
+                  ) : (
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#b9d5e9]">
+                      Print 8
+                    </p>
+                  )}
                   <p className="mt-1 text-lg font-bold leading-snug">
                     {meta.headline || subject}
                   </p>
-                  {meta.subtitle ? (
-                    <p className="mt-2 text-sm text-[#dceaf4]">{meta.subtitle}</p>
-                  ) : null}
                 </div>
+                {previewHero ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={previewHero}
+                    alt=""
+                    className="h-auto w-full object-cover"
+                  />
+                ) : null}
                 <div className="space-y-3 px-4 py-4 text-sm leading-relaxed text-ink-800">
                   {previewParagraphs.length > 0 ? (
                     previewParagraphs.map((paragraph, index) => (
@@ -410,17 +523,139 @@ export function NewsletterAdminPanel() {
                   )}
                 </div>
                 {meta.ctaLabel ? (
-                  <div className="px-4 pb-4">
-                    <span className="inline-block bg-[#2f7cb2] px-4 py-2 text-xs font-bold uppercase tracking-wide text-white">
+                  <div className="px-4 pb-4 text-center">
+                    <span className="inline-block rounded-md bg-[#e85d04] px-5 py-2.5 text-xs font-bold tracking-wide text-white">
                       {meta.ctaLabel}
                     </span>
                     <p className="mt-2 text-[11px] text-ink-400">{meta.ctaPath}</p>
                   </div>
                 ) : null}
+                <div className="border-t border-ink-200 bg-ink-50 px-4 py-4 text-[13px] leading-relaxed text-ink-800">
+                  <p className="font-bold">PRINT8</p>
+                  <p className="mt-1">Тел: 074 606 906</p>
+                  <p>print8@gmail.com · print8mk@hotmail.com</p>
+                  <p>www.print8.mk</p>
+                </div>
               </div>
             ) : (
               <p className="text-sm text-ink-500">{t.previewEmpty}</p>
             )}
+          </div>
+        </div>
+
+        <div className="border border-ink-200 bg-ink-50/40 p-4">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-semibold text-ink-900">{t.recipientsTitle}</h3>
+              <p className="mt-1 text-xs text-ink-500">{t.recipientsHelp}</p>
+            </div>
+            <p className="text-sm font-medium text-ink-800">
+              {t.selectedCount.replace('{count}', String(selectedIds.size))}
+              {activeSubscribers.length
+                ? ` / ${activeSubscribers.length}`
+                : ''}
+            </p>
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <input
+              value={recipientQuery}
+              onChange={(e) => setRecipientQuery(e.target.value)}
+              placeholder={t.searchRecipients}
+              className="min-w-[220px] flex-1 border border-ink-300 bg-white px-3 py-2 text-sm"
+            />
+            <button
+              type="button"
+              onClick={selectVisible}
+              className="text-xs font-medium text-brand-700 underline-offset-2 hover:underline"
+            >
+              {t.selectAll}
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedIds(new Set())}
+              className="text-xs font-medium text-ink-600 underline-offset-2 hover:underline"
+            >
+              {t.selectNone}
+            </button>
+          </div>
+          {loading ? (
+            <p className="mt-3 text-sm text-ink-500">{t.loading}</p>
+          ) : filteredSubscribers.length === 0 ? (
+            <p className="mt-3 text-sm text-ink-500">{t.empty}</p>
+          ) : (
+            <ul className="mt-3 max-h-72 divide-y divide-ink-100 overflow-y-auto border border-ink-200 bg-white">
+              {filteredSubscribers.map((item) => {
+                const disabled = item.status !== 'active';
+                const checked = selectedIds.has(item.id);
+                return (
+                  <li key={item.id}>
+                    <label
+                      className={`flex cursor-pointer items-center justify-between gap-3 px-3 py-2 text-sm ${
+                        disabled ? 'cursor-not-allowed bg-ink-50 text-ink-400' : 'hover:bg-brand-50/60'
+                      }`}
+                    >
+                      <span className="flex min-w-0 items-center gap-3">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          disabled={disabled}
+                          onChange={(e) => toggleRecipient(item.id, e.target.checked)}
+                          className="h-4 w-4 accent-brand-700"
+                        />
+                        <span className="truncate font-medium text-ink-900">
+                          {item.email}
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-xs text-ink-500">
+                        {item.status === 'active' ? t.statusActive : t.statusUnsubscribed}
+                        {item.locale ? ` · ${item.locale}` : ''}
+                      </span>
+                    </label>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
+        <div className="border border-ink-200 p-4">
+          <h3 className="text-sm font-semibold text-ink-900">{t.testTitle}</h3>
+          <p className="mt-1 text-xs text-ink-500">{t.testHelp}</p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto_auto] sm:items-end">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-ink-700">
+                {t.testEmail}
+              </label>
+              <input
+                type="email"
+                value={testEmail}
+                onChange={(e) => setTestEmail(e.target.value)}
+                placeholder="print8@gmail.com"
+                className="w-full border border-ink-300 px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-ink-700">
+                {t.testLocale}
+              </label>
+              <select
+                value={testLocale}
+                onChange={(e) => setTestLocale(e.target.value === 'en' ? 'en' : 'mk')}
+                className="w-full border border-ink-300 px-3 py-2 text-sm"
+              >
+                <option value="mk">MK</option>
+                <option value="en">EN</option>
+              </select>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              loading={testing}
+              disabled={sending || testing || !subject || body.length < 10}
+              onClick={() => void handleTestSend()}
+            >
+              {t.testSend}
+            </Button>
           </div>
         </div>
 
@@ -432,34 +667,14 @@ export function NewsletterAdminPanel() {
             {message}
           </p>
         ) : null}
-        <Button type="submit" loading={sending} disabled={sending || counts.active === 0}>
+        <Button
+          type="submit"
+          loading={sending}
+          disabled={sending || testing || selectedIds.size === 0}
+        >
           {t.send}
         </Button>
       </form>
-
-      <div className="border border-ink-200 bg-white p-4 sm:p-6">
-        <h2 className="text-lg font-semibold text-ink-900">{t.listTitle}</h2>
-        {loading ? (
-          <p className="mt-3 text-sm text-ink-500">{t.loading}</p>
-        ) : subscribers.length === 0 ? (
-          <p className="mt-3 text-sm text-ink-500">{t.empty}</p>
-        ) : (
-          <ul className="mt-3 divide-y divide-ink-100">
-            {subscribers.map((item) => (
-              <li
-                key={item.id}
-                className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm"
-              >
-                <span className="font-medium text-ink-900">{item.email}</span>
-                <span className="text-ink-500">
-                  {item.status === 'active' ? t.statusActive : t.statusUnsubscribed}
-                  {item.locale ? ` · ${item.locale}` : ''}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
     </div>
   );
 }

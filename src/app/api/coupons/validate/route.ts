@@ -3,10 +3,18 @@ import { z } from 'zod';
 import { enforceRateLimit } from '@/lib/security/rate-limit';
 import { validateCouponForCheckout } from '@/lib/coupons/validate-coupon';
 
+const couponLineSchema = z.object({
+  type: z.enum(['service', 'design', 'product']).optional(),
+  price: z.number().min(0).max(500_000),
+  quantity: z.number().int().positive().max(99),
+  metadata: z.record(z.union([z.string(), z.number(), z.boolean()])).optional(),
+});
+
 const schema = z.object({
   code: z.string().trim().min(2).max(40),
   subtotalAmount: z.number().positive().max(500_000),
   email: z.string().trim().email().max(254).optional(),
+  items: z.array(couponLineSchema).max(30).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -27,6 +35,7 @@ export async function POST(request: NextRequest) {
       code: parsed.data.code,
       subtotalAmount: parsed.data.subtotalAmount,
       customerEmail: parsed.data.email,
+      items: parsed.data.items,
     });
 
     if (!result.ok) {

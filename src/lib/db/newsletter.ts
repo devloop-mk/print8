@@ -153,7 +153,7 @@ export async function countNewsletterSubscribers(): Promise<{
   };
 }
 
-export async function listNewsletterSubscribers(limit = 200): Promise<
+export async function listNewsletterSubscribers(limit = 2000): Promise<
   NewsletterSubscriber[]
 > {
   const { data, error } = await getSupabaseAdmin()
@@ -164,4 +164,43 @@ export async function listNewsletterSubscribers(limit = 200): Promise<
 
   if (error) throw new Error(error.message);
   return (data as NewsletterRow[]).map(mapRow);
+}
+
+export async function findNewsletterSubscriberByEmail(
+  email: string,
+): Promise<NewsletterSubscriber | null> {
+  const normalized = normalizeEmail(email);
+  if (!normalized) return null;
+  const { data, error } = await getSupabaseAdmin()
+    .from('newsletter_subscribers')
+    .select('*')
+    .ilike('email', normalized)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data ? mapRow(data as NewsletterRow) : null;
+}
+
+export async function getActiveNewsletterSubscribersByIds(
+  ids: string[],
+): Promise<NewsletterSubscriber[]> {
+  const unique = [
+    ...new Set(ids.map((id) => id.trim()).filter((id) => id.length > 0)),
+  ];
+  if (unique.length === 0) return [];
+
+  const supabase = getSupabaseAdmin();
+  const rows: NewsletterRow[] = [];
+  const chunkSize = 100;
+  for (let i = 0; i < unique.length; i += chunkSize) {
+    const chunk = unique.slice(i, i + chunkSize);
+    const { data, error } = await supabase
+      .from('newsletter_subscribers')
+      .select('*')
+      .in('id', chunk)
+      .eq('status', 'active');
+    if (error) throw new Error(error.message);
+    rows.push(...((data ?? []) as NewsletterRow[]));
+  }
+
+  return rows.map(mapRow);
 }

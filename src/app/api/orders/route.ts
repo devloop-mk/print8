@@ -166,6 +166,7 @@ export async function POST(request: NextRequest) {
         code: data.couponCode,
         subtotalAmount,
         customerEmail: data.email,
+        items: data.items,
       });
       if (!couponResult.ok) {
         return NextResponse.json(

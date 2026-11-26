@@ -5,6 +5,9 @@ import {
   normalizeCouponCode,
   type CouponRecord,
 } from '@/lib/db/coupons';
+import { computeHolidayPercentDiscount } from '@/lib/holiday/holiday-discount';
+import { parseHolidayWorkshopNote } from '@/lib/holiday/workshop-config';
+import type { HolidayDiscountLine } from '@/lib/holiday/holiday-discount';
 
 export type CouponValidationErrorCode =
   | 'missing_code'
@@ -44,6 +47,7 @@ export async function validateCouponForCheckout(input: {
   code: string | null | undefined;
   subtotalAmount: number;
   customerEmail?: string | null;
+  items?: readonly HolidayDiscountLine[];
 }): Promise<CouponValidationResult> {
   const raw = input.code?.trim() ?? '';
   if (!raw) {
@@ -113,8 +117,19 @@ export async function validateCouponForCheckout(input: {
     }
   }
 
+  const holiday = parseHolidayWorkshopNote(coupon.note);
+  const percentDiscount =
+    holiday?.kind === 'percent' && holiday.percent
+      ? computeHolidayPercentDiscount({
+          percent: holiday.percent,
+          boostKind: holiday.boostKind,
+          items: input.items ?? [],
+          subtotalAmount: input.subtotalAmount,
+          cap: coupon.discountAmount,
+        })
+      : coupon.discountAmount;
   const discountAmount = roundMoney(
-    Math.min(coupon.discountAmount, Math.max(0, input.subtotalAmount)),
+    Math.min(percentDiscount, coupon.discountAmount, Math.max(0, input.subtotalAmount)),
   );
   const totalAmount = roundMoney(Math.max(0, input.subtotalAmount - discountAmount));
 

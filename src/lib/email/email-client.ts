@@ -13,6 +13,8 @@ export const EMAIL_BRAND = {
 } as const;
 
 const DEFAULT_FROM = 'Print 8 <orders@print8.mk>';
+const DEFAULT_NEWSLETTER_FROM = 'Print 8 <offers@print8.mk>';
+const DEFAULT_REPLY_TO = 'print8mk@hotmail.com';
 
 let brevoSingleton: BrevoClient | null | undefined;
 
@@ -26,6 +28,14 @@ export function getBrevoClient(): BrevoClient | null {
 
 export function getEmailFromAddress(fallback = DEFAULT_FROM): string {
   return process.env.EMAIL_FROM?.trim() || fallback;
+}
+
+export function getNewsletterFromAddress(): string {
+  return process.env.EMAIL_NEWSLETTER_FROM?.trim() || DEFAULT_NEWSLETTER_FROM;
+}
+
+export function getEmailReplyToAddress(): string {
+  return process.env.EMAIL_REPLY_TO?.trim() || DEFAULT_REPLY_TO;
 }
 
 /** Parse `Name <email@domain>` or plain `email@domain`. */
@@ -71,6 +81,10 @@ export async function sendTransactionalEmail(
   }
 
   const sender = parseEmailFromAddress(input.from ?? getEmailFromAddress());
+  const replyToEmail = input.replyTo?.trim() || getEmailReplyToAddress();
+  const replyTo = input.replyTo
+    ? { email: replyToEmail }
+    : { name: 'Print 8', email: replyToEmail };
 
   try {
     await brevo.transactionalEmails.sendTransacEmail({
@@ -79,7 +93,7 @@ export async function sendTransactionalEmail(
       subject: input.subject,
       htmlContent: input.html,
       textContent: input.text,
-      replyTo: input.replyTo ? { email: input.replyTo } : undefined,
+      replyTo,
       attachment:
         input.attachments && input.attachments.length > 0
           ? input.attachments.map((file) => ({

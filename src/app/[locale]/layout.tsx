@@ -14,6 +14,7 @@ import { OngoingDesignsProvider } from "@/components/drafts/OngoingDesignsProvid
 import { SiteAnalytics } from "@/components/analytics/SiteAnalytics";
 import { CookieConsent } from "@/components/legal/CookieConsent";
 import { SpinWheelPromoPopupLazy } from "@/components/rewards/SpinWheelPromoPopupLazy";
+import { HolidayWorkshopLazy } from "@/components/holiday/HolidayWorkshopLazy";
 import { NavigationProgress } from "@/components/navigation/NavigationProgress";
 import { ScrollToTop } from "@/components/navigation/ScrollToTop";
 import { PageTransition } from "@/components/motion/PageTransition";
@@ -75,6 +76,7 @@ export default async function LocaleLayout({
             <SiteAnalytics />
             <CookieConsent />
             <SpinWheelPromoPopupLazy />
+            <HolidayWorkshopLazy />
             <HeaderGate />
             <main className="flex min-h-0 min-w-0 flex-1 flex-col">
               <PageTransition>{children}</PageTransition>
