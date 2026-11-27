@@ -5,9 +5,20 @@ import {
   normalizeCouponCode,
   type CouponRecord,
 } from '@/lib/db/coupons';
-import { computeHolidayPercentDiscount } from '@/lib/holiday/holiday-discount';
+import {
+  buildHolidayCouponApplication,
+  compactHolidayDiscountLine,
+  computeHolidayPercentDiscount,
+  computeProductGiveawayDiscount,
+  holidayMatchingSubtotal,
+  type HolidayCouponApplication,
+  type HolidayDiscountLine,
+} from '@/lib/holiday/holiday-discount';
 import { parseHolidayWorkshopNote } from '@/lib/holiday/workshop-config';
-import type { HolidayDiscountLine } from '@/lib/holiday/holiday-discount';
+import {
+  parseNyScratchNote,
+  type ScratchCouponApplication,
+} from '@/lib/scratch/scratch-config';
 
 export type CouponValidationErrorCode =
   | 'missing_code'
@@ -27,6 +38,9 @@ export type CouponValidationResult =
       discountAmount: number;
       subtotalAmount: number;
       totalAmount: number;
+      holiday: HolidayCouponApplication | null;
+      scratch: ScratchCouponApplication | null;
+      capped: boolean;
     }
   | {
       ok: false;
@@ -117,19 +131,58 @@ export async function validateCouponForCheckout(input: {
     }
   }
 
-  const holiday = parseHolidayWorkshopNote(coupon.note);
-  const percentDiscount =
-    holiday?.kind === 'percent' && holiday.percent
-      ? computeHolidayPercentDiscount({
-          percent: holiday.percent,
-          boostKind: holiday.boostKind,
-          items: input.items ?? [],
+  const items = (input.items ?? []).map(compactHolidayDiscountLine);
+  const holidayNote = parseHolidayWorkshopNote(coupon.note);
+  const scratchNote = parseNyScratchNote(coupon.note);
+  const holiday = holidayNote
+    ? buildHolidayCouponApplication({
+        prizeKind: holidayNote.kind,
+        percent: holidayNote.percent,
+        boostKind: holidayNote.boostKind,
+        items,
+        subtotalAmount: input.subtotalAmount,
+      })
+    : scratchNote?.kind === 'percent'
+      ? buildHolidayCouponApplication({
+          prizeKind: 'percent',
+          percent: scratchNote.percent,
+          boostKind: null,
+          items,
           subtotalAmount: input.subtotalAmount,
-          cap: coupon.discountAmount,
         })
-      : coupon.discountAmount;
+      : null;
+  const scratch: ScratchCouponApplication | null = scratchNote
+    ? {
+        prizeKey: scratchNote.prizeKey,
+        prizeKind: scratchNote.kind,
+        percent: scratchNote.percent,
+        productKind: scratchNote.productKind,
+        matchingSubtotal: scratchNote.productKind
+          ? holidayMatchingSubtotal(items, scratchNote.productKind)
+          : 0,
+      }
+    : null;
+
+  let rawDiscount = coupon.discountAmount;
+  if (holiday?.prizeKind === 'percent' && holiday.percent) {
+    rawDiscount = computeHolidayPercentDiscount({
+      percent: holiday.percent,
+      boostKind: holiday.boostKind,
+      items,
+      subtotalAmount: input.subtotalAmount,
+      cap: coupon.discountAmount,
+    });
+  } else if (scratchNote?.kind === 'product' && scratchNote.productKind) {
+    rawDiscount = computeProductGiveawayDiscount({
+      kind: scratchNote.productKind,
+      items,
+      subtotalAmount: input.subtotalAmount,
+      cap: coupon.discountAmount,
+    });
+  }
+
   const discountAmount = roundMoney(
-    Math.min(percentDiscount, coupon.discountAmount, Math.max(0, input.subtotalAmount)),
+    Math.min(rawDiscount, coupon.discountAmount, Math.max(0, input.subtotalAmount)),
   );
   const totalAmount = roundMoney(Math.max(0, input.subtotalAmount - discountAmount));
 
@@ -139,5 +192,11 @@ export async function validateCouponForCheckout(input: {
     discountAmount,
     subtotalAmount: roundMoney(input.subtotalAmount),
     totalAmount,
+    holiday,
+    scratch,
+    capped:
+      Boolean(holiday?.percent) &&
+      coupon.discountAmount > 0 &&
+      discountAmount + 1e-9 >= coupon.discountAmount,
   };
 }

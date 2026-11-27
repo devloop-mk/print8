@@ -44,14 +44,93 @@ import {
   getCartItemProduct,
 } from "@/lib/cart/product-cart";
 import {
+  compactHolidayDiscountLine,
+  holidayLineDiscountPercent,
+  holidayLineMatchesBoost,
+  type HolidayCouponApplication,
+} from "@/lib/holiday/holiday-discount";
+import { isHolidayProductKind } from "@/lib/holiday/workshop-config";
+import type { ScratchCouponApplication } from "@/lib/scratch/scratch-config";
+import {
   FREE_DELIVERY_THRESHOLD_MKD,
   getOrderDeliveryFeeMkd,
 } from "@/lib/orders/delivery-pricing";
+import { Check } from "lucide-react";
+
+function parseHolidayCouponPayload(value: unknown): HolidayCouponApplication | null {
+  if (!value || typeof value !== "object") return null;
+  const row = value as Record<string, unknown>;
+  const prizeKind = row.prizeKind;
+  if (
+    prizeKind !== "percent" &&
+    prizeKind !== "delivery" &&
+    prizeKind !== "design" &&
+    prizeKind !== "mystery"
+  ) {
+    return null;
+  }
+  const percent =
+    typeof row.percent === "number" && Number.isFinite(row.percent)
+      ? row.percent
+      : null;
+  const boostPercent =
+    typeof row.boostPercent === "number" && Number.isFinite(row.boostPercent)
+      ? row.boostPercent
+      : null;
+  const boostKind =
+    typeof row.boostKind === "string" && isHolidayProductKind(row.boostKind)
+      ? row.boostKind
+      : null;
+  const matchingSubtotal =
+    typeof row.matchingSubtotal === "number" &&
+    Number.isFinite(row.matchingSubtotal)
+      ? row.matchingSubtotal
+      : 0;
+  return {
+    prizeKind,
+    percent,
+    boostPercent,
+    boostKind,
+    matchingSubtotal,
+  };
+}
+
+function parseScratchCouponPayload(value: unknown): ScratchCouponApplication | null {
+  if (!value || typeof value !== "object") return null;
+  const row = value as Record<string, unknown>;
+  const prizeKind = row.prizeKind;
+  if (
+    prizeKind !== "percent" &&
+    prizeKind !== "delivery" &&
+    prizeKind !== "product"
+  ) {
+    return null;
+  }
+  const productKind =
+    row.productKind === "mug" || row.productKind === "tshirt"
+      ? row.productKind
+      : null;
+  return {
+    prizeKey: null,
+    prizeKind,
+    percent:
+      typeof row.percent === "number" && Number.isFinite(row.percent)
+        ? row.percent
+        : null,
+    productKind,
+    matchingSubtotal:
+      typeof row.matchingSubtotal === "number" &&
+      Number.isFinite(row.matchingSubtotal)
+        ? row.matchingSubtotal
+        : 0,
+  };
+}
 
 export function CheckoutForm() {
   const t = useTranslations("checkout");
   const tp = useTranslations("products.types");
   const ti = useTranslations("products.items");
+  const th = useTranslations("holidayWorkshop");
   const locale = useLocale();
   const router = useRouter();
   const { items, total, hydrated } = useCart();
@@ -82,6 +161,11 @@ export function CheckoutForm() {
   const [couponCode, setCouponCode] = useState("");
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [couponMessage, setCouponMessage] = useState<string | null>(null);
+  const [couponHoliday, setCouponHoliday] =
+    useState<HolidayCouponApplication | null>(null);
+  const [couponScratch, setCouponScratch] =
+    useState<ScratchCouponApplication | null>(null);
+  const [couponCapped, setCouponCapped] = useState(false);
   const [couponChecking, setCouponChecking] = useState(false);
   const [pointsToRedeem, setPointsToRedeem] = useState(0);
   const [pointsDiscount, setPointsDiscount] = useState(0);
@@ -291,37 +375,15 @@ export function CheckoutForm() {
           email:
             (emailOverride ?? pendingCouponEmail.current ?? form.email).trim() ||
             undefined,
-          items: items.map((item) => ({
-            type: item.type,
-            price: item.price,
-            quantity: item.quantity,
-            metadata: item.metadata
-              ? {
-                  ...(typeof item.metadata.productId === "string"
-                    ? { productId: item.metadata.productId }
-                    : {}),
-                  ...(typeof item.metadata.serviceId === "string"
-                    ? { serviceId: item.metadata.serviceId }
-                    : {}),
-                  ...(typeof item.metadata.catalogServiceId === "string"
-                    ? { catalogServiceId: item.metadata.catalogServiceId }
-                    : {}),
-                  ...(typeof item.metadata.category === "string"
-                    ? { category: item.metadata.category }
-                    : {}),
-                  ...(typeof item.metadata.customDesignCategory === "string"
-                    ? {
-                        customDesignCategory: item.metadata.customDesignCategory,
-                      }
-                    : {}),
-                }
-              : undefined,
-          })),
+          items: items.map((item) => compactHolidayDiscountLine(item)),
         }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
         setCouponDiscount(0);
+        setCouponHoliday(null);
+        setCouponScratch(null);
+        setCouponCapped(false);
         setCouponMessage(
           data.code === "min_order"
             ? t("couponMinOrder", {
@@ -331,15 +393,19 @@ export function CheckoutForm() {
         );
         return;
       }
+      const holiday = parseHolidayCouponPayload(data.holiday);
+      const scratch = parseScratchCouponPayload(data.scratch);
       setCouponCode(String(data.code ?? code).toUpperCase());
       setCouponDiscount(Number(data.discountAmount ?? 0));
-      setCouponMessage(
-        t("couponApplied", {
-          amount: formatPrice(Number(data.discountAmount ?? 0), locale),
-        }),
-      );
+      setCouponHoliday(holiday);
+      setCouponScratch(scratch);
+      setCouponCapped(Boolean(data.capped));
+      setCouponMessage(null);
     } catch {
       setCouponDiscount(0);
+      setCouponHoliday(null);
+      setCouponScratch(null);
+      setCouponCapped(false);
       setCouponMessage(t("couponInvalid"));
     } finally {
       setCouponChecking(false);
@@ -362,9 +428,10 @@ export function CheckoutForm() {
   }, [hydrated, couponCode, total]);
 
   useEffect(() => {
-    if (!hydrated || !couponCode.trim() || total <= 0 || couponDiscount <= 0) return;
+    if (!hydrated || !couponCode.trim() || total <= 0) return;
+    if (couponDiscount <= 0 && couponScratch?.prizeKind !== "product") return;
     void applyCoupon(couponCode);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- recompute holiday boost when cart lines change
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- recompute holiday / scratch when cart lines change
   }, [hydrated, total, couponCartKey]);
 
   const hasServiceItems = items.some((item) => item.type === "service");
@@ -386,6 +453,77 @@ export function CheckoutForm() {
       ti,
     );
   }
+
+  const couponBoostProductLabel = couponHoliday?.boostKind
+    ? th(`products.${couponHoliday.boostKind}`)
+    : "";
+  const couponBoostActive =
+    Boolean(
+      couponHoliday?.percent &&
+        couponHoliday.boostKind &&
+        couponHoliday.matchingSubtotal > 0,
+    );
+  const couponBoostAllItems =
+    couponBoostActive && couponHoliday
+      ? couponHoliday.matchingSubtotal + 1e-9 >= total
+      : false;
+  const scratchGiveawayKind =
+    couponScratch?.prizeKind === "product" ? couponScratch.productKind : null;
+  const scratchGiveawayActive = Boolean(
+    scratchGiveawayKind && couponScratch && couponScratch.matchingSubtotal > 0,
+  );
+  const scratchGiveawayWaiting = Boolean(
+    scratchGiveawayKind && couponScratch && couponScratch.matchingSubtotal <= 0,
+  );
+  const couponAppliedOk = couponDiscount > 0 || scratchGiveawayWaiting;
+  const couponRateLabel = scratchGiveawayKind
+    ? t(
+        scratchGiveawayKind === "tshirt"
+          ? "couponGiveawayTshirt"
+          : "couponGiveawayMug",
+      )
+    : couponDiscount > 0 && couponHoliday?.percent
+      ? couponBoostAllItems && couponHoliday.boostPercent
+        ? t("discountPercentBoostAll", {
+            boost: couponHoliday.boostPercent,
+            product: couponBoostProductLabel,
+          })
+        : couponBoostActive && couponHoliday.boostPercent
+          ? t("discountPercentBoost", {
+              percent: couponHoliday.percent,
+              boost: couponHoliday.boostPercent,
+              product: couponBoostProductLabel,
+            })
+          : t("discountPercent", { percent: couponHoliday.percent })
+      : t("discount");
+  const couponRateDetail = scratchGiveawayActive
+    ? t(
+        scratchGiveawayKind === "tshirt"
+          ? "couponGiveawayAppliedTshirt"
+          : "couponGiveawayAppliedMug",
+      )
+    : scratchGiveawayWaiting
+      ? t(
+          scratchGiveawayKind === "tshirt"
+            ? "couponGiveawayHintTshirt"
+            : "couponGiveawayHintMug",
+        )
+      : couponDiscount > 0 && couponHoliday?.percent
+        ? couponBoostAllItems && couponHoliday.boostPercent
+          ? t("couponAppliedPercentBoostAll", {
+              boost: couponHoliday.boostPercent,
+              product: couponBoostProductLabel,
+            })
+          : couponBoostActive && couponHoliday.boostPercent
+            ? t("couponAppliedPercentBoost", {
+                percent: couponHoliday.percent,
+                boost: couponHoliday.boostPercent,
+                product: couponBoostProductLabel,
+              })
+            : t("couponAppliedPercent", { percent: couponHoliday.percent })
+        : couponDiscount > 0
+          ? t("couponApplied")
+          : null;
 
   function getValidationMessages() {
     return {
@@ -577,6 +715,9 @@ export function CheckoutForm() {
         if (typeof data.code === "string" && data.code.startsWith("coupon_")) {
           setErrors({ form: t("couponInvalid") });
           setCouponDiscount(0);
+          setCouponHoliday(null);
+          setCouponScratch(null);
+          setCouponCapped(false);
           setCouponMessage(null);
           setProcessing(false);
           return;
@@ -904,14 +1045,37 @@ export function CheckoutForm() {
 
         <Card>
           <div className="space-y-2">
-            {items.map((item) => (
-              <div key={item.id} className="flex justify-between text-sm">
-                <span className="text-ink-600">
-                  {lineName(item)} × {item.quantity}
-                </span>
-                <span>{formatPrice(item.price * item.quantity, locale)}</span>
-              </div>
-            ))}
+            {items.map((item) => {
+              const linePercent =
+                couponDiscount > 0
+                  ? holidayLineDiscountPercent(item, couponHoliday)
+                  : null;
+              const giftLine = Boolean(
+                scratchGiveawayKind &&
+                  holidayLineMatchesBoost(item, scratchGiveawayKind),
+              );
+              return (
+                <div key={item.id} className="flex justify-between gap-3 text-sm">
+                  <span className="flex min-w-0 items-center gap-2 text-ink-600">
+                    <span className="truncate">
+                      {lineName(item)} × {item.quantity}
+                    </span>
+                    {giftLine ? (
+                      <span className="shrink-0 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-emerald-800">
+                        {t("couponGiftBadge")}
+                      </span>
+                    ) : linePercent != null ? (
+                      <span className="shrink-0 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-emerald-800">
+                        −{linePercent}%
+                      </span>
+                    ) : null}
+                  </span>
+                  <span className="shrink-0">
+                    {formatPrice(item.price * item.quantity, locale)}
+                  </span>
+                </div>
+              );
+            })}
           </div>
           <div className="mt-4 space-y-2 border-t border-ink-200 pt-4">
             <label className="block text-sm font-medium text-ink-700">
@@ -923,6 +1087,9 @@ export function CheckoutForm() {
                 onChange={(e) => {
                   setCouponCode(e.target.value.toUpperCase());
                   setCouponDiscount(0);
+                  setCouponHoliday(null);
+                  setCouponScratch(null);
+                  setCouponCapped(false);
                   setCouponMessage(null);
                 }}
                 placeholder={t("couponPlaceholder")}
@@ -939,14 +1106,50 @@ export function CheckoutForm() {
                 {t("couponApply")}
               </Button>
             </div>
-            {couponMessage ? (
-              <p
-                className={`text-xs ${
-                  couponDiscount > 0 ? "text-emerald-700" : "text-red-600"
-                }`}
-              >
-                {couponMessage}
-              </p>
+            {couponAppliedOk ? (
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50/90 px-3 py-2.5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="flex items-center gap-1.5 text-sm font-semibold text-emerald-900">
+                      <Check className="h-4 w-4 shrink-0" aria-hidden />
+                      <span className="truncate font-mono tracking-wide">
+                        {couponCode}
+                      </span>
+                      <span className="font-sans text-xs font-medium uppercase tracking-wide text-emerald-700">
+                        {t("couponAppliedBadge")}
+                      </span>
+                    </p>
+                    {couponRateDetail ? (
+                      <p className="mt-1 text-xs leading-relaxed text-emerald-800">
+                        {couponRateDetail}
+                      </p>
+                    ) : null}
+                    {couponHoliday?.percent &&
+                    couponHoliday.boostKind &&
+                    couponHoliday.boostPercent &&
+                    !couponBoostActive ? (
+                      <p className="mt-1 text-xs leading-relaxed text-emerald-800">
+                        {t("couponBoostHint", {
+                          product: couponBoostProductLabel,
+                          boost: couponHoliday.boostPercent,
+                        })}
+                      </p>
+                    ) : null}
+                    {couponCapped ? (
+                      <p className="mt-1 text-xs text-emerald-700">
+                        {t("couponCapped")}
+                      </p>
+                    ) : null}
+                  </div>
+                  {couponDiscount > 0 ? (
+                    <p className="shrink-0 text-sm font-semibold text-emerald-800">
+                      −{formatPrice(couponDiscount, locale)}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+            ) : couponMessage ? (
+              <p className="text-xs text-red-600">{couponMessage}</p>
             ) : null}
           </div>
 
@@ -960,9 +1163,16 @@ export function CheckoutForm() {
           </div>
 
           {couponDiscount > 0 ? (
-            <div className="mt-3 flex justify-between text-sm text-ink-600">
-              <span>{t("discount")}</span>
-              <span>−{formatPrice(couponDiscount, locale)}</span>
+            <div className="mt-3 flex justify-between gap-3 text-sm">
+              <span className="min-w-0 text-ink-600">
+                <span className="block">{couponRateLabel}</span>
+                <span className="block font-mono text-xs tracking-wide text-ink-400">
+                  {couponCode}
+                </span>
+              </span>
+              <span className="shrink-0 font-medium text-emerald-700">
+                −{formatPrice(couponDiscount, locale)}
+              </span>
             </div>
           ) : null}
 

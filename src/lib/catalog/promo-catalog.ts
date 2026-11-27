@@ -142,20 +142,15 @@ const CAL_QUARTER = breaks([
   ['50–100', 70],
   ['100+', 60],
 ]);
-const CAL_SIXTH = breaks([
-  ['30–50', 95],
-  ['50–100', 80],
-  ['100+', 70],
-]);
 const CAL_NARROW = breaks([
-  ['30–50', 75],
-  ['50–100', 65],
-  ['100+', 55],
+  ['30–50', 70],
+  ['50–100', 60],
+  ['100+', 50],
 ]);
 const CAL_DESK = breaks([
-  ['30–50', 85],
-  ['50–100', 75],
-  ['100+', 65],
+  ['30–50', 70],
+  ['50–100', 60],
+  ['100+', 50],
 ]);
 const CAL_TRODELEN = breaks([
   ['30–50', 120],
@@ -598,7 +593,7 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     swatches: CAL_SPIRAL_SWATCHES,
   },
   {
-    ...calendarProduct('calWild', 'wild', 6, CAL_SIXTH),
+    ...calendarProduct('calWild', 'wild', 6, CAL_ORTHODOX_SIXTH),
     image: `${CAL_IMG}/wild/hero.png?v=p8`,
     images: [
       `${CAL_IMG}/wild/2.jpg`,
@@ -620,7 +615,7 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     ],
   },
   {
-    ...calendarProduct('calLandscape6', 'landscape-6', 6, CAL_SIXTH),
+    ...calendarProduct('calLandscape6', 'landscape-6', 6, CAL_ORTHODOX_SIXTH),
     image: `${CAL_IMG}/landscape-6/hero.png?v=p8`,
     images: [
       `${CAL_IMG}/landscape-6/2.jpg`,

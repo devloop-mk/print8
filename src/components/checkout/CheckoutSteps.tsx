@@ -43,8 +43,8 @@ export function CheckoutSteps({ current }: { current: StepId }) {
             </span>
             <span
               className={cn(
-                'hidden text-sm font-medium sm:inline',
-                isCurrent ? 'text-ink-900' : 'text-ink-500',
+                'text-sm font-medium',
+                isCurrent ? 'inline text-ink-900' : 'hidden text-ink-500 sm:inline',
               )}
             >
               {step.label}

@@ -34,13 +34,13 @@ export async function sendSpinRewardEmail(input: {
         `Вашиот уникатен код е подолу. Важи еднаш и е врзан за оваа е-пошта.`,
         `Минимална нарачка: ${input.minOrderAmount} ден.`,
         `Важност: ${input.validDays} дена.`,
-        `Внесете го кодот на каса при нарачка.`,
+        `Внесете го кодот при нарачка.`,
       ]
     : [
         `Your unique code is below. It can be used once and is locked to this email.`,
         `Minimum order: ${input.minOrderAmount} MKD.`,
         `Valid for: ${input.validDays} days.`,
-        `Enter the code at checkout when you order.`,
+        `Enter the code when placing your order.`,
       ];
   const ctaLabel = isMk ? 'Купи сега' : 'Shop now';
   const ctaUrl = `${getSiteUrl()}${localePath(input.locale, '/products')}`;

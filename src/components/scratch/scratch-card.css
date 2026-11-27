@@ -1,0 +1,93 @@
+.ny-scratch-overlay {
+  animation: ny-scratch-fade 280ms ease-out;
+}
+
+.ny-scratch-card {
+  animation: ny-scratch-pop 420ms cubic-bezier(0.16, 1, 0.3, 1);
+  overflow-x: hidden;
+}
+
+.ny-scratch-glow {
+  animation: ny-scratch-pulse 2.8s ease-in-out infinite;
+}
+
+.ny-scratch-foil-hint {
+  animation: ny-scratch-hint 1.8s ease-in-out infinite;
+}
+
+.ny-scratch-win {
+  animation: ny-scratch-win 520ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ny-scratch-cell-match {
+  box-shadow: 0 0 0 2px #fbbf24, 0 0 18px rgba(251, 191, 36, 0.35);
+}
+
+.ny-scratch-grid {
+  touch-action: none;
+  user-select: none;
+  min-width: 0;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ny-scratch-overlay,
+  .ny-scratch-card,
+  .ny-scratch-glow,
+  .ny-scratch-foil-hint,
+  .ny-scratch-win,
+  .ny-scratch-cell-match {
+    animation: none;
+  }
+}
+
+@keyframes ny-scratch-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ny-scratch-pop {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes ny-scratch-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+@keyframes ny-scratch-hint {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(6px);
+  }
+}
+
+@keyframes ny-scratch-win {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

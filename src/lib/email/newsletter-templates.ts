@@ -111,7 +111,7 @@ The PRINT8 team`,
 
 Избери готов дизајн или качи свој — ние печатиме професионално во Штип.
 
-Нарачај на print8.mk и искористи го попустот на каса.`,
+Нарачај на print8.mk и искористи го попустот при нарачка.`,
       ctaLabel: 'Нарачај сега',
       ctaPath: '/products',
     },
@@ -125,7 +125,7 @@ Get 500 MKD off when your order is over 3,500 MKD at Print 8.
 
 Pick a ready design or upload your own — we print professionally in Štip.
 
-Shop on print8.mk and apply the discount at checkout.`,
+Shop on print8.mk and apply the discount when placing your order.`,
       ctaLabel: 'Shop now',
       ctaPath: '/products',
     },
@@ -145,7 +145,7 @@ Shop on print8.mk and apply the discount at checkout.`,
 
 Идеално за семејни пакети, тимски маици или branding.
 
-Нарачај на print8.mk и искористи го попустот на каса.`,
+Нарачај на print8.mk и искористи го попустот при нарачка.`,
       ctaLabel: 'Искористи попуст',
       ctaPath: '/products',
     },
@@ -159,7 +159,7 @@ For bigger orders — save 1,000 MKD when your total is over 6,500 MKD.
 
 Great for family packs, team tees, or branding.
 
-Order on print8.mk and apply the discount at checkout.`,
+Order on print8.mk and apply the discount when placing your order.`,
       ctaLabel: 'Claim discount',
       ctaPath: '/products',
     },

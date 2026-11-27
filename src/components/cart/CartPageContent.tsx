@@ -27,7 +27,7 @@ import { Card } from "@/components/ui/Card";
 import { ImageLightbox } from "@/components/ui/ImageLightbox";
 import { CheckoutSteps } from "@/components/checkout/CheckoutSteps";
 
-import { Trash2, Pencil } from "lucide-react";
+import { ArrowRight, Trash2, Pencil } from "lucide-react";
 
 import {
   buildCustomizerEditUrl,
@@ -584,14 +584,19 @@ export function CartPageContent() {
             </p>
           ) : null}
 
+          <p className="mt-5 text-sm leading-relaxed text-ink-600">
+            {t("checkoutNextStep")}
+          </p>
           {cartLimitMessage ? (
-            <Button size="lg" className="mt-6 w-full" disabled>
+            <Button size="lg" className="mt-2 w-full" disabled>
               {t("checkout")}
+              <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
             </Button>
           ) : (
-            <Link href="/checkout" className="mt-6 block">
+            <Link href="/checkout" className="mt-2 block">
               <Button size="lg" className="w-full">
                 {t("checkout")}
+                <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
               </Button>
             </Link>
           )}

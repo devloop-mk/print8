@@ -65,7 +65,7 @@
       "calChurch": "Churches and orthodox",
       "calLandscape": "Landscapes",
       "calCars": "Cars",
-      "calMosques": "Mosques",
+      "calMosques": "Mosques 1/4",
       "calWildlife": "Wildlife and animals",
       "calPets": "Pets",
       "calTrodelen": "Tri-panel",
@@ -578,7 +578,7 @@
         ]
       },
       "calWild": {
-        "name": "Wildlife",
+        "name": "Wildlife 1/6",
         "specs": [
           "6 sheets · art paper 90 g/m² · chrome board 250 g/m²",
           "Format 500 × 300 mm · metal rail",
@@ -618,7 +618,7 @@
         ]
       },
       "calDomestic": {
-        "name": "Farm animals",
+        "name": "Farm animals 1/4",
         "specs": [
           "4 sheets · art paper 90 g/m² · chrome board 250 g/m²",
           "Format 500 × 300 mm · metal rail",
@@ -626,7 +626,7 @@
         ]
       },
       "calMosques": {
-        "name": "Mosques",
+        "name": "Mosques 1/4",
         "specs": [
           "4 sheets · art paper 90 g/m² · chrome board 250 g/m²",
           "Format 500 × 300 mm · metal rail",
@@ -634,7 +634,7 @@
         ]
       },
       "calTrucks": {
-        "name": "Trucks",
+        "name": "Trucks 1/4",
         "specs": [
           "4 sheets · art paper 90 g/m² · chrome board 250 g/m²",
           "Format 500 × 300 mm · metal rail",
@@ -717,7 +717,7 @@
         ]
       },
       "calLandscapeWave": {
-        "name": "Landscapes 1/4 — wave",
+        "name": "Landscapes 1/4",
         "specs": [
           "4 sheets",
           "Format 500 × 300 mm",
@@ -3367,7 +3367,8 @@
     "deliveryFeeNote": "Cargo delivery is {fee} for orders under {threshold}.",
     "pickupAlwaysFree": "Store pickup in Shtip is always free.",
     "total": "Total",
-    "checkout": "Checkout",
+    "checkout": "Continue to details",
+    "checkoutNextStep": "Next step: fill in your order details.",
     "zoomPreview": "View design preview",
     "previewStills": "Photos",
     "preview3d": "3D",
@@ -3481,10 +3482,26 @@
     "couponCode": "Coupon code",
     "couponPlaceholder": "e.g. SUMMER500",
     "couponApply": "Apply",
-    "couponApplied": "Coupon applied (−{amount}).",
+    "couponApplied": "Coupon credit applied.",
+    "couponAppliedBadge": "Applied",
+    "couponAppliedPercent": "{percent}% off this order",
+    "couponAppliedPercentBoost": "{percent}% off the order · {boost}% off {product}",
+    "couponAppliedPercentBoostAll": "{boost}% off {product}",
+    "couponBoostHint": "{product} get a double discount — {boost}%. Add them to this order.",
+    "couponGiveawayMug": "Free mug",
+    "couponGiveawayTshirt": "Free T-shirt",
+    "couponGiveawayAppliedMug": "One mug is free on this order.",
+    "couponGiveawayAppliedTshirt": "One T-shirt is free on this order.",
+    "couponGiveawayHintMug": "Add a mug to this order to use the reward.",
+    "couponGiveawayHintTshirt": "Add a T-shirt to this order to use the reward.",
+    "couponGiftBadge": "Gift",
+    "couponCapped": "This code’s maximum discount has been applied.",
     "couponInvalid": "This coupon is invalid or cannot be applied.",
     "couponMinOrder": "Minimum order for this coupon: {amount}.",
     "discount": "Discount",
+    "discountPercent": "Discount {percent}%",
+    "discountPercentBoost": "Discount {percent}% / {boost}% on {product}",
+    "discountPercentBoostAll": "Discount {boost}% on {product}",
     "orderStickerLimit": "This order can include at most {max} stickers in total. Remove stickers from your cart items.",
     "orderPhotoLimit": "This order can include at most {max} uploaded photos in total. Remove photos from your cart items.",
     "designUnavailable": "One or more exclusive designs are no longer available. Remove them from your cart and choose another design.",
@@ -3890,7 +3907,7 @@
     "alreadyBodyLoggedIn": "You already spun the wheel with this account. Your coupon is in your account dashboard.",
     "rules": "One play per email. Spin first, then claim with your email. Coupons are single-use and locked to your email.",
     "winTitle": "You won a {amount} MKD discount!",
-    "winBody": "Minimum order {min} MKD · Valid {days} days · enter the code at checkout.",
+    "winBody": "Minimum order {min} MKD · Valid {days} days · enter the code when placing your order.",
     "emailSent": "We also sent the code to your email.",
     "emailFallback": "Save the code below (email may be delayed).",
     "copyCode": "Copy code",
@@ -3922,6 +3939,13 @@
     "noticeTitleClaimed": "Your holiday gift is waiting",
     "noticeBodyClaimed": "Open your gift and copy the code for your order.",
     "startCta": "Start Challenge",
+    "howtoTitle": "How to play",
+    "howtoLead": "Help Santa collect 10 Print8 products before the timer runs out.",
+    "howtoStepCatch": "Move the sack left and right — products that land in it are collected.",
+    "howtoStepTap": "Or tap / click a product to drop it straight into the sack.",
+    "howtoStepGoal": "The goal is 10/10. The coupon unlocks only when the sack is full.",
+    "howtoPlay": "Got it, let’s play",
+    "caught": "+1",
     "viewGift": "Open gift",
     "later": "Later",
     "dismiss": "Close",
@@ -3980,7 +4004,7 @@
       },
       "delivery": {
         "title": "Free delivery",
-        "body": "Cargo delivery credited at checkout (equivalent to the 150 MKD delivery fee)."
+        "body": "Cargo delivery credited when placing your order (equivalent to the 150 MKD delivery fee)."
       },
       "design": {
         "title": "Free design service",
@@ -3993,6 +4017,53 @@
       "golden": {
         "title": "Golden 15% off",
         "body": "A rare golden gift — 15% off all Print8 products. Enter the code when placing your order."
+      }
+    }
+  },
+  "newYearScratch": {
+    "title": "🎄 Print8 New Year Scratch Card",
+    "subtitle": "Scratch the 9 fields. Three matching symbols win that prize.",
+    "winEyebrow": "Congratulations — your reward is unlocked.",
+    "scratchLabel": "Scratch a field to reveal its symbol",
+    "scratchHint": "Scratch here",
+    "cellLabel": "Field {n} of 9 — scratch to reveal the symbol",
+    "cellRevealed": "Field {n}: {prize}",
+    "hiddenPrize": "The symbols are under the foil",
+    "revealWithoutScratch": "Reveal the matching three",
+    "claiming": "Printing your reward…",
+    "claimError": "The reward could not be opened just now. Please try again.",
+    "retry": "Try again",
+    "jackpot": "Jackpot",
+    "couponLabel": "Your unique code",
+    "copy": "Copy",
+    "copied": "Copied",
+    "useDiscount": "Use discount",
+    "close": "Close",
+    "reopen": "Your New Year scratch card",
+    "prizes": {
+      "percent5": {
+        "title": "5% off",
+        "body": "A discount on your whole order. Enter the code when placing your order."
+      },
+      "percent10": {
+        "title": "10% off",
+        "body": "A bigger discount on your whole order. Enter the code when placing your order."
+      },
+      "percent15": {
+        "title": "15% off",
+        "body": "One of the best New Year discounts. Enter the code when placing your order."
+      },
+      "shipping": {
+        "title": "Free shipping",
+        "body": "Cargo delivery is covered on your order."
+      },
+      "mug": {
+        "title": "Free personalized mug",
+        "body": "Add a mug to your order — one mug is on Print8."
+      },
+      "tshirt": {
+        "title": "Free t-shirt",
+        "body": "A rare prize. Add a t-shirt to your order — one shirt is free."
       }
     }
   }

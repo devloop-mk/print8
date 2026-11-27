@@ -783,11 +783,80 @@ async function buildOriginalUploadAttachments(
   return attachments;
 }
 
+const HOLIDAY_BOOST_LABELS: Record<
+  "mk" | "en",
+  Record<string, string>
+> = {
+  mk: {
+    mug: "шолји",
+    tshirt: "маици",
+    calendar: "календари",
+    cards: "визит-картички",
+    poster: "плакати",
+    sticker: "налепници и магнети",
+    gift: "подарок-кутии",
+  },
+  en: {
+    mug: "mugs",
+    tshirt: "t-shirts",
+    calendar: "calendars",
+    cards: "business cards",
+    poster: "posters",
+    sticker: "stickers and magnets",
+    gift: "gift boxes",
+  },
+};
+
+function formatHolidayCouponEmailRate(
+  holiday:
+    | {
+        percent: number | null;
+        boostPercent: number | null;
+        boostKind: string | null;
+        matchingSubtotal: number;
+      }
+    | null
+    | undefined,
+  isMk: boolean,
+  subtotalAmount?: number,
+): string | null {
+  if (!holiday?.percent) return null;
+  const locale = isMk ? "mk" : "en";
+  const product =
+    holiday.boostKind && HOLIDAY_BOOST_LABELS[locale][holiday.boostKind]
+      ? HOLIDAY_BOOST_LABELS[locale][holiday.boostKind]
+      : null;
+  const boosted =
+    Boolean(holiday.boostPercent && product && holiday.matchingSubtotal > 0);
+  const allBoosted =
+    boosted &&
+    typeof subtotalAmount === "number" &&
+    holiday.matchingSubtotal + 1e-9 >= subtotalAmount;
+
+  if (allBoosted && holiday.boostPercent && product) {
+    return isMk
+      ? `${holiday.boostPercent}% на ${product}`
+      : `${holiday.boostPercent}% off ${product}`;
+  }
+  if (boosted && holiday.boostPercent && product) {
+    return isMk
+      ? `${holiday.percent}% / ${holiday.boostPercent}% на ${product}`
+      : `${holiday.percent}% / ${holiday.boostPercent}% on ${product}`;
+  }
+  return `${holiday.percent}%`;
+}
+
 export type OrderEmailExtras = {
   discountAmount?: number;
   subtotalAmount?: number;
   shippingAmount?: number;
   couponCode?: string | null;
+  couponHoliday?: {
+    percent: number | null;
+    boostPercent: number | null;
+    boostKind: string | null;
+    matchingSubtotal: number;
+  } | null;
   rewardCoupon?: { code: string; amount: number; endsAt: string | null } | null;
   loyalty?: {
     pointsEarnedThisOrder: number;
@@ -838,13 +907,21 @@ export async function sendOrderEmails(
   const discountRows: string[] = [];
   if (extras.couponCode && extras.discountAmount && extras.discountAmount > 0) {
     const discountLabel = formatPrice(extras.discountAmount, data.locale);
+    const holidayRate = formatHolidayCouponEmailRate(
+      extras.couponHoliday,
+      isMk,
+      extras.subtotalAmount,
+    );
     discountRows.push(
       detailTable([
         detailRow(
           isMk ? "Купон" : "Coupon",
           escapeHtml(extras.couponCode),
         ),
-        detailRow(isMk ? "Попуст" : "Discount", `−${discountLabel}`),
+        detailRow(
+          isMk ? "Попуст" : "Discount",
+          holidayRate ? `−${discountLabel} (${holidayRate})` : `−${discountLabel}`,
+        ),
       ]),
     );
   }

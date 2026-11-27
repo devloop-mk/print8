@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname } from '@/i18n/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { Gift, X } from 'lucide-react';
+import { Gift, Hand, MousePointerClick, Timer, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { HolidayWorkshopCanvas } from '@/components/holiday/HolidayWorkshopCanvas';
 import { HolidayGiftReveal } from '@/components/holiday/HolidayGiftReveal';
@@ -25,11 +25,13 @@ import {
 } from '@/lib/holiday/workshop-storage';
 import './holiday-workshop.css';
 
-type Overlay = 'closed' | 'playing' | 'reward';
+type Overlay = 'closed' | 'howto' | 'playing' | 'reward';
 
 function isExcludedPath(pathname: string | null): boolean {
   if (!pathname) return true;
   return (
+    pathname === '/catalog' ||
+    pathname.startsWith('/catalog/') ||
     /\/products\/customize\//.test(pathname) ||
     /\/designs\/[^/]+\/customize(?:\/|$)/.test(pathname) ||
     /\/checkout(?:\/|$)/.test(pathname) ||
@@ -42,7 +44,6 @@ function isExcludedPath(pathname: string | null): boolean {
 function isEntryPath(pathname: string | null): boolean {
   if (!pathname) return false;
   if (pathname === '/') return true;
-  if (pathname === '/catalog' || pathname.startsWith('/catalog/')) return true;
   if (pathname === '/products' || pathname.startsWith('/products/')) return true;
   if (pathname === '/services' || pathname.startsWith('/services/')) return true;
   return false;
@@ -134,9 +135,14 @@ export function HolidayWorkshop() {
     }
     setClaim(null);
     setClaimError(null);
+    setOverlay('howto');
+    setNotice(false);
+  }, []);
+
+  const beginPlay = useCallback(() => {
+    setClaimError(null);
     setPlayKey((value) => value + 1);
     setOverlay('playing');
-    setNotice(false);
   }, []);
 
   const claimReward = useCallback(
@@ -335,7 +341,71 @@ export function HolidayWorkshop() {
           <span className="hw-star absolute right-[28%] top-[28%] h-1.5 w-1.5 rounded-full bg-white" style={{ animationDelay: '1.8s' }} />
 
           <div className="relative flex h-full min-h-0 flex-col">
-            {overlay === 'playing' ? (
+            {overlay === 'howto' ? (
+              <div className="relative z-10 flex h-full min-h-0 flex-col px-4 pb-6 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-6">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#f0d78c]">
+                      {t('eyebrow')}
+                    </p>
+                    <h2
+                      id="holiday-workshop-title"
+                      className="font-display text-xl font-bold text-white sm:text-2xl"
+                    >
+                      {t('howtoTitle')}
+                    </h2>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={closeOverlay}
+                    className="rounded-md p-2 text-white/70 hover:bg-white/10 hover:text-white"
+                    aria-label={t('close')}
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <div className="mx-auto mt-6 w-full max-w-md flex-1 overflow-y-auto">
+                  <p className="text-sm leading-relaxed text-white/75 sm:text-base">
+                    {t('howtoLead')}
+                  </p>
+                  <ol className="mt-5 space-y-3">
+                    {[
+                      { icon: Hand, text: t('howtoStepCatch') },
+                      { icon: MousePointerClick, text: t('howtoStepTap') },
+                      { icon: Timer, text: t('howtoStepGoal') },
+                    ].map((step, index) => (
+                      <li
+                        key={step.text}
+                        className="flex gap-3 rounded-2xl border border-white/15 bg-white/8 p-3.5 text-white backdrop-blur-md"
+                      >
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#f0d78c]/30 bg-[#f0d78c]/10 text-[#f0d78c]">
+                          <step.icon className="h-5 w-5" aria-hidden />
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#f0d78c]">
+                            {index + 1}
+                          </p>
+                          <p className="mt-0.5 text-sm leading-relaxed text-white/90">
+                            {step.text}
+                          </p>
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                  <Button
+                    type="button"
+                    size="lg"
+                    className="mt-6 w-full"
+                    onClick={beginPlay}
+                    data-testid="holiday-howto-play"
+                  >
+                    <Gift className="mr-2 h-4 w-4" />
+                    {t('howtoPlay')}
+                  </Button>
+                </div>
+              </div>
+            ) : overlay === 'playing' ? (
               <HolidayWorkshopCanvas
                 key={playKey}
                 reducedMotion={reducedMotion}

@@ -24,6 +24,15 @@ type FallingItem = {
   size: number;
 };
 
+type CatchFx = {
+  id: number;
+  kind: HolidayProductKind;
+  x: number;
+  y: number;
+  size: number;
+  golden: boolean;
+};
+
 const KINDS = HOLIDAY_PRODUCTS.map((item) => item.id);
 
 function randomKind(): HolidayProductKind {
@@ -52,6 +61,8 @@ export function HolidayWorkshopCanvas({
   const [sackX, setSackX] = useState(50);
   const [tick, setTick] = useState(0);
   const [status, setStatus] = useState<'playing' | 'won' | 'lost'>('playing');
+  const [catchFx, setCatchFx] = useState<CatchFx[]>([]);
+  const fxId = useRef(1);
   const startedAt = useRef(0);
   const lastSpawn = useRef(0);
   const finished = useRef(false);
@@ -70,6 +81,28 @@ export function HolidayWorkshopCanvas({
     [onComplete],
   );
 
+  const spawnCatchFx = useCallback((item: FallingItem) => {
+    const fx: CatchFx = {
+      id: fxId.current,
+      kind: item.kind,
+      x: item.x,
+      y: item.y,
+      size: item.size,
+      golden: item.golden,
+    };
+    fxId.current += 1;
+    setCatchFx((prev) => [...prev, fx]);
+    const sack = sackRef.current;
+    if (sack && !reducedMotion) {
+      sack.classList.remove('hw-sack-catch');
+      void sack.offsetWidth;
+      sack.classList.add('hw-sack-catch');
+    }
+    window.setTimeout(() => {
+      setCatchFx((prev) => prev.filter((entry) => entry.id !== fx.id));
+    }, 720);
+  }, [reducedMotion]);
+
   const collectItem = useCallback(
     (id: number) => {
       if (finished.current) return;
@@ -77,14 +110,16 @@ export function HolidayWorkshopCanvas({
       if (!item) return;
       itemsRef.current = itemsRef.current.filter((entry) => entry.id !== id);
       collectedKindsRef.current = [...collectedKindsRef.current, item.kind];
+      spawnCatchFx(item);
       const next = collectedKindsRef.current.length;
       if (next >= HOLIDAY_WORKSHOP_TARGET) {
+        setCollected(next);
         complete('won');
         return;
       }
       setCollected(next);
     },
-    [complete],
+    [complete, spawnCatchFx],
   );
 
   useEffect(() => {
@@ -183,7 +218,11 @@ export function HolidayWorkshopCanvas({
         </div>
         <div className="flex items-center gap-2">
           <div
-            className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-sm font-semibold tabular-nums text-white backdrop-blur-md"
+            className={cn(
+              'rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-sm font-semibold tabular-nums text-white backdrop-blur-md',
+              collected > 0 && 'hw-counter-pop',
+            )}
+            key={collected}
             aria-live="polite"
             data-testid="holiday-counter"
           >
@@ -236,6 +275,25 @@ export function HolidayWorkshopCanvas({
           >
             <HolidayProductGlyph kind={item.kind} golden={item.golden} className="h-full w-full" />
           </button>
+        ))}
+
+        {catchFx.map((fx) => (
+          <div
+            key={fx.id}
+            className="hw-catch-fx"
+            style={{
+              left: `${fx.x}%`,
+              top: `${fx.y}%`,
+              width: fx.size,
+              height: fx.size,
+            }}
+          >
+            <span className="hw-catch-ring" />
+            <div className="hw-catch-pop h-full w-full rounded-2xl border border-[#f0d78c]/60 bg-[#f0d78c]/20 p-1.5">
+              <HolidayProductGlyph kind={fx.kind} golden={fx.golden} className="h-full w-full" />
+            </div>
+            <span className="hw-catch-plus">{t('caught')}</span>
+          </div>
         ))}
 
         <div

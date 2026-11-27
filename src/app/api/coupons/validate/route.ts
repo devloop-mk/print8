@@ -57,6 +57,9 @@ export async function POST(request: NextRequest) {
       minOrderAmount: result.coupon.minOrderAmount,
       totalAmount: result.totalAmount,
       endsAt: result.coupon.endsAt,
+      holiday: result.holiday,
+      scratch: result.scratch,
+      capped: result.capped,
     });
   } catch (error) {
     console.error('[coupons/validate] failed', error);

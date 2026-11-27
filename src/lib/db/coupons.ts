@@ -2,6 +2,7 @@ import { customAlphabet, nanoid } from 'nanoid';
 import { getSupabaseAdmin } from '@/lib/supabase/client';
 
 const holidayCouponId = customAlphabet('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', 8);
+const scratchCouponId = customAlphabet('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', 6);
 
 export type CouponKind = 'public' | 'reward_issued';
 
@@ -458,6 +459,46 @@ export async function issueHolidayWorkshopCoupon(input: {
   throw lastError instanceof Error
     ? lastError
     : new Error('Failed to issue holiday coupon');
+}
+
+/** One-time New Year scratch coupon — guest-usable unique code. */
+export async function issueNyScratchCoupon(input: {
+  year: number;
+  discountAmount: number;
+  minOrderAmount: number;
+  validDays: number;
+  note: string;
+}): Promise<CouponRecord> {
+  const endsAt = new Date();
+  endsAt.setUTCDate(endsAt.getUTCDate() + input.validDays);
+  const payload = {
+    kind: 'public' as const,
+    discountAmount: input.discountAmount,
+    minOrderAmount: input.minOrderAmount,
+    startsAt: new Date().toISOString(),
+    endsAt: endsAt.toISOString(),
+    maxRedemptionsPerDay: 1,
+    maxRedemptionsTotal: 1,
+    active: true,
+    issuedToEmail: null,
+    issuedFromOrderId: null,
+    note: input.note,
+  };
+
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    try {
+      return await createCoupon({
+        ...payload,
+        code: `NY${input.year}-${scratchCouponId()}`,
+      });
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError instanceof Error
+    ? lastError
+    : new Error('Failed to issue New Year scratch coupon');
 }
 
 /** One-time spin-wheel coupon locked to the winner's email. */

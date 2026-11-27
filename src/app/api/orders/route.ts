@@ -161,6 +161,12 @@ export async function POST(request: NextRequest) {
       customerId = customer.id;
     }
 
+    let appliedCouponHoliday: {
+      percent: number | null;
+      boostPercent: number | null;
+      boostKind: string | null;
+      matchingSubtotal: number;
+    } | null = null;
     if (data.couponCode) {
       const couponResult = await validateCouponForCheckout({
         code: data.couponCode,
@@ -182,6 +188,14 @@ export async function POST(request: NextRequest) {
       totalAmount = couponResult.totalAmount;
       appliedCouponCode = couponResult.coupon.code;
       appliedCouponId = couponResult.coupon.id;
+      if (couponResult.holiday) {
+        appliedCouponHoliday = {
+          percent: couponResult.holiday.percent,
+          boostPercent: couponResult.holiday.boostPercent,
+          boostKind: couponResult.holiday.boostKind,
+          matchingSubtotal: couponResult.holiday.matchingSubtotal,
+        };
+      }
     }
 
     const subtotalAfterCoupon = Math.max(0, subtotalAmount - discountAmount);
@@ -421,6 +435,7 @@ export async function POST(request: NextRequest) {
           subtotalAmount,
           shippingAmount,
           couponCode: appliedCouponCode,
+          couponHoliday: appliedCouponHoliday,
           rewardCoupon,
           loyalty: loyaltyForEmail,
         });
