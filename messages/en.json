@@ -69,7 +69,7 @@
       "calWildlife": "Wildlife and animals",
       "calPets": "Pets",
       "calTrodelen": "Tri-panel",
-      "calTrodelenRed": "Tri-panel - Red",
+      "calTrodelenRed": "3 months - Red",
       "calClassic": "Classic wall"
     },
     "qty": "Quantity",
@@ -339,11 +339,11 @@
         ]
       },
       "keyHbRound": {
-        "name": "Sublimation round keychain",
+        "name": "Mediapan keychain — round",
         "specs": [
-          "Hard board, sublimation",
+          "Mediapan, sublimation",
           "Ø 50 mm",
-          "Minimum order 10 pieces"
+          "Minimum order 30 pieces"
         ]
       },
       "keyHbSquare": {
@@ -561,9 +561,9 @@
         ]
       },
       "calTrodelenRed": {
-        "name": "Tri-panel calendar - Red",
+        "name": "3-month calendar - Red",
         "specs": [
-          "Three months in one view · red header",
+          "Three months in one view · red top",
           "Metal spiral",
           "Wall calendar"
         ]

@@ -138,9 +138,9 @@ const PRICE_MUG_CORK = breaks([
   ['100+', 250],
 ]);
 const CAL_QUARTER = breaks([
-  ['30–50', 80],
-  ['50–100', 70],
-  ['100+', 60],
+  ['30–50', 70],
+  ['50–100', 60],
+  ['100+', 50],
 ]);
 const CAL_NARROW = breaks([
   ['30–50', 70],
@@ -173,9 +173,9 @@ const CAL_ORTHODOX_SIXTH = breaks([
   ['100+', 60],
 ]);
 const CAL_RED_ORTHODOX = breaks([
-  ['30–50', 65],
-  ['50–100', 55],
-  ['100+', 45],
+  ['30–50', 70],
+  ['50–100', 60],
+  ['100+', 50],
 ]);
 const CAL_ICONS_QUARTER = breaks([
   ['30–50', 70],
@@ -421,12 +421,7 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
   merchProduct(
     'keyHbRound',
     'key-hb-round.jpg?v=2',
-    breaks([
-      ['10–20', 130],
-      ['20–50', 120],
-      ['50–100', 100],
-      ['100+', 90],
-    ]),
+    PRICE_KEY_MEDIAPAN,
   ),
   merchProduct(
     'keyHbSquare',
@@ -577,7 +572,11 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     NOTEBOOK_SPIRAL_SWATCHES,
   ),
   {
-    ...calendarProduct('calTrodelen', 'trodelen', 1, CAL_TRODELEN),
+    ...calendarProduct('calTrodelen', 'trodelen', 1, breaks([
+      ['30–50', 160],
+      ['50–100', 140],
+      ['100+', 120],
+    ])),
     image: `${CAL_IMG}/trodelen/hero.png?v=tri`,
   },
   calendarProduct('calTrodelenRed', 'trodelen', 1, CAL_TRODELEN),
