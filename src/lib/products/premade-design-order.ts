@@ -4,6 +4,7 @@ import {
   type Product,
   type ProductDesignTemplate,
   type ProductSide,
+  type ProductType,
 } from '@/lib/data/catalog';
 import type { CartItem } from '@/lib/cart/types';
 import {
@@ -117,6 +118,7 @@ export function writeSideDesignMetadataWithTemplate(
 function premadeSideFootprint(
   design: ProductDesignTemplate,
   side: ProductSide,
+  productType: ProductType,
 ): TshirtContentFootprint | null {
   if (!getDesignSides(design).includes(side)) return null;
 
@@ -127,17 +129,18 @@ function premadeSideFootprint(
     return { width: scale, height: scale };
   }
 
-  const placement = resolveOverlayPlacementForSide(design, side, 't-shirt');
+  const placement = resolveOverlayPlacementForSide(design, side, productType);
   return { width: placement.scale, height: placement.scale };
 }
 
 /**
- * Auto print package for ready-made tee designs (no live DOM measure).
+ * Auto print package for a ready-made design (no live DOM measure).
  * Classifies each side via overlay/photo scale vs the small chest zone —
- * same thresholds as the customizer's footprintFitsSmallZone.
+ * same thresholds as the customizer.
  */
-export function getPremadeTshirtPrintPackage(
+export function getPremadePrintPackage(
   design: ProductDesignTemplate,
+  productType: ProductType = 't-shirt',
 ): TshirtPrintPackage {
   const sides = getDesignSides(design);
   const hasFront = sides.includes('front');
@@ -146,9 +149,19 @@ export function getPremadeTshirtPrintPackage(
   return deriveTshirtPrintPackage({
     hasFrontContent: hasFront,
     hasBackContent: hasBack,
-    frontFootprint: hasFront ? premadeSideFootprint(design, 'front') : null,
-    backFootprint: hasBack ? premadeSideFootprint(design, 'back') : null,
+    frontFootprint: hasFront
+      ? premadeSideFootprint(design, 'front', productType)
+      : null,
+    backFootprint: hasBack
+      ? premadeSideFootprint(design, 'back', productType)
+      : null,
   });
+}
+
+export function getPremadeTshirtPrintPackage(
+  design: ProductDesignTemplate,
+): TshirtPrintPackage {
+  return getPremadePrintPackage(design, 't-shirt');
 }
 
 export function getPremadeDesignUnitPrice(
@@ -167,7 +180,11 @@ export function getPremadeDesignUnitPrice(
     return getDrinkwareUnitPrice(product, tier);
   }
   if (isHoodieProduct(product)) {
-    return getHoodieUnitPrice(product, size);
+    return getHoodieUnitPrice(
+      product,
+      size,
+      getPremadePrintPackage(design, 'hoodie'),
+    );
   }
   return product.basePrice;
 }
@@ -199,6 +216,8 @@ export function buildPremadeDesignOrderMetadata({
 
   if (isTshirtProduct(product)) {
     metadata.printPackage = getPremadeTshirtPrintPackage(design);
+  } else if (isHoodieProduct(product)) {
+    metadata.printPackage = getPremadePrintPackage(design, 'hoodie');
   }
 
   if (sides.length > 1) {

@@ -7,7 +7,10 @@ import {
   getHoodieCompareAtPrice,
   getHoodieUnitPrice,
 } from '@/lib/products/hoodie-pricing';
-import { getProductDisplayPrice } from '@/lib/products/tshirt-print-pricing';
+import {
+  getProductDisplayPrice,
+  type TshirtPrintPackage,
+} from '@/lib/products/tshirt-print-pricing';
 import { cn, formatPrice } from '@/lib/utils';
 
 export function ProductSalePrice({
@@ -15,20 +18,23 @@ export function ProductSalePrice({
   size,
   locale,
   showFromPrefix = false,
+  printPackage,
   className,
 }: {
   product: Product;
   size?: string;
   locale: string;
   showFromPrefix?: boolean;
+  /** Hoodie print size. Catalog cards omit this and stay on the small-front price. */
+  printPackage?: TshirtPrintPackage;
   className?: string;
 }) {
   const t = useTranslations('products');
   const current = isHoodieProduct(product)
-    ? getHoodieUnitPrice(product, size)
+    ? getHoodieUnitPrice(product, size, printPackage)
     : getProductDisplayPrice(product);
   const was = isHoodieProduct(product)
-    ? getHoodieCompareAtPrice(product, size)
+    ? getHoodieCompareAtPrice(product, size, printPackage)
     : product.compareAtPrice && product.compareAtPrice > current
       ? product.compareAtPrice
       : null;

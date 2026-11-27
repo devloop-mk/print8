@@ -332,6 +332,18 @@ function packageFrontTier(pkg: TshirtPrintPackage): PrintTier | null {
   return match ? (match[1] as PrintTier) : null;
 }
 
+/** Front and back tiers for a package. `front-back` is the legacy large + large key. */
+export function getPrintPackageTiers(pkg: TshirtPrintPackage): {
+  front: PrintTier | null;
+  back: PrintTier | null;
+} {
+  if (pkg === 'front-back') return { front: 'large', back: 'large' };
+  return {
+    front: packageFrontTier(pkg),
+    back: packageBackTier(pkg),
+  };
+}
+
 export function deriveTshirtPrintPackage({
   hasFrontContent = false,
   hasBackContent,

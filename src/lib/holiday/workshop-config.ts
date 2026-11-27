@@ -2,7 +2,7 @@ import { CARGO_DELIVERY_FEE_MKD } from '@/lib/orders/delivery-pricing';
 
 export const HOLIDAY_WORKSHOP_TARGET = 10;
 export const HOLIDAY_WORKSHOP_DURATION_MS = 26_000;
-export const HOLIDAY_WORKSHOP_VALID_DAYS = 21;
+export const HOLIDAY_WORKSHOP_VALID_DAYS = 7;
 export const HOLIDAY_WORKSHOP_NOTE_PREFIX = 'holiday_workshop';
 
 export const HOLIDAY_CLAIM_STORAGE_KEY = 'print8_holiday_workshop_claim';

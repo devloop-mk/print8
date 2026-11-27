@@ -32,6 +32,7 @@ import {
 import {
   buildPremadeDesignCartPayload,
   getPremadeDesignUnitPrice,
+  getPremadePrintPackage,
 } from '@/lib/products/premade-design-order';
 import { isTshirtProduct } from '@/lib/products/tshirt-print-pricing';
 import { isHoodieProduct } from '@/lib/products/hoodie-catalog';
@@ -338,6 +339,7 @@ export function ProductDesignDetail({
                     product={product}
                     size={size}
                     locale={locale}
+                    printPackage={getPremadePrintPackage(design, 'hoodie')}
                   />
                 ) : (
                   formatPrice(

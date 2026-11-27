@@ -5,7 +5,13 @@ import { useLocale, useTranslations } from 'next-intl';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import { useCart } from '@/components/cart/CartProvider';
 import { RewardModal } from '@/components/scratch/RewardModal';
+import { Button } from '@/components/ui/Button';
 import { getCookieConsent } from '@/lib/legal/cookie-consent';
+import {
+  canAutoShowPromo,
+  markDailyPromoPlayed,
+  onDailyPromoPlayed,
+} from '@/lib/promo/daily-promo';
 import { SPIN_PENDING_COUPON_KEY } from '@/lib/rewards/spin-config';
 import {
   NY_SCRATCH_CELL_COUNT,
@@ -59,6 +65,7 @@ export function NewYearScratch() {
   const router = useRouter();
   const { items, hydrated } = useCart();
   const [open, setOpen] = useState(false);
+  const [intro, setIntro] = useState(false);
   const [ready, setReady] = useState(false);
   const [claim, setClaim] = useState<StoredNyScratchClaim | null>(null);
   const [grid, setGrid] = useState<NyScratchPrizeKey[] | null>(null);
@@ -110,16 +117,28 @@ export function NewYearScratch() {
       return;
     }
 
+    if (!canAutoShowPromo('scratch')) {
+      setReady(true);
+      return;
+    }
+
     const delay = getCookieConsent() !== null ? 1600 : 4200;
     const timer = window.setTimeout(() => {
-      setOpen(true);
+      setIntro(true);
       setReady(true);
     }, delay);
     return () => window.clearTimeout(timer);
   }, [applyClaim, entry, excluded]);
 
+  useEffect(() => {
+    return onDailyPromoPlayed((id) => {
+      if (id !== 'scratch') setIntro(false);
+    });
+  }, []);
+
   const close = useCallback(() => {
     setOpen(false);
+    setIntro(false);
     dismissNyScratch();
   }, []);
 
@@ -193,6 +212,7 @@ export function NewYearScratch() {
           playComplete: false,
         };
         saveNyScratchClaim(stored);
+        markDailyPromoPlayed('scratch');
         setClaim(stored);
         setGrid(data.grid);
         return stored;
@@ -281,6 +301,62 @@ export function NewYearScratch() {
 
   return (
     <>
+      {intro && !open ? (
+        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[42] flex justify-end p-3 sm:p-5">
+          <aside
+            className="pointer-events-auto relative w-full max-w-[22.5rem] rounded-2xl border border-white/20 bg-[linear-gradient(160deg,rgba(28,80,130,0.92),rgba(62,64,141,0.94))] p-4 text-white shadow-[0_18px_50px_rgba(8,16,40,0.38)] backdrop-blur-xl"
+            role="dialog"
+            aria-labelledby="ny-scratch-intro-title"
+          >
+            <div className="flex items-start gap-3">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-xl">
+                🎄
+              </span>
+              <div className="min-w-0 flex-1">
+                <p
+                  id="ny-scratch-intro-title"
+                  className="font-display text-base font-bold leading-snug"
+                >
+                  {t('introTitle')}
+                </p>
+                <p className="mt-1 text-sm leading-relaxed text-white/75">
+                  {t('introBody')}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="rounded-md p-1 text-white/60 hover:bg-white/10 hover:text-white"
+                onClick={close}
+                aria-label={t('close')}
+              >
+                ×
+              </button>
+            </div>
+            <div className="mt-3 flex gap-2">
+              <Button
+                type="button"
+                size="sm"
+                className="min-h-10 flex-1"
+                onClick={() => {
+                  setIntro(false);
+                  setOpen(true);
+                }}
+              >
+                {t('start')}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                className="text-white"
+                onClick={close}
+              >
+                {t('later')}
+              </Button>
+            </div>
+          </aside>
+        </div>
+      ) : null}
       <RewardModal
         open={open}
         claim={claim}

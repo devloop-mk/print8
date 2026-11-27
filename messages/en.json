@@ -1016,6 +1016,12 @@
         }
       }
     },
+    "christmas": {
+      "eyebrow": "Season",
+      "title": "Christmas designs",
+      "description": "Ready artwork for a bodysuit, hoodie, mug, or bag. Each design prints on the product you see.",
+      "viewAll": "See all Christmas designs"
+    },
     "featuredServices": "Popular services",
     "featuredServicesDesc": "Photocopying, laminating, plastification, binding, and similar shop-floor services.",
     "featuredDesigns": "Print designs",
@@ -2364,6 +2370,16 @@
       "paginationPage": "Page {current} of {total}",
       "viewProduct": "View product"
     },
+    "christmasArchive": {
+      "eyebrow": "Christmas",
+      "title": "Christmas designs",
+      "subtitle": "Bodysuits, hoodies, mugs, and bags are kept apart. A design prints on the product shown with it.",
+      "gridTitle": "All Christmas designs",
+      "resultsCount": "{count, plural, one {# Christmas design} other {# Christmas designs}}",
+      "back": "Back",
+      "footerHint": "Looking for a design that is not Christmas?",
+      "footerLink": "All ready designs"
+    },
     "kidsArchive": {
       "eyebrow": "Kids & birthday",
       "title": "Designs made for little stars",
@@ -2605,6 +2621,14 @@
         "babyMilestones": {
           "title": "Baby milestones",
           "description": "Sweet designs for bodysuits and first moments."
+        },
+        "christmasBaby": {
+          "title": "Christmas bodysuits",
+          "description": "A seasonal set made only for baby bodysuits."
+        },
+        "christmas": {
+          "title": "Christmas designs",
+          "description": "Seasonal prints made for this product."
         }
       },
       "t-shirt": {
@@ -4041,6 +4065,10 @@
     "useDiscount": "Use discount",
     "close": "Close",
     "reopen": "Your New Year scratch card",
+    "introTitle": "New Year scratch card",
+    "introBody": "Scratch 9 fields. Match 3 identical symbols and the prize is yours.",
+    "start": "Start",
+    "later": "Later",
     "prizes": {
       "percent5": {
         "title": "5% off",

@@ -46,14 +46,8 @@ export function resolveSideOverlayConfig(
   template: ProductDesignTemplate,
   side: ProductSide,
 ): ProductDesignSideOverlay | null {
-  if (side === 'back' && template.backOverlay) {
-    return template.backOverlay;
-  }
-
-  if (side !== template.defaultSide && !getDesignSides(template).includes(side)) {
-    return null;
-  }
-
+  // Back-only keeps the artwork on the main overlay fields. A leftover
+  // backOverlay must not hide those edits.
   if (side === 'back' && getDesignSideMode(template) === 'back') {
     return {
       overlayImage: template.overlayImage,
@@ -65,6 +59,14 @@ export function resolveSideOverlayConfig(
       overlayByProductType: template.overlayByProductType,
       overlayByProductId: template.overlayByProductId,
     };
+  }
+
+  if (side === 'back' && template.backOverlay) {
+    return template.backOverlay;
+  }
+
+  if (side !== template.defaultSide && !getDesignSides(template).includes(side)) {
+    return null;
   }
 
   if (side === 'front' || (side === template.defaultSide && side !== 'back')) {

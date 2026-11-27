@@ -189,15 +189,25 @@ function getProductUnitPrice(
     return product.basePrice;
   }
 
+  if (isHoodieProduct(product)) {
+    const raw = metadata.printPackage;
+    if (typeof raw === 'string') {
+      return getHoodieUnitPrice(product, size, raw);
+    }
+    if (typeof metadata.designTemplateId === 'string') {
+      const design = getStaticProductDesignTemplates().find(
+        (template) => template.id === metadata.designTemplateId,
+      );
+      if (design) return getPremadeDesignUnitPrice(product, design, size);
+    }
+    return getHoodieUnitPrice(product, size);
+  }
+
   if (typeof metadata.designTemplateId === 'string') {
     const design = getStaticProductDesignTemplates().find(
       (template) => template.id === metadata.designTemplateId,
     );
     if (design) return getPremadeDesignUnitPrice(product, design, size);
-  }
-
-  if (isHoodieProduct(product)) {
-    return getHoodieUnitPrice(product, size);
   }
 
   return product.basePrice;

@@ -1157,6 +1157,8 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   );
 
   const isTshirt = product ? isTshirtProduct(product) : false;
+  const isHoodie = product ? isHoodieProduct(product) : false;
+  const tracksPrintSize = isTshirt || isHoodie;
 
   // T-shirts always expose every configured side (front + back) for
   // editing — same as hoodies/other multi-side garments. There is no
@@ -1521,32 +1523,43 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   // (position/scale/text/stickers) changes — drives the auto-derived print
   // package below instead of a user-facing placement picker.
   useLayoutEffect(() => {
-    if (!isTshirt) return;
+    if (!tracksPrintSize) return;
     const mockupInner = previewRef.current?.querySelector<HTMLElement>(
       '[data-mockup-inner]',
     );
-    const measured = measureContentLayersBoundsPercent(mockupInner ?? null);
+    if (!mockupInner) return;
 
-    setSideFootprints((prev) => {
-      const existing = prev[activeSide];
-      if (!existing && !measured) return prev;
-      if (
-        existing &&
-        measured &&
-        Math.abs(existing.width - measured.width) < 0.5 &&
-        Math.abs(existing.height - measured.height) < 0.5
-      ) {
-        return prev;
-      }
-      const next = { ...prev };
-      if (measured) {
-        next[activeSide] = measured;
-      } else {
-        delete next[activeSide];
-      }
-      return next;
-    });
-  }, [isTshirt, activeSide, currentDesign]);
+    const publish = () => {
+      const measured = measureContentLayersBoundsPercent(mockupInner);
+      setSideFootprints((prev) => {
+        const existing = prev[activeSide];
+        if (!existing && !measured) return prev;
+        if (
+          existing &&
+          measured &&
+          Math.abs(existing.width - measured.width) < 0.5 &&
+          Math.abs(existing.height - measured.height) < 0.5
+        ) {
+          return prev;
+        }
+        const next = { ...prev };
+        if (measured) {
+          next[activeSide] = measured;
+        } else {
+          delete next[activeSide];
+        }
+        return next;
+      });
+    };
+
+    publish();
+    const observer = new ResizeObserver(publish);
+    observer.observe(mockupInner);
+    mockupInner
+      .querySelectorAll<HTMLElement>('[data-customizer-content-layer]')
+      .forEach((layer) => observer.observe(layer));
+    return () => observer.disconnect();
+  }, [tracksPrintSize, activeSide, currentDesign]);
 
   const frontHasContent = sideHasDesignContent(sideDesigns.front);
   const backHasContent = sideHasDesignContent(sideDesigns.back);
@@ -1554,20 +1567,32 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
   // Auto-derived print package: each side with content is classified
   // small vs large from its measured footprint (dual → four price tiers).
   const printPackage = useMemo<TshirtPrintPackage>(() => {
-    if (!isTshirt) return 'front-large';
+    if (!tracksPrintSize) return 'front-large';
+    const footprintFor = (
+      side: 'front' | 'back',
+      hasContent: boolean,
+    ) => {
+      if (!hasContent) return null;
+      const measured = sideFootprints[side];
+      if (measured) return measured;
+      const scale = sideDesigns[side]?.uploadedImageScale;
+      if (!scale) return null;
+      return { width: scale, height: scale };
+    };
     return deriveTshirtPrintPackage({
       hasFrontContent: frontHasContent,
       hasBackContent: backHasContent,
-      frontFootprint: sideFootprints.front ?? null,
-      backFootprint: sideFootprints.back ?? null,
+      frontFootprint: footprintFor('front', frontHasContent),
+      backFootprint: footprintFor('back', backHasContent),
       isWomen: product?.fit === 'women',
     });
   }, [
-    isTshirt,
+    tracksPrintSize,
     frontHasContent,
     backHasContent,
     sideFootprints.front,
     sideFootprints.back,
+    sideDesigns,
     product,
   ]);
 
@@ -1585,7 +1610,9 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
       });
       return getDrinkwareUnitPrice(product, tier);
     }
-    if (isHoodieProduct(product)) return getHoodieUnitPrice(product, size);
+    if (isHoodieProduct(product)) {
+      return getHoodieUnitPrice(product, size, printPackage);
+    }
     return product.basePrice;
   }, [
     product,
@@ -2405,7 +2432,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
     if (product?.sizes?.length && size) {
       metadata.size = size;
     }
-    if (isTshirt) {
+    if (isTshirt || isHoodie) {
       metadata.printPackage = printPackage;
     }
     if (product && isBagProduct(product)) {
@@ -2847,6 +2874,7 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
                     product={product}
                     size={size}
                     locale={locale}
+                    printPackage={printPackage}
                     className="text-xs"
                   />
                 ) : (
@@ -4624,7 +4652,7 @@ function ProductOptions({
           onChange={onDrinkwareProductChange}
         />
       ) : null}
-      {isTshirt && printPackage ? (
+      {(isTshirt || isHoodieProduct(product)) && printPackage ? (
         <div>
           <label className="mb-2 block text-sm font-medium text-ink-700">
             {t('printPackage')}
@@ -4639,7 +4667,12 @@ function ProductOptions({
               </p>
             </div>
             <span className="shrink-0 text-sm font-semibold text-brand-700">
-              {formatPrice(getTshirtUnitPrice(printPackage, product), locale ?? 'mk')}
+              {formatPrice(
+                isHoodieProduct(product)
+                  ? getHoodieUnitPrice(product, size, printPackage)
+                  : getTshirtUnitPrice(printPackage, product),
+                locale ?? 'mk',
+              )}
             </span>
           </div>
         </div>

@@ -12,6 +12,7 @@ import {
   SPIN_PROMO_DISMISS_KEY,
   SPIN_PROMO_DISMISS_MS,
 } from '@/lib/rewards/spin-config';
+import { canAutoShowPromo, onDailyPromoPlayed } from '@/lib/promo/daily-promo';
 
 function isRewardsPath(pathname: string | null): boolean {
   if (!pathname) return false;
@@ -74,6 +75,10 @@ export function SpinWheelPromoPopup() {
       return;
     }
 
+    if (!canAutoShowPromo('wheel')) {
+      return;
+    }
+
     let armed = false;
 
     function onScroll() {
@@ -94,6 +99,12 @@ export function SpinWheelPromoPopup() {
     onScroll();
     return () => window.removeEventListener('scroll', onScroll);
   }, [pathname]);
+
+  useEffect(() => {
+    return onDailyPromoPlayed((id) => {
+      if (id !== 'wheel') setVisible(false);
+    });
+  }, []);
 
   function dismiss() {
     try {

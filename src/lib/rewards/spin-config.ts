@@ -80,7 +80,7 @@ export const SPIN_SEGMENTS: readonly SpinSegment[] = [
   },
 ] as const;
 
-export const SPIN_COUPON_VALID_DAYS = 30;
+export const SPIN_COUPON_VALID_DAYS = 7;
 export const SPIN_PROMO_DISMISS_KEY = 'print8_spin_promo_dismissed_at';
 export const SPIN_PROMO_DISMISS_MS = 7 * 24 * 60 * 60 * 1000;
 export const SPIN_CLAIMED_FLAG_KEY = 'print8_spin_claimed';

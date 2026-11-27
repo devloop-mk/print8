@@ -9,6 +9,11 @@ import { HolidayWorkshopCanvas } from '@/components/holiday/HolidayWorkshopCanva
 import { HolidayGiftReveal } from '@/components/holiday/HolidayGiftReveal';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { getCookieConsent } from '@/lib/legal/cookie-consent';
+import {
+  canAutoShowPromo,
+  markDailyPromoPlayed,
+  onDailyPromoPlayed,
+} from '@/lib/promo/daily-promo';
 import { LOGO_MARK } from '@/lib/brand/logos';
 import {
   HOLIDAY_WORKSHOP_TARGET,
@@ -97,6 +102,12 @@ export function HolidayWorkshop() {
       return;
     }
 
+    if (!canAutoShowPromo('workshop')) {
+      setNotice(false);
+      setReady(true);
+      return;
+    }
+
     const delay = cookieReady ? 1400 : 4200;
     const timer = window.setTimeout(() => {
       setNotice(true);
@@ -104,6 +115,12 @@ export function HolidayWorkshop() {
     }, delay);
     return () => window.clearTimeout(timer);
   }, [entry, excluded]);
+
+  useEffect(() => {
+    return onDailyPromoPlayed((id) => {
+      if (id !== 'workshop') setNotice(false);
+    });
+  }, []);
 
   const closeOverlay = useCallback(() => {
     setOverlay('closed');
@@ -196,13 +213,14 @@ export function HolidayWorkshop() {
           minOrderAmount: Number(data.minOrderAmount ?? 0),
           discountAmount: Number(data.discountAmount ?? 0),
           percent: data.percent ?? null,
-          validDays: Number(data.validDays ?? 21),
+          validDays: Number(data.validDays ?? 7),
           golden: Boolean(data.golden),
           suggestionId: data.suggestionId ?? 'mug',
           suggestionHref: data.suggestionHref ?? '/products',
           claimedAt: Date.now(),
         };
         saveHolidayClaim(stored);
+        markDailyPromoPlayed('workshop');
         setClaim(stored);
       } catch {
         setClaimError(t('claimError'));

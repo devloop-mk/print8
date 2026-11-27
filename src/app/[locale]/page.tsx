@@ -17,6 +17,7 @@ import { HeroFeatureBar } from '@/components/home/HeroFeatureBar';
 import { HomeHighlights } from '@/components/home/HomeHighlights';
 import { HomeHowItWorks } from '@/components/home/HomeHowItWorks';
 import { HomeCategoryGrid } from '@/components/home/HomeCategoryGrid';
+import { HomeChristmasBand } from '@/components/home/HomeChristmasBand';
 import { FeaturedDesignCards } from '@/components/home/FeaturedDesignCards';
 import { HomeCustomDesignCta } from '@/components/home/HomeCustomDesignCta';
 import { HomeContactCta } from '@/components/home/HomeContactCta';
@@ -90,6 +91,8 @@ export default async function HomePage({
         <HomePromoBannerCarousel />
         <HeroFeatureBar />
       </section>
+
+      <HomeChristmasBand />
 
       <Reveal delay={15}>
         <HomeCategoryGrid productCount={productCount} />

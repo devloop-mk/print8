@@ -31,30 +31,30 @@ export const HOODIE_SIZES = [
 
 export type HoodieSize = (typeof HOODIE_SIZES)[number];
 
-const CHARCOAL_SIDES = {
-  front: '/hoodies/hoodie-charcoal.jpg',
-  back: '/hoodies/hoodie-charcoal-back.jpg',
-} as const;
-
 const WHITE_SIDES = {
   front: '/hoodies/hoodie-white.jpg',
   back: '/hoodies/hoodie-white-back.jpg',
 } as const;
 
-const INK_SIDES = {
-  front: '/hoodies/hoodie-blue.jpg',
-  back: '/hoodies/hoodie-blue-back.jpg',
-} as const;
+const HOODIE_GENERATED_MOCKUP_VERSION = 2;
 
-/** Pullover hoodie / zip-hoodie-with-hood mockups. Missing colors reuse closest blank. */
+function generatedHoodieSides(slug: string) {
+  const version = `?v=${HOODIE_GENERATED_MOCKUP_VERSION}`;
+  return {
+    front: `/hoodies/generated/hoodie-${slug}-front.jpg${version}`,
+    back: `/hoodies/generated/hoodie-${slug}-back.jpg${version}`,
+  };
+}
+
+/** New catalog photos per swatch. The original white blank is unchanged. */
 export function buildHoodieBasicColorImages(): ProductColorImages {
   return {
     [HOODIE_COLOR_WHITE]: WHITE_SIDES,
-    [HOODIE_COLOR_GRAY]: WHITE_SIDES,
-    [HOODIE_COLOR_BLACK]: CHARCOAL_SIDES,
-    [HOODIE_COLOR_NAVY]: CHARCOAL_SIDES,
-    [HOODIE_COLOR_RED]: CHARCOAL_SIDES,
-    [HOODIE_COLOR_INK]: INK_SIDES,
+    [HOODIE_COLOR_GRAY]: generatedHoodieSides('siva'),
+    [HOODIE_COLOR_BLACK]: generatedHoodieSides('crna'),
+    [HOODIE_COLOR_NAVY]: generatedHoodieSides('teget'),
+    [HOODIE_COLOR_RED]: generatedHoodieSides('crvena'),
+    [HOODIE_COLOR_INK]: generatedHoodieSides('mastilo'),
   };
 }
 

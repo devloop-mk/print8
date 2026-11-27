@@ -9,7 +9,7 @@ export const NY_SCRATCH_DISMISS_KEY = 'print8_ny_scratch_dismissed_at';
 export const NY_SCRATCH_DISMISS_MS = 4 * 60 * 60 * 1000;
 /** One scratch per browser every 24 hours. */
 export const NY_SCRATCH_COOLDOWN_MS = 24 * 60 * 60 * 1000;
-export const NY_SCRATCH_VALID_DAYS = 21;
+export const NY_SCRATCH_VALID_DAYS = 7;
 /** Auto-clear the foil once this share of pixels is gone. */
 export const NY_SCRATCH_REVEAL_RATIO = 0.5;
 export const NY_SCRATCH_CELL_COUNT = 9;

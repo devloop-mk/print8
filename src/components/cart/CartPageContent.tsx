@@ -13,6 +13,7 @@ import { useCart } from "@/components/cart/CartProvider";
 import { formatPrice, cn } from "@/lib/utils";
 import { isHoodieProduct } from "@/lib/products/hoodie-catalog";
 import { getHoodieUnitPrice } from "@/lib/products/hoodie-pricing";
+import { isTshirtPrintPackage } from "@/lib/products/tshirt-print-pricing";
 import { getColorSwatchDisplayHex } from "@/lib/products/product-color-labels";
 import {
   MAX_PHOTOS_PER_ORDER,
@@ -162,7 +163,16 @@ export function CartPageContent() {
     updateItem(itemId, {
       name: formatProductCartName(typeLabel, newSize, product),
       ...(product && isHoodieProduct(product)
-        ? { price: getHoodieUnitPrice(product, newSize) }
+        ? {
+            price: getHoodieUnitPrice(
+              product,
+              newSize,
+              typeof item.metadata?.printPackage === "string" &&
+                isTshirtPrintPackage(item.metadata.printPackage)
+                ? item.metadata.printPackage
+                : "front-small",
+            ),
+          }
         : {}),
       metadata: {
         ...item.metadata,

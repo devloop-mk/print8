@@ -30,6 +30,8 @@ const MERCH_COLLECTION_LABELS_MK: Record<string, string> = {
   streetwear: 'Streetwear',
   streetwear3: 'Streetwear',
   'baby-milestones': 'Беби пресвртници',
+  'christmas-baby': 'Божиќни бодија',
+  christmas: 'Божиќ',
   kids: 'Детски',
   'kids-birthday': 'Роденденски',
   'couple-packs': 'Парски пакети',

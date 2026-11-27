@@ -7,6 +7,7 @@ export const PRODUCT_OFFERING_PATHS = {
   readyDesigns: '/products/ready-designs',
   kidsReadyDesigns: '/products/ready-designs/kids',
   couplesReadyDesigns: '/products/ready-designs/couples',
+  christmasReadyDesigns: '/products/ready-designs/christmas',
   textTemplates: '/products/text-templates',
   category: (categoryId: string) => `/products/category/${categoryId}`,
   categoryBrowse: (categoryId: string) => `/products/category/${categoryId}/browse`,

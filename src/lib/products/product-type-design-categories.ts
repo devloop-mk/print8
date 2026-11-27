@@ -24,7 +24,9 @@ export type ProductTypeDesignCategoryId =
   | 'dailyGrind'
   | 'mkSlang'
   | 'mkRetroPlates'
-  | 'babyMilestones';
+  | 'babyMilestones'
+  | 'christmasBaby'
+  | 'christmas';
 
 export type ProductTypeDesignCategory = {
   id: ProductTypeDesignCategoryId;
@@ -99,6 +101,11 @@ const TYPE_DESIGN_CATEGORIES: Partial<
   ],
   hoodie: [
     {
+      id: 'christmas',
+      href: PRODUCT_OFFERING_PATHS.christmasReadyDesigns,
+      previewDesignId: 'xmas-hoodie-2027',
+    },
+    {
       id: 'kidsBirthday',
       href: PRODUCT_OFFERING_PATHS.kidsReadyDesigns,
       previewDesignId: 'tee-kids-rodendensko-dete',
@@ -126,6 +133,11 @@ const TYPE_DESIGN_CATEGORIES: Partial<
   ],
   bodysuit: [
     {
+      id: 'christmasBaby',
+      href: PRODUCT_OFFERING_PATHS.christmasReadyDesigns,
+      previewDesignId: 'baby-xmas-first',
+    },
+    {
       id: 'babyMilestones',
       href: productTypeHref('bodysuit', { collection: 'baby-milestones' }),
       previewDesignId: 'baby-hello-world',
@@ -134,6 +146,20 @@ const TYPE_DESIGN_CATEGORIES: Partial<
       id: 'kidsBirthday',
       href: PRODUCT_OFFERING_PATHS.kidsReadyDesigns,
       previewDesignId: 'tee-kids-gen-unicorn-party',
+    },
+  ],
+  mug: [
+    {
+      id: 'christmas',
+      href: PRODUCT_OFFERING_PATHS.christmasReadyDesigns,
+      previewDesignId: 'xmas-mug-nina',
+    },
+  ],
+  bag: [
+    {
+      id: 'christmas',
+      href: PRODUCT_OFFERING_PATHS.christmasReadyDesigns,
+      previewDesignId: 'xmas-bag-jana',
     },
   ],
 };

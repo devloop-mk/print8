@@ -20,6 +20,7 @@ import {
   getSpinSliceDegrees,
   type SpinPrizeKey,
 } from '@/lib/rewards/spin-config';
+import { markDailyPromoPlayed } from '@/lib/promo/daily-promo';
 
 type SpinResult = {
   prizeKey: string;
@@ -312,6 +313,7 @@ export function SpinWheelGame() {
       } catch {
         /* ignore */
       }
+      markDailyPromoPlayed('wheel');
       return true;
     } catch {
       setError(t('errors.generic'));
@@ -822,7 +824,7 @@ export function SpinWheelGame() {
               <p className="mt-2 text-sm text-ink-600">
                 {t('winBody', {
                   min: result.minOrderAmount,
-                  days: result.validDays ?? 30,
+                  days: result.validDays ?? 7,
                 })}
               </p>
               {result.emailSent ? (

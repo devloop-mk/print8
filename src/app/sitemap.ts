@@ -14,6 +14,7 @@ const STATIC_PATHS = [
   '/products/ready-designs',
   '/products/ready-designs/kids',
   '/products/ready-designs/couples',
+  '/products/ready-designs/christmas',
   '/products/custom',
   '/designs',
   '/designs/all',

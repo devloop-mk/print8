@@ -6,6 +6,8 @@ export const DESIGN_COLLECTION_LABELS: Record<string, { en: string; mk: string }
   streetwear: { en: 'Streetwear', mk: 'Streetwear' },
   streetwear3: { en: 'Streetwear', mk: 'Streetwear' },
   'baby-milestones': { en: 'Baby milestones', mk: 'Беби пресвртници' },
+  'christmas-baby': { en: 'Christmas bodysuits', mk: 'Божиќни бодија' },
+  christmas: { en: 'Christmas', mk: 'Божиќ' },
   kids: { en: 'Kids', mk: 'Детски' },
   'kids-birthday': { en: 'Birthday', mk: 'Роденденски' },
   'couple-packs': { en: 'Couple packs', mk: 'Парски пакети' },

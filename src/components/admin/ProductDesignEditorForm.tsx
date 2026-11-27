@@ -790,7 +790,7 @@ export function ProductDesignEditorForm({ design }: ProductDesignEditorFormProps
                 template={template}
                 previewSide="back"
                 title="Задна страна — позиција по тип"
-                onPlacementChange={patchBackPlacement}
+                onPlacementChange={patchFrontPlacement}
               />
             </div>
           ) : null}
