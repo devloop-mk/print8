@@ -69,7 +69,7 @@
       "calWildlife": "Wildlife and animals",
       "calPets": "Pets",
       "calTrodelen": "Tri-panel",
-      "calTrodelenRed": "Tri-panel with red spiral",
+      "calTrodelenRed": "Tri-panel - Red",
       "calClassic": "Classic wall"
     },
     "qty": "Quantity",
@@ -561,7 +561,7 @@
         ]
       },
       "calTrodelenRed": {
-        "name": "Tri-panel calendar with red spiral",
+        "name": "Tri-panel calendar - Red",
         "specs": [
           "Three months in one view · red header",
           "Metal spiral",
@@ -2382,7 +2382,6 @@
     "christmasArchive": {
       "eyebrow": "Christmas",
       "title": "Christmas designs",
-      "subtitle": "Bodysuits, hoodies, mugs, and bags are kept apart. A design prints on the product shown with it.",
       "gridTitle": "All Christmas designs",
       "resultsCount": "{count, plural, one {# Christmas design} other {# Christmas designs}}",
       "back": "Back",

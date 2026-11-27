@@ -91,9 +91,6 @@ export function ChristmasDesignsArchive({
               <h1 className="mt-4 font-display text-4xl font-bold tracking-tight sm:text-5xl">
                 {t('title')}
               </h1>
-              <p className="mt-3 max-w-xl text-base leading-relaxed text-white/80 sm:text-lg">
-                {t('subtitle')}
-              </p>
             </div>
 
             {featured.length > 0 ? (
@@ -149,6 +146,7 @@ export function ChristmasDesignsArchive({
                       colorFilter="all"
                       preferredProductId={entry.products[0]?.id}
                       preferredProductType={group.type}
+                      orderButtonClassName="border-[#143024] bg-[#1a4a34] bg-none from-transparent to-transparent text-white hover:border-[#10281c] hover:bg-[#10281c] hover:from-transparent hover:to-transparent focus-visible:outline-[#1a4a34]"
                     />
                   </div>
                 </Reveal>

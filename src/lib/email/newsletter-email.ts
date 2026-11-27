@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import { getCanonicalSiteUrl, localePath } from '@/lib/seo/site';
 import type { Locale } from '@/i18n/routing';
 import {
@@ -11,6 +13,7 @@ import {
   getBrevoClient,
   getNewsletterFromAddress,
   sendTransactionalEmail,
+  type TransactionalEmailAttachment,
 } from '@/lib/email/email-client';
 
 export function buildNewsletterUnsubscribeUrl(
@@ -244,6 +247,25 @@ function resolveCopyForRecipient(
 
 const NEWSLETTER_SEND_CONCURRENCY = 5;
 
+async function loadTemplateAttachments(
+  templateId: string | null | undefined,
+): Promise<TransactionalEmailAttachment[]> {
+  const attachment = getNewsletterTemplate(templateId)?.attachment;
+  if (!attachment) return [];
+
+  const relative = attachment.publicPath.replace(/^\/+/, '');
+  const filePath = path.join(process.cwd(), 'public', relative);
+  try {
+    const content = await readFile(filePath);
+    return [{ filename: attachment.filename, content }];
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : 'unreadable file';
+    throw new Error(
+      `Newsletter attachment is missing (${attachment.filename}): ${detail}`,
+    );
+  }
+}
+
 async function mapPool<T, R>(
   items: T[],
   concurrency: number,
@@ -274,6 +296,8 @@ export async function sendNewsletterBroadcast(
     throw new Error('BREVO_API_KEY is not configured');
   }
 
+  const attachments = await loadTemplateAttachments(input.templateId);
+
   const outcomes = await mapPool(
     input.recipients,
     NEWSLETTER_SEND_CONCURRENCY,
@@ -302,6 +326,7 @@ export async function sendNewsletterBroadcast(
           to: recipient.email,
           subject: copy.subject,
           html,
+          attachments,
           headers: {
             'List-Unsubscribe': `<${unsubscribeUrl}>`,
           },

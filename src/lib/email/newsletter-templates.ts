@@ -29,6 +29,11 @@ export type NewsletterTemplate = {
   description: string;
   /** Optional full-width image under the header (site-relative path). */
   heroImagePath?: string;
+  /** File under public/ attached to every send of this template. */
+  attachment?: {
+    publicPath: string;
+    filename: string;
+  };
   mk: NewsletterTemplateLocaleCopy;
   en: NewsletterTemplateLocaleCopy;
 };
@@ -39,8 +44,12 @@ export const NEWSLETTER_TEMPLATES: NewsletterTemplate[] = [
     label: 'Новогодишен каталог 2027',
     labelEn: 'New Year catalog 2027',
     description:
-      'Бизнис писмо за новогодишниот каталог: деловни подароци, брендирање и линк кон каталогот.',
+      'Бизнис писмо за новогодишниот каталог. PDF каталогот се праќа како прилог.',
     heroImagePath: '/email/newsletter-hero-v2.jpg',
+    attachment: {
+      publicPath: '/email/print8-katalog-2027.pdf',
+      filename: 'PRINT8-katalog-2027.pdf',
+    },
     mk: {
       subject: 'PRINT8 | Новогодишен каталог – деловни подароци и брендирани производи',
       headline: 'Новогодишен каталог – деловни подароци и брендирани производи',

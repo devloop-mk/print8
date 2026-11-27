@@ -65,6 +65,8 @@ type ProductDesignCatalogCardProps = {
   preferredProductType?: ProductType;
   /** Lock mockup/order to a specific catalog product (e.g. product /designs page). */
   preferredProductId?: string;
+  /** Extra classes for the primary order button, e.g. a page-specific color. */
+  orderButtonClassName?: string;
 };
 
 function resolvePreviewColorForFilter(
@@ -92,6 +94,7 @@ export function ProductDesignCatalogCard({
   varyInitialColor = false,
   preferredProductType,
   preferredProductId,
+  orderButtonClassName,
 }: ProductDesignCatalogCardProps) {
   const t = useTranslations('products');
   const locale = useLocale() as 'mk' | 'en';
@@ -407,7 +410,10 @@ export function ProductDesignCatalogCard({
             {canQuickOrder ? (
               <Button
                 size="sm"
-                className="w-full normal-case tracking-normal shadow-none hover:translate-y-0 active:translate-y-0 active:shadow-none"
+                className={cn(
+                  'w-full normal-case tracking-normal shadow-none hover:translate-y-0 active:translate-y-0 active:shadow-none',
+                  orderButtonClassName,
+                )}
                 onClick={handleOrder}
                 loading={ordering}
                 disabled={ordering}
@@ -418,7 +424,10 @@ export function ProductDesignCatalogCard({
               <Link href={customizeHref} prefetch={false}>
                 <Button
                   size="sm"
-                  className="w-full normal-case tracking-normal shadow-none hover:translate-y-0 active:translate-y-0 active:shadow-none"
+                  className={cn(
+                    'w-full normal-case tracking-normal shadow-none hover:translate-y-0 active:translate-y-0 active:shadow-none',
+                    orderButtonClassName,
+                  )}
                 >
                   {isTextDesignTemplate(design)
                     ? td('customizeWithPhoto')

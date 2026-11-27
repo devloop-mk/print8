@@ -27,12 +27,12 @@ export async function generateMetadata({
   return buildPageMetadata({
     locale: locale as Locale,
     title: `${t('title')} | Print 8`,
-    description: t('subtitle'),
+    description: t('title'),
     path: PRODUCT_OFFERING_PATHS.christmasReadyDesigns,
     image: buildOgImageUrl({
       locale: locale as Locale,
       title: t('title'),
-      description: t('subtitle'),
+      description: t('title'),
       badge: tm('badges.products'),
     }),
   });
