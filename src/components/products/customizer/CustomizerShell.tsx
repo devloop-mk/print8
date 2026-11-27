@@ -314,7 +314,7 @@ export function CustomizerShell({
               </div>
 
               <div
-                className="flex min-h-0 min-w-0 flex-col border-l border-ink-200/60 bg-white"
+                className="flex min-h-0 min-w-0 flex-col overflow-hidden border-l border-ink-200/60 bg-white"
                 style={{ width: `${100 - splitPercent}%` }}
               >
                 {sidePreview}

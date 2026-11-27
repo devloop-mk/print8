@@ -3,6 +3,7 @@ import { products } from '@/lib/data/catalog';
 import { getProductPremadeDesignCatalogEntries } from '@/lib/products/design-catalog';
 import { slimProductDesignCatalogEntries } from '@/lib/products/slim-catalog-entry';
 import { resolveProductId } from '@/lib/products/product-id-aliases';
+import { isProductVisibleOnStorefront } from '@/lib/cms/product-visibility';
 import { buildProductPremadeDesignsMetadata } from '@/lib/seo/page-metadata';
 import type { Locale } from '@/i18n/routing';
 import { notFound } from 'next/navigation';
@@ -18,6 +19,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale, id } = await params;
   const canonicalId = resolveProductId(id);
+  if (!(await isProductVisibleOnStorefront(canonicalId))) notFound();
   const metadata = await buildProductPremadeDesignsMetadata(
     locale as Locale,
     canonicalId,
@@ -35,7 +37,7 @@ export default async function ProductPremadeDesignsPage({
   const canonicalId = resolveProductId(id);
   const product = products.find((item) => item.id === canonicalId);
 
-  if (!product) {
+  if (!product || !(await isProductVisibleOnStorefront(canonicalId))) {
     notFound();
   }
 

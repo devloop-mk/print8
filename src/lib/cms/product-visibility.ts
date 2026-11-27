@@ -7,7 +7,10 @@ import {
   type ProductType,
 } from '@/lib/data/catalog';
 import { productVisibilityDb } from '@/lib/db/product-visibility';
-import { isProductTypeHiddenFromStorefront } from '@/lib/products/storefront-hidden-types';
+import {
+  isProductIdHiddenFromStorefront,
+  isProductTypeHiddenFromStorefront,
+} from '@/lib/products/storefront-hidden-types';
 import {
   productIdVariants,
   resolveProductId,
@@ -27,6 +30,7 @@ function isStorefrontProductVisible(
   visibility: Record<string, boolean>,
 ): boolean {
   if (isProductTypeHiddenFromStorefront(product.type)) return false;
+  if (isProductIdHiddenFromStorefront(product.id)) return false;
   return isProductActiveOnStorefront(product.id, visibility);
 }
 
@@ -77,7 +81,10 @@ export async function isProductVisibleOnStorefront(
 ): Promise<boolean> {
   const canonicalId = resolveProductId(productId);
   const product = products.find((item) => item.id === canonicalId);
-  if (product && isProductTypeHiddenFromStorefront(product.type)) {
+  if (
+    isProductIdHiddenFromStorefront(canonicalId) ||
+    (product && isProductTypeHiddenFromStorefront(product.type))
+  ) {
     return false;
   }
   const visibility = await getProductVisibilityRecord();

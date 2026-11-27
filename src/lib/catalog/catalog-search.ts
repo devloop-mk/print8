@@ -28,6 +28,7 @@ import { buildDesignDetailUrl } from '@/lib/products/paths';
 import type { ProductDesignCatalogEntry } from '@/lib/products/design-catalog';
 import { premadeDesignAppliesToProduct } from '@/lib/products/premade-design-product-match';
 import { designCategoryHref } from '@/lib/designs/design-nav';
+import { isProductIdHiddenFromStorefront } from '@/lib/products/storefront-hidden-types';
 
 /** Initial matches shown before "See more" on search UIs. */
 export const SEARCH_RESULTS_PREVIEW_LIMIT = 20;
@@ -316,6 +317,7 @@ function buildCatalogItemResults(
   }
 
   for (const product of products) {
+    if (isProductIdHiddenFromStorefront(product.id)) continue;
     results.push({
       id: product.id,
       kind: 'product',
@@ -329,8 +331,10 @@ function buildCatalogItemResults(
   }
 
   for (const design of productDesignTemplates) {
-    const matchedProducts = products.filter((product) =>
-      premadeDesignAppliesToProduct(design, product),
+    const matchedProducts = products.filter(
+      (product) =>
+        !isProductIdHiddenFromStorefront(product.id) &&
+        premadeDesignAppliesToProduct(design, product),
     );
     if (matchedProducts.length === 0) continue;
     // Prefer productTypes[0] (e.g. bodysuit for baby designs), not catalog order.

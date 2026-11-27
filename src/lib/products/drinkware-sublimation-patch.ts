@@ -40,7 +40,8 @@ export const DRINKWARE_SUBLIMATION_PATCH_BY_PRODUCT_ID: Record<
     ...PATCH_MUG_SUBLIMATION_FIELD,
   },
   'mug-window-blue': {
-    bodyColor: '#2563eb',
+    // Sampled from the CB11T-BL photo — deep navy, not bright blue.
+    bodyColor: '#1a1464',
     patchColor: '#ffffff',
     ...PATCH_MUG_SUBLIMATION_FIELD,
   },
@@ -58,13 +59,18 @@ export function isInnerColorMug(productId?: string): boolean {
   return Boolean(productId?.startsWith('mug-inner-'));
 }
 
+/** Heat-reveal mugs are previewed in the heated state: the body turns white. */
+function isMagicMugId(productId?: string): boolean {
+  return productId === 'mug-magic-glossy' || productId === 'mug-magic-matte';
+}
+
 export function getDrinkwareBodyColor(
   productId: string | undefined,
   productColor: string,
 ): string {
   const patch = getDrinkwareSublimationPatch(productId);
   if (patch) return patch.bodyColor;
-  if (isInnerColorMug(productId)) return '#ffffff';
+  if (isInnerColorMug(productId) || isMagicMugId(productId)) return '#ffffff';
   return productColor;
 }
 

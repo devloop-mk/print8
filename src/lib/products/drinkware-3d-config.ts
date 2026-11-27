@@ -169,6 +169,30 @@ const productConfigs: Record<string, Drinkware3DConfig> = {
   'mug-window-blue': {
     ...MUG_CONFIG,
     handleGapFraction: 0.1,
+    /** Bowl is the same deep navy as the glaze, darker toward the bottom. */
+    interiorColor: '#0c0a22',
+  },
+  /**
+   * Shown heated: the black mug turns white and the design becomes visible.
+   * Interior is white ceramic as well.
+   */
+  'mug-magic-glossy': {
+    ...MUG_CONFIG,
+    interiorColor: '#ffffff',
+  },
+  'mug-magic-matte': {
+    ...MUG_CONFIG,
+    interiorColor: '#ffffff',
+  },
+  /** Sparkle glaze is light pink outside; the bowl is white ceramic. */
+  'mug-rose-sparkle': {
+    ...MUG_CONFIG,
+    interiorColor: '#ffffff',
+  },
+  /** Sparkle glaze is pink outside; the bowl is white ceramic. */
+  'mug-red-sparkle': {
+    ...MUG_CONFIG,
+    interiorColor: '#ffffff',
   },
 };
 

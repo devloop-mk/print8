@@ -49,8 +49,10 @@ import {
   getDrinkwareBodyColorOptions,
   isCorkLidMug,
   isHeartHandleMug,
+  isMagicMug,
   isMugInsideProduct,
 } from '@/lib/products/drinkware-product-options';
+import { isProductIdHiddenFromStorefront } from '@/lib/products/storefront-hidden-types';
 import { withVendorSkuMetadata } from '@/lib/products/vendor-sku';
 import { GarmentFitSelector } from '@/components/products/GarmentFitSelector';
 import { DrinkwareProductSelector } from '@/components/products/DrinkwareProductSelector';
@@ -994,8 +996,13 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
         ? resolveProductId(activeProductId)
         : undefined;
       const base =
-        products.find((p) => p.id === resolvedId) ||
-        products.find((p) => p.type === type);
+        products.find(
+          (p) =>
+            p.id === resolvedId && !isProductIdHiddenFromStorefront(p.id),
+        ) ||
+        products.find(
+          (p) => p.type === type && !isProductIdHiddenFromStorefront(p.id),
+        );
       if (!base || base.type !== 't-shirt' || !designTemplateForFit) {
         return base;
       }
@@ -2677,8 +2684,8 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
 
   const drinkwareSidePreviewNode =
     isDrinkware && isDesktopSplitPreview && !isCapturing ? (
-      <div className="flex min-h-0 flex-1 flex-col">
-        <div className="flex shrink-0 flex-col gap-2 border-b border-ink-100 px-4 py-3">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="flex shrink-0 flex-col gap-2 overflow-y-auto border-b border-ink-100 px-4 py-3">
           <div className="flex items-center gap-2">
             <Rotate3d className="h-4 w-4 text-brand-600" aria-hidden />
             <h2 className="text-sm font-semibold text-ink-900">
@@ -2715,8 +2722,16 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
               {t('mugCorkLidPreviewNote')}
             </p>
           ) : null}
+          {isMagicMug(product.id) ? (
+            <p
+              role="note"
+              className="rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-2 text-xs font-medium leading-snug text-brand-950"
+            >
+              {t('mugMagicPrintNote')}
+            </p>
+          ) : null}
         </div>
-        <div className="flex min-h-0 flex-1 items-center justify-center bg-[#f4f6f8] p-4 md:p-6">
+        <div className="relative min-h-0 flex-1 overflow-hidden bg-[#f4f6f8]">
           <DrinkwareDesignPreview3D
             productType={type}
             productId={product.id}
@@ -2725,8 +2740,8 @@ export function ProductCustomizer({ type }: { type: ProductType }) {
             designTemplate={activeDesignTemplate}
             printBounds={overlayPrintBounds ?? effectivePrintAreaInsets}
             textLayers={preview3DTextLayers}
-            variant="floating"
-            className="w-[min(28rem,46vh)] max-w-full shadow-[0_8px_40px_rgba(15,23,42,0.12)]"
+            variant="pane"
+            className="h-full max-h-full w-full"
             canvasHeightPx={drinkwareCanvasHeightPx}
           />
         </div>
@@ -3598,7 +3613,9 @@ function InteractivePreview({
   const drinkwareFlatSize = isDrinkware
     ? getDrinkwareFlatCanvasSize(productType, product.id)
     : null;
-  const drinkwareBodyColor = getDrinkwareBodyColor(product.id, shirtColor);
+  const drinkwareCanvasColor = isMagicMug(product.id)
+    ? '#ffffff'
+    : getDrinkwareBodyColor(product.id, shirtColor);
   const sublimationPatch = getDrinkwareSublimationPatch(product.id);
   const sublimationPatchClipPath = sublimationPatch
     ? getSublimationPatchCssClipPath(sublimationPatch)
@@ -3610,6 +3627,7 @@ function InteractivePreview({
   const showMugInsideNote = isMugInsideProduct(product.id);
   const showHeartHandleNote = isHeartHandleMug(product.id);
   const showCorkLidNote = isCorkLidMug(product.id);
+  const showMagicMugNote = isMagicMug(product.id);
   const placedPhotos = getPlacedPhotos(sideDesign);
 
   // Drinkware 2D editor is a flat unwrap template — never show the mug photo.
@@ -3671,7 +3689,7 @@ function InteractivePreview({
                 ? '100%'
                 : `min(${drinkwareFlatSize.width}px, 94vw)`,
               aspectRatio: String(drinkwareFlatSize.aspect),
-              backgroundColor: drinkwareBodyColor,
+              backgroundColor: drinkwareCanvasColor,
             }
           : undefined
       }
@@ -3703,7 +3721,7 @@ function InteractivePreview({
           <>
             <div
               className="pointer-events-none absolute inset-0 z-0"
-              style={{ backgroundColor: drinkwareBodyColor }}
+              style={{ backgroundColor: drinkwareCanvasColor }}
               aria-hidden
             />
           </>
@@ -3922,6 +3940,14 @@ function InteractivePreview({
             {t('mugCorkLidPreviewNote')}
           </p>
         ) : null}
+        {showMagicMugNote ? (
+          <p
+            role="note"
+            className="w-full rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-center text-xs font-medium leading-snug text-brand-950"
+          >
+            {t('mugMagicPrintNote')}
+          </p>
+        ) : null}
         <p
           role="note"
           className="w-full rounded-lg border border-amber-300/80 bg-amber-50 px-3 py-2 text-center text-xs font-medium leading-snug text-amber-950"
@@ -3959,41 +3985,18 @@ function InteractivePreview({
             {t('mugCorkLidPreviewNote')}
           </p>
         ) : null}
+        {showMagicMugNote && !showStacked3dPreview ? (
+          <p
+            role="note"
+            className="w-full rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-center text-xs font-medium leading-snug text-brand-950"
+          >
+            {t('mugMagicPrintNote')}
+          </p>
+        ) : null}
         <DrinkwareWrapHint>{t('drinkwareWrapHint')}</DrinkwareWrapHint>
       </div>
     ) : null}
 
-    {!isCapturing &&
-    mockupLayout.wrapPrintArea &&
-    desktopSplitPreview &&
-    (showMugInsideNote || showHeartHandleNote || showCorkLidNote) ? (
-      <>
-        {showMugInsideNote ? (
-          <p
-            role="note"
-            className="w-full max-w-[min(36rem,92vw)] rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-center text-xs font-medium leading-snug text-brand-950"
-          >
-            {t('mugInsidePrintNote')}
-          </p>
-        ) : null}
-        {showHeartHandleNote ? (
-          <p
-            role="note"
-            className="w-full max-w-[min(36rem,92vw)] rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-center text-xs font-medium leading-snug text-brand-950"
-          >
-            {t('mugHeartHandlePreviewNote')}
-          </p>
-        ) : null}
-        {showCorkLidNote ? (
-          <p
-            role="note"
-            className="w-full max-w-[min(36rem,92vw)] rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-center text-xs font-medium leading-snug text-brand-950"
-          >
-            {t('mugCorkLidPreviewNote')}
-          </p>
-        ) : null}
-      </>
-    ) : null}
     </div>
   );
 }

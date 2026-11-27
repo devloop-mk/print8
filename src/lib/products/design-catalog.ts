@@ -22,6 +22,7 @@ import {
   premadeDesignAppliesToProduct,
   productRequiresExplicitPremadeDesigns,
 } from '@/lib/products/premade-design-product-match';
+import { isProductIdHiddenFromStorefront } from '@/lib/products/storefront-hidden-types';
 export type ProductDesignCatalogEntry = {
   design: ProductDesignTemplate;
   products: Product[];
@@ -35,8 +36,10 @@ export function buildProductDesignCatalogEntries(
     .filter((design) => design.category === category)
     .map((design) => ({
       design,
-      products: products.filter((product) =>
-        premadeDesignAppliesToProduct(design, product),
+      products: products.filter(
+        (product) =>
+          !isProductIdHiddenFromStorefront(product.id) &&
+          premadeDesignAppliesToProduct(design, product),
       ),
     }))
     .filter((entry) => entry.products.length > 0);

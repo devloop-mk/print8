@@ -6,6 +6,7 @@ import { routing } from '@/i18n/routing';
 import { getSiteUrl, localePath } from '@/lib/seo/site';
 import type { Locale } from '@/i18n/routing';
 import { designNavCategories } from '@/lib/designs/design-nav';
+import { isProductIdHiddenFromStorefront } from '@/lib/products/storefront-hidden-types';
 
 const STATIC_PATHS = [
   '',
@@ -71,6 +72,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }
 
     for (const product of products) {
+      if (isProductIdHiddenFromStorefront(product.id)) continue;
       entries.push(entry(locale, `/products/${product.id}`, { priority: 0.6 }));
       entries.push(
         entry(locale, `/products/${product.id}/designs`, {

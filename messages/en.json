@@ -112,16 +112,16 @@
       "magicGlossy": {
         "name": "Magic mug — gloss",
         "specs": [
-          "Material: Ceramic",
-          "Print appears with a hot drink",
+          "The mug is black",
+          "When heated it turns white and the design shows",
           "Printed with your artwork or ours"
         ]
       },
       "magicMatte": {
         "name": "Magic mug — matte",
         "specs": [
-          "Material: Ceramic, matte finish",
-          "Print appears with a hot drink",
+          "The mug is black, matte finish",
+          "When heated it turns white and the design shows",
           "Printed with your artwork or ours"
         ]
       },
@@ -158,7 +158,7 @@
         ]
       },
       "frosted": {
-        "name": "Frosted glass mug",
+        "name": "Personalized glass mug — MATTE",
         "specs": [
           "Material: Frosted glass",
           "Printed with your artwork or ours"
@@ -173,14 +173,14 @@
         ]
       },
       "roseSparkle": {
-        "name": "Rose sparkle mug",
+        "name": "Light pink mug",
         "specs": [
           "Material: Ceramic with sparkle glaze",
           "Printed with your artwork or ours"
         ]
       },
       "redSparkle": {
-        "name": "Red sparkle mug",
+        "name": "Pink mug",
         "specs": [
           "Material: Ceramic with sparkle glaze",
           "Printed with your artwork or ours"
@@ -2964,7 +2964,7 @@
       "mugGoldHandle": "Gold handle mug",
       "mugB5kfWhite": "Personalized white ceramic mug",
       "mugRedPatch": "Personalized red mug with print area",
-      "mugFrosted": "Personalized frosted glass mug",
+      "mugFrosted": "Personalized glass mug — MATTE",
       "mugCorkLid": "Personalized mug with cork base and lid",
       "cupGlassBeer": "Personalized glass beer mug",
       "mugInsideDaddy": "Personalized mug — World's best daddy (inside)",
@@ -2988,8 +2988,8 @@
       "mugMagicGlossy": "Personalized magic mug — glossy",
       "mugMagicMatte": "Personalized magic mug — matte",
       "mugWindowBlue": "Personalized window mug — blue",
-      "mugRoseSparkle": "Personalized rose sparkle mug",
-      "mugRedSparkle": "Personalized red sparkle mug",
+      "mugRoseSparkle": "Personalized light pink mug",
+      "mugRedSparkle": "Personalized pink mug",
       "magnetHardboard7x9": "Personalized hardboard magnet 7×9 cm",
       "photoStone15x20": "Personalized photo stone 15×20 cm",
       "photoStone15x15": "Personalized photo stone 15×15 cm",
@@ -3079,6 +3079,7 @@
       "drinkwarePreviewApproximateNote": "Approximate preview — the finished product may look slightly different.",
       "mugHeartHandlePreviewNote": "This mug has a heart-shaped handle. The 3D preview shows a standard handle so you can judge the print on the mug body — the real handle will be heart-shaped.",
       "mugCorkLidPreviewNote": "The lid and cork base are not printed — place the design on the white ceramic wall only.",
+      "mugMagicPrintNote": "The mug is black. When heated it turns white, and then the design shows.",
       "drinkwareHandleHint": "Handle",
       "drinkwareCenterOfMug": "Center of mug",
       "splitResizeHandle": "Resize design and 3D preview",

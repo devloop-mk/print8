@@ -11,6 +11,7 @@ import {
   isDrinkwareGlassType,
 } from '@/lib/products/drinkware-type-groups';
 import { productIdsInclude } from '@/lib/products/product-id-aliases';
+import { isProductIdHiddenFromStorefront } from '@/lib/products/storefront-hidden-types';
 
 export function isDrinkwareProduct(product: Product): boolean {
   return isCylindricalDrinkwareType(product.type);
@@ -31,12 +32,18 @@ export function isCorkLidMug(productId: string): boolean {
   return productId === 'mug-cork-lid';
 }
 
+/** Heat-reveal mugs: black when cold, the body turns white when heated and the design shows. */
+export function isMagicMug(productId: string): boolean {
+  return productId === 'mug-magic-glossy' || productId === 'mug-magic-matte';
+}
+
 /** Drinkware blanks compatible with the active design (type + optional productIds lock). */
 export function getCompatibleDrinkwareProducts(
   design: ProductDesignTemplate | null | undefined,
 ): Product[] {
   return products.filter((product) => {
     if (!isDrinkwareProduct(product)) return false;
+    if (isProductIdHiddenFromStorefront(product.id)) return false;
     if (!design) return true;
     if (!design.productTypes.includes(product.type)) return false;
     if (
