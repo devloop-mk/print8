@@ -25,9 +25,8 @@ function TrendingThumbnail({
   return (
     <div
       className={cn(
-        'relative w-full overflow-hidden shadow-[0_20px_60px_-24px_rgba(0,0,0,0.65)] rounded-xl',
-        'transition duration-500 group-hover:scale-[1.03] group-hover:shadow-[0_28px_70px_-20px_rgba(0,0,0,0.55)]',
-        compact && 'shadow-[0_8px_24px_-12px_rgba(0,0,0,0.5)] group-hover:shadow-[0_12px_28px_-10px_rgba(0,0,0,0.45)]',
+        'relative w-full overflow-hidden rounded-xl shadow-[0_12px_28px_-18px_rgba(0,0,0,0.55)]',
+        compact && 'shadow-[0_8px_18px_-12px_rgba(0,0,0,0.45)]',
         design.ring,
       )}
     >
@@ -81,9 +80,8 @@ function TrendingCard({
       prefetch={false}
       className={cn(
         'group relative flex h-full flex-col overflow-hidden rounded-xl',
-        'border border-white/10 bg-white/[0.04] backdrop-blur-sm',
-        'transition duration-500 hover:border-white/25 hover:bg-white/[0.07]',
-        'hover:shadow-[0_24px_80px_-20px_rgba(255,255,255,0.15)]',
+        'border border-white/10 bg-white/[0.06]',
+        'transition duration-300 hover:border-white/25 hover:bg-white/[0.09]',
         compact && 'w-[55vw] max-w-[210px] shrink-0 snap-start',
         featured && !compact && 'min-h-[320px] lg:min-h-full',
         !featured && !compact && 'min-h-[240px]',
@@ -98,9 +96,8 @@ function TrendingCard({
       />
       <div
         className={cn(
-          'pointer-events-none absolute -right-8 -top-8 rounded-full blur-3xl',
+          'pointer-events-none absolute -right-8 -top-8 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.14),transparent_68%)]',
           compact ? 'h-20 w-20' : 'h-32 w-32',
-          design.badge.replace('/90', '/25'),
         )}
         aria-hidden
       />
@@ -201,11 +198,11 @@ export function TrendingDesignsSection({
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute -left-24 top-1/3 h-72 w-72 rounded-full bg-brand-500/10 blur-3xl"
+        className="pointer-events-none absolute -left-24 top-1/3 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.16),transparent_70%)]"
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute -right-16 bottom-0 h-64 w-64 rounded-full bg-rose-500/10 blur-3xl"
+        className="pointer-events-none absolute -right-16 bottom-0 h-64 w-64 rounded-full bg-[radial-gradient(circle,rgba(244,63,94,0.12),transparent_70%)]"
         aria-hidden
       />
 
@@ -228,7 +225,7 @@ export function TrendingDesignsSection({
 
           <Link
             href={productTypeHref('t-shirt')}
-            className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-white/25 bg-white/5 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm transition hover:border-white/40 hover:bg-white/10 sm:px-5 sm:py-2.5"
+            className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-white/25 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/40 hover:bg-white/15 sm:px-5 sm:py-2.5"
           >
             <Sparkles className="h-4 w-4 text-brand-300" aria-hidden />
             {t('viewAll')}
@@ -290,7 +287,7 @@ export function TrendingDesignsSection({
         <div className="mt-8 hidden justify-center sm:mt-12 sm:flex">
           <Link
             href={productTypeHref('t-shirt')}
-            className="inline-flex items-center gap-2 rounded-lg border border-white/25 bg-white/5 px-6 py-3 text-sm font-semibold text-white backdrop-blur-sm transition hover:border-white/40 hover:bg-white/10"
+            className="inline-flex items-center gap-2 rounded-lg border border-white/25 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:border-white/40 hover:bg-white/15"
           >
             <Sparkles className="h-4 w-4 text-brand-300" aria-hidden />
             {t('viewAll')}

@@ -4,13 +4,15 @@ import { Link } from '@/i18n/navigation';
 import { DesignTemplatePreview } from '@/components/products/DesignTemplatePreview';
 import { getProductDesignDisplayName } from '@/lib/products/design-display-name';
 import { getChristmasHomeShowcase } from '@/lib/products/christmas-designs';
+import { getMergedProductDesignTemplates } from '@/lib/products/merged-product-designs';
 import { PRODUCT_OFFERING_PATHS, buildDesignDetailUrl } from '@/lib/products/paths';
 
 export async function HomeChristmasBand() {
   const locale = (await getLocale()) as 'mk' | 'en';
   const t = await getTranslations('home.christmas');
   const types = await getTranslations('products.types');
-  const items = getChristmasHomeShowcase();
+  const merged = await getMergedProductDesignTemplates();
+  const items = getChristmasHomeShowcase(merged);
   if (items.length === 0) return null;
 
   return (
@@ -57,15 +59,19 @@ export async function HomeChristmasBand() {
             const name = getProductDesignDisplayName(design, locale);
             const type = design.productTypes[0];
             return (
-              <li key={design.id}>
+              <li
+                key={design.id}
+                className="[content-visibility:auto] [contain-intrinsic-size:auto_320px]"
+              >
                 <Link href={buildDesignDetailUrl(design.id)} className="group block">
-                  <div className="overflow-hidden rounded-2xl bg-white shadow-[0_16px_40px_-24px_rgba(0,0,0,0.8)] ring-1 ring-white/40 transition duration-300 group-hover:-translate-y-0.5">
+                  <div className="overflow-hidden rounded-2xl bg-white shadow-[0_8px_24px_-16px_rgba(0,0,0,0.55)] ring-1 ring-white/40 transition duration-300 group-hover:-translate-y-0.5">
                     <DesignTemplatePreview
                       product={product}
                       color={design.recommendedColor ?? '#ffffff'}
                       design={design}
                       typeLabel={name}
                       allowDrinkware3d={false}
+                      drinkwareCatalogCapture3d={false}
                       mockupVariant="catalog-card"
                       className="rounded-none border-0 bg-white shadow-none"
                     />

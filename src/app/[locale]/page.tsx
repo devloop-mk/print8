@@ -92,11 +92,14 @@ export default async function HomePage({
         <HeroFeatureBar />
       </section>
 
-      <HomeChristmasBand />
-
-      <Reveal delay={15}>
-        <HomeCategoryGrid productCount={productCount} />
-      </Reveal>
+      <div className="flex flex-col">
+        <div className="order-1 lg:order-2">
+          <HomeChristmasBand />
+        </div>
+        <Reveal delay={15} className="order-2 lg:order-1">
+          <HomeCategoryGrid productCount={productCount} />
+        </Reveal>
+      </div>
 
       <Reveal delay={30}>
         <TrendingDesignsSection designs={trendingDesigns} />

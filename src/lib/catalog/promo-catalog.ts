@@ -578,8 +578,9 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
   ),
   {
     ...calendarProduct('calTrodelen', 'trodelen', 1, CAL_TRODELEN),
-    image: `${CAL_IMG}/trodelen/hero.jpg?v=photo`,
+    image: `${CAL_IMG}/trodelen/hero.png?v=tri`,
   },
+  calendarProduct('calTrodelenRed', 'trodelen', 1, CAL_TRODELEN),
   {
     ...calendarProduct('calClassicPlastic', 'classic-plastic', 1, CAL_CLASSIC_PLASTIC),
     image: `${CAL_IMG}/classic-plastic/hero.jpg?v=a4h`,
@@ -917,6 +918,7 @@ export const MERCH_TOC_GROUPS = [
 /** All densities: at most 2 calendars per page (promo-cal-page--one|two). */
 const CALENDAR_PAGE_GROUPS: string[][] = [
   ['calTrodelen'],
+  ['calTrodelenRed'],
   ['calClassicPlastic', 'calClassicMetal'],
   ['calOrthodox6'],
   ['calOrthodox4', 'calRedOrthodox'],
@@ -940,6 +942,10 @@ export const CALENDAR_TOC_GROUPS = [
   {
     key: 'calTrodelen',
     ids: ['calTrodelen'],
+  },
+  {
+    key: 'calTrodelenRed',
+    ids: ['calTrodelenRed'],
   },
   {
     key: 'calClassic',

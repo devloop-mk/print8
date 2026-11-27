@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { revalidateTag } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import {
   getProductDesignTemplate,
   productDesignTemplates,
@@ -33,6 +33,9 @@ function revalidateProductDesignCaches() {
   // unused constant in CATALOG_CACHE_TAGS) — only PRODUCT_DESIGNS_CACHE_TAG
   // actually invalidates cached data here (managed product-design records).
   revalidateTag(PRODUCT_DESIGNS_CACHE_TAG, 'max');
+  // Homepage Christmas band is ISR; bust it so admin placement shows there too.
+  revalidatePath('/');
+  revalidatePath('/en');
 }
 
 function buildAdminProductDesignListItems(

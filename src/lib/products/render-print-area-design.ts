@@ -8,7 +8,6 @@ import { getCustomizerCanvasFontFamily } from '@/lib/products/customizer-fonts';
 import type { SideDesign } from '@/lib/products/design-state';
 import {
   fetchRecoloredSvgBlobUrl,
-  getDesignCompositeOverlayUrl,
   normalizeHex,
   resolveComposableOverlayUrl,
   resolveDisplayOverlayRasterUrl,
@@ -104,19 +103,30 @@ export async function rasterizeSvgSource(
   }
 }
 
+function sideHasOwnArtwork(design: SideDesign): boolean {
+  return Boolean(
+    design.overlayRaster ||
+      design.overlaySvg ||
+      design.premadeDesignImage ||
+      design.isRecolorableOverlay ||
+      (design.overlayColorVariants &&
+        Object.keys(design.overlayColorVariants).length > 0),
+  );
+}
+
 function resolveOverlayAssetUrl(
   design: SideDesign,
   template: ProductDesignTemplate | null | undefined,
   shirtColor: string,
 ): string | null {
+  if (!sideHasOwnArtwork(design)) return null;
+
   if (template?.printMasterImage) {
     const master = resolveComposableOverlayUrl(template.printMasterImage);
     if (master) return master;
   }
 
-  const raster =
-    resolveComposableOverlayUrl(design.overlayRaster) ??
-    (template ? getDesignCompositeOverlayUrl(template) : null);
+  const raster = resolveComposableOverlayUrl(design.overlayRaster);
   if (raster) return raster;
 
   if (design.overlayColorVariants) {
@@ -133,10 +143,6 @@ function resolveOverlayAssetUrl(
       },
       shirtColor,
     );
-  }
-
-  if (template?.overlayColorVariants) {
-    return resolveOverlayColorVariant(template, shirtColor);
   }
 
   if (design.premadeDesignImage) {

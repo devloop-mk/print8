@@ -411,24 +411,25 @@ export function resolveOverlayColorVariant(
 }
 
 /**
- * Raster URL shown in the interactive customizer (`useOverlayAssetUrl`).
- * Prefers the live overlay raster over a print master so cart captures match
- * what the customer placed on the mockup.
+ * Raster URL for one side of the customizer.
+ * Uses only artwork stored on that side. A text-only front must not inherit
+ * the template graphic that is placed on the other side.
  */
 export function resolveDisplayOverlayRasterUrl(
   design: {
     overlayRaster?: string | null;
     overlayColorVariants?: Record<string, string> | null;
   },
-  template: ProductDesignTemplate | null | undefined,
+  _template: ProductDesignTemplate | null | undefined,
   shirtColor: string,
 ): string | null {
-  const raster =
-    resolveComposableOverlayUrl(design.overlayRaster) ??
-    (template ? getDesignCompositeOverlayUrl(template) : null);
+  const raster = resolveComposableOverlayUrl(design.overlayRaster);
   if (raster) return raster;
 
-  if (design.overlayColorVariants) {
+  if (
+    design.overlayColorVariants &&
+    Object.keys(design.overlayColorVariants).length > 0
+  ) {
     const normalizedVariants = Object.fromEntries(
       Object.entries(design.overlayColorVariants).map(([key, value]) => [
         normalizeHex(key),
@@ -442,10 +443,6 @@ export function resolveDisplayOverlayRasterUrl(
       },
       shirtColor,
     );
-  }
-
-  if (template?.overlayColorVariants) {
-    return resolveOverlayColorVariant(template, shirtColor);
   }
 
   return null;

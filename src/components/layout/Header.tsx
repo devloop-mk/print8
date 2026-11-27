@@ -87,7 +87,7 @@ export function Header() {
     <>
       <header
         ref={headerRef}
-        className="sticky top-0 z-50 border-b-2 border-ink-200 bg-white/95 backdrop-blur-md"
+        className="sticky top-0 z-50 border-b-2 border-ink-200 bg-white"
       >
         <div
           className="hidden h-1 w-full bg-gradient-to-r from-brand-500 via-brand-700 to-ink-900 xl:block"

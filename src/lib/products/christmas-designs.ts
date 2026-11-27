@@ -48,11 +48,28 @@ function productForDesign(design: ProductDesignTemplate): Product | undefined {
   return products.find((product) => product.type === type);
 }
 
-export function getChristmasCatalogEntries(): ProductDesignCatalogEntry[] {
+function designWithAdminPlacement(
+  design: ProductDesignTemplate,
+  mergedById?: ReadonlyMap<string, ProductDesignTemplate>,
+): ProductDesignTemplate {
+  return mergedById?.get(design.id) ?? design;
+}
+
+export function getChristmasCatalogEntries(
+  merged?: readonly ProductDesignTemplate[],
+): ProductDesignCatalogEntry[] {
+  const mergedById = merged
+    ? new Map(merged.map((design) => [design.id, design]))
+    : undefined;
   return getChristmasDesignTemplates().flatMap((design) => {
     const product = productForDesign(design);
     if (!product) return [];
-    return [{ design, products: [product] }];
+    return [
+      {
+        design: designWithAdminPlacement(design, mergedById),
+        products: [product],
+      },
+    ];
   });
 }
 
@@ -61,9 +78,11 @@ export type ChristmasShowcaseItem = {
   product: Product;
 };
 
-export function getChristmasHomeShowcase(): ChristmasShowcaseItem[] {
+export function getChristmasHomeShowcase(
+  merged?: readonly ProductDesignTemplate[],
+): ChristmasShowcaseItem[] {
   const byId = new Map(
-    getChristmasCatalogEntries().map((entry) => [entry.design.id, entry]),
+    getChristmasCatalogEntries(merged).map((entry) => [entry.design.id, entry]),
   );
   return CHRISTMAS_HOME_FEATURED_IDS.flatMap((id) => {
     const entry = byId.get(id);

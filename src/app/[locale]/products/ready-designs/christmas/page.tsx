@@ -4,6 +4,7 @@ import { getTranslations } from 'next-intl/server';
 import { ChristmasDesignsArchive } from '@/components/products/ChristmasDesignsArchive';
 import { SectionLoading } from '@/components/ui/SectionLoading';
 import { getChristmasCatalogEntries } from '@/lib/products/christmas-designs';
+import { getMergedProductDesignTemplates } from '@/lib/products/merged-product-designs';
 import { slimProductDesignCatalogEntries } from '@/lib/products/slim-catalog-entry';
 import { buildPageMetadata, buildOgImageUrl } from '@/lib/seo/metadata';
 import { PRODUCT_OFFERING_PATHS } from '@/lib/products/paths';
@@ -37,9 +38,10 @@ export async function generateMetadata({
   });
 }
 
-export default function ChristmasReadyDesignsPage() {
+export default async function ChristmasReadyDesignsPage() {
+  const merged = await getMergedProductDesignTemplates();
   const initialEntries = slimProductDesignCatalogEntries(
-    getChristmasCatalogEntries(),
+    getChristmasCatalogEntries(merged),
   );
 
   return (

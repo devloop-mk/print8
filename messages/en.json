@@ -69,6 +69,7 @@
       "calWildlife": "Wildlife and animals",
       "calPets": "Pets",
       "calTrodelen": "Tri-panel",
+      "calTrodelenRed": "Tri-panel with red spiral",
       "calClassic": "Classic wall"
     },
     "qty": "Quantity",
@@ -557,6 +558,14 @@
           "(3×12) sheets, offset 80 g/m²",
           "Backing: chrome board 300 g/m² · format 670 × 320 mm",
           "Glued with rivet · ad space 150 × 320 mm"
+        ]
+      },
+      "calTrodelenRed": {
+        "name": "Tri-panel calendar with red spiral",
+        "specs": [
+          "Three months in one view · red header",
+          "Metal spiral",
+          "Wall calendar"
         ]
       },
       "calClassicPlastic": {
