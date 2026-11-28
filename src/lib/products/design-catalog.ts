@@ -17,7 +17,7 @@ import {
   type ProductNavCategoryId,
 } from '@/lib/products/product-nav';
 import { productMatchesCatalogType } from '@/lib/products/drinkware-type-groups';
-import { resolveDesignProduct as resolveDesignProductByFit, designSupportsGarmentFit, getProductGarmentFit } from '@/lib/products/garment-fit';
+import { resolveDesignProduct as resolveDesignProductByFit, designResolvesToProduct, designSupportsGarmentFit, getProductGarmentFit } from '@/lib/products/garment-fit';
 import {
   premadeDesignAppliesToProduct,
   productRequiresExplicitPremadeDesigns,
@@ -271,34 +271,34 @@ export function resolveDesignProduct(
   preferredType?: ProductType,
   preferredProductId?: string,
 ): { product: Product; color: string } {
-  if (preferredProductId) {
-    const locked =
-      entry.products.find((item) => item.id === preferredProductId) ??
-      products.find((item) => item.id === preferredProductId);
-    if (locked) {
-      const applicable = getDesignApplicableColors(entry.design, locked);
-      const defaultColor = applicable[0] ?? locked.colors?.[0] ?? '#ffffff';
-      const color =
-        colorFilter !== 'all' &&
-        applicable.some(
-          (value) => normalizeHex(value) === normalizeHex(colorFilter),
-        )
-          ? colorFilter
-          : defaultColor;
-      return { product: locked, color };
-    }
-  }
+  const requested =
+    preferredProductId == null
+      ? undefined
+      : (entry.products.find((item) => item.id === preferredProductId) ??
+        products.find((item) => item.id === preferredProductId));
 
-  const resolvedType =
-    preferredType && entry.design.productTypes.includes(preferredType)
-      ? preferredType
-      : entry.design.productTypes[0];
-  const product =
-    resolvedType === 't-shirt' &&
-    entry.products.some((item) => item.type === 't-shirt')
-      ? resolveDesignProductByFit(entry.design, undefined, resolvedType)
-      : (entry.products.find((item) => item.type === resolvedType) ??
-        entry.products[0]);
+  // Never preview a blank the design detail page will replace (kids tee for a
+  // mug-only design, kids size for an adult-only design, and the same elsewhere).
+  let product: Product | undefined;
+  if (requested && designResolvesToProduct(entry.design, requested)) {
+    product = requested;
+  } else {
+    const requestedType = requested?.type;
+    const resolvedType =
+      preferredType && entry.design.productTypes.includes(preferredType)
+        ? preferredType
+        : requestedType && entry.design.productTypes.includes(requestedType)
+          ? requestedType
+          : undefined;
+    const requestedFit = requested
+      ? (getProductGarmentFit(requested) ?? undefined)
+      : undefined;
+    product = resolveDesignProductByFit(
+      entry.design,
+      resolvedType === 't-shirt' ? requestedFit : undefined,
+      resolvedType,
+    );
+  }
   const applicable = getDesignApplicableColors(entry.design, product);
   const defaultColor = applicable[0] ?? product.colors?.[0] ?? '#ffffff';
   const color =

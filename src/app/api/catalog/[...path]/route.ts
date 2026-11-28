@@ -59,6 +59,18 @@ export async function GET(
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
+  const localPath = resolveLocalCatalogPath(relativePath);
+  if (localPath) {
+    const body = fs.readFileSync(localPath);
+    return new NextResponse(new Uint8Array(body), {
+      headers: {
+        'Content-Type': contentTypeFromPath(localPath),
+        'Cache-Control': 'public, max-age=3600',
+        'X-Content-Type-Options': 'nosniff',
+      },
+    });
+  }
+
   try {
     const { body, contentType } = await getCatalogObject(relativePath);
     return new NextResponse(new Uint8Array(body), {
@@ -74,17 +86,5 @@ export async function GET(
     }
   }
 
-  const localPath = resolveLocalCatalogPath(relativePath);
-  if (!localPath) {
-    return NextResponse.json({ error: 'Catalog asset not found' }, { status: 404 });
-  }
-
-  const body = fs.readFileSync(localPath);
-  return new NextResponse(new Uint8Array(body), {
-    headers: {
-      'Content-Type': contentTypeFromPath(localPath),
-      'Cache-Control': 'public, max-age=3600',
-      'X-Content-Type-Options': 'nosniff',
-    },
-  });
+  return NextResponse.json({ error: 'Catalog asset not found' }, { status: 404 });
 }

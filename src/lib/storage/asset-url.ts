@@ -193,8 +193,10 @@ export function isRemoteAssetUrl(url: string) {
  * R2 CDN when `NEXT_PUBLIC_ASSETS_CDN_URL` is set — never Next `public/` as the
  * production source of truth for design art.
  *
- * Local development keeps `/public` paths so missing R2 uploads don't break
- * previews. Set `ASSETS_FORCE_CDN=1` to exercise CDN URLs locally.
+ * Local development serves catalog art through `/api/catalog`, which reads
+ * `public/` first and falls back to R2. Files that were uploaded but never
+ * copied into the repo still show on cards. Set `ASSETS_FORCE_CDN=1` to
+ * exercise CDN URLs locally.
  */
 export function resolveAssetUrl(path: string): string {
   if (!path || isRemoteAssetUrl(path)) {
@@ -206,6 +208,9 @@ export function resolveAssetUrl(path: string): string {
   const cdn = getAssetsCdnBase();
 
   if (preferLocalPublicAssets()) {
+    if (isCatalogDesignAssetPath(normalized)) {
+      return `/api/catalog/${key}`;
+    }
     return normalized;
   }
 
@@ -250,9 +255,6 @@ export function resolveCanvasAssetUrl(path: string): string {
 
   const catalogKey = extractCatalogStorageKey(path);
   if (catalogKey) {
-    if (preferLocalPublicAssets()) {
-      return `/${catalogKey}`;
-    }
     return `/api/catalog/${catalogKey}`;
   }
 

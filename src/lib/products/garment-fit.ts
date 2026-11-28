@@ -70,13 +70,24 @@ export function getDesignApplicableFits(
     });
   }
 
-  if (extraFit && !fits.includes(extraFit)) {
-    fits = GARMENT_FIT_ORDER.filter(
-      (fit) => fit === extraFit || fits.includes(fit),
-    );
-  }
+  // A requested fit is only honored when the design already lists it.
+  // Adding it here made a kids-tee link open a kids size for adult-only
+  // designs (and the reverse).
+  void extraFit;
 
   return fits.length > 0 ? fits : ['unisex'];
+}
+
+/**
+ * True when the design detail page, opened for this product's type and fit,
+ * lands on the same product the card would be showing.
+ */
+export function designResolvesToProduct(
+  design: ProductDesignTemplate,
+  product: Product,
+): boolean {
+  const fit = getProductGarmentFit(product) ?? undefined;
+  return resolveDesignProduct(design, fit, product.type).id === product.id;
 }
 
 export function designSupportsGarmentFit(

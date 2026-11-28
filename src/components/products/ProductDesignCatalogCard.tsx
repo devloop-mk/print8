@@ -358,13 +358,15 @@ export function ProductDesignCatalogCard({
           className="flex flex-1 flex-col outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500"
         >
           <div className="flex flex-1 flex-col gap-3 p-4 pb-3">
-            {!preferredProductId ? (
+            {!preferredProductId || product.id !== preferredProductId ? (
               <div className="flex flex-wrap gap-1.5">
-                {(preferredProductType
-                  ? design.productTypes.filter(
-                      (productType) => productType === preferredProductType,
-                    )
-                  : design.productTypes
+                {(preferredProductId
+                  ? [product.type]
+                  : preferredProductType
+                    ? design.productTypes.filter(
+                        (productType) => productType === preferredProductType,
+                      )
+                    : design.productTypes
                 ).map((productType) => (
                   <span
                     key={productType}

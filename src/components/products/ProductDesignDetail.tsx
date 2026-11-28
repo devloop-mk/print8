@@ -164,6 +164,29 @@ export function ProductDesignDetail({
     setPreviewSide(resolved?.design.defaultSide ?? 'front');
   }, [resolved?.design.id]);
 
+  useEffect(() => {
+    if (!product) return;
+    const params = new URLSearchParams(searchParams.toString());
+    let changed = false;
+    const typeParam = params.get('type');
+    if (typeParam && typeParam !== product.type) {
+      params.set('type', product.type);
+      changed = true;
+    }
+    if (product.type === 't-shirt') {
+      if (product.fit && params.get('fit') && params.get('fit') !== product.fit) {
+        params.set('fit', product.fit);
+        changed = true;
+      }
+    } else if (params.has('fit')) {
+      params.delete('fit');
+      changed = true;
+    }
+    if (!changed) return;
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }, [pathname, product, router, searchParams]);
+
   if (!resolved || !product) {
     return <p>{td('notFound')}</p>;
   }
@@ -249,7 +272,11 @@ export function ProductDesignDetail({
     }
   }
 
-  const backType = normalizeProductTypeRoute(preferredProductType ?? product.type);
+  const backType = normalizeProductTypeRoute(
+    preferredProductType && design.productTypes.includes(preferredProductType)
+      ? preferredProductType
+      : product.type,
+  );
   const readyDesignsBackHref = productTypeHref(backType);
   const backHref = returnTo ?? readyDesignsBackHref;
   const backLabel = returnTo

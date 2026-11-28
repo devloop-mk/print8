@@ -59,7 +59,7 @@
       "mugs-set": "Ceramic mugs",
       "merchApparel": "T-shirts and sweatshirts",
       "merchBottles": "Bottles, cloth and tote",
-      "merchNotebooks": "Spiral notebooks",
+      "merchNotebooks": "Notebooks",
       "merchWrite": "Pens and lighters",
       "merchKeys": "Keychains",
       "calChurch": "Churches and orthodox",
@@ -256,6 +256,7 @@
         "specs": [
           "Metal body with stylus tip",
           "Engraving",
+          "Screen printing in one color",
           "Minimum order 100 pieces"
         ]
       },
@@ -264,6 +265,7 @@
         "specs": [
           "Metal pen 137 × 10 mm",
           "Engraving",
+          "Screen printing in one color",
           "Minimum order 100 pieces"
         ]
       },
@@ -279,7 +281,7 @@
         "name": "Plastic pen 1",
         "specs": [
           "Plastic pen 138 × 10.5 mm",
-          "Screen print",
+          "Screen printing in one color",
           "Minimum order 100 pieces"
         ]
       },
@@ -287,7 +289,7 @@
         "name": "Plastic pen 2",
         "specs": [
           "Click plastic pen",
-          "Screen print",
+          "Screen printing in one color",
           "Minimum order 100 pieces"
         ]
       },
@@ -390,7 +392,16 @@
         "name": "Plastic lighter 1",
         "specs": [
           "Plastic lighter, 63 × 35 × 14 mm",
-          "Screen print",
+          "Screen printing in one or two colors",
+          "Minimum order 100 pieces"
+        ]
+      },
+      "lighterUnilite": {
+        "name": "Plastic lighter 1",
+        "specs": [
+          "Plastic lighter, 79 × 23 mm",
+          "Yellow, green, white and red",
+          "Screen printing in one or two colors",
           "Minimum order 100 pieces"
         ]
       },
@@ -398,7 +409,7 @@
         "name": "Plastic lighter 2",
         "specs": [
           "Plastic lighter, 82.3 × 24.1 × 11.4 mm",
-          "Screen print",
+          "Screen printing in one or two colors",
           "Minimum order 100 pieces"
         ]
       },
@@ -406,7 +417,7 @@
         "name": "Plastic lighter 3",
         "specs": [
           "Plastic lighter, 8 × 2.5 × 1 cm",
-          "Screen print",
+          "Screen printing in one or two colors",
           "Minimum order 100 pieces"
         ]
       },
@@ -455,6 +466,56 @@
           "Format A5 · 160 lined pages",
           "80 g/m² paper · thick laminated cover",
           "Metal spiral · personalized design"
+        ]
+      },
+      "notebookForest": {
+        "name": "FOREST notebook A5 — red",
+        "specs": [
+          "Format A5 · 14.4 × 21.4 cm",
+          "160 pages · 70 g/m²",
+          "Kraft cover · red elastic band",
+          "Screen printing in one or two colors",
+          "Minimum order 50 pieces"
+        ]
+      },
+      "notebookMini": {
+        "name": "Elastic notebook NOTE MINI A6",
+        "specs": [
+          "Format A6 · 9.3 × 14.3 cm",
+          "80 sheets · lined white paper",
+          "Royal blue, navy, red and black",
+          "Screen printing in one or two colors",
+          "Minimum order 50 pieces"
+        ]
+      },
+      "notebookGratz": {
+        "name": "Spiral notebook A5",
+        "specs": [
+          "Format A5 · metal spiral",
+          "80 sheets · white perforated lined paper",
+          "Recycled matte cardboard · cream and black",
+          "Screen printing in one or two colors",
+          "Minimum order 50 pieces"
+        ]
+      },
+      "notebookNoteA5": {
+        "name": "Elastic notebook NOTE A5",
+        "specs": [
+          "Format A5 · elastic band",
+          "Lined white paper",
+          "Light green, blue, white, orange, red and black",
+          "Screen printing in one or two colors",
+          "Minimum order 50 pieces"
+        ]
+      },
+      "notebookHelsinki": {
+        "name": "Hardcover notebook B5",
+        "specs": [
+          "Format B5 · hardcover",
+          "120 sheets · lined white paper",
+          "Green, natural, gray, white, navy and black",
+          "Screen printing in one or two colors",
+          "Minimum order 50 pieces"
         ]
       },
       "coasterHb": {

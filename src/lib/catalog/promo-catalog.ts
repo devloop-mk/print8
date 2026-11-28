@@ -101,6 +101,26 @@ const PRICE_NOTEBOOK_A5 = breaks([
   ['10–50', 180],
   ['50+', 150],
 ]);
+const PRICE_NOTEBOOK_FOREST = breaks([
+  ['50–100', 180],
+  ['100+', 160],
+]);
+const PRICE_NOTEBOOK_MINI = breaks([
+  ['50–100', 110],
+  ['100+', 90],
+]);
+const PRICE_NOTEBOOK_GRATZ = breaks([
+  ['50–100', 230],
+  ['100+', 210],
+]);
+const PRICE_NOTEBOOK_NOTE_A5 = breaks([
+  ['50–100', 150],
+  ['100+', 130],
+]);
+const PRICE_NOTEBOOK_HELSINKI = breaks([
+  ['50–100', 250],
+  ['100+', 230],
+]);
 const NOTEBOOK_SPIRAL_SWATCHES = ['#ffffff', '#111111'];
 const PRICE_MUG_WHITE = breaks([
   ['1–10', 280],
@@ -143,9 +163,9 @@ const CAL_QUARTER = breaks([
   ['100+', 50],
 ]);
 const CAL_NARROW = breaks([
-  ['30–50', 70],
-  ['50–100', 60],
-  ['100+', 50],
+  ['30–50', 65],
+  ['50–100', 55],
+  ['100+', 45],
 ]);
 const CAL_DESK = breaks([
   ['30–50', 70],
@@ -173,9 +193,9 @@ const CAL_ORTHODOX_SIXTH = breaks([
   ['100+', 60],
 ]);
 const CAL_RED_ORTHODOX = breaks([
-  ['30–50', 70],
-  ['50–100', 60],
-  ['100+', 50],
+  ['30–50', 65],
+  ['50–100', 55],
+  ['100+', 45],
 ]);
 const CAL_ICONS_QUARTER = breaks([
   ['30–50', 70],
@@ -433,6 +453,7 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     'key-hb-oval.jpg?v=2',
     PRICE_KEY_MEDIAPAN,
   ),
+  // Hidden for now. Put lighterLuss back in the lighter page group to restore it.
   merchProduct(
     'lighterLuss',
     'lighter-luss.jpg',
@@ -441,6 +462,16 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
       ['200–300', 28],
       ['300+', 26],
     ]),
+  ),
+  merchProduct(
+    'lighterUnilite',
+    'lighter-unilite-u117.jpg',
+    breaks([
+      ['100–200', 33],
+      ['200–300', 31],
+      ['300+', 29],
+    ]),
+    ['#f0c400', '#00875a', '#f4f4f4', '#d0121c'],
   ),
   merchProduct(
     'lighterMavrovo',
@@ -571,6 +602,36 @@ const PROMO_CATALOG_PRODUCTS_RAW: PromoCatalogProduct[] = [
     PRICE_NOTEBOOK_A5,
     NOTEBOOK_SPIRAL_SWATCHES,
   ),
+  merchProduct('notebookForest', 'notebook-forest-a5.jpg', PRICE_NOTEBOOK_FOREST, [
+    '#c4a574',
+    '#e10600',
+  ]),
+  merchProduct('notebookMini', 'notebook-note-mini-a6.jpg', PRICE_NOTEBOOK_MINI, [
+    '#2457c5',
+    '#1c2c52',
+    '#c43732',
+    '#1a1a1a',
+  ]),
+  merchProduct('notebookGratz', 'notebook-gratz-a5b.jpg', PRICE_NOTEBOOK_GRATZ, [
+    '#c5a278',
+    '#18181a',
+  ]),
+  merchProduct('notebookNoteA5', 'notebook-note-a5.jpg', PRICE_NOTEBOOK_NOTE_A5, [
+    '#b4d429',
+    '#272e4b',
+    '#f3f3f3',
+    '#d76830',
+    '#c72928',
+    '#212121',
+  ]),
+  merchProduct('notebookHelsinki', 'notebook-helsinki-b5.jpg', PRICE_NOTEBOOK_HELSINKI, [
+    '#243832',
+    '#d4cbbd',
+    '#5a5a5e',
+    '#f2f2f2',
+    '#2a3148',
+    '#161616',
+  ]),
   {
     ...calendarProduct('calTrodelen', 'trodelen', 1, breaks([
       ['30–50', 160],
@@ -857,11 +918,16 @@ const MERCH_IDS = [
   'bagNaturella',
   'notebookA4',
   'notebookA5',
+  'notebookForest',
+  'notebookMini',
+  'notebookGratz',
+  'notebookNoteA5',
+  'notebookHelsinki',
   'armada',
   'oggi',
   'alfa',
   'twister',
-  'lighterLuss',
+  'lighterUnilite',
   'lighterMavrovo',
   'lighterFresh',
   'keyHouse',
@@ -885,7 +951,15 @@ export const MERCH_TOC_GROUPS = [
   },
   {
     key: 'merchNotebooks',
-    ids: ['notebookA4', 'notebookA5'],
+    ids: [
+      'notebookA4',
+      'notebookA5',
+      'notebookForest',
+      'notebookMini',
+      'notebookGratz',
+      'notebookNoteA5',
+      'notebookHelsinki',
+    ],
   },
   {
     key: 'merchWrite',
@@ -894,7 +968,7 @@ export const MERCH_TOC_GROUPS = [
       'oggi',
       'alfa',
       'twister',
-      'lighterLuss',
+      'lighterUnilite',
       'lighterMavrovo',
       'lighterFresh',
     ],
@@ -1032,9 +1106,10 @@ const MERCH_PAGE_GROUPS_DENSE: string[][] = [
   ['polarZip', 'polarQuarterZip', 'polarVest'],
   ['bottleRaise', 'bottleAlu600', 'bottleAlu400', 'towelPure'],
   ['bagNaturella'],
-  ['notebookA4', 'notebookA5'],
+  ['notebookA4', 'notebookA5', 'notebookForest', 'notebookMini'],
+  ['notebookGratz', 'notebookNoteA5', 'notebookHelsinki'],
   ['armada', 'oggi', 'alfa', 'twister'],
-  ['lighterLuss', 'lighterMavrovo', 'lighterFresh'],
+  ['lighterUnilite', 'lighterMavrovo', 'lighterFresh'],
   ['keyHouse', 'keyCircle', 'keyCk40', 'keyHeart'],
   ['keyCf40', 'keyHbRound', 'keyHbSquare', 'keyHbOval'],
 ];
@@ -1076,15 +1151,9 @@ function buildCatalogPages(productsPerPage: 2 | 4): PromoCatalogPage[] {
   const merchGroups =
     productsPerPage === 4
       ? MERCH_PAGE_GROUPS_DENSE
-      : [
-          ...chunkIds(APPAREL_MERCH_IDS, productsPerPage),
-          ...chunkIds(
-            MERCH_IDS.filter(
-              (id) => !(APPAREL_MERCH_IDS as readonly string[]).includes(id),
-            ),
-            productsPerPage,
-          ),
-        ];
+      : MERCH_PAGE_GROUPS_DENSE.flatMap((ids) =>
+          chunkIds(ids, productsPerPage),
+        );
   const calendarGroups =
     productsPerPage === 2
       ? compactCalendarGroups(CALENDAR_PAGE_GROUPS)
